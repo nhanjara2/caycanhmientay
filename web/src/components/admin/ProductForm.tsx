@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition, type FormEvent } from 'react';
 import { saveProductAction } from '@/app/actions/admin';
 import { Art, type IconName } from '@/components/Icon';
-import { categories } from '@/lib/catalog';
+import { categories, parseYoutubeId } from '@/lib/catalog';
+import { ProductImages, type AdminImage } from './ProductImages';
 
 type Option = { label: string; price: string; oldPrice: string; stock: string; existingStock?: number };
 export type ProductFormValue = {
@@ -24,6 +25,9 @@ export type ProductFormValue = {
   specs: [string, string][];
   active: boolean;
   flash: boolean;
+  /** Link YouTube, bỏ trống = không có video. */
+  video: string;
+  images: AdminImage[];
   options: { label: string; price: number; oldPrice: number | null; stock: number }[];
 };
 
@@ -52,6 +56,7 @@ export function ProductForm({ initial, canEdit }: { initial: ProductFormValue; c
   const [pending, start] = useTransition();
   const set = <K extends keyof ProductFormValue>(k: K, val: ProductFormValue[K]) => { setV((x) => ({ ...x, [k]: val })); setSaved(false); };
   const kind = kindOf(v);
+  const videoId = parseYoutubeId(v.video);
   const cat = categories.find((c) => c.slug === v.category) ?? categories[0];
 
   const pickKind = (k: Kind) => {
@@ -71,6 +76,7 @@ export function ProductForm({ initial, canEdit }: { initial: ProductFormValue; c
     setError('');
     const payload = {
       ...v,
+      images: undefined, // ảnh đã lưu riêng khi tải lên
       specs: v.specs.filter(([k, val]) => k.trim() && val.trim()),
       options: opts.map((o) => ({
         label: o.label,
@@ -137,7 +143,7 @@ export function ProductForm({ initial, canEdit }: { initial: ProductFormValue; c
                   <textarea id="pf-lead" className="vx-input" style={{ minHeight: 56 }} value={v.lead} onChange={(e) => set('lead', e.target.value)} maxLength={600} />
                 </div>
                 <div className="ad-f">
-                  <label>Ảnh minh họa</label>
+                  <label>Biểu tượng (hiện khi chưa có ảnh)</label>
                   <span className="vx-seg" style={{ flexWrap: 'wrap' }}>
                     {ICONS.map((i) => (
                       <button key={i} type="button" className="vx-chip" aria-pressed={v.icon === i} aria-label={i} onClick={() => set('icon', i)} style={{ padding: 4, width: 36, height: 36, display: 'grid', placeItems: 'center', color: 'var(--primary)' }}>
@@ -145,7 +151,28 @@ export function ProductForm({ initial, canEdit }: { initial: ProductFormValue; c
                       </button>
                     ))}
                   </span>
-                  <span className="hint">Tạm dùng biểu tượng cho đến khi có ảnh chụp tại vườn (xem PhotoGuide).</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="ad-card">
+              <div className="ad-card__h">Ảnh & video</div>
+              <div className="ad-card__b">
+                <div className="ad-f">
+                  <label>Ảnh sản phẩm</label>
+                  <ProductImages key={v.slug} slug={v.slug} initial={v.images} canEdit={canEdit} />
+                </div>
+                <div className="ad-f">
+                  <label htmlFor="pf-video">Video YouTube</label>
+                  <input id="pf-video" className="vx-input" value={v.video} onChange={(e) => set('video', e.target.value)} placeholder="https://youtu.be/… hoặc https://www.youtube.com/watch?v=…" maxLength={200} />
+                  {v.video.trim() && !videoId
+                    ? <span className="vx-err">Link chưa đúng — mở video trên YouTube, bấm Chia sẻ → Sao chép đường liên kết rồi dán vào đây.</span>
+                    : <span className="hint">Đăng video lên YouTube (có thể để chế độ “Không công khai”), rồi dán link vào đây. Video hiện ở phần mô tả trang sản phẩm. Bấm <b>Lưu sản phẩm</b> để áp dụng.</span>}
+                  {videoId && (
+                    <div className="app-yt" style={{ maxWidth: 360 }}>
+                      <iframe src={`https://www.youtube-nocookie.com/embed/${videoId}`} title="Xem trước video" loading="lazy" allow="encrypted-media; picture-in-picture" allowFullScreen />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

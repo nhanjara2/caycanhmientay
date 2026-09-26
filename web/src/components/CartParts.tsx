@@ -68,7 +68,7 @@ function Item({ l, editable, setQty, remove }: {
   const { snap: p } = l;
   return (
     <div className="vx-item">
-      <Link href={`/san-pham/${l.slug}`} className="vx-item__img"><Art name={p.icon} /></Link>
+      <Link href={`/san-pham/${l.slug}`} className="vx-item__img">{p.image ? <img src={p.image} alt="" /> : <Art name={p.icon} />}</Link>
       <div className="vx-item__info">
         {p.flash && <span><span className="vx-badge vx-badge--sale" style={{ fontSize: 11, padding: '2px 6px' }}><Icon name="bolt" size={12} />Flash sale</span></span>}
         <p className="vx-item__name"><Link href={`/san-pham/${l.slug}`}>{p.name}</Link></p>

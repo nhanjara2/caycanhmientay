@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useRef, useState, useTransition } from 'react';
 import { createWarrantyAction } from '@/app/actions/warranty';
+import { compressImage as compress } from '@/lib/compress-image';
 import { Art, Icon, type IconName } from './Icon';
 
 export type WarrantyItem = { itemId: number; name: string; label: string; icon: string; code: string; daysLeft: number };
@@ -13,19 +14,6 @@ const SHOTS = [
   { title: 'Cận lá bệnh', hint: 'Mặt trên và mặt dưới lá' },
   { title: 'Gốc và mặt đất', hint: 'Nhấc nhẹ cây nếu được' },
 ];
-
-/** Nén ảnh ở trình duyệt: cạnh dài tối đa 1600px, JPEG ~80%. */
-async function compress(file: File): Promise<File> {
-  const bmp = await createImageBitmap(file);
-  const scale = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
-  const canvas = document.createElement('canvas');
-  canvas.width = Math.round(bmp.width * scale);
-  canvas.height = Math.round(bmp.height * scale);
-  canvas.getContext('2d')!.drawImage(bmp, 0, 0, canvas.width, canvas.height);
-  const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, 'image/jpeg', 0.8));
-  if (!blob) throw new Error('Không đọc được ảnh');
-  return new File([blob], 'photo.jpg', { type: 'image/jpeg' });
-}
 
 /** WarrantyRequest: 1 Chọn cây → 2 Chụp ảnh & mô tả → 3 Gửi yêu cầu. */
 export function WarrantyForm({ items }: { items: WarrantyItem[] }) {

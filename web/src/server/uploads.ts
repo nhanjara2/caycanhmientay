@@ -3,7 +3,7 @@ import { randomBytes } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import { db, schema } from './db';
 
-// Ảnh lưu ngay trong database (warranty_photos.data) — máy chủ Vercel không giữ file ghi ra ổ đĩa.
+// Ảnh lưu ngay trong database (warranty_photos.data, product_images.data) — máy chủ Vercel không giữ file ghi ra ổ đĩa.
 const MAX_BYTES = 2 * 1024 * 1024; // ảnh đã nén ở trình duyệt ~300–600KB
 
 /** Nhận diện ảnh bằng byte đầu file (không tin phần mở rộng hay content-type do trình duyệt gửi). */
@@ -27,6 +27,9 @@ export async function saveImage(f: File): Promise<SavedImage | { error: string }
 
 /** Tên file chỉ gồm hex + đuôi — chặn đường dẫn kiểu "../". */
 export const isSafeName = (name: string) => /^[a-f0-9]{32}\.(jpg|png|webp)$/.test(name);
+
+export const readProductImage = async (name: string) =>
+  (await db.select({ data: schema.productImages.data, mime: schema.productImages.mime }).from(schema.productImages).where(eq(schema.productImages.file, name)))[0] ?? null;
 
 export const readUpload = async (name: string) =>
   (await db.select({ data: schema.warrantyPhotos.data }).from(schema.warrantyPhotos).where(eq(schema.warrantyPhotos.file, name)))[0]?.data ?? null;

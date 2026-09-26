@@ -182,3 +182,20 @@ button.vx-pay__opt:first-child { border-top: 0; }
 @media (max-width: 640px) {
   .app-nc { position: fixed; left: 12px; right: 12px; top: 64px; width: auto; max-width: none; }
 }
+
+/* Ảnh sản phẩm thật (thay biểu tượng) + video YouTube nhúng */
+.vx-pcard__media > img, .vx-gal__main > img, .vx-item__img > img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
+.vx-pcard__media:has(> img), .vx-gal__main:has(> img), .vx-item__img:has(> img) { overflow: hidden; }
+.vx-thumb { padding: 0; overflow: hidden; cursor: pointer; }
+.vx-thumb > img { width: 100%; height: 100%; object-fit: cover; }
+.app-yt { position: relative; max-width: 720px; aspect-ratio: 16 / 9; border-radius: var(--radius-md); overflow: hidden; background: #000; margin: var(--space-3) 0; }
+.app-yt iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
+/* Admin: lưới ảnh sản phẩm */
+.ad-imgs { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: var(--space-2); }
+.ad-img { position: relative; margin: 0; aspect-ratio: 1 / 1; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; background: var(--surface-sunken); }
+.ad-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ad-img__main { position: absolute; top: 4px; left: 4px; font-size: 10px; }
+.ad-img figcaption { position: absolute; left: 0; right: 0; bottom: 0; display: flex; justify-content: flex-end; gap: 2px; padding: 4px; background: linear-gradient(transparent, rgba(0, 0, 0, .55)); }
+.ad-img figcaption button { width: 24px; height: 24px; border: 0; border-radius: 4px; background: var(--surface); color: var(--ink); font-size: 13px; line-height: 1; cursor: pointer; }
+.ad-img figcaption button:disabled { opacity: .5; cursor: default; }

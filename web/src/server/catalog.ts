@@ -3,22 +3,28 @@ import { connection } from 'next/server';
 import { cache } from 'react';
 import { and, asc, eq, inArray, isNotNull } from 'drizzle-orm';
 import type { IconName } from '@/components/Icon';
-import { normalize, type Product } from '@/lib/catalog';
+import { normalize, productImageUrl, type Product } from '@/lib/catalog';
 import { db, schema } from './db';
 
-const { products: P, productOptions: O } = schema;
+const { products: P, productOptions: O, productImages: I } = schema;
 
 type Row = typeof P.$inferSelect;
 
 async function hydrate(rows: Row[]): Promise<Product[]> {
   if (!rows.length) return [];
-  const opts = await db.select().from(O).where(inArray(O.productSlug, rows.map((r) => r.slug))).orderBy(asc(O.idx));
+  const slugs = rows.map((r) => r.slug);
+  const [opts, imgs] = await Promise.all([
+    db.select().from(O).where(inArray(O.productSlug, slugs)).orderBy(asc(O.idx)),
+    db.select({ slug: I.productSlug, file: I.file }).from(I).where(inArray(I.productSlug, slugs)).orderBy(asc(I.idx), asc(I.id)),
+  ]);
   return rows.map((r) => ({
     slug: r.slug, sku: r.sku, name: r.name, category: r.category, sub: r.sub, icon: r.icon as IconName,
     origin: r.origin, ship: r.ship, pesticide: r.pesticide || undefined, unit: r.unit, spec: r.spec, lead: r.lead,
     specs: r.specs, keywords: r.keywords, rating: r.rating / 10, reviews: r.reviews, sold: r.sold,
     flash: r.flashTotal ? { sold: r.flashSold ?? 0, total: r.flashTotal } : undefined,
     options: opts.filter((o) => o.productSlug === r.slug).map((o) => ({ label: o.label, price: o.price, oldPrice: o.oldPrice ?? undefined })),
+    images: imgs.filter((i) => i.slug === r.slug).map((i) => productImageUrl(i.file)),
+    youtubeId: r.youtubeId ?? undefined,
   }));
 }
 

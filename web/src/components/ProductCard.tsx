@@ -17,7 +17,7 @@ export function ProductCard({ product: p, showFlash = false }: { product: Produc
   return (
     <article className="vx-pcard">
       <Link href={href} className="vx-pcard__media" aria-label={p.name}>
-        <Art name={p.icon} />
+        {p.images?.[0] ? <img src={p.images[0]} alt={p.name} loading="lazy" /> : <Art name={p.icon} />}
       </Link>
       <div className="vx-pcard__tags">
         <span className="vx-badge vx-badge--origin">{p.origin}</span>

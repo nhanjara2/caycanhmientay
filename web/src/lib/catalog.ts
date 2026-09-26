@@ -32,6 +32,10 @@ export type Product = {
   sold: number;
   flash?: { sold: number; total: number };
   keywords?: string[];
+  /** Đường dẫn ảnh thật, ảnh đầu là ảnh đại diện. Không có thì hiện biểu tượng `icon`. */
+  images?: string[];
+  /** Video hướng dẫn trên YouTube (mã 11 ký tự). */
+  youtubeId?: string;
 };
 
 export const categories: Category[] = [
@@ -98,5 +102,25 @@ export const getCategory = (slug: string) => categories.find((c) => c.slug === s
 /** Tìm không phân biệt dấu: "tri nam" khớp "trị nấm". */
 export const normalize = (s: string) =>
   s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase().trim();
+
+/** Tối đa ảnh mỗi sản phẩm (mỗi ảnh ~200–500KB sau khi nén). */
+export const MAX_PRODUCT_IMAGES = 10;
+
+export const productImageUrl = (file: string) => `/api/product-images/${file}`;
+
+/** Lấy mã video từ link YouTube: youtu.be/…, watch?v=…, /shorts/…, /embed/…, /live/… hoặc dán thẳng mã. */
+export function parseYoutubeId(input: string): string | null {
+  const s = input.trim();
+  if (/^[\w-]{11}$/.test(s)) return s;
+  let u: URL;
+  try { u = new URL(/^https?:\/\//i.test(s) ? s : `https://${s}`); } catch { return null; }
+  const host = u.hostname.replace(/^(www|m|music)\./, '');
+  let id: string | null = null;
+  if (host === 'youtu.be') id = u.pathname.split('/')[1] ?? null;
+  else if (host === 'youtube.com' || host === 'youtube-nocookie.com') {
+    id = u.searchParams.get('v') ?? u.pathname.match(/^\/(?:shorts|embed|live|v)\/([^/?#]+)/)?.[1] ?? null;
+  }
+  return id && /^[\w-]{11}$/.test(id) ? id : null;
+}
 
 export const discountPct = (u: Unit) => (u.oldPrice ? Math.round((1 - u.price / u.oldPrice) * 100) : 0);

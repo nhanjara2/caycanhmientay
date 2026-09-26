@@ -37,6 +37,7 @@ npx tsc --noEmit                          # typecheck
 | `app/actions/*.ts` | Server actions (`'use server'` — chỉ export hàm async). Luôn kiểm tra quyền + Zod trong từng hàm |
 | `server/` | Chỉ chạy trên server (`import 'server-only'`): `db/` (schema, kết nối, seed), `auth.ts`, `catalog.ts`, `orders.ts`, `inventory.ts`, `products-admin.ts`, `addresses.ts`, `warranty.ts`, `notify.ts`, `uploads.ts`, `stats.ts` |
 | `app/api/uploads/[file]` | Phục vụ ảnh riêng tư (bảo hành) có kiểm tra quyền |
+| `app/api/product-images/[file]` | Ảnh sản phẩm công khai (bảng `product_images`, cache 1 năm vì tên file ngẫu nhiên) |
 | `lib/` | Dùng chung client/server: `catalog.ts` (kiểu + danh mục), `pricing.ts` (tính tiền), `stock.ts` (lô/hạn dùng, vùng giao cây sống), `order-labels.ts`, `address-labels.ts`, `warranty-labels.ts`, `cart.tsx`, `auth.tsx` |
 | `components/` | Component viết tay; `components/admin/`, `components/orders/` |
 | `views/` | **Sinh tự động** từ `design-system/components/*/preview.html` bằng `npm run gen-views` (cấu hình `web/scripts/views.config.mjs`). Không sửa tay. Trang nào đã làm thật thì xóa khỏi config + xóa file view |
@@ -68,6 +69,7 @@ Quy tắc đã chốt:
 - Admin (menu trái có số việc thật: đơn chờ xác nhận, bảo hành chờ duyệt, hàng dưới mức):
   - Tổng quan (số liệu thật), Đơn hàng (lọc, tìm, chi tiết, đổi trạng thái; hủy → trả kho; giao xong → cộng điểm).
   - **Sản phẩm** (`/admin/san-pham`, thêm `/admin/san-pham/moi`, sửa `/admin/san-pham/<slug>`): loại sản phẩm điền sẵn thông số; thuốc BVTV bắt buộc 4 thông số an toàn; không xóa quy cách cũ (đơn cũ tham chiếu theo thứ tự); bật/tắt bán ngay trong bảng. Chỉ role `admin` được sửa, `staff` chỉ xem.
+  - **Ảnh & video sản phẩm** (khung "Ảnh & video" trong trang sửa): tải nhiều ảnh (tối đa `MAX_PRODUCT_IMAGES = 10`, nén ở trình duyệt ≤1600px, gửi từng ảnh một, lưu ngay không cần bấm Lưu), ảnh đầu là ảnh đại diện (★ đặt làm đại diện, ‹ › đổi thứ tự, ✕ xóa). Ảnh lưu trong `product_images.data` (bytea). Chưa có ảnh thì hiện biểu tượng `icon`. Ảnh hiện ở thẻ sản phẩm, giỏ hàng, trang chi tiết (ảnh lớn + dải ảnh nhỏ). **Video**: dán link YouTube (mọi dạng link, `parseYoutubeId` trong `lib/catalog.ts`) → lưu `products.youtube_id`, nhúng `youtube-nocookie.com` ở mục "Video" trang chi tiết. Sản phẩm mới phải Lưu trước rồi mới tải ảnh.
   - Mức tồn tối thiểu `MIN_STOCK = 10` (tổng các cửa hàng) trong `server/inventory.ts`.
   - **Bảo hành** (`/admin/bao-hanh`, chi tiết `/admin/bao-hanh/<id>`): xem ảnh, chọn hướng xử lý. **Đổi cây mới** → tự tạo đơn 0đ (cùng địa chỉ/khung giờ, trừ kho, chọn số cây); **Cứu cây** → tự tạo đơn tặng Trichoderma 0đ (bỏ chọn được); **Hoàn tiền** → ghi số tiền "Chờ hoàn tiền", admin chuyển khoản tay rồi bấm "Xác nhận đã hoàn" kèm mã giao dịch; **Từ chối** bắt buộc lý do ≥10 ký tự. Khách thấy kết quả, link đơn đổi, trạng thái hoàn tiền.
   - **Kho nhiều cửa hàng + lô** (`/admin/kho`): 3 cửa hàng (Vườn Q7 mặc định, Nguyễn Văn Linh, Thảo Điền — tạo trong migration 0002, tọa độ ước lượng), lọc theo cửa hàng, cột tồn từng cửa hàng, hạn gần nhất, tab "Sắp / đã hết hạn". Hộp thoại: Nhập hàng (chọn cửa hàng, số lô, hạn dùng) / Kiểm kê từng lô / Chuyển kho (giữ số lô + hạn).
@@ -87,7 +89,7 @@ Quy tắc đã chốt:
 - Cổng thanh toán VietQR / MoMo / ZaloPay / thẻ + webhook đánh dấu đã trả.
 - Còn là giao diện mẫu (view sinh tự động, dữ liệu giả): Vườn của tôi, Lịch chăm cây, Yêu thích, Góc chăm cây/bài viết, Bệnh cây, Tin tức; admin Khách hàng, Khuyến mãi, Giao hàng, Nhập hàng (phiếu nhập/NCC), Nội dung, Đánh giá, Phân quyền, Báo cáo, POS, Mẫu tin nhắn, Cài đặt giao hàng, Yêu cầu dịch vụ; app nhân viên.
 - Gợi ý thứ tự tiếp: admin Khách hàng (dữ liệu có sẵn: users, orders, addresses) → Yêu thích (bảng mới) → Khuyến mãi/voucher → Vườn của tôi + Lịch chăm cây.
-- Ảnh sản phẩm thật (hiện dùng icon).
+- Ảnh sản phẩm: đã có chức năng tải lên — cần chụp và tải ảnh thật cho từng sản phẩm. Nếu ảnh nhiều (database Supabase gói miễn phí 500MB) thì chuyển sang Supabase Storage.
 - Nhiều máy chủ → chuyển SQLite sang PostgreSQL (giữ schema Drizzle).
 - Đã chuyển SQLite → Supabase PostgreSQL (26/09/2026), kiểm thử lại toàn bộ luồng (đặt hàng, 2 đơn tranh tồn, hủy trả kho, trạng thái, điểm, bảo hành duyệt trùng, kho nhập/chuyển/kiểm kê, sổ địa chỉ, sản phẩm) + Playwright các trang khách/admin.
 - Mật khẩu database đã lộ trong chat — nên đổi trong Supabase (Settings → Database) rồi sửa `DATABASE_URL` ở `.env.local` và Vercel.

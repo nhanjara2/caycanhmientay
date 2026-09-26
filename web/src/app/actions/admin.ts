@@ -6,7 +6,8 @@ import * as z from 'zod';
 import { requireStaff, staffName } from '@/server/auth';
 import { applyStock, countLot, recentMoves, transferStock } from '@/server/inventory';
 import { todayVN, tracksLots } from '@/lib/stock';
-import { ProductInputSchema, saveProduct, setProductActive } from '@/server/products-admin';
+import { addProductImage, deleteProductImage, listProductImages, moveProductImage, ProductInputSchema, saveProduct, setProductActive } from '@/server/products-admin';
+import { saveImage } from '@/server/uploads';
 import { db, schema } from '@/server/db';
 
 // Mọi action trong file này: kiểm tra quyền nhân viên trước, rồi mới kiểm tra đầu vào.
@@ -35,6 +36,35 @@ export async function setProductActiveAction(slug: unknown, active: unknown) {
   const ok = await setProductActive(p.data.slug, p.data.active);
   if (ok) refreshCatalog(p.data.slug);
   return { ok };
+}
+
+const slugSchema = z.string().min(1).max(120);
+
+/** Tải một ảnh sản phẩm (đã nén ở trình duyệt). FormData: slug, photo. */
+export async function uploadProductImageAction(fd: FormData) {
+  await requireStaff('admin');
+  const slug = slugSchema.safeParse(fd.get('slug'));
+  const f = fd.get('photo');
+  if (!slug.success || !(f instanceof File)) return { ok: false as const, error: 'Thiếu ảnh' };
+  const img = await saveImage(f);
+  if ('error' in img) return { ok: false as const, error: img.error };
+  const r = await addProductImage(slug.data, img);
+  if (!r.ok) return r;
+  refreshCatalog(slug.data);
+  return { ok: true as const, images: await listProductImages(slug.data) };
+}
+
+const ImageOp = z.object({ slug: slugSchema, id: z.number().int().positive(), op: z.enum(['delete', 'first', 'left', 'right']) });
+
+export async function editProductImageAction(input: unknown) {
+  await requireStaff('admin');
+  const p = ImageOp.safeParse(input);
+  if (!p.success) return { ok: false as const, error: 'Yêu cầu không hợp lệ' };
+  const { slug, id, op } = p.data;
+  const ok = op === 'delete' ? await deleteProductImage(slug, id) : await moveProductImage(slug, id, op);
+  if (!ok) return { ok: false as const, error: 'Không tìm thấy ảnh' };
+  refreshCatalog(slug);
+  return { ok: true as const, images: await listProductImages(slug) };
 }
 
 const ymd = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Hạn dùng chưa đúng');

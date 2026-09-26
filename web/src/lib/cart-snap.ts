@@ -8,6 +8,8 @@ export type CartSnap = {
   label: string;
   unit: string;
   icon: IconName;
+  /** Ảnh đại diện (nếu có) — không có thì hiện biểu tượng. */
+  image?: string;
   ship: ShipGroup;
   pesticide?: boolean;
   flash?: boolean;
@@ -19,7 +21,7 @@ export type CartLine = { slug: string; option: number; qty: number; snap: CartSn
 export const snapOf = (p: Product, option: number): CartSnap => {
   const u = p.options[option];
   return {
-    name: p.name, label: u.label, unit: p.unit, icon: p.icon, ship: p.ship, pesticide: p.pesticide,
+    name: p.name, label: u.label, unit: p.unit, icon: p.icon, image: p.images?.[0], ship: p.ship, pesticide: p.pesticide,
     flash: Boolean(p.flash), price: u.price, oldPrice: u.oldPrice,
   };
 };

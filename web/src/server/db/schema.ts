@@ -67,8 +67,21 @@ export const products = pgTable('products', {
   flashSold: integer('flash_sold'),
   flashTotal: integer('flash_total'),
   active: boolean('active').notNull().default(true),
+  /** Mã video YouTube (11 ký tự) hiện ở trang chi tiết — video để trên YouTube, web chỉ nhúng. */
+  youtubeId: text('youtube_id'),
   createdAt: createdAt(),
 }, (t) => [index('products_cat_idx').on(t.category, t.sub)]);
+
+/** Ảnh sản phẩm (đã nén ở trình duyệt) lưu trong database; `idx` nhỏ nhất là ảnh đại diện. */
+export const productImages = pgTable('product_images', {
+  id: serial('id').primaryKey(),
+  productSlug: text('product_slug').notNull().references(() => products.slug, { onDelete: 'cascade' }),
+  idx: integer('idx').notNull(),
+  file: text('file').notNull().unique(),
+  mime: text('mime').notNull(),
+  data: bytea('data').notNull(),
+  createdAt: createdAt(),
+}, (t) => [index('product_images_slug_idx').on(t.productSlug, t.idx)]);
 
 /** Quy cách bán (Chậu sứ / Chỉ cây, Chai 500ml / Thùng…) — giá tính theo từng quy cách. */
 export const productOptions = pgTable('product_options', {

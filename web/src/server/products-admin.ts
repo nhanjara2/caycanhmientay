@@ -1,11 +1,12 @@
 import 'server-only';
 import { and, asc, count, desc, eq, ilike, or, sql } from 'drizzle-orm';
 import * as z from 'zod';
-import { categories, getCategory, normalize } from '@/lib/catalog';
+import { categories, getCategory, MAX_PRODUCT_IMAGES, normalize, parseYoutubeId, productImageUrl } from '@/lib/catalog';
 import { db, schema } from './db';
 import { applyStock } from './inventory';
+import type { SavedImage } from './uploads';
 
-const { products, productOptions } = schema;
+const { products, productOptions, productImages } = schema;
 
 /** Thông số bắt buộc với thuốc BVTV (BRANDBOOK + AdminProductForm). */
 export const PESTICIDE_REQUIRED = ['Số đăng ký', 'Hoạt chất', 'Liều pha', 'Thời gian cách ly'] as const;
@@ -29,6 +30,13 @@ export const ProductInputSchema = z.object({
   specs: z.array(z.tuple([z.string().trim().min(1).max(60), z.string().trim().min(1).max(200)])).max(20),
   active: z.boolean(),
   flash: z.boolean(),
+  // Link YouTube (bỏ trống = không có video) → lưu mã video
+  video: z.string().trim().max(200).optional().transform((v, ctx) => {
+    if (!v) return null;
+    const id = parseYoutubeId(v);
+    if (!id) ctx.addIssue({ code: 'custom', message: 'Link YouTube chưa đúng (ví dụ: https://youtu.be/abc123XYZ_0)' });
+    return id;
+  }),
   options: z.array(z.object({
     label: z.string().trim().min(1, 'Nhập tên quy cách').max(40),
     price: money.min(1000, 'Giá bán tối thiểu 1.000đ'),
@@ -68,7 +76,47 @@ export async function getProductAdmin(slug: string) {
   const [p] = await db.select().from(products).where(eq(products.slug, slug));
   if (!p) return undefined;
   const options = await db.select().from(productOptions).where(eq(productOptions.productSlug, slug)).orderBy(asc(productOptions.idx));
-  return { ...p, options };
+  return { ...p, options, images: await listProductImages(slug) };
+}
+
+// ---- Ảnh sản phẩm ---------------------------------------------------------------------------
+
+export async function listProductImages(slug: string) {
+  const rows = await db.select({ id: productImages.id, file: productImages.file }).from(productImages)
+    .where(eq(productImages.productSlug, slug)).orderBy(asc(productImages.idx), asc(productImages.id));
+  return rows.map((r) => ({ id: r.id, url: productImageUrl(r.file) }));
+}
+
+export async function addProductImage(slug: string, img: SavedImage): Promise<{ ok: true } | { ok: false; error: string }> {
+  return db.transaction(async (tx) => {
+    // khóa dòng sản phẩm để 2 lần tải cùng lúc không vượt giới hạn / trùng thứ tự
+    const [p] = await tx.select({ slug: products.slug }).from(products).where(eq(products.slug, slug)).for('update');
+    if (!p) return { ok: false as const, error: 'Không tìm thấy sản phẩm' };
+    const [{ n, last }] = await tx.select({ n: count(), last: sql<number | null>`max(${productImages.idx})` }).from(productImages).where(eq(productImages.productSlug, slug));
+    if (n >= MAX_PRODUCT_IMAGES) return { ok: false as const, error: `Mỗi sản phẩm tối đa ${MAX_PRODUCT_IMAGES} ảnh` };
+    await tx.insert(productImages).values({ productSlug: slug, idx: (last ?? -1) + 1, file: img.file, mime: img.mime, data: img.data });
+    return { ok: true as const };
+  });
+}
+
+export async function deleteProductImage(slug: string, id: number) {
+  const r = await db.delete(productImages).where(and(eq(productImages.productSlug, slug), eq(productImages.id, id))).returning({ id: productImages.id });
+  return r.length > 0;
+}
+
+/** Đưa một ảnh lên đầu (ảnh đại diện) hoặc dời trái/phải một bậc. */
+export async function moveProductImage(slug: string, id: number, to: 'first' | 'left' | 'right') {
+  return db.transaction(async (tx) => {
+    await tx.select({ slug: products.slug }).from(products).where(eq(products.slug, slug)).for('update');
+    const ids = (await tx.select({ id: productImages.id }).from(productImages).where(eq(productImages.productSlug, slug))
+      .orderBy(asc(productImages.idx), asc(productImages.id))).map((r) => r.id);
+    const i = ids.indexOf(id);
+    if (i < 0) return false;
+    ids.splice(i, 1);
+    ids.splice(to === 'first' ? 0 : to === 'left' ? Math.max(0, i - 1) : Math.min(ids.length, i + 1), 0, id);
+    for (const [idx, imgId] of ids.entries()) await tx.update(productImages).set({ idx }).where(eq(productImages.id, imgId));
+    return true;
+  });
 }
 
 export type SaveResult = { ok: true; slug: string } | { ok: false; error: string };
@@ -77,6 +125,7 @@ export async function saveProduct(input: ProductInput, actor: string): Promise<S
   const values = {
     name: input.name, category: input.category, sub: input.sub, icon: input.icon, origin: input.origin, ship: input.ship,
     pesticide: input.pesticide, unit: input.unit, spec: input.spec, lead: input.lead, specs: input.specs, active: input.active,
+    youtubeId: input.video,
   };
 
   if (input.slug) {

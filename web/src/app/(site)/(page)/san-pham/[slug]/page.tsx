@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { Breadcrumb, SectionHeader } from '@/components/Blocks';
 import { BuyBox } from '@/components/BuyBox';
-import { Art, Icon } from '@/components/Icon';
+import { Icon } from '@/components/Icon';
+import { ProductGallery } from '@/components/ProductGallery';
 import { ProductGrid } from '@/components/ProductCard';
 import { getCategory, type Product } from '@/lib/catalog';
 import { boughtTogether, getProduct } from '@/server/catalog';
@@ -31,6 +32,7 @@ function Content({ p }: { p: Product }) {
     <div className="vx-content">
       <nav className="vx-toc">
         <a href="#mo-ta" aria-current="true">Mô tả sản phẩm</a>
+        {p.youtubeId && <a href="#video">Video</a>}
         <a href="#cach-dung">{isPlant ? 'Cách chăm sóc' : 'Cách sử dụng'}</a>
         <a href="#luu-y">Lưu ý</a>
         <a href="#hoi-dap">Câu hỏi thường gặp</a>
@@ -38,6 +40,21 @@ function Content({ p }: { p: Product }) {
       <article className="vx-article">
         <h2 id="mo-ta">{p.name} là gì?</h2>
         <p>{p.lead}</p>
+        {p.youtubeId && (
+          <>
+            <h3 id="video">Video {isPlant ? 'thực tế tại vườn' : 'hướng dẫn'}</h3>
+            <div className="app-yt">
+              <iframe
+                src={`https://www.youtube-nocookie.com/embed/${p.youtubeId}?rel=0`}
+                title={`Video ${p.name}`}
+                loading="lazy"
+                allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+              />
+            </div>
+          </>
+        )}
         <h3 id="cach-dung">{isPlant ? 'Cách chăm sóc' : 'Cách sử dụng'}</h3>
         <ul>
           {p.specs.slice(0, 4).map(([k, v]) => (
@@ -89,11 +106,7 @@ export default async function ProductPage({ params }: Props) {
       />
       <section className="vx-pd">
         <div className="vx-gal">
-          <div className="vx-gal__main">
-            <Art name={p.icon} />
-            <div className="vx-gal__stamp"><span>ẢNH<br />THẬT</span></div>
-            {p.ship === 'plant' && <span className="vx-gal__tag vx-badge vx-badge--origin">Ảnh chụp tại vườn</span>}
-          </div>
+          <ProductGallery p={p} />
           <p className="vx-gal__note">
             {p.ship === 'plant' ? 'Mỗi cây là một cá thể, dáng lá có thể khác đôi chút so với ảnh.' : 'Bao bì có thể thay đổi theo lô sản xuất.'}
           </p>
