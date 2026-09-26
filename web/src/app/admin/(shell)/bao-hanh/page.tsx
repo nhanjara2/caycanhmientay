@@ -40,7 +40,7 @@ export default async function AdminWarrantyListPage({ searchParams }: Props) {
                 <tr key={r.w.id}>
                   <td><Link className="code" href={`/admin/bao-hanh/${r.w.id}`}>{r.code}</Link><small>{fmtDateTime(r.w.createdAt)}</small></td>
                   <td><span className="ad-prod"><span className="ad-thumb"><Art name={r.itemIcon as IconName} /></span><span>{r.itemName}<small>Đơn {r.orderCode} · {r.photos.length} ảnh</small></span></span></td>
-                  <td>{r.customer ?? 'Khách hàng'}<small>{maskPhone(r.customerPhone)}</small></td>
+                  <td>{r.customer ?? 'Khách hàng'}<small>{r.customerPhone ? maskPhone(r.customerPhone) : ''}</small></td>
                   <td>{r.w.symptoms.join(', ')}</td>
                   <td>
                     <span className={`ad-pill ${PILL[r.w.status]}`}>{WARRANTY_STATUS_LABEL[r.w.status]}</span>

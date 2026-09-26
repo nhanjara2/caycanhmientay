@@ -44,23 +44,26 @@ async function sendExternal(userId: number, n: Notice) {
   // Zalo ZNS: cần template đã duyệt có 3 tham số customer_name, content, link.
   const token = process.env.ZALO_ZNS_ACCESS_TOKEN;
   const template = process.env.ZALO_ZNS_TEMPLATE_ID;
-  if (!token || !template) await log('zalo', u.phone, 'skipped', 'Chưa cấu hình ZALO_ZNS_ACCESS_TOKEN / ZALO_ZNS_TEMPLATE_ID');
+  if (!u.phone) {
+    // Tài khoản chỉ đăng nhập Google: không có SĐT để gửi Zalo.
+  } else if (!token || !template) await log('zalo', u.phone, 'skipped', 'Chưa cấu hình ZALO_ZNS_ACCESS_TOKEN / ZALO_ZNS_TEMPLATE_ID');
   else {
+    const phone = u.phone;
     try {
       const res = await fetch('https://business.openapi.zalo.me/message/template', {
         method: 'POST',
         headers: { 'content-type': 'application/json', access_token: token },
         body: JSON.stringify({
-          phone: u.phone.replace(/^0/, '84'), template_id: template, tracking_id: `n${Date.now()}`,
+          phone: phone.replace(/^0/, '84'), template_id: template, tracking_id: `n${Date.now()}`,
           template_data: { customer_name: u.name ?? 'Quý khách', content: body.slice(0, 200), link },
         }),
         signal: AbortSignal.timeout(10_000),
       });
       const j = (await res.json().catch(() => ({}))) as { error?: number; message?: string };
-      if (res.ok && !j.error) await log('zalo', u.phone, 'sent');
-      else await log('zalo', u.phone, 'failed', `${res.status} ${j.error ?? ''} ${j.message ?? ''}`.trim());
+      if (res.ok && !j.error) await log('zalo', phone, 'sent');
+      else await log('zalo', phone, 'failed', `${res.status} ${j.error ?? ''} ${j.message ?? ''}`.trim());
     } catch (e) {
-      await log('zalo', u.phone, 'failed', String(e).slice(0, 200));
+      await log('zalo', phone, 'failed', String(e).slice(0, 200));
     }
   }
 

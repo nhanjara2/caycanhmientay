@@ -34,7 +34,7 @@ export function ProfileForm({ initial }: { initial: { name: string; email: strin
         </div>
         <div className="vx-fl vx-fl--locked">
           <label htmlFor="pf-phone">Số điện thoại</label>
-          <input id="pf-phone" value={initial.phone} disabled />
+          <input id="pf-phone" value={initial.phone || 'Chưa có (đăng nhập bằng Google)'} disabled />
         </div>
         <div className="vx-fl">
           <label htmlFor="pf-email">Email (không bắt buộc)</label>

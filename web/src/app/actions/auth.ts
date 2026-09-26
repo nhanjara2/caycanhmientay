@@ -26,9 +26,9 @@ export async function meAction() {
   return u ? auth.publicUser(u) : null;
 }
 
-/** Nút Google có bật không, và email Google đang chờ xác thực SĐT để gắn (nếu có). */
-export async function googleStatusAction() {
-  return { enabled: auth.googleEnabled(), pendingEmail: await auth.pendingGoogleEmail() };
+/** Cách đăng nhập đang bật: Google (có GOOGLE_CLIENT_ID/SECRET), SĐT + OTP (gửi được OTP hoặc đang chạy thử). */
+export async function loginOptionsAction() {
+  return { google: auth.googleEnabled(), phone: auth.phoneLoginEnabled() };
 }
 
 export async function logoutAction() {

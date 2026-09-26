@@ -30,8 +30,10 @@ export const normalizePhone = (s: string) => s.replace(/[^\d+]/g, '').replace(/^
 export const isPhone = (s: string) => /^0(3|5|7|8|9)\d{8}$/.test(normalizePhone(s));
 export const maskPhone = (p: string) => `${p.slice(0, 4)} xxx ${p.slice(-3)}`;
 
-/** SĐT trong ADMIN_PHONES (cách nhau bằng dấu phẩy) được cấp quyền admin khi đăng nhập. */
-const adminPhones = () => (process.env.ADMIN_PHONES ?? '').split(',').map((p) => normalizePhone(p.trim())).filter(Boolean);
+/** SĐT trong ADMIN_PHONES / email Google trong ADMIN_EMAILS (cách nhau bằng dấu phẩy) được cấp quyền admin khi đăng nhập. */
+const envList = (name: string) => (process.env[name] ?? '').split(',').map((s) => s.trim()).filter(Boolean);
+const adminPhones = () => envList('ADMIN_PHONES').map(normalizePhone);
+const adminEmails = () => envList('ADMIN_EMAILS').map((e) => e.toLowerCase());
 
 // ---- OTP -------------------------------------------------------------------------------------
 
@@ -64,6 +66,9 @@ export async function requestOtp(rawPhone: string): Promise<OtpRequestResult> {
  * Ai biết SĐT cũng đăng nhập được — TẮT trước khi mở bán thật.
  */
 const showCode = () => process.env.NODE_ENV !== 'production' || process.env.OTP_DEMO === '1';
+
+/** Đăng nhập SĐT chỉ bật khi gửi được OTP (có nhà cung cấp) hoặc đang chạy thử; không thì chỉ có Google. */
+export const phoneLoginEnabled = () => showCode() || Boolean(process.env.OTP_PROVIDER);
 
 /** Gửi OTP qua Zalo ZNS, SMS dự phòng. TODO: nối nhà cung cấp thật (ZNS template, SMS brandname). */
 async function sendOtp(phone: string, code: string) {
@@ -103,19 +108,16 @@ export async function verifyOtp(rawPhone: string, code: string): Promise<VerifyR
   if (adminPhones().includes(phone) && user.role !== 'admin') {
     [user] = await db.update(users).set({ role: 'admin' }).where(eq(users.id, user.id)).returning();
   }
-  // Vừa đăng nhập Google mà chưa gắn tài khoản: SĐT vừa xác thực chính là tài khoản để gắn.
-  const google = await takePendingGoogle();
-  if (google) user = await linkGoogle(user, google);
   await createSession(user.id);
-  return { ok: true, user: { id: user.id, phone: user.phone, name: user.name, role: user.role, points: user.points } };
+  return { ok: true, user: toSessionUser(user) };
 }
 
 // ---- Đăng nhập Google (OAuth 2.0 + PKCE) ----------------------------------------------------
-// Tài khoản vẫn định danh bằng SĐT: lần đầu đăng nhập Google phải xác thực SĐT một lần để gắn;
-// các lần sau Google đăng nhập thẳng. Không tự gắn theo email (email trong hồ sơ chưa được xác thực).
+// Miễn phí, không cần OTP: Google đã gắn → vào tài khoản đó; đang đăng nhập SĐT → gắn vào tài khoản hiện tại;
+// còn lại tạo tài khoản mới không có SĐT (SĐT nhập lúc đặt hàng). Không tự gắn theo email
+// (email trong hồ sơ chưa được xác thực).
 
 const GOOGLE_FLOW_COOKIE = 'ccmt_google_flow';
-const GOOGLE_LINK_COOKIE = 'ccmt_google_link';
 const GOOGLE_TTL_MS = 10 * 60 * 1000;
 
 type GoogleProfile = { sub: string; email: string; name: string | null };
@@ -161,11 +163,9 @@ export async function startGoogleLogin(origin: string, next: string) {
   return url.toString();
 }
 
-export type GoogleResult =
-  | { ok: true; next: string; linked: boolean } // linked=false: cần xác thực SĐT để gắn
-  | { ok: false; next: string; error: string };
+export type GoogleResult = { ok: true; next: string } | { ok: false; next: string; error: string };
 
-/** Bước 2: Google trả về `code` → đổi lấy id_token → đăng nhập hoặc chờ gắn SĐT. */
+/** Bước 2: Google trả về `code` → đổi lấy id_token → đăng nhập. */
 export async function finishGoogleLogin(origin: string, params: URLSearchParams): Promise<GoogleResult> {
   const store = await cookies();
   const flow = unseal<{ state: string; verifier: string; next: string }>(store.get(GOOGLE_FLOW_COOKIE)?.value);
@@ -200,43 +200,26 @@ export async function finishGoogleLogin(origin: string, params: URLSearchParams)
     || claims.exp * 1000 < Date.now() || !claims.email || !claims.email_verified) {
     return { ok: false, next, error: 'google' };
   }
-  const profile: GoogleProfile = { sub: claims.sub, email: claims.email, name: claims.name?.trim() || null };
+  const g: GoogleProfile = { sub: claims.sub, email: claims.email.toLowerCase(), name: claims.name?.trim() || null };
 
-  const [owner] = await db.select().from(users).where(eq(users.googleSub, profile.sub));
-  if (owner) {
-    await createSession(owner.id);
-    return { ok: true, next, linked: true };
+  let [user] = await db.select().from(users).where(eq(users.googleSub, g.sub));
+  const current = user ? null : await getCurrentUser();
+  if (!user && current && !current.googleSub) {
+    // Đang đăng nhập bằng SĐT: gắn Google vào tài khoản hiện tại.
+    [user] = await db.update(users)
+      .set({ googleSub: g.sub, name: current.name ?? g.name, email: current.email ?? g.email })
+      .where(and(eq(users.id, current.id), isNull(users.googleSub)))
+      .returning();
   }
-  // Đang đăng nhập bằng SĐT rồi thì gắn luôn vào tài khoản hiện tại.
-  const current = await getCurrentUser();
-  if (current) {
-    const [u] = await db.select().from(users).where(eq(users.id, current.id));
-    await linkGoogle(u, profile);
-    return { ok: true, next, linked: true };
+  if (!user) {
+    await db.insert(users).values({ googleSub: g.sub, email: g.email, name: g.name }).onConflictDoNothing({ target: users.googleSub });
+    [user] = await db.select().from(users).where(eq(users.googleSub, g.sub));
   }
-  store.set(GOOGLE_LINK_COOKIE, seal(profile), shortCookie);
-  return { ok: true, next, linked: false };
-}
-
-/** Email Google đang chờ gắn (để hộp đăng nhập nhắc "xác thực SĐT để hoàn tất"). */
-export async function pendingGoogleEmail() {
-  return unseal<GoogleProfile>((await cookies()).get(GOOGLE_LINK_COOKIE)?.value)?.email ?? null;
-}
-
-async function takePendingGoogle() {
-  const store = await cookies();
-  const p = unseal<GoogleProfile>(store.get(GOOGLE_LINK_COOKIE)?.value);
-  if (p) store.delete(GOOGLE_LINK_COOKIE);
-  return p;
-}
-
-async function linkGoogle(user: typeof users.$inferSelect, g: GoogleProfile) {
-  if (user.googleSub) return user; // đã gắn tài khoản Google khác: giữ nguyên
-  const [u] = await db.update(users)
-    .set({ googleSub: g.sub, name: user.name ?? g.name, email: user.email ?? g.email })
-    .where(and(eq(users.id, user.id), isNull(users.googleSub)))
-    .returning();
-  return u ?? user;
+  if (adminEmails().includes(g.email) && user.role !== 'admin') {
+    [user] = await db.update(users).set({ role: 'admin' }).where(eq(users.id, user.id)).returning();
+  }
+  await createSession(user.id);
+  return { ok: true, next };
 }
 
 // ---- Phiên đăng nhập -------------------------------------------------------------------------
@@ -261,18 +244,19 @@ export async function destroySession() {
   store.delete(SESSION_COOKIE);
 }
 
-export type SessionUser = { id: number; phone: string; name: string | null; role: Role; points: number };
+export type SessionUser = Pick<typeof users.$inferSelect, 'id' | 'phone' | 'email' | 'googleSub' | 'name' | 'role' | 'points'>;
+const toSessionUser = ({ id, phone, email, googleSub, name, role, points }: typeof users.$inferSelect): SessionUser =>
+  ({ id, phone, email, googleSub, name, role, points });
 
 /** Người dùng của request hiện tại (gọi nhiều lần trong một request chỉ truy vấn một lần). */
 export const getCurrentUser = cache(async (): Promise<SessionUser | null> => {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!token) return null;
-  const [row] = await db.select({ id: users.id, phone: users.phone, name: users.name, role: users.role, points: users.points, expiresAt: sessions.expiresAt })
+  const [row] = await db.select({ user: users, expiresAt: sessions.expiresAt })
     .from(sessions).innerJoin(users, eq(users.id, sessions.userId))
     .where(eq(sessions.id, sha256(token)));
   if (!row || row.expiresAt.getTime() < Date.now()) return null;
-  const { expiresAt: _e, ...user } = row;
-  return user;
+  return toSessionUser(row.user);
 });
 
 export async function requireUser() {
@@ -290,9 +274,13 @@ export async function requireStaff(minRole: 'staff' | 'admin' = 'staff') {
   return user;
 }
 
+/** Tên ghi vào lịch sử khi nhân viên thao tác. */
+export const staffName = (u: SessionUser) => u.name ?? (u.phone ? `NV ${u.phone.slice(-3)}` : u.email ?? 'Nhân viên');
+
 export const publicUser = (u: SessionUser) => ({
   name: u.name ?? 'Khách hàng',
-  phoneMasked: maskPhone(u.phone),
+  /** SĐT che bớt, hoặc email với tài khoản chỉ đăng nhập Google. */
+  phoneMasked: u.phone ? maskPhone(u.phone) : u.email ?? '',
   initials: (u.name ?? 'Khách hàng').split(/\s+/).map((w) => w[0]).slice(-2).join('').toUpperCase(),
   role: u.role,
   points: u.points,

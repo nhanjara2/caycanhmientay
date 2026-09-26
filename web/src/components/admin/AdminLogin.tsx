@@ -14,11 +14,11 @@ export function AdminLogin({ loggedInAsCustomer }: { loggedInAsCustomer: boolean
         <div className="au-box">
           <div className="au-head">
             <h2>Tài khoản chưa có quyền quản trị</h2>
-            <p>{user?.phoneMasked} đang đăng nhập là khách hàng. Nhờ quản lý cấp quyền, hoặc đăng nhập bằng số điện thoại khác.</p>
+            <p>{user?.phoneMasked} đang đăng nhập là khách hàng. Nhờ quản lý cấp quyền, hoặc đăng nhập bằng tài khoản khác.</p>
           </div>
           <div className="au-body">
             <button type="button" className="vx-btn vx-btn--primary vx-btn--lg vx-btn--block" onClick={async () => { await logout(); router.refresh(); }}>
-              Đăng nhập số khác
+              Đăng nhập tài khoản khác
             </button>
             <Link href="/" className="vx-btn vx-btn--ghost vx-btn--block">Về website</Link>
           </div>
@@ -26,7 +26,7 @@ export function AdminLogin({ loggedInAsCustomer }: { loggedInAsCustomer: boolean
       ) : (
         <OtpLoginBox
           title="Quản trị Cây Cảnh Miền Tây"
-          subtitle="Đăng nhập bằng số điện thoại nhân viên"
+          subtitle="Đăng nhập bằng tài khoản nhân viên"
           googleNext="/admin"
           onDone={() => { router.push('/admin'); router.refresh(); }}
         />

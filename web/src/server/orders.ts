@@ -157,9 +157,10 @@ export const ORDER_TABS = {
 export type OrderTab = keyof typeof ORDER_TABS;
 
 /** Đơn của khách: đặt khi đã đăng nhập, hoặc đặt vãng lai bằng đúng SĐT đã xác thực OTP của tài khoản. */
-const ownedBy = (u: Pick<SessionUser, 'id' | 'phone'>) => or(eq(orders.userId, u.id), eq(orders.phone, u.phone));
+/** Tài khoản chỉ đăng nhập Google (chưa có SĐT) chỉ thấy đơn đặt khi đã đăng nhập. */
+const ownedBy = (u: Pick<SessionUser, 'id' | 'phone'>) => (u.phone ? or(eq(orders.userId, u.id), eq(orders.phone, u.phone)) : eq(orders.userId, u.id));
 export const canViewOrder = (o: { userId: number | null; phone: string }, u: Pick<SessionUser, 'id' | 'phone'>) =>
-  o.userId === u.id || o.phone === u.phone;
+  o.userId === u.id || (!!u.phone && o.phone === u.phone);
 
 export async function listOrdersForUser(user: SessionUser, tab: OrderTab = 'tat-ca') {
   const st = ORDER_TABS[tab].statuses;

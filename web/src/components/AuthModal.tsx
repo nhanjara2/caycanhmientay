@@ -26,7 +26,7 @@ export function OtpLoginBox({ onDone, onClose, googleNext, title = 'Đăng nhậ
   /** Trang quay về sau khi đăng nhập Google (mặc định: trang đang xem). */
   onDone: () => void; onClose?: () => void; googleNext?: string; title?: string; subtitle?: string;
 }) {
-  const { requestOtp, verifyOtp, google } = useAuth();
+  const { requestOtp, verifyOtp, options } = useAuth();
   const closeLogin = onClose ?? (() => {});
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [phone, setPhone] = useState('');
@@ -81,17 +81,10 @@ export function OtpLoginBox({ onDone, onClose, googleNext, title = 'Đăng nhậ
           {onClose && <button type="button" className="x" aria-label="Đóng" onClick={onClose}><Icon name="close" /></button>}
           <span className="mark"><Icon name={step === 'phone' ? 'leaf' : 'shield'} /></span>
           {step === 'phone' ? (
-            google.pendingEmail ? (
-              <>
-                <h2>Xác thực số điện thoại</h2>
-                <p>Đã xác thực Google <b>{google.pendingEmail}</b>. Nhập số điện thoại để hoàn tất — chỉ cần làm một lần, lần sau bấm Google là vào.</p>
-              </>
-            ) : (
-              <>
-                <h2>{title}</h2>
-                <p>{subtitle}</p>
-              </>
-            )
+            <>
+              <h2>{title}</h2>
+              <p>{subtitle}</p>
+            </>
           ) : (
             <>
               <h2>Nhập mã xác thực</h2>
@@ -105,21 +98,27 @@ export function OtpLoginBox({ onDone, onClose, googleNext, title = 'Đăng nhậ
 
         {step === 'phone' ? (
           <form className="au-body" onSubmit={sendOtp}>
-            {!google.pendingEmail && <div className="au-perk"><span>Tặng voucher 50.000đ</span><span>Tích điểm mọi đơn</span></div>}
-            <div className="au-phone">
-              <span>+84</span>
-              <input autoFocus inputMode="tel" autoComplete="tel" placeholder="Nhập số điện thoại" value={phone} onChange={(e) => setPhone(e.target.value)} />
-            </div>
-            {(error || google.error) && <span className="vx-err">{error || google.error}</span>}
-            <button className="vx-btn vx-btn--primary vx-btn--lg vx-btn--block" disabled={busy}>Tiếp tục</button>
-            {google.enabled && !google.pendingEmail && (
+            <div className="au-perk"><span>Tặng voucher 50.000đ</span><span>Tích điểm mọi đơn</span></div>
+            {options.phone && (
               <>
-                <div className="au-or">hoặc</div>
+                <div className="au-phone">
+                  <span>+84</span>
+                  <input autoFocus inputMode="tel" autoComplete="tel" placeholder="Nhập số điện thoại" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                </div>
+                {error && <span className="vx-err">{error}</span>}
+                <button className="vx-btn vx-btn--primary vx-btn--lg vx-btn--block" disabled={busy}>Tiếp tục</button>
+              </>
+            )}
+            {options.googleError && <span className="vx-err">{options.googleError}</span>}
+            {options.google && (
+              <>
+                {options.phone && <div className="au-or">hoặc</div>}
                 <div className="au-social">
                   <button type="button" className="au-sbtn" onClick={loginWithGoogle}><span className="logo">G</span>Tiếp tục với Google</button>
                 </div>
               </>
             )}
+            {!options.phone && !options.google && <span className="vx-err">Đăng nhập tạm thời chưa mở. Vui lòng quay lại sau.</span>}
             <p className="au-terms">
               Bằng việc tiếp tục, bạn đồng ý với <Link href="/chinh-sach/dieu-khoan" onClick={closeLogin}>Điều khoản sử dụng</Link> và{' '}
               <Link href="/chinh-sach/bao-mat" onClick={closeLogin}>Chính sách bảo mật dữ liệu cá nhân</Link> của Cây Cảnh Miền Tây.

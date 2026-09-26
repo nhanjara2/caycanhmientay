@@ -3,7 +3,7 @@
 import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import * as z from 'zod';
-import { requireStaff, type SessionUser } from '@/server/auth';
+import { requireStaff, staffName } from '@/server/auth';
 import { applyStock, countLot, recentMoves, transferStock } from '@/server/inventory';
 import { todayVN, tracksLots } from '@/lib/stock';
 import { ProductInputSchema, saveProduct, setProductActive } from '@/server/products-admin';
@@ -11,7 +11,7 @@ import { db, schema } from '@/server/db';
 
 // Mọi action trong file này: kiểm tra quyền nhân viên trước, rồi mới kiểm tra đầu vào.
 
-const actorName = (u: SessionUser) => u.name ?? `NV ${u.phone.slice(-3)}`;
+const actorName = staffName;
 
 function refreshCatalog(slug?: string) {
   revalidatePath('/admin', 'layout');

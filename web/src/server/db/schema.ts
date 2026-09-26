@@ -14,10 +14,11 @@ export type Role = (typeof ROLES)[number];
 /** Tài khoản định danh bằng SĐT đã xác thực (BRANDBOOK). */
 export const users = pgTable('users', {
   id: serial('id').primaryKey(),
-  phone: text('phone').notNull().unique(),
+  /** SĐT đã xác thực OTP; null với tài khoản chỉ đăng nhập Google. */
+  phone: text('phone').unique(),
   name: text('name'),
   email: text('email'),
-  /** Tài khoản Google đã gắn (claim `sub`) — gắn sau khi xác thực SĐT một lần. */
+  /** Tài khoản Google (claim `sub`). */
   googleSub: text('google_sub').unique(),
   role: text('role', { enum: ROLES }).notNull().default('customer'),
   points: integer('points').notNull().default(0),

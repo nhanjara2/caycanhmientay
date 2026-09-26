@@ -20,7 +20,7 @@ export const warrantyCode = (id: number) => `BH-${String(id).padStart(4, '0')}`;
 export const SYMPTOMS = ['Lá vàng', 'Lá mềm, rũ', 'Đốm nâu', 'Rụng lá', 'Thối gốc', 'Có sâu, rệp', 'Dập, gãy khi nhận'] as const;
 
 type Owner = Pick<SessionUser, 'id' | 'phone'>;
-const ownedBy = (u: Owner) => or(eq(orders.userId, u.id), eq(orders.phone, u.phone));
+const ownedBy = (u: Owner) => (u.phone ? or(eq(orders.userId, u.id), eq(orders.phone, u.phone)) : eq(orders.userId, u.id));
 
 /** Cây sống trong đơn đã giao, còn hạn bảo hành, chưa có yêu cầu đang mở / đã duyệt. */
 export async function eligibleItems(u: Owner) {

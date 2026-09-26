@@ -3,7 +3,7 @@
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import * as z from 'zod';
-import { getCurrentUser, requireStaff } from '@/server/auth';
+import { getCurrentUser, requireStaff, staffName } from '@/server/auth';
 import { getProducts } from '@/server/catalog';
 import { createOrder, LAST_ORDER_COOKIE, PlaceOrderSchema, setOrderStatus } from '@/server/orders';
 import { ORDER_STATUSES } from '@/server/db/schema';
@@ -40,7 +40,7 @@ export async function setOrderStatusAction(code: unknown, status: unknown, note?
   const staff = await requireStaff();
   const p = z.object({ code: z.string().max(20), status: z.enum(ORDER_STATUSES), note: z.string().max(300).optional() }).safeParse({ code, status, note });
   if (!p.success) return { ok: false as const, error: 'Dữ liệu không hợp lệ' };
-  const r = await setOrderStatus(p.data.code, p.data.status, staff.name ?? `NV ${staff.phone.slice(-3)}`, p.data.note);
+  const r = await setOrderStatus(p.data.code, p.data.status, staffName(staff), p.data.note);
   if (r.ok) {
     revalidatePath('/admin', 'layout');
     revalidatePath('/tai-khoan', 'layout');
