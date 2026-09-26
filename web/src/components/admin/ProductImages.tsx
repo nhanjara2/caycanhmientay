@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 import { editProductImageAction, uploadProductImageAction } from '@/app/actions/admin';
-import { compressImage } from '@/lib/compress-image';
+import { compressImage, WATERMARK } from '@/lib/compress-image';
 import { MAX_PRODUCT_IMAGES } from '@/lib/catalog';
 
 export type AdminImage = { id: number; url: string };
@@ -31,7 +31,7 @@ export function ProductImages({ slug, initial, canEdit }: { slug?: string; initi
       try {
         const fd = new FormData();
         fd.set('slug', slug);
-        fd.set('photo', await compressImage(f));
+        fd.set('photo', await compressImage(f, 1600, WATERMARK));
         const r = await uploadProductImageAction(fd);
         if (!r.ok) { setError(r.error); break; }
         setImages(r.images);
@@ -88,7 +88,7 @@ export function ProductImages({ slug, initial, canEdit }: { slug?: string; initi
       {busy && images.length >= MAX_PRODUCT_IMAGES && <span className="hint">{busy}</span>}
       {error && <span className="vx-err" role="alert">{error}</span>}
       <span className="hint">
-        {images.length}/{MAX_PRODUCT_IMAGES} ảnh · Chọn nhiều ảnh một lần được, ảnh tự thu nhỏ trước khi gửi. Ảnh đầu tiên hiện trên thẻ sản phẩm. Ảnh lưu ngay, không cần bấm Lưu.
+        {images.length}/{MAX_PRODUCT_IMAGES} ảnh · Chọn nhiều ảnh một lần được, ảnh tự thu nhỏ và đóng chữ ký “{WATERMARK}” chống lấy ảnh. Ảnh đầu tiên hiện trên thẻ sản phẩm. Ảnh lưu ngay, không cần bấm Lưu.
       </span>
     </>
   );
