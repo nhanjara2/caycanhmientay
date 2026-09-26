@@ -1,0 +1,17 @@
+<!-- @dsCard group="Giỏ hàng" height=640 width=680 -->
+<!doctype html>
+<html lang="vi">
+<head><meta charset="utf-8"><title>CheckoutForm</title></head>
+<body>
+<div class="vx-pad"><div class="vx-card"><div class="vx-label-row"><b>Chọn hình thức nhận hàng</b><div class="vx-toggle"><button aria-pressed="true"><svg class="vx-ico" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M3 6h11v10H3zM14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="1.8"/><circle cx="17" cy="18" r="1.8"/></svg>Giao tận nơi</button><button><svg class="vx-ico" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M4 9h16l-1-4H5zM5 9v11h14V9M10 20v-5h4v5"/></svg>Nhận tại vườn</button></div></div>
+<h3 class="vx-card__title"><svg class="vx-ico" viewBox="0 0 24 24" ><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>Thông tin người đặt</h3>
+<div class="vx-fields"><input class="vx-input" placeholder="Họ và tên người đặt"><div class="vx-field"><input class="vx-input vx-input--error" value="0909 12"><span class="vx-err">Số điện thoại chưa đúng</span></div><input class="vx-input vx-field--full" placeholder="Email (không bắt buộc)"></div>
+<div class="vx-label-row"><h3 class="vx-card__title"><svg class="vx-ico" viewBox="0 0 24 24" ><path d="M12 21s7-6 7-12a7 7 0 0 0-14 0c0 6 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>Thông tin nhận hàng</h3><label class="vx-check" style="align-items:center"><button class="vx-switch" aria-checked="true"></button>Giống người đặt</label></div>
+<div class="vx-fields"><div class="vx-input vx-input--select vx-field--full"><span style="display:flex;gap:8px;align-items:center"><svg class="vx-ico" viewBox="0 0 24 24" style="width:18px;height:18px;color:var(--primary)"><path d="M12 21s7-6 7-12a7 7 0 0 0-14 0c0 6 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>12 Nguyễn Huệ, P. Bến Nghé, Q.1, TP.HCM</span><svg class="vx-ico" viewBox="0 0 24 24" ><path d="m9 6 6 6-6 6"/></svg></div></div>
+<b style="font-size:14px;display:flex;gap:8px;align-items:center"><svg class="vx-ico" viewBox="0 0 24 24" style="width:18px;height:18px;color:var(--primary)"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>Chọn khung giờ giao</b>
+<div class="vx-slots2"><div class="vx-tslot" aria-disabled="true">Hôm nay<small>8:00 – 12:00</small></div><div class="vx-tslot" aria-pressed="true">Hôm nay<small>14:00 – 18:00</small></div><div class="vx-tslot">Ngày mai<small>8:00 – 12:00</small></div><div class="vx-tslot">Ngày mai<small>14:00 – 18:00</small></div></div>
+<textarea class="vx-input" placeholder="Ghi chú cho shop (không bắt buộc). Ví dụ: Gọi trước 15 phút, cây để ở sảnh."></textarea>
+<div class="vx-label-row"><span>Yêu cầu xuất hóa đơn điện tử</span><button class="vx-switch" aria-checked="false"></button></div>
+</div></div>
+</body>
+</html>

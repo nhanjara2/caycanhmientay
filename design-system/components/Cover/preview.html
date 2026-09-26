@@ -1,0 +1,47 @@
+<!-- @dsCard height=288 -->
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Cây Cảnh Miền Tây</title>
+<style>
+  html, body { margin:0; height:100%; }
+  body { background:var(--surface); color:var(--ink); font-family:var(--font-sans); overflow:hidden; }
+  .cover { position:relative; height:288px; width:960px; overflow:hidden; }
+  .art { position:absolute; top:0; left:480px; width:480px; height:288px; overflow:hidden; }
+  .art svg { display:block; }
+  .brand { fill:var(--primary); }
+  .tint { fill:var(--primary-soft); }
+  .deep { fill:var(--primary-deep); }
+  .sun { fill:var(--sun); }
+  .blk { rx:var(--radius-md); }
+  .lg { rx:var(--radius-lg); }
+  .sm { rx:var(--radius-sm); }
+  .lf { fill:var(--primary); }
+  .lf.cut { fill:var(--primary-soft); }
+  .words { position:absolute; left:var(--space-6); bottom:var(--space-6); max-width:440px; }
+  .name { margin:0; font-size:80px; line-height:.98; font-weight:700; letter-spacing:-.02em; color:var(--ink); }
+  .tag { margin:var(--space-2) 0 0 4px; font-size:14px; line-height:20px; color:var(--ink-muted); }
+</style>
+</head>
+<body>
+<div class="cover">
+<div class="art" aria-hidden="true">
+<svg viewBox="0 0 480 288" width="480" height="288">
+<!--
+  blocks      primary 144x232 slab bled off the top (the brand green, largest) · primary-soft 128x168 · primary-deep 176x224 bleeding off the right edge (header colour) · sun 64x32 once (it only ever means flash sale) — about 35% of 960x288
+  arrangement one tall primary slab with satellites, bottoms on one line space-6 above the edge, space-4 gutters
+  pattern     leaf motif, from "Hệ thống thiết kế cho website bán cây": leaves drawn as two radius-lg-scale arcs (24px = space-6), primary on the deep block thinning toward the top-left, three cut into the slab in primary-soft, two loose on the tint
+  scales      sides in space-2 multiples; gutters space-4; leaf pitch 40 (space-8 + space-2); corners radius-md on slab and tint, radius-lg on deep, radius-sm on sun
+-->
+<rect class="brand blk" x="16" y="-16" width="144" height="232" rx="12"/>
+<rect class="sun sm" x="16" y="232" width="64" height="32" rx="6"/>
+<rect class="tint blk" x="176" y="96" width="128" height="168" rx="12"/>
+<rect class="deep lg" x="320" y="40" width="184" height="224" rx="20"/>
+<path class="lf" d="M336 80 A24 24 0 0 1 360 56 A24 24 0 0 1 336 80Z"/><path class="lf" d="M376 80 A24 24 0 0 1 400 56 A24 24 0 0 1 376 80Z"/><path class="lf" d="M416 80 A24 24 0 0 1 440 56 A24 24 0 0 1 416 80Z"/><path class="lf" d="M456 80 A24 24 0 0 1 480 56 A24 24 0 0 1 456 80Z"/><path class="lf" d="M336 120 A24 24 0 0 1 360 96 A24 24 0 0 1 336 120Z"/><path class="lf" d="M376 120 A24 24 0 0 1 400 96 A24 24 0 0 1 376 120Z"/><path class="lf" d="M416 120 A24 24 0 0 1 440 96 A24 24 0 0 1 416 120Z"/><path class="lf" d="M456 120 A24 24 0 0 1 480 96 A24 24 0 0 1 456 120Z"/><path class="lf" d="M376 160 A24 24 0 0 1 400 136 A24 24 0 0 1 376 160Z"/><path class="lf" d="M416 160 A24 24 0 0 1 440 136 A24 24 0 0 1 416 160Z"/><path class="lf" d="M456 160 A24 24 0 0 1 480 136 A24 24 0 0 1 456 160Z"/><path class="lf" d="M416 200 A24 24 0 0 1 440 176 A24 24 0 0 1 416 200Z"/><path class="lf" d="M456 200 A24 24 0 0 1 480 176 A24 24 0 0 1 456 200Z"/><path class="lf" d="M456 240 A24 24 0 0 1 480 216 A24 24 0 0 1 456 240Z"/><path class="lf cut" d="M32 192 A24 24 0 0 1 56 168 A24 24 0 0 1 32 192Z"/><path class="lf cut" d="M72 192 A24 24 0 0 1 96 168 A24 24 0 0 1 72 192Z"/><path class="lf cut" d="M112 152 A24 24 0 0 1 136 128 A24 24 0 0 1 112 152Z"/><path class="lf" d="M208 136 A24 24 0 0 1 232 112 A24 24 0 0 1 208 136Z"/><path class="lf" d="M248 176 A24 24 0 0 1 272 152 A24 24 0 0 1 248 176Z"/>
+</svg>
+</div>
+<div class="words"><h1 class="name">Cây Cảnh<br>Miền Tây</h1><p class="tag">Cây khỏe từ nhà vườn miền Tây — tìm nhanh, mua rõ giá.</p></div>
+</div>
+</body>
+</html>

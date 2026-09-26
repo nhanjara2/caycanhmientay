@@ -1,0 +1,110 @@
+/* Sinh tu design-system/tokens.json — dung `node tools/build-tokens.mjs`, khong sua tay. */
+
+:root { color-scheme: light; }
+
+:root,
+[data-theme="light"] {
+  --surface: #ffffff;
+  --surface-page: #eef3ef;
+  --surface-sunken: #f5f8f6;
+  --ink: #1c2a22;
+  --ink-muted: #56665c;
+  --border: #d9e3dc;
+  --primary: #1a7f37;
+  --primary-hover: #156b2e;
+  --primary-deep: #0f4a24;
+  --primary-soft: #e3f2e8;
+  --on-primary: #ffffff;
+  --on-deep: #ffffff;
+  --on-deep-muted: #b9d8c3;
+  --sale: #c2410c;
+  --on-sale: #ffffff;
+  --sun: #f6b90a;
+  --ink-on-sun: #2a1d00;
+  --success: #157347;
+  --danger: #b42318;
+  --warning-soft: #fff4d6;
+  --shadow-card: 0 1px 2px rgba(15,74,36,0.06), 0 2px 8px rgba(15,74,36,0.06);
+  --shadow-pop: 0 8px 28px rgba(15,74,36,0.16);
+}
+
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+  --font-sans: "Be Vietnam Pro", "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+/* Tiêu đề */
+.display {
+  font-family: var(--font-sans);
+  font-size: 32px;
+  line-height: 40px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.heading-1 {
+  font-family: var(--font-sans);
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 700;
+}
+.heading-2 {
+  font-family: var(--font-sans);
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 600;
+}
+.heading-3 {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 600;
+}
+
+/* Nội dung */
+.body {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+}
+.body-sm {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 400;
+}
+.caption {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+}
+.label {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+}
+
+/* Giá */
+.price {
+  font-family: var(--font-sans);
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 700;
+}
+.price-lg {
+  font-family: var(--font-sans);
+  font-size: 28px;
+  line-height: 36px;
+  font-weight: 700;
+}
