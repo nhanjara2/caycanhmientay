@@ -22,3 +22,4 @@ export function AccountGate({ children }: { children: ReactNode }) {
   }
   return <>{children}</>;
 }
+
