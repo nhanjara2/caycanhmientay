@@ -14,7 +14,7 @@ type Props = { searchParams: Promise<{ ma?: string }> };
 export default async function OrderSuccessPage({ searchParams }: Props) {
   const code = ((await searchParams).ma ?? '').slice(0, 20);
   const [store, user] = await Promise.all([cookies(), getCurrentUser()]);
-  const order = code ? getOrderByCode(code) : undefined;
+  const order = code ? await getOrderByCode(code) : undefined;
   // Chỉ người vừa đặt trên trình duyệt này hoặc chủ tài khoản mới xem được chi tiết đơn.
   const canView = order && (store.get(LAST_ORDER_COOKIE)?.value === code || (user && canViewOrder(order, user)));
 

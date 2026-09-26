@@ -16,8 +16,8 @@ export default async function OrdersPage({ searchParams }: Props) {
   if (!user) return null; // AccountGate (layout) mời đăng nhập
   const raw = (await searchParams)['trang-thai'];
   const tab: OrderTab = raw && raw in ORDER_TABS ? (raw as OrderTab) : 'tat-ca';
-  const orders = listOrdersForUser(user, tab);
-  const counts = countOrdersByTab(user);
+  const orders = await listOrdersForUser(user, tab);
+  const counts = await countOrdersByTab(user);
 
   return (
     <div className="vx-acctpage">

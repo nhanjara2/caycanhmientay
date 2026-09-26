@@ -1,25 +1,21 @@
 import 'server-only';
-import Database from 'better-sqlite3';
-import { drizzle, type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
-import { mkdirSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { Pool } from 'pg';
 import * as schema from './schema';
-import { seedIfEmpty } from './seed';
 
-export type DB = BetterSQLite3Database<typeof schema>;
+export type DB = NodePgDatabase<typeof schema>;
 
-const FILE = process.env.DATABASE_FILE ?? join(process.cwd(), 'data/app.db');
+// Dùng node-postgres (pg) với Supabase "Transaction pooler" (cổng 6543). Không dùng thư viện `postgres`:
+// nó gửi dồn nhiều truy vấn trên một kết nối (pipelining) và bị treo qua pooler này.
+// Tạo bảng + dữ liệu mẫu: `npm run db:setup` (tự chạy trước `npm run build`).
+/** Supabase: mã hóa đường truyền (không kiểm chứng chứng chỉ — Supabase dùng CA riêng). */
+const sslFor = (url: string) => (/localhost|127\.0\.0\.1/.test(url) ? undefined : { rejectUnauthorized: false });
 
 function open(): DB {
-  mkdirSync(dirname(FILE), { recursive: true });
-  const sqlite = new Database(FILE);
-  sqlite.pragma('journal_mode = WAL');
-  sqlite.pragma('foreign_keys = ON');
-  const db = drizzle({ client: sqlite, schema });
-  migrate(db, { migrationsFolder: join(process.cwd(), 'drizzle') });
-  seedIfEmpty(db);
-  return db;
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error('Thiếu biến môi trường DATABASE_URL (chuỗi kết nối Supabase)');
+  const client = new Pool({ connectionString: url, max: 5, idleTimeoutMillis: 20_000, ssl: sslFor(url) });
+  return drizzle({ client, schema });
 }
 
 // Giữ một kết nối qua các lần hot-reload khi chạy dev.

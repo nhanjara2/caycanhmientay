@@ -40,6 +40,6 @@ export async function updateProfileAction(input: unknown) {
   if (!user) return { ok: false as const, error: 'Vui lòng đăng nhập' };
   const p = ProfileSchema.safeParse(input);
   if (!p.success) return { ok: false as const, error: p.error.issues[0].message };
-  const u = db.update(schema.users).set({ name: p.data.name, email: p.data.email || null }).where(eq(schema.users.id, user.id)).returning().get();
+  const [u] = await db.update(schema.users).set({ name: p.data.name, email: p.data.email || null }).where(eq(schema.users.id, user.id)).returning();
   return { ok: true as const, user: auth.publicUser(u) };
 }

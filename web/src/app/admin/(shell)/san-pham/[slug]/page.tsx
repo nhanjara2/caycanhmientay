@@ -24,7 +24,7 @@ export default async function AdminProductPage({ params }: Props) {
   const { slug } = await params;
   let initial = EMPTY;
   if (slug !== 'moi') {
-    const p = getProductAdmin(slug);
+    const p = await getProductAdmin(slug);
     if (!p) notFound();
     initial = {
       slug: p.slug, sku: p.sku, name: p.name, category: p.category, sub: p.sub, icon: p.icon as IconName, origin: p.origin,

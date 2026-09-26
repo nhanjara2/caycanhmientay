@@ -23,40 +23,41 @@ export type AddressInput = z.infer<typeof AddressSchema>;
 export type Address = typeof addresses.$inferSelect;
 
 export const listAddresses = (userId: number) =>
-  db.select().from(addresses).where(eq(addresses.userId, userId)).orderBy(desc(addresses.isDefault), desc(addresses.id)).all();
+  db.select().from(addresses).where(eq(addresses.userId, userId)).orderBy(desc(addresses.isDefault), desc(addresses.id));
 
 /** Tạo hoặc sửa (id có = sửa). Địa chỉ đầu tiên luôn là mặc định; chỉ một địa chỉ mặc định. */
-export function saveAddress(userId: number, input: AddressInput, id?: number) {
-  return db.transaction((tx) => {
-    const own = id ? tx.select().from(addresses).where(and(eq(addresses.id, id), eq(addresses.userId, userId))).get() : undefined;
+export async function saveAddress(userId: number, input: AddressInput, id?: number) {
+  return db.transaction(async (tx) => {
+    // Khóa sổ địa chỉ của khách trong lúc sửa (giữ đúng một địa chỉ mặc định).
+    const mine = await tx.select().from(addresses).where(eq(addresses.userId, userId)).for('update');
+    const own = id ? mine.find((a) => a.id === id) : undefined;
     if (id && !own) return { ok: false as const, error: 'Không tìm thấy địa chỉ' };
-    const count = tx.select({ id: addresses.id }).from(addresses).where(eq(addresses.userId, userId)).all().length;
+    const count = mine.length;
     const isDefault = input.isDefault || count === 0 || (own?.isDefault ?? false);
-    if (isDefault) tx.update(addresses).set({ isDefault: false }).where(eq(addresses.userId, userId)).run();
+    if (count >= 20 && !own) return { ok: false as const, error: 'Sổ địa chỉ tối đa 20 địa chỉ' };
+    if (isDefault) await tx.update(addresses).set({ isDefault: false }).where(eq(addresses.userId, userId));
     const values = { ...input, phone: normalizePhone(input.phone), isDefault };
-    if (own) tx.update(addresses).set(values).where(eq(addresses.id, own.id)).run();
-    else {
-      if (count >= 20) return { ok: false as const, error: 'Sổ địa chỉ tối đa 20 địa chỉ' };
-      tx.insert(addresses).values({ ...values, userId }).run();
-    }
+    if (own) await tx.update(addresses).set(values).where(eq(addresses.id, own.id));
+    else await tx.insert(addresses).values({ ...values, userId });
     return { ok: true as const };
   });
 }
 
-export function deleteAddress(userId: number, id: number) {
-  return db.transaction((tx) => {
-    const own = tx.select().from(addresses).where(and(eq(addresses.id, id), eq(addresses.userId, userId))).get();
+export async function deleteAddress(userId: number, id: number) {
+  return db.transaction(async (tx) => {
+    const mine = await tx.select().from(addresses).where(eq(addresses.userId, userId)).for('update');
+    const own = mine.find((a) => a.id === id);
     if (!own) return false;
-    tx.delete(addresses).where(eq(addresses.id, id)).run();
+    await tx.delete(addresses).where(eq(addresses.id, id));
     // Xóa địa chỉ mặc định thì địa chỉ mới nhất còn lại thành mặc định.
     if (own.isDefault) {
-      const next = tx.select({ id: addresses.id }).from(addresses).where(eq(addresses.userId, userId)).orderBy(desc(addresses.id)).get();
-      if (next) tx.update(addresses).set({ isDefault: true }).where(eq(addresses.id, next.id)).run();
+      const next = mine.filter((a) => a.id !== id).sort((a, b) => b.id - a.id)[0];
+      if (next) await tx.update(addresses).set({ isDefault: true }).where(eq(addresses.id, next.id));
     }
     return true;
   });
 }
 
 /** Địa chỉ của chính khách (dùng khi đặt hàng để kiểm tra vùng giao). */
-export const getAddress = (userId: number, id: number) =>
-  db.select().from(addresses).where(and(eq(addresses.id, id), eq(addresses.userId, userId))).get();
+export const getAddress = async (userId: number, id: number) =>
+  (await db.select().from(addresses).where(and(eq(addresses.id, id), eq(addresses.userId, userId))))[0];

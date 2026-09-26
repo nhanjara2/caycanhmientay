@@ -16,8 +16,8 @@ export const metadata: Metadata = { title: 'Bảo hành cây' };
 export default async function WarrantyPage() {
   const user = await getCurrentUser();
   if (!user) return null; // AccountGate (layout) mời đăng nhập
-  const items = eligibleItems(user).map((i) => ({ itemId: i.itemId, name: i.name, label: i.label, icon: i.icon, code: i.code, daysLeft: i.daysLeft }));
-  const requests = listWarrantyForUser(user.id);
+  const items = (await eligibleItems(user)).map((i) => ({ itemId: i.itemId, name: i.name, label: i.label, icon: i.icon, code: i.code, daysLeft: i.daysLeft }));
+  const requests = await listWarrantyForUser(user.id);
 
   return (
     <div className="vx-acctpage">

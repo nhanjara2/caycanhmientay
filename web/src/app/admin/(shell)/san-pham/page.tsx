@@ -17,7 +17,7 @@ export default async function AdminProductsPage({ searchParams }: Props) {
   const sp = await searchParams;
   const category = getCategory(sp.danh_muc ?? '')?.slug;
   const q = sp.q?.slice(0, 60);
-  const rows = listProductsAdmin({ category, q });
+  const rows = await listProductsAdmin({ category, q });
   const isAdmin = me.role === 'admin';
 
   return (

@@ -1,9 +1,9 @@
 import 'server-only';
 import { randomBytes } from 'node:crypto';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { eq } from 'drizzle-orm';
+import { db, schema } from './db';
 
-export const UPLOAD_DIR = process.env.UPLOAD_DIR ?? join(process.cwd(), 'data/uploads');
+// Ảnh lưu ngay trong database (warranty_photos.data) — máy chủ Vercel không giữ file ghi ra ổ đĩa.
 const MAX_BYTES = 2 * 1024 * 1024; // ảnh đã nén ở trình duyệt ~300–600KB
 
 /** Nhận diện ảnh bằng byte đầu file (không tin phần mở rộng hay content-type do trình duyệt gửi). */
@@ -14,20 +14,19 @@ function sniff(buf: Buffer): { mime: string; ext: string } | null {
   return null;
 }
 
-export type SavedImage = { file: string; mime: string };
+export type SavedImage = { file: string; mime: string; data: Buffer };
 
 export async function saveImage(f: File): Promise<SavedImage | { error: string }> {
   if (f.size > MAX_BYTES) return { error: 'Ảnh quá lớn (tối đa 2MB)' };
   const buf = Buffer.from(await f.arrayBuffer());
   const t = sniff(buf);
   if (!t) return { error: 'Chỉ nhận ảnh JPG, PNG hoặc WebP' };
-  mkdirSync(UPLOAD_DIR, { recursive: true });
   const file = `${randomBytes(16).toString('hex')}.${t.ext}`;
-  writeFileSync(join(UPLOAD_DIR, file), buf);
-  return { file, mime: t.mime };
+  return { file, mime: t.mime, data: buf };
 }
 
 /** Tên file chỉ gồm hex + đuôi — chặn đường dẫn kiểu "../". */
 export const isSafeName = (name: string) => /^[a-f0-9]{32}\.(jpg|png|webp)$/.test(name);
 
-export const readUpload = (name: string) => readFileSync(join(UPLOAD_DIR, name));
+export const readUpload = async (name: string) =>
+  (await db.select({ data: schema.warrantyPhotos.data }).from(schema.warrantyPhotos).where(eq(schema.warrantyPhotos.file, name)))[0]?.data ?? null;

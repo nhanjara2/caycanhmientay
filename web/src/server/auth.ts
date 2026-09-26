@@ -1,5 +1,5 @@
 import 'server-only';
-import { and, desc, eq, gt, isNull } from 'drizzle-orm';
+import { and, desc, eq, gt, isNull, sql } from 'drizzle-orm';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createHash, createHmac, randomBytes, randomInt, timingSafeEqual } from 'node:crypto';
@@ -42,9 +42,8 @@ export async function requestOtp(rawPhone: string): Promise<OtpRequestResult> {
   const phone = normalizePhone(rawPhone);
   const now = Date.now();
 
-  const recent = db.select().from(otpCodes)
-    .where(and(eq(otpCodes.phone, phone), gt(otpCodes.createdAt, new Date(now - 60 * 60 * 1000))))
-    .all();
+  const recent = await db.select().from(otpCodes)
+    .where(and(eq(otpCodes.phone, phone), gt(otpCodes.createdAt, new Date(now - 60 * 60 * 1000))));
   const last = recent.reduce<number>((m, r) => Math.max(m, r.createdAt.getTime()), 0);
   if (now - last < OTP_RESEND_MS) {
     return { ok: false, error: 'Vui lòng đợi trước khi gửi lại mã', retryAfter: Math.ceil((OTP_RESEND_MS - (now - last)) / 1000) };
@@ -53,16 +52,22 @@ export async function requestOtp(rawPhone: string): Promise<OtpRequestResult> {
 
   const code = String(randomInt(0, 1_000_000)).padStart(6, '0');
   // Mã mới thay mã cũ: mã cũ chưa dùng hết hiệu lực ngay.
-  db.update(otpCodes).set({ consumedAt: new Date(now) }).where(and(eq(otpCodes.phone, phone), isNull(otpCodes.consumedAt))).run();
-  db.insert(otpCodes).values({ phone, codeHash: hmac(`${phone}:${code}`), expiresAt: new Date(now + OTP_TTL_MS) }).run();
+  await db.update(otpCodes).set({ consumedAt: new Date(now) }).where(and(eq(otpCodes.phone, phone), isNull(otpCodes.consumedAt)));
+  await db.insert(otpCodes).values({ phone, codeHash: hmac(`${phone}:${code}`), expiresAt: new Date(now + OTP_TTL_MS) });
   await sendOtp(phone, code);
-  // Chỉ khi chạy dev: trả mã về để thử nghiệm không cần Zalo/SMS.
-  return { ok: true, devCode: process.env.NODE_ENV === 'production' ? undefined : code };
+  // Chạy dev, hoặc OTP_DEMO=1 khi chưa có nhà cung cấp OTP: trả mã về để thử nghiệm không cần Zalo/SMS.
+  return { ok: true, devCode: showCode() ? code : undefined };
 }
+
+/**
+ * OTP_DEMO=1: hiện mã ngay trong hộp đăng nhập (chỉ để chạy thử trên Vercel khi chưa nối Zalo/SMS).
+ * Ai biết SĐT cũng đăng nhập được — TẮT trước khi mở bán thật.
+ */
+const showCode = () => process.env.NODE_ENV !== 'production' || process.env.OTP_DEMO === '1';
 
 /** Gửi OTP qua Zalo ZNS, SMS dự phòng. TODO: nối nhà cung cấp thật (ZNS template, SMS brandname). */
 async function sendOtp(phone: string, code: string) {
-  if (process.env.NODE_ENV === 'production' && !process.env.OTP_PROVIDER) {
+  if (!showCode() && !process.env.OTP_PROVIDER) {
     throw new Error('Chưa cấu hình nhà cung cấp OTP (OTP_PROVIDER)');
   }
   console.info(`[OTP] ${maskPhone(phone)}: ${code}`);
@@ -74,26 +79,29 @@ export async function verifyOtp(rawPhone: string, code: string): Promise<VerifyR
   const phone = normalizePhone(rawPhone);
   if (!isPhone(phone) || !/^\d{6}$/.test(code)) return { ok: false, error: 'Mã xác thực chưa đúng' };
 
-  const otp = db.select().from(otpCodes)
+  const [otp] = await db.select().from(otpCodes)
     .where(and(eq(otpCodes.phone, phone), gt(otpCodes.expiresAt, new Date()), isNull(otpCodes.consumedAt)))
     .orderBy(desc(otpCodes.id))
-    .get();
+    .limit(1);
   if (!otp) return { ok: false, error: 'Mã đã hết hạn. Vui lòng gửi lại mã.' };
   if (otp.attempts >= OTP_MAX_ATTEMPTS) return { ok: false, error: 'Nhập sai quá nhiều lần. Vui lòng gửi lại mã.' };
 
   const a = Buffer.from(otp.codeHash, 'hex');
   const b = Buffer.from(hmac(`${phone}:${code}`), 'hex');
   if (a.length !== b.length || !timingSafeEqual(a, b)) {
-    db.update(otpCodes).set({ attempts: otp.attempts + 1 }).where(eq(otpCodes.id, otp.id)).run();
+    await db.update(otpCodes).set({ attempts: sql`${otpCodes.attempts} + 1` }).where(eq(otpCodes.id, otp.id));
     return { ok: false, error: 'Mã xác thực chưa đúng' };
   }
-  db.update(otpCodes).set({ consumedAt: new Date() }).where(eq(otpCodes.id, otp.id)).run();
+  // Chỉ một request dùng được mã (hai lần bấm cùng lúc không tạo hai phiên).
+  const used = await db.update(otpCodes).set({ consumedAt: new Date() })
+    .where(and(eq(otpCodes.id, otp.id), isNull(otpCodes.consumedAt))).returning({ id: otpCodes.id });
+  if (!used.length) return { ok: false, error: 'Mã đã được sử dụng. Vui lòng gửi lại mã.' };
 
   // Tài khoản định danh bằng SĐT: chưa có thì tạo mới, có rồi thì đăng nhập vào tài khoản đó.
-  let user = db.select().from(users).where(eq(users.phone, phone)).get();
-  if (!user) user = db.insert(users).values({ phone }).returning().get();
+  await db.insert(users).values({ phone }).onConflictDoNothing({ target: users.phone });
+  let [user] = await db.select().from(users).where(eq(users.phone, phone));
   if (adminPhones().includes(phone) && user.role !== 'admin') {
-    user = db.update(users).set({ role: 'admin' }).where(eq(users.id, user.id)).returning().get();
+    [user] = await db.update(users).set({ role: 'admin' }).where(eq(users.id, user.id)).returning();
   }
   await createSession(user.id);
   return { ok: true, user: { id: user.id, phone: user.phone, name: user.name, role: user.role, points: user.points } };
@@ -104,7 +112,7 @@ export async function verifyOtp(rawPhone: string, code: string): Promise<VerifyR
 async function createSession(userId: number) {
   const token = randomBytes(32).toString('base64url');
   const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000);
-  db.insert(sessions).values({ id: sha256(token), userId, expiresAt }).run();
+  await db.insert(sessions).values({ id: sha256(token), userId, expiresAt });
   (await cookies()).set(SESSION_COOKIE, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -117,7 +125,7 @@ async function createSession(userId: number) {
 export async function destroySession() {
   const store = await cookies();
   const token = store.get(SESSION_COOKIE)?.value;
-  if (token) db.delete(sessions).where(eq(sessions.id, sha256(token))).run();
+  if (token) await db.delete(sessions).where(eq(sessions.id, sha256(token)));
   store.delete(SESSION_COOKIE);
 }
 
@@ -127,9 +135,9 @@ export type SessionUser = { id: number; phone: string; name: string | null; role
 export const getCurrentUser = cache(async (): Promise<SessionUser | null> => {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!token) return null;
-  const row = db.select({ id: users.id, phone: users.phone, name: users.name, role: users.role, points: users.points, expiresAt: sessions.expiresAt })
+  const [row] = await db.select({ id: users.id, phone: users.phone, name: users.name, role: users.role, points: users.points, expiresAt: sessions.expiresAt })
     .from(sessions).innerJoin(users, eq(users.id, sessions.userId))
-    .where(eq(sessions.id, sha256(token))).get();
+    .where(eq(sessions.id, sha256(token)));
   if (!row || row.expiresAt.getTime() < Date.now()) return null;
   const { expiresAt: _e, ...user } = row;
   return user;

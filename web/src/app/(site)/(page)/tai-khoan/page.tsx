@@ -12,7 +12,7 @@ export const metadata: Metadata = { title: 'Thông tin cá nhân' };
 export default async function ProfilePage() {
   const user = await getCurrentUser();
   if (!user) return null; // AccountGate (layout) mời đăng nhập
-  const row = db.select({ email: schema.users.email }).from(schema.users).where(eq(schema.users.id, user.id)).get();
+  const [row] = await db.select({ email: schema.users.email }).from(schema.users).where(eq(schema.users.id, user.id));
 
   return (
     <div className="vx-acctpage">

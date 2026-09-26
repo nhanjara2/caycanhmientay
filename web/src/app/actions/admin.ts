@@ -23,7 +23,7 @@ export async function saveProductAction(input: unknown) {
   const staff = await requireStaff('admin');
   const p = ProductInputSchema.safeParse(input);
   if (!p.success) return { ok: false as const, error: p.error.issues[0].message };
-  const r = saveProduct(p.data, actorName(staff));
+  const r = await saveProduct(p.data, actorName(staff));
   if (r.ok) refreshCatalog(r.slug);
   return r;
 }
@@ -32,7 +32,7 @@ export async function setProductActiveAction(slug: unknown, active: unknown) {
   await requireStaff('admin');
   const p = z.object({ slug: z.string().max(120), active: z.boolean() }).safeParse({ slug, active });
   if (!p.success) return { ok: false as const };
-  const ok = setProductActive(p.data.slug, p.data.active);
+  const ok = await setProductActive(p.data.slug, p.data.active);
   if (ok) refreshCatalog(p.data.slug);
   return { ok };
 }
@@ -62,21 +62,21 @@ export async function adjustStockAction(input: unknown) {
   let slug: string | undefined;
 
   if (v.mode === 'import') {
-    const prod = db.select().from(schema.products).where(eq(schema.products.slug, v.slug)).get();
+    const [prod] = await db.select().from(schema.products).where(eq(schema.products.slug, v.slug));
     if (!prod) return { ok: false as const, error: 'Không tìm thấy sản phẩm' };
     if (tracksLots(prod) && (!v.lotCode || !v.expiry)) return { ok: false as const, error: 'Hàng có hạn dùng: nhập Số lô và Hạn dùng (in trên bao bì)' };
     if (v.expiry && v.expiry < todayVN()) return { ok: false as const, error: 'Lô này đã hết hạn, không nhập kho' };
-    const after = applyStock(db, v.slug, v.idx, v.qty, 'import', actor, v.note, { storeId: v.storeId, lotCode: v.lotCode, expiry: v.expiry });
+    const after = await db.transaction((tx) => applyStock(tx, v.slug, v.idx, v.qty, 'import', actor, v.note, { storeId: v.storeId, lotCode: v.lotCode, expiry: v.expiry }));
     if (after === null) return { ok: false as const, error: 'Không tìm thấy quy cách' };
     slug = v.slug;
   } else if (v.mode === 'count') {
-    const lot = db.select().from(schema.stockLots).where(eq(schema.stockLots.id, v.lotId)).get();
+    const [lot] = await db.select().from(schema.stockLots).where(eq(schema.stockLots.id, v.lotId));
     if (!lot) return { ok: false as const, error: 'Không tìm thấy lô' };
-    db.transaction((tx) => countLot(tx, v.lotId, v.qty, actor, v.note));
+    await db.transaction((tx) => countLot(tx, v.lotId, v.qty, actor, v.note));
     slug = lot.productSlug;
   } else {
     if (v.from === v.to) return { ok: false as const, error: 'Chọn hai cửa hàng khác nhau' };
-    const ok = db.transaction((tx) => transferStock(tx, v.slug, v.idx, v.from, v.to, v.qty, actor, v.note));
+    const ok = await db.transaction((tx) => transferStock(tx, v.slug, v.idx, v.from, v.to, v.qty, actor, v.note));
     if (!ok) return { ok: false as const, error: 'Cửa hàng chuyển đi không đủ hàng còn hạn' };
     slug = v.slug;
   }
@@ -88,7 +88,7 @@ export async function stockHistoryAction(slug: unknown, idx: unknown) {
   await requireStaff();
   const p = z.object({ slug: z.string().max(120), idx: z.number().int().min(0) }).safeParse({ slug, idx });
   if (!p.success) return [];
-  return recentMoves(p.data.slug, p.data.idx).map(({ m, store, lotCode, expiry }) => ({
+  return (await recentMoves(p.data.slug, p.data.idx)).map(({ m, store, lotCode, expiry }) => ({
     id: m.id, reason: m.reason, delta: m.delta, after: m.after, actor: m.actor, note: m.note,
     store, lotCode, expiry, createdAt: m.createdAt.getTime(),
   }));

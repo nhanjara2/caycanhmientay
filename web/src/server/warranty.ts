@@ -23,23 +23,23 @@ type Owner = Pick<SessionUser, 'id' | 'phone'>;
 const ownedBy = (u: Owner) => or(eq(orders.userId, u.id), eq(orders.phone, u.phone));
 
 /** Cây sống trong đơn đã giao, còn hạn bảo hành, chưa có yêu cầu đang mở / đã duyệt. */
-export function eligibleItems(u: Owner) {
-  const rows = db.select({
+export async function eligibleItems(u: Owner) {
+  const rows = await db.select({
     itemId: orderItems.id, name: orderItems.name, label: orderItems.label, icon: orderItems.icon, price: orderItems.price,
     orderId: orders.id, code: orders.code, updatedAt: orders.updatedAt,
   })
     .from(orderItems).innerJoin(orders, eq(orders.id, orderItems.orderId))
     .where(and(ownedBy(u), eq(orders.status, 'delivered'), eq(orderItems.ship, 'plant')))
-    .orderBy(desc(orders.id)).all();
+    .orderBy(desc(orders.id));
   if (!rows.length) return [];
 
   const delivered = new Map(
-    db.select({ orderId: orderEvents.orderId, at: orderEvents.createdAt }).from(orderEvents)
-      .where(and(inArray(orderEvents.orderId, rows.map((r) => r.orderId)), eq(orderEvents.status, 'delivered'))).all()
+    (await db.select({ orderId: orderEvents.orderId, at: orderEvents.createdAt }).from(orderEvents)
+      .where(and(inArray(orderEvents.orderId, rows.map((r) => r.orderId)), eq(orderEvents.status, 'delivered'))))
       .map((e) => [e.orderId, e.at.getTime()]),
   );
   const taken = new Set(
-    db.select({ id: W.orderItemId }).from(W).where(and(inArray(W.orderItemId, rows.map((r) => r.itemId)), ne(W.status, 'rejected'))).all().map((r) => r.id),
+    (await db.select({ id: W.orderItemId }).from(W).where(and(inArray(W.orderItemId, rows.map((r) => r.itemId)), ne(W.status, 'rejected')))).map((r) => r.id),
   );
   return rows
     .map((r) => {
@@ -48,7 +48,7 @@ export function eligibleItems(u: Owner) {
     })
     .filter((r) => r.daysLeft > 0 && !taken.has(r.itemId));
 }
-export type EligibleItem = ReturnType<typeof eligibleItems>[number];
+export type EligibleItem = Awaited<ReturnType<typeof eligibleItems>>[number];
 
 export const WarrantyInputSchema = z.object({
   orderItemId: z.coerce.number().int().positive(),
@@ -59,7 +59,7 @@ export const WarrantyInputSchema = z.object({
 });
 
 export async function createWarranty(u: Owner, input: z.infer<typeof WarrantyInputSchema>, files: File[]) {
-  const item = eligibleItems(u).find((i) => i.itemId === input.orderItemId);
+  const item = (await eligibleItems(u)).find((i) => i.itemId === input.orderItemId);
   if (!item) return { ok: false as const, error: 'Cây này không còn trong hạn bảo hành hoặc đã có yêu cầu' };
   if (files.length < 1) return { ok: false as const, error: 'Cần ít nhất 1 ảnh cây' };
   if (files.length > 3) return { ok: false as const, error: 'Tối đa 3 ảnh' };
@@ -70,12 +70,12 @@ export async function createWarranty(u: Owner, input: z.infer<typeof WarrantyInp
     if ('error' in r) return { ok: false as const, error: r.error };
     saved.push(r);
   }
-  const id = db.transaction((tx) => {
-    const row = tx.insert(W).values({
+  const id = await db.transaction(async (tx) => {
+    const [row] = await tx.insert(W).values({
       orderId: item.orderId, orderItemId: item.itemId, userId: u.id, symptoms: input.symptoms,
       description: input.description || null, placement: input.placement || null, watering: input.watering || null,
-    }).returning({ id: W.id }).get();
-    for (const s of saved) tx.insert(WP).values({ requestId: row.id, file: s.file, mime: s.mime }).run();
+    }).returning({ id: W.id });
+    await tx.insert(WP).values(saved.map((s) => ({ requestId: row.id, file: s.file, mime: s.mime, data: s.data })));
     return row.id;
   });
   return { ok: true as const, code: warrantyCode(id) };
@@ -95,23 +95,23 @@ function base() {
     .innerJoin(users, eq(users.id, W.userId));
 }
 
-function withPhotos<T extends { w: { id: number } }>(rows: T[]) {
+async function withPhotos<T extends { w: { id: number } }>(rows: T[]) {
   if (!rows.length) return [];
-  const photos = db.select().from(WP).where(inArray(WP.requestId, rows.map((r) => r.w.id))).all();
+  const photos = await db.select({ requestId: WP.requestId, file: WP.file }).from(WP).where(inArray(WP.requestId, rows.map((r) => r.w.id))).orderBy(WP.id);
   return rows.map((r) => ({ ...r, code: warrantyCode(r.w.id), photos: photos.filter((p) => p.requestId === r.w.id).map((p) => p.file) }));
 }
 
-export const listWarrantyForUser = (userId: number) => withPhotos(base().where(eq(W.userId, userId)).orderBy(desc(W.id)).all());
+export const listWarrantyForUser = async (userId: number) => withPhotos(await base().where(eq(W.userId, userId)).orderBy(desc(W.id)));
 
-export function listWarranty(status?: (typeof WARRANTY_STATUSES)[number]) {
-  return withPhotos(base().where(status ? eq(W.status, status) : undefined).orderBy(desc(W.id)).limit(100).all());
+export async function listWarranty(status?: (typeof WARRANTY_STATUSES)[number]) {
+  return withPhotos(await base().where(status ? eq(W.status, status) : undefined).orderBy(desc(W.id)).limit(100));
 }
 
-export const getWarranty = (id: number) => withPhotos(base().where(eq(W.id, id)).all())[0];
-export type WarrantyFull = NonNullable<ReturnType<typeof getWarranty>>;
+export const getWarranty = async (id: number) => (await withPhotos(await base().where(eq(W.id, id))))[0];
+export type WarrantyFull = NonNullable<Awaited<ReturnType<typeof getWarranty>>>;
 
-export function countWarrantyByStatus() {
-  const all = db.select({ s: W.status }).from(W).all();
+export async function countWarrantyByStatus() {
+  const all = await db.select({ s: W.status }).from(W);
   return Object.fromEntries(WARRANTY_STATUSES.map((s) => [s, all.filter((r) => r.s === s).length])) as Record<(typeof WARRANTY_STATUSES)[number], number>;
 }
 
@@ -139,57 +139,58 @@ type OrderRow = typeof orders.$inferSelect;
 type Line = { slug: string; idx: number; name: string; label: string; unit: string; icon: string; ship: 'plant' | 'supply'; oldPrice: number | null; qty: number };
 
 /** Đơn 0đ do bảo hành tạo: giao lại cùng địa chỉ/khung giờ đơn gốc, đã xác nhận sẵn, trừ kho với lý do "warranty". */
-function createWarrantyOrder(tx: Tx, src: OrderRow, userId: number, lines: Line[], note: string, actor: string) {
-  const code = newOrderCode(tx);
+async function createWarrantyOrder(tx: Tx, src: OrderRow, userId: number, lines: Line[], note: string, actor: string) {
+  const code = await newOrderCode(tx);
   if (!code) throw new DecideError('Không tạo được mã đơn, vui lòng thử lại');
-  const order = tx.insert(orders).values({
+  const [order] = await tx.insert(orders).values({
     code, kind: 'warranty', userId, status: 'confirmed', customerName: src.customerName, phone: src.phone,
     delivery: src.delivery, address: src.address, slot: src.slot, note, paymentMethod: src.paymentMethod, paid: true,
     original: 0, subtotal: 0, plantShip: 0, supplyShip: 0, total: 0,
-  }).returning({ id: orders.id }).get();
+  }).returning({ id: orders.id });
   for (const l of lines) {
-    tx.insert(orderItems).values({
+    await tx.insert(orderItems).values({
       orderId: order.id, productSlug: l.slug, optionIdx: l.idx, name: l.name, label: l.label, unit: l.unit,
       icon: l.icon, ship: l.ship, price: 0, oldPrice: l.oldPrice, qty: l.qty,
-    }).run();
-    if (applyStock(tx, l.slug, l.idx, -l.qty, 'warranty', actor, code) === null) {
+    });
+    if (await applyStock(tx, l.slug, l.idx, -l.qty, 'warranty', actor, code) === null) {
       throw new DecideError(`Kho không đủ “${l.name} · ${l.label}” (cần ${l.qty}). Nhập thêm hàng hoặc chọn hướng xử lý khác.`);
     }
   }
-  tx.insert(orderEvents).values([
+  await tx.insert(orderEvents).values([
     { orderId: order.id, status: 'pending', actor, note },
     { orderId: order.id, status: 'confirmed', actor },
-  ]).run();
+  ]);
   return { id: order.id, code };
 }
 
-export function decideWarranty(input: z.infer<typeof DecideSchema>, actor: string) {
-  const w = db.select().from(W).where(eq(W.id, input.id)).get();
-  if (!w) return { ok: false as const, error: 'Không tìm thấy yêu cầu' };
-  if (w.status !== 'pending') return { ok: false as const, error: 'Yêu cầu đã được xử lý' };
-  const item = db.select().from(orderItems).where(eq(orderItems.id, w.orderItemId)).get();
-  const src = db.select().from(orders).where(eq(orders.id, w.orderId)).get();
-  if (!item || !src) return { ok: false as const, error: 'Không tìm thấy đơn gốc' };
-  if (input.qty > item.qty) return { ok: false as const, error: `Đơn gốc chỉ có ${item.qty} cây` };
-  const code = warrantyCode(w.id);
-
+export async function decideWarranty(input: z.infer<typeof DecideSchema>, actor: string) {
   try {
-    const r = db.transaction((tx) => {
+    return await db.transaction(async (tx) => {
+      // Khóa yêu cầu: hai kỹ sư duyệt cùng lúc không tạo hai đơn đổi.
+      const [w] = await tx.select().from(W).where(eq(W.id, input.id)).for('update');
+      if (!w) throw new DecideError('Không tìm thấy yêu cầu');
+      if (w.status !== 'pending') throw new DecideError('Yêu cầu đã được xử lý');
+      const [item] = await tx.select().from(orderItems).where(eq(orderItems.id, w.orderItemId));
+      const [src] = await tx.select().from(orders).where(eq(orders.id, w.orderId));
+      if (!item || !src) throw new DecideError('Không tìm thấy đơn gốc');
+      if (input.qty > item.qty) throw new DecideError(`Đơn gốc chỉ có ${item.qty} cây`);
+      const code = warrantyCode(w.id);
+
       let replacement: { id: number; code: string } | null = null;
       let refundAmount: number | null = null;
 
       if (input.resolution === 'replace') {
-        replacement = createWarrantyOrder(tx, src, w.userId, [{
+        replacement = await createWarrantyOrder(tx, src, w.userId, [{
           slug: item.productSlug, idx: item.optionIdx, name: item.name, label: item.label, unit: item.unit,
           icon: item.icon, ship: item.ship, oldPrice: item.price, qty: input.qty,
         }], `Đổi cây bảo hành ${code} (đơn gốc ${src.code})`, actor);
       }
       if (input.resolution === 'rescue' && input.gift) {
-        const p = tx.select().from(schema.products).where(eq(schema.products.slug, RESCUE_GIFT_SLUG)).get();
-        const opt = p && tx.select().from(schema.productOptions)
-          .where(and(eq(schema.productOptions.productSlug, p.slug), eq(schema.productOptions.idx, 0))).get();
+        const [p] = await tx.select().from(schema.products).where(eq(schema.products.slug, RESCUE_GIFT_SLUG));
+        const [opt] = p ? await tx.select().from(schema.productOptions)
+          .where(and(eq(schema.productOptions.productSlug, p.slug), eq(schema.productOptions.idx, 0))) : [];
         if (!p || !opt) throw new DecideError('Không tìm thấy vật tư tặng (Trichoderma). Bỏ chọn “Tặng vật tư” để tiếp tục.');
-        replacement = createWarrantyOrder(tx, src, w.userId, [{
+        replacement = await createWarrantyOrder(tx, src, w.userId, [{
           slug: p.slug, idx: 0, name: p.name, label: opt.label, unit: p.unit, icon: p.icon, ship: p.ship, oldPrice: opt.price, qty: 1,
         }], `Tặng vật tư cứu cây — bảo hành ${code} (đơn gốc ${src.code})`, actor);
       }
@@ -199,22 +200,21 @@ export function decideWarranty(input: z.infer<typeof DecideSchema>, actor: strin
         if (refundAmount <= 0) throw new DecideError('Số tiền hoàn phải lớn hơn 0');
       }
 
-      tx.update(W).set({
+      await tx.update(W).set({
         status: input.resolution === 'reject' ? 'rejected' : 'approved',
         resolution: input.resolution, cause: input.cause || null, engineerNote: input.note || null,
         decidedBy: actor, decidedAt: new Date(),
         replacementOrderId: replacement?.id ?? null,
         refundAmount, refundStatus: refundAmount ? 'pending' : null,
-      }).where(eq(W.id, w.id)).run();
+      }).where(eq(W.id, w.id));
 
       const tail = replacement ? ` — đơn giao ${replacement.code}` : refundAmount ? ` — hoàn ${refundAmount.toLocaleString('vi-VN')}đ` : '';
-      notify(tx, w.userId, {
+      await notify(tx, w.userId, {
         kind: 'warranty', href: '/tai-khoan/bao-hanh', external: true,
         text: `Kỹ sư đã phản hồi yêu cầu bảo hành #${code}: **${WARRANTY_RESOLUTION_LABEL[input.resolution]}**${tail}`,
       });
-      return { replacementCode: replacement?.code ?? null };
+      return { ok: true as const, replacementCode: replacement?.code ?? null };
     });
-    return { ok: true as const, ...r };
   } catch (e) {
     if (e instanceof DecideError) return { ok: false as const, error: e.message };
     throw e;
@@ -230,16 +230,16 @@ export const RefundSchema = z.object({
  * Kế toán xác nhận đã chuyển tiền hoàn cho khách (chưa có cổng thanh toán nên làm tay).
  * TODO: khi nối cổng (MoMo/ZaloPay/VNPay) gọi API hoàn tiền ở đây và lưu mã giao dịch trả về.
  */
-export function confirmRefund(input: z.infer<typeof RefundSchema>, actor: string) {
-  const w = db.select().from(W).where(eq(W.id, input.id)).get();
-  if (!w || w.resolution !== 'refund') return { ok: false as const, error: 'Không tìm thấy yêu cầu hoàn tiền' };
-  if (w.refundStatus === 'done') return { ok: false as const, error: 'Yêu cầu đã hoàn tiền' };
-  db.transaction((tx) => {
-    tx.update(W).set({ refundStatus: 'done', refundRef: input.ref, refundedBy: actor, refundedAt: new Date() }).where(eq(W.id, w.id)).run();
-    notify(tx, w.userId, {
+export async function confirmRefund(input: z.infer<typeof RefundSchema>, actor: string) {
+  return db.transaction(async (tx) => {
+    const [w] = await tx.select().from(W).where(eq(W.id, input.id)).for('update');
+    if (!w || w.resolution !== 'refund') return { ok: false as const, error: 'Không tìm thấy yêu cầu hoàn tiền' };
+    if (w.refundStatus === 'done') return { ok: false as const, error: 'Yêu cầu đã hoàn tiền' };
+    await tx.update(W).set({ refundStatus: 'done', refundRef: input.ref, refundedBy: actor, refundedAt: new Date() }).where(eq(W.id, w.id));
+    await notify(tx, w.userId, {
       kind: 'warranty', href: '/tai-khoan/bao-hanh', external: true,
       text: `Đã hoàn **${(w.refundAmount ?? 0).toLocaleString('vi-VN')}đ** cho yêu cầu bảo hành #${warrantyCode(w.id)}`,
     });
+    return { ok: true as const };
   });
-  return { ok: true as const };
 }

@@ -17,8 +17,8 @@ export default async function AdminWarrantyListPage({ searchParams }: Props) {
   await requireStaff();
   const raw = (await searchParams).trang_thai;
   const status = WARRANTY_STATUSES.includes(raw as Status) ? (raw as Status) : undefined;
-  const rows = listWarranty(status);
-  const counts = countWarrantyByStatus();
+  const rows = await listWarranty(status);
+  const counts = await countWarrantyByStatus();
 
   return (
     <div className="ad-body">

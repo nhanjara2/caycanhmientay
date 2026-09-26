@@ -13,7 +13,7 @@ export const metadata: Metadata = { title: 'Chi tiết đơn hàng', robots: { i
 export default async function OrderDetailPage({ params }: Props) {
   const user = await getCurrentUser();
   if (!user) return null; // AccountGate (layout) mời đăng nhập
-  const order = getOrderByCode((await params).ma.slice(0, 20));
+  const order = await getOrderByCode((await params).ma.slice(0, 20));
   if (!order || !canViewOrder(order, user)) notFound();
 
   return (

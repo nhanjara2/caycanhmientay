@@ -18,12 +18,12 @@ export default async function AdminInventoryPage({ searchParams }: Props) {
   const sp = await searchParams;
   const tab: InventoryTab = sp.tab && sp.tab in INVENTORY_TABS ? (sp.tab as InventoryTab) : 'tat-ca';
   const q = sp.q?.slice(0, 60);
-  const stores = listStores();
+  const stores = await listStores();
   const store = stores.find((s) => s.code === sp.kho);
-  const all = listInventory({ tab, q });
+  const all = await listInventory({ tab, q });
   // Lọc theo cửa hàng: cột Tồn là tồn tại cửa hàng đó
   const rows = store ? all.map((r) => ({ ...r, stock: r.byStore[store.id] ?? 0, lots: r.lots.filter((l) => l.storeId === store.id) })) : all;
-  const sum = inventorySummary();
+  const sum = await inventorySummary();
   const maxStock = Math.max(40, ...rows.map((r) => r.stock));
   const href = (p: { tab?: string; kho?: string }) => {
     const u = new URLSearchParams();

@@ -1,26 +1,12 @@
 {
   "version": "7",
-  "dialect": "sqlite",
+  "dialect": "postgresql",
   "entries": [
     {
       "idx": 0,
-      "version": "6",
-      "when": 1790394646786,
+      "version": "7",
+      "when": 1790414548355,
       "tag": "0000_init",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1790396309284,
-      "tag": "0001_addresses_stock_warranty",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1790409343773,
-      "tag": "0002_stores_lots_notifications",
       "breakpoints": true
     }
   ]

@@ -1,5 +1,5 @@
 import 'server-only';
-import { and, asc, desc, eq, like, or, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, ilike, or, sql } from 'drizzle-orm';
 import * as z from 'zod';
 import { categories, getCategory, normalize } from '@/lib/catalog';
 import { db, schema } from './db';
@@ -51,76 +51,76 @@ export type ProductInput = z.infer<typeof ProductInputSchema>;
 
 const slugify = (s: string) => normalize(s).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80);
 
-export function listProductsAdmin({ q, category }: { q?: string; category?: string } = {}) {
+export async function listProductsAdmin({ q, category }: { q?: string; category?: string } = {}) {
   const term = q?.trim() ? `%${q.trim().replace(/[%_]/g, '')}%` : undefined;
-  const rows = db.select({
+  const rows = await db.select({
     slug: products.slug, sku: products.sku, name: products.name, icon: products.icon, category: products.category, sub: products.sub,
     unit: products.unit, active: products.active, pesticide: products.pesticide, ship: products.ship, sold: products.sold,
-    minPrice: sql<number>`min(${productOptions.price})`, stock: sql<number>`sum(${productOptions.stock})`, variants: sql<number>`count(${productOptions.idx})`,
+    minPrice: sql`min(${productOptions.price})`.mapWith(Number), stock: sql`coalesce(sum(${productOptions.stock}), 0)`.mapWith(Number), variants: count(productOptions.idx),
   })
     .from(products).leftJoin(productOptions, eq(productOptions.productSlug, products.slug))
-    .where(and(category ? eq(products.category, category) : undefined, term ? or(like(products.name, term), like(products.sku, term)) : undefined))
-    .groupBy(products.slug).orderBy(desc(products.active), asc(products.name)).all();
+    .where(and(category ? eq(products.category, category) : undefined, term ? or(ilike(products.name, term), ilike(products.sku, term)) : undefined))
+    .groupBy(products.slug).orderBy(desc(products.active), asc(products.name));
   return rows;
 }
 
-export function getProductAdmin(slug: string) {
-  const p = db.select().from(products).where(eq(products.slug, slug)).get();
+export async function getProductAdmin(slug: string) {
+  const [p] = await db.select().from(products).where(eq(products.slug, slug));
   if (!p) return undefined;
-  const options = db.select().from(productOptions).where(eq(productOptions.productSlug, slug)).orderBy(asc(productOptions.idx)).all();
+  const options = await db.select().from(productOptions).where(eq(productOptions.productSlug, slug)).orderBy(asc(productOptions.idx));
   return { ...p, options };
 }
 
 export type SaveResult = { ok: true; slug: string } | { ok: false; error: string };
 
-export function saveProduct(input: ProductInput, actor: string): SaveResult {
+export async function saveProduct(input: ProductInput, actor: string): Promise<SaveResult> {
   const values = {
     name: input.name, category: input.category, sub: input.sub, icon: input.icon, origin: input.origin, ship: input.ship,
     pesticide: input.pesticide, unit: input.unit, spec: input.spec, lead: input.lead, specs: input.specs, active: input.active,
   };
 
   if (input.slug) {
-    const existing = getProductAdmin(input.slug);
+    const existing = await getProductAdmin(input.slug);
     if (!existing) return { ok: false, error: 'Không tìm thấy sản phẩm' };
     // Không xóa quy cách cũ: đơn hàng cũ tham chiếu theo thứ tự quy cách.
     if (input.options.length < existing.options.length) return { ok: false, error: 'Không thể xóa quy cách đã có. Hãy ẩn sản phẩm hoặc đổi tên quy cách.' };
-    db.transaction((tx) => {
-      tx.update(products).set({
+    await db.transaction(async (tx) => {
+      await tx.update(products).set({
         ...values,
         flashTotal: input.flash ? (existing.flashTotal ?? 50) : null,
         flashSold: input.flash ? (existing.flashSold ?? 0) : null,
-      }).where(eq(products.slug, input.slug!)).run();
-      input.options.forEach((o, idx) => {
+      }).where(eq(products.slug, input.slug!));
+      for (const [idx, o] of input.options.entries()) {
         if (idx < existing.options.length) {
-          tx.update(productOptions).set({ label: o.label, price: o.price, oldPrice: o.oldPrice })
-            .where(and(eq(productOptions.productSlug, input.slug!), eq(productOptions.idx, idx))).run();
+          await tx.update(productOptions).set({ label: o.label, price: o.price, oldPrice: o.oldPrice })
+            .where(and(eq(productOptions.productSlug, input.slug!), eq(productOptions.idx, idx)));
         } else {
-          tx.insert(productOptions).values({ productSlug: input.slug!, idx, label: o.label, price: o.price, oldPrice: o.oldPrice, stock: 0 }).run();
-          if (o.stock) applyStock(tx, input.slug!, idx, o.stock, 'import', actor, 'Tồn đầu kỳ');
+          await tx.insert(productOptions).values({ productSlug: input.slug!, idx, label: o.label, price: o.price, oldPrice: o.oldPrice, stock: 0 });
+          if (o.stock) await applyStock(tx, input.slug!, idx, o.stock, 'import', actor, 'Tồn đầu kỳ');
         }
-      });
+      }
     });
     return { ok: true, slug: input.slug };
   }
 
   let slug = slugify(input.name) || 'san-pham';
-  for (let i = 2; db.select({ s: products.slug }).from(products).where(eq(products.slug, slug)).get(); i++) slug = `${slugify(input.name)}-${i}`;
+  for (let i = 2; (await db.select({ s: products.slug }).from(products).where(eq(products.slug, slug))).length; i++) slug = `${slugify(input.name)}-${i}`;
   const prefix = input.ship === 'plant' ? 'MT' : 'VT';
-  const n = (db.select({ n: sql<number>`count(*)` }).from(products).get()?.n ?? 0) + 1;
+  const n = ((await db.select({ n: count() }).from(products))[0]?.n ?? 0) + 1;
   let sku = `${prefix}-${String(90000 + n)}`;
-  for (let i = 1; db.select({ s: products.sku }).from(products).where(eq(products.sku, sku)).get(); i++) sku = `${prefix}-${String(90000 + n + i)}`;
+  for (let i = 1; (await db.select({ s: products.sku }).from(products).where(eq(products.sku, sku))).length; i++) sku = `${prefix}-${String(90000 + n + i)}`;
 
-  db.transaction((tx) => {
-    tx.insert(products).values({ slug, sku, ...values, keywords: [], flashTotal: input.flash ? 50 : null, flashSold: input.flash ? 0 : null }).run();
-    input.options.forEach((o, idx) => {
-      tx.insert(productOptions).values({ productSlug: slug, idx, label: o.label, price: o.price, oldPrice: o.oldPrice, stock: 0 }).run();
-      if (o.stock) applyStock(tx, slug, idx, o.stock, 'import', actor, 'Tồn đầu kỳ');
-    });
+  await db.transaction(async (tx) => {
+    await tx.insert(products).values({ slug, sku, ...values, keywords: [], flashTotal: input.flash ? 50 : null, flashSold: input.flash ? 0 : null });
+    for (const [idx, o] of input.options.entries()) {
+      await tx.insert(productOptions).values({ productSlug: slug, idx, label: o.label, price: o.price, oldPrice: o.oldPrice, stock: 0 });
+      if (o.stock) await applyStock(tx, slug, idx, o.stock, 'import', actor, 'Tồn đầu kỳ');
+    }
   });
   return { ok: true, slug };
 }
 
-export function setProductActive(slug: string, active: boolean) {
-  const r = db.update(products).set({ active }).where(eq(products.slug, slug)).run();
-  return r.changes > 0;
+export async function setProductActive(slug: string, active: boolean) {
+  const r = await db.update(products).set({ active }).where(eq(products.slug, slug)).returning({ slug: products.slug });
+  return r.length > 0;
 }

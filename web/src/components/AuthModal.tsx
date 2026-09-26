@@ -130,7 +130,7 @@ export function OtpLoginBox({ onDone, onClose, title = 'Đăng nhập Cây Cản
               {' · '}<a style={{ cursor: 'pointer' }} onClick={() => sendOtp()}>Gửi qua SMS</a>
             </div>
             <button className="vx-btn vx-btn--primary vx-btn--lg vx-btn--block" disabled={code.length < 6 || busy}>Xác nhận</button>
-            {devCode && <p className="au-terms">Môi trường phát triển — mã OTP: <b>{devCode}</b> (cũng in ở log server).</p>}
+            {devCode && <p className="au-terms">Chế độ chạy thử — mã OTP: <b>{devCode}</b> (cũng in ở log server).</p>}
           </form>
         )}
       </div>

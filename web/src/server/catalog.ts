@@ -10,9 +10,9 @@ const { products: P, productOptions: O } = schema;
 
 type Row = typeof P.$inferSelect;
 
-function hydrate(rows: Row[]): Product[] {
+async function hydrate(rows: Row[]): Promise<Product[]> {
   if (!rows.length) return [];
-  const opts = db.select().from(O).where(inArray(O.productSlug, rows.map((r) => r.slug))).orderBy(asc(O.idx)).all();
+  const opts = await db.select().from(O).where(inArray(O.productSlug, rows.map((r) => r.slug))).orderBy(asc(O.idx));
   return rows.map((r) => ({
     slug: r.slug, sku: r.sku, name: r.name, category: r.category, sub: r.sub, icon: r.icon as IconName,
     origin: r.origin, ship: r.ship, pesticide: r.pesticide || undefined, unit: r.unit, spec: r.spec, lead: r.lead,
@@ -24,39 +24,39 @@ function hydrate(rows: Row[]): Product[] {
 
 const active = eq(P.active, true);
 
-// better-sqlite3 chạy đồng bộ: gọi connection() để trang đọc dữ liệu mới mỗi request thay vì chụp lúc build.
+// Gọi connection() để trang đọc dữ liệu mới mỗi request thay vì chụp lúc build.
 
 /** Toàn bộ sản phẩm đang bán; gọi nhiều lần trong một request chỉ truy vấn một lần. */
 export const allProducts = cache(async () => {
   await connection();
-  return hydrate(db.select().from(P).where(active).all());
+  return hydrate(await db.select().from(P).where(active).orderBy(asc(P.createdAt), asc(P.slug)));
 });
 
 export async function getProduct(slug: string) {
   await connection();
-  return hydrate(db.select().from(P).where(and(eq(P.slug, slug), active)).all())[0];
+  return (await hydrate(await db.select().from(P).where(and(eq(P.slug, slug), active))))[0];
 }
 
 /** Không gọi connection(): dùng trong server action (luôn chạy lúc request). */
-export function getProducts(slugs: string[]) {
-  return slugs.length ? hydrate(db.select().from(P).where(and(inArray(P.slug, slugs), active)).all()) : [];
+export async function getProducts(slugs: string[]) {
+  return slugs.length ? hydrate(await db.select().from(P).where(and(inArray(P.slug, slugs), active))) : [];
 }
 
 export async function productsIn(category: string, sub?: string) {
   await connection();
-  return hydrate(db.select().from(P).where(and(active, eq(P.category, category), sub ? eq(P.sub, sub) : undefined)).all());
+  return hydrate(await db.select().from(P).where(and(active, eq(P.category, category), sub ? eq(P.sub, sub) : undefined)).orderBy(asc(P.createdAt), asc(P.slug)));
 }
 
 export async function flashProducts() {
   await connection();
-  return hydrate(db.select().from(P).where(and(active, isNotNull(P.flashTotal))).all());
+  return hydrate(await db.select().from(P).where(and(active, isNotNull(P.flashTotal))).orderBy(asc(P.createdAt), asc(P.slug)));
 }
 
 /** Số sản phẩm theo "danh mục" và "danh mục/nhóm con" — cho SidebarMenu. */
 export async function categoryCounts(): Promise<Record<string, number>> {
   await connection();
   const out: Record<string, number> = {};
-  for (const r of db.select({ c: P.category, s: P.sub }).from(P).where(active).all()) {
+  for (const r of await db.select({ c: P.category, s: P.sub }).from(P).where(active)) {
     out[r.c] = (out[r.c] ?? 0) + 1;
     out[`${r.c}/${r.s}`] = (out[`${r.c}/${r.s}`] ?? 0) + 1;
   }

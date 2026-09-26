@@ -29,7 +29,7 @@ export async function decideWarrantyAction(input: unknown) {
   const staff = await requireStaff();
   const p = DecideSchema.safeParse(input);
   if (!p.success) return { ok: false as const, error: p.error.issues[0].message };
-  const r = decideWarranty(p.data, staff.name ?? `NV ${staff.phone.slice(-3)}`);
+  const r = await decideWarranty(p.data, staff.name ?? `NV ${staff.phone.slice(-3)}`);
   if (r.ok) {
     revalidatePath('/admin', 'layout');
     revalidatePath('/tai-khoan', 'layout');
@@ -43,7 +43,7 @@ export async function confirmRefundAction(input: unknown) {
   const staff = await requireStaff('admin');
   const p = RefundSchema.safeParse(input);
   if (!p.success) return { ok: false as const, error: p.error.issues[0].message };
-  const r = confirmRefund(p.data, staff.name ?? `NV ${staff.phone.slice(-3)}`);
+  const r = await confirmRefund(p.data, staff.name ?? `NV ${staff.phone.slice(-3)}`);
   if (r.ok) {
     revalidatePath('/admin', 'layout');
     revalidatePath('/tai-khoan/bao-hanh');

@@ -19,7 +19,7 @@ function Delta({ now, before, unit = '%' }: { now: number; before: number; unit?
 /** AdminDashboard với số liệu thật: KPI, doanh thu 14 ngày, việc cần xử lý, nhóm hàng, tồn kho thấp. */
 export default async function AdminDashboardPage() {
   await requireStaff();
-  const s = dashboardStats();
+  const s = await dashboardStats();
   const maxDay = Math.max(1, ...s.days.map((d) => d.revenue));
   const catTotal = s.byCategory.reduce((a, c) => a + c.sum, 0) || 1;
 

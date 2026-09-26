@@ -20,8 +20,11 @@ npx tsc --noEmit                          # typecheck
 
 - Đăng nhập khách: SĐT bất kỳ, khi chạy dev mã OTP hiện ngay trong hộp đăng nhập.
 - Admin: `/admin`, đăng nhập bằng SĐT trong `ADMIN_PHONES` (file `web/.env.local`, hiện là `0909000001`).
-- Database: `web/data/app.db` (SQLite), tự tạo + nạp 18 sản phẩm mẫu. Xóa `web/data/` để làm lại từ đầu. Xem dữ liệu: `npm run db:studio`.
-- Đổi schema (`web/src/server/db/schema.ts`) → `npm run db:generate` (tạo file trong `web/drizzle/`); migration tự chạy khi server khởi động (cần khởi động lại dev server).
+- Database: **Supabase PostgreSQL** (project `fdsgvlmbqkksgibpcuwz`, vùng Mumbai ap-south-1), chuỗi kết nối `DATABASE_URL` trong `web/.env.local` (Transaction pooler cổng 6543). Máy dev và Vercel dùng **chung một database**. Xem dữ liệu: `npm run db:studio` hoặc bảng điều khiển Supabase.
+- Tạo bảng + nạp 18 sản phẩm mẫu + 3 cửa hàng: `npm run db:setup` (`scripts/db-setup.mts`, tự chạy trong `prebuild` nên Vercel tự migrate mỗi lần deploy).
+- Đổi schema (`web/src/server/db/schema.ts`) → `npm run db:generate` (tạo file trong `web/drizzle/`) → `npm run db:setup`. Bảng mới phải thêm `ALTER TABLE … ENABLE ROW LEVEL SECURITY` vào migration (khóa API công khai của Supabase).
+- Driver: `pg` (node-postgres). **Không dùng thư viện `postgres`** — nó pipelining và treo qua Supabase pooler. Mọi truy vấn là async (`await`); ghi nhiều bước dùng `db.transaction(async (tx) => …)`, khóa dòng bằng `.for('update')` (tồn kho, đơn, bảo hành, sổ địa chỉ).
+- Deploy: Vercel (tài khoản nhanjara3), repo GitHub `nhanjara-flora-global/caycanhmientay`, Root Directory `web`, vùng chạy `bom1` (`web/vercel.json`, cùng vùng database). Biến môi trường trên Vercel: `DATABASE_URL`, `AUTH_SECRET`, `ADMIN_PHONES`, `OTP_DEMO=1` (chạy thử: hiện mã OTP trên màn hình — tắt khi bán thật), `SITE_URL`.
 
 ## Kiến trúc `web/src`
 
@@ -32,7 +35,7 @@ npx tsc --noEmit                          # typecheck
 | `app/admin/(shell)` | Admin có menu trái (AdminShell); `requireStaff()` ở layout **và** từng trang/action |
 | `app/admin/pos`, `app/admin/dang-nhap`, `app/nhan-vien` | Màn không có khung admin |
 | `app/actions/*.ts` | Server actions (`'use server'` — chỉ export hàm async). Luôn kiểm tra quyền + Zod trong từng hàm |
-| `server/` | Chỉ chạy trên server (`import 'server-only'`): `db/`, `auth.ts`, `catalog.ts`, `orders.ts`, `inventory.ts`, `products-admin.ts`, `addresses.ts`, `warranty.ts`, `notify.ts`, `uploads.ts`, `stats.ts` |
+| `server/` | Chỉ chạy trên server (`import 'server-only'`): `db/` (schema, kết nối, seed), `auth.ts`, `catalog.ts`, `orders.ts`, `inventory.ts`, `products-admin.ts`, `addresses.ts`, `warranty.ts`, `notify.ts`, `uploads.ts`, `stats.ts` |
 | `app/api/uploads/[file]` | Phục vụ ảnh riêng tư (bảo hành) có kiểm tra quyền |
 | `lib/` | Dùng chung client/server: `catalog.ts` (kiểu + danh mục), `pricing.ts` (tính tiền), `stock.ts` (lô/hạn dùng, vùng giao cây sống), `order-labels.ts`, `address-labels.ts`, `warranty-labels.ts`, `cart.tsx`, `auth.tsx` |
 | `components/` | Component viết tay; `components/admin/`, `components/orders/` |
@@ -50,7 +53,7 @@ Quy tắc đã chốt:
 - Tài khoản định danh bằng SĐT đã xác thực; đơn đặt vãng lai bằng đúng SĐT đó thuộc về tài khoản (`canViewOrder`).
 - Thuốc BVTV: bắt buộc Số đăng ký, Hoạt chất, Liều pha, Thời gian cách ly; giỏ có thuốc phải xác nhận an toàn.
 - Đơn Flash sale không cho COD. Nhận tại vườn không tính phí giao.
-- Server action nhận tối đa 7MB (`next.config.ts`) cho ảnh bảo hành.
+- Server action nhận tối đa 7MB (`next.config.ts`) cho ảnh bảo hành — nhưng Vercel giới hạn thân request **4,5MB**. Ảnh bảo hành lưu trong cột `warranty_photos.data` (bytea), không ghi ổ đĩa.
 - `.pos` trong `components.css` bị dùng trùng (khung POS và số tiền "Miễn phí") — đã vá ở `app/globals.css`.
 
 ## Tiến độ
@@ -60,7 +63,7 @@ Quy tắc đã chốt:
 - Sản phẩm/danh mục/tìm kiếm đọc từ DB; giỏ hàng; thanh toán → tạo đơn trên server (trừ kho, ghi `stock_moves`); trang đặt hàng thành công.
 - Đăng nhập SĐT + OTP (băm, hết hạn 5 phút, gửi lại sau 60s, tối đa 5 mã/giờ, 5 lần sai), phiên trong DB + cookie httpOnly.
 - Tài khoản: hồ sơ (tên, email), đơn hàng (tab, chi tiết, tiến trình, Mua lại, đếm ngày bảo hành), **sổ địa chỉ** (`/tai-khoan/so-dia-chi`: thêm/sửa/xóa, mặc định, điều kiện giao cây lớn) — trang thanh toán tự điền địa chỉ mặc định và cho chọn địa chỉ đã lưu.
-- **Bảo hành cây** (`/tai-khoan/bao-hanh`): 3 bước chọn cây → tối đa 3 ảnh (nén ở trình duyệt ≤1600px) + triệu chứng → gửi. Chỉ cây sống của đơn đã giao, trong 7 ngày, mỗi cây 1 yêu cầu đang mở. Ảnh lưu `web/data/uploads/`, phục vụ qua `/api/uploads/[file]` (chỉ chủ yêu cầu hoặc nhân viên; kiểm tra byte đầu file; chặn `../`).
+- **Bảo hành cây** (`/tai-khoan/bao-hanh`): 3 bước chọn cây → tối đa 3 ảnh (nén ở trình duyệt ≤1600px) + triệu chứng → gửi. Chỉ cây sống của đơn đã giao, trong 7 ngày, mỗi cây 1 yêu cầu đang mở. Ảnh lưu trong database, phục vụ qua `/api/uploads/[file]` (chỉ chủ yêu cầu hoặc nhân viên; kiểm tra byte đầu file; chặn `../`).
 - Admin (menu trái có số việc thật: đơn chờ xác nhận, bảo hành chờ duyệt, hàng dưới mức):
   - Tổng quan (số liệu thật), Đơn hàng (lọc, tìm, chi tiết, đổi trạng thái; hủy → trả kho; giao xong → cộng điểm).
   - **Sản phẩm** (`/admin/san-pham`, thêm `/admin/san-pham/moi`, sửa `/admin/san-pham/<slug>`): loại sản phẩm điền sẵn thông số; thuốc BVTV bắt buộc 4 thông số an toàn; không xóa quy cách cũ (đơn cũ tham chiếu theo thứ tự); bật/tắt bán ngay trong bảng. Chỉ role `admin` được sửa, `staff` chỉ xem.
@@ -85,4 +88,6 @@ Quy tắc đã chốt:
 - Gợi ý thứ tự tiếp: admin Khách hàng (dữ liệu có sẵn: users, orders, addresses) → Yêu thích (bảng mới) → Khuyến mãi/voucher → Vườn của tôi + Lịch chăm cây.
 - Ảnh sản phẩm thật (hiện dùng icon).
 - Nhiều máy chủ → chuyển SQLite sang PostgreSQL (giữ schema Drizzle).
-- Đã commit toàn bộ `web/` (572603c). Đang chuyển repo sang GitHub của nhanjara3 để deploy Vercel; cần đổi SQLite → Supabase (Postgres + Storage) trước khi chạy trên Vercel.
+- Đã chuyển SQLite → Supabase PostgreSQL (26/09/2026), kiểm thử lại toàn bộ luồng (đặt hàng, 2 đơn tranh tồn, hủy trả kho, trạng thái, điểm, bảo hành duyệt trùng, kho nhập/chuyển/kiểm kê, sổ địa chỉ, sản phẩm) + Playwright các trang khách/admin.
+- Mật khẩu database đã lộ trong chat — nên đổi trong Supabase (Settings → Database) rồi sửa `DATABASE_URL` ở `.env.local` và Vercel.
+- Admin Tổng quan chạy ~20 truy vấn lần lượt: nếu chậm thì gộp truy vấn trong `server/stats.ts`.

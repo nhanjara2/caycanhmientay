@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function AdminWarrantyPage({ params }: Props) {
   const staff = await requireStaff();
   const id = Number((await params).id);
-  const r = Number.isInteger(id) && id > 0 ? getWarranty(id) : undefined;
+  const r = Number.isInteger(id) && id > 0 ? await getWarranty(id) : undefined;
   if (!r) notFound();
   const w = r.w;
 

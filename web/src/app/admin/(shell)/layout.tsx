@@ -15,9 +15,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const staff = await requireStaff();
   // Số việc cần làm trên menu trái
   const badges = {
-    '/admin/don-hang': countOrdersByStatus().pending ?? 0,
-    '/admin/bao-hanh': countWarrantyByStatus().pending,
-    '/admin/kho': inventorySummary().low,
+    '/admin/don-hang': (await countOrdersByStatus()).pending ?? 0,
+    '/admin/bao-hanh': (await countWarrantyByStatus()).pending,
+    '/admin/kho': (await inventorySummary()).low,
   };
   return <AdminShell me={publicUser(staff)} badges={badges}>{children}</AdminShell>;
 }

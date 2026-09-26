@@ -18,8 +18,8 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
   const sp = await searchParams;
   const status = ORDER_STATUSES.includes(sp.trang_thai as Status) ? (sp.trang_thai as Status) : undefined;
   const q = sp.q?.slice(0, 60);
-  const orders = listOrders({ status, q });
-  const counts = countOrdersByStatus();
+  const orders = await listOrders({ status, q });
+  const counts = await countOrdersByStatus();
   const total = Object.values(counts).reduce((a, b) => a + (b ?? 0), 0);
   const href = (s?: Status) => `/admin/don-hang${s ? `?trang_thai=${s}` : ''}`;
 

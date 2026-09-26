@@ -1,5 +1,5 @@
 import 'server-only';
-import { and, desc, eq, isNull, sql } from 'drizzle-orm';
+import { and, count, desc, eq, isNull } from 'drizzle-orm';
 import { after } from 'next/server';
 import { db, schema, type DB } from './db';
 import type { NOTIFICATION_KINDS } from './db/schema';
@@ -22,8 +22,8 @@ export type Notice = {
  * Tạo thông báo trong tài khoản khách (ghi cùng transaction nếu truyền tx).
  * Tin gửi ra ngoài chạy sau khi phản hồi xong (next/server `after`), không làm chậm thao tác của nhân viên.
  */
-export function notify(tx: Tx | DB, userId: number, n: Notice) {
-  tx.insert(N).values({ userId, kind: n.kind, text: n.text, href: n.href ?? null }).run();
+export async function notify(tx: Tx | DB, userId: number, n: Notice) {
+  await tx.insert(N).values({ userId, kind: n.kind, text: n.text, href: n.href ?? null });
   if (!n.external) return;
   const run = () => sendExternal(userId, n).catch((e) => console.error('[notify]', e));
   try { after(run); } catch { void run(); }
@@ -33,18 +33,18 @@ const plain = (t: string) => t.replace(/\*\*/g, '');
 const siteUrl = () => process.env.SITE_URL ?? 'http://localhost:3000';
 
 async function sendExternal(userId: number, n: Notice) {
-  const u = db.select({ phone: users.phone, email: users.email, name: users.name }).from(users).where(eq(users.id, userId)).get();
+  const [u] = await db.select({ phone: users.phone, email: users.email, name: users.name }).from(users).where(eq(users.id, userId));
   if (!u) return;
   const subject = 'Cây Cảnh Miền Tây';
   const body = plain(n.text);
   const link = n.href ? `${siteUrl()}${n.href}` : siteUrl();
   const log = (channel: 'zalo' | 'email', to: string, status: 'sent' | 'failed' | 'skipped', error?: string) =>
-    db.insert(OUT).values({ userId, channel, to, subject, body, status, error: error ?? null }).run();
+    db.insert(OUT).values({ userId, channel, to, subject, body, status, error: error ?? null });
 
   // Zalo ZNS: cần template đã duyệt có 3 tham số customer_name, content, link.
   const token = process.env.ZALO_ZNS_ACCESS_TOKEN;
   const template = process.env.ZALO_ZNS_TEMPLATE_ID;
-  if (!token || !template) log('zalo', u.phone, 'skipped', 'Chưa cấu hình ZALO_ZNS_ACCESS_TOKEN / ZALO_ZNS_TEMPLATE_ID');
+  if (!token || !template) await log('zalo', u.phone, 'skipped', 'Chưa cấu hình ZALO_ZNS_ACCESS_TOKEN / ZALO_ZNS_TEMPLATE_ID');
   else {
     try {
       const res = await fetch('https://business.openapi.zalo.me/message/template', {
@@ -57,10 +57,10 @@ async function sendExternal(userId: number, n: Notice) {
         signal: AbortSignal.timeout(10_000),
       });
       const j = (await res.json().catch(() => ({}))) as { error?: number; message?: string };
-      if (res.ok && !j.error) log('zalo', u.phone, 'sent');
-      else log('zalo', u.phone, 'failed', `${res.status} ${j.error ?? ''} ${j.message ?? ''}`.trim());
+      if (res.ok && !j.error) await log('zalo', u.phone, 'sent');
+      else await log('zalo', u.phone, 'failed', `${res.status} ${j.error ?? ''} ${j.message ?? ''}`.trim());
     } catch (e) {
-      log('zalo', u.phone, 'failed', String(e).slice(0, 200));
+      await log('zalo', u.phone, 'failed', String(e).slice(0, 200));
     }
   }
 
@@ -68,7 +68,7 @@ async function sendExternal(userId: number, n: Notice) {
   if (!u.email) return;
   const key = process.env.RESEND_API_KEY;
   const from = process.env.EMAIL_FROM;
-  if (!key || !from) { log('email', u.email, 'skipped', 'Chưa cấu hình RESEND_API_KEY / EMAIL_FROM'); return; }
+  if (!key || !from) { await log('email', u.email, 'skipped', 'Chưa cấu hình RESEND_API_KEY / EMAIL_FROM'); return; }
   try {
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -76,29 +76,29 @@ async function sendExternal(userId: number, n: Notice) {
       body: JSON.stringify({ from, to: u.email, subject: `${subject}: ${body.slice(0, 60)}`, text: `Chào ${u.name ?? 'bạn'},\n\n${body}\n\nXem chi tiết: ${link}\n\nCây Cảnh Miền Tây` }),
       signal: AbortSignal.timeout(10_000),
     });
-    if (res.ok) log('email', u.email, 'sent');
-    else log('email', u.email, 'failed', `${res.status} ${(await res.text().catch(() => '')).slice(0, 180)}`);
+    if (res.ok) await log('email', u.email, 'sent');
+    else await log('email', u.email, 'failed', `${res.status} ${(await res.text().catch(() => '')).slice(0, 180)}`);
   } catch (e) {
-    log('email', u.email, 'failed', String(e).slice(0, 200));
+    await log('email', u.email, 'failed', String(e).slice(0, 200));
   }
 }
 
 /** Chủ đơn: tài khoản đặt đơn, hoặc tài khoản có đúng SĐT đặt hàng (đặt vãng lai). */
-export function orderOwner(tx: Tx | DB, o: { userId: number | null; phone: string }) {
-  return o.userId ?? tx.select({ id: users.id }).from(users).where(eq(users.phone, o.phone)).get()?.id ?? null;
+export async function orderOwner(tx: Tx | DB, o: { userId: number | null; phone: string }) {
+  return o.userId ?? (await tx.select({ id: users.id }).from(users).where(eq(users.phone, o.phone)))[0]?.id ?? null;
 }
 
 // ---- Đọc (NotificationCenter) ----------------------------------------------------------------
 
 export const listNotifications = (userId: number, limit = 30) =>
-  db.select().from(N).where(eq(N.userId, userId)).orderBy(desc(N.id)).limit(limit).all();
+  db.select().from(N).where(eq(N.userId, userId)).orderBy(desc(N.id)).limit(limit);
 
-export const unreadCount = (userId: number) =>
-  db.select({ n: sql<number>`count(*)` }).from(N).where(and(eq(N.userId, userId), isNull(N.readAt))).get()?.n ?? 0;
+export const unreadCount = async (userId: number) =>
+  (await db.select({ n: count() }).from(N).where(and(eq(N.userId, userId), isNull(N.readAt))))[0]?.n ?? 0;
 
-export function markRead(userId: number, id?: number) {
-  db.update(N).set({ readAt: new Date() })
-    .where(and(eq(N.userId, userId), isNull(N.readAt), id ? eq(N.id, id) : undefined)).run();
+export async function markRead(userId: number, id?: number) {
+  await db.update(N).set({ readAt: new Date() })
+    .where(and(eq(N.userId, userId), isNull(N.readAt), id ? eq(N.id, id) : undefined));
 }
 
-export const recentOutbound = (limit = 50) => db.select().from(OUT).orderBy(desc(OUT.id)).limit(limit).all();
+export const recentOutbound = (limit = 50) => db.select().from(OUT).orderBy(desc(OUT.id)).limit(limit);

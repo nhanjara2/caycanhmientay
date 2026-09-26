@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: 'Sổ địa chỉ' };
 export default async function AddressBookPage() {
   const user = await getCurrentUser();
   if (!user) return null; // AccountGate (layout) mời đăng nhập
-  const items = listAddresses(user.id).map(({ createdAt: _c, userId: _u, ...a }) => a);
+  const items = (await listAddresses(user.id)).map(({ createdAt: _c, userId: _u, ...a }) => a);
   return (
     <div className="vx-acctpage">
       <div className="vx-crumb">
@@ -19,7 +19,7 @@ export default async function AddressBookPage() {
       </div>
       <div className="vx-acctgrid">
         <AccountSidebar />
-        <AddressBook items={items} stores={listStores().map(({ id, code, name, lat, lng }) => ({ id, code, name, lat, lng }))} />
+        <AddressBook items={items} stores={(await listStores()).map(({ id, code, name, lat, lng }) => ({ id, code, name, lat, lng }))} />
       </div>
     </div>
   );

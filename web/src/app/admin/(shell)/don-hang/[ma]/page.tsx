@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 /** AdminOrderDetail: tiến trình, sản phẩm, khách, thanh toán, lịch sử (dữ liệu thật). */
 export default async function AdminOrderDetailPage({ params }: Props) {
   await requireStaff();
-  const o = getOrderByCode((await params).ma.slice(0, 20));
+  const o = await getOrderByCode((await params).ma.slice(0, 20));
   if (!o) notFound();
   const cur = TIMELINE.findIndex((t) => t.status === o.status);
 
