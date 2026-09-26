@@ -1,0 +1,23 @@
+import type { Metadata } from 'next';
+import { AdminShell } from '@/components/AdminShell';
+import { publicUser, requireStaff } from '@/server/auth';
+import { inventorySummary } from '@/server/inventory';
+import { countOrdersByStatus } from '@/server/orders';
+import { countWarrantyByStatus } from '@/server/warranty';
+
+export const metadata: Metadata = {
+  title: { default: 'Quản trị', template: '%s · Admin | Cây Cảnh Miền Tây' },
+  robots: { index: false },
+};
+
+/** Chỉ nhân viên/admin. Mỗi trang và server action của admin vẫn tự kiểm tra lại quyền. */
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const staff = await requireStaff();
+  // Số việc cần làm trên menu trái
+  const badges = {
+    '/admin/don-hang': countOrdersByStatus().pending ?? 0,
+    '/admin/bao-hanh': countWarrantyByStatus().pending,
+    '/admin/kho': inventorySummary().low,
+  };
+  return <AdminShell me={publicUser(staff)} badges={badges}>{children}</AdminShell>;
+}

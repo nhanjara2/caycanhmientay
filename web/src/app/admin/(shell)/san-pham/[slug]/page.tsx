@@ -1,0 +1,37 @@
+import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import { ProductForm, type ProductFormValue } from '@/components/admin/ProductForm';
+import type { IconName } from '@/components/Icon';
+import { requireStaff } from '@/server/auth';
+import { getProductAdmin } from '@/server/products-admin';
+
+type Props = { params: Promise<{ slug: string }> };
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  return { title: (await params).slug === 'moi' ? 'Thêm sản phẩm' : 'Sửa sản phẩm' };
+}
+
+const EMPTY: ProductFormValue = {
+  name: '', category: 'cay-canh', sub: 'kieng-la', icon: 'plant', origin: 'Việt Nam', ship: 'plant', pesticide: false,
+  unit: 'Chậu', spec: '', lead: '', active: true, flash: false,
+  specs: [['Chiều cao', ''], ['Chậu', ''], ['Ánh sáng', ''], ['Tưới nước', ''], ['Nguồn gốc', ''], ['An toàn thú cưng', '']],
+  options: [{ label: '', price: 0, oldPrice: null, stock: 0 }],
+};
+
+/** AdminProductForm: /admin/san-pham/moi để thêm, /admin/san-pham/<slug> để sửa. */
+export default async function AdminProductPage({ params }: Props) {
+  const me = await requireStaff();
+  const { slug } = await params;
+  let initial = EMPTY;
+  if (slug !== 'moi') {
+    const p = getProductAdmin(slug);
+    if (!p) notFound();
+    initial = {
+      slug: p.slug, sku: p.sku, name: p.name, category: p.category, sub: p.sub, icon: p.icon as IconName, origin: p.origin,
+      ship: p.ship, pesticide: p.pesticide, unit: p.unit, spec: p.spec, lead: p.lead, specs: p.specs, active: p.active,
+      flash: p.flashTotal !== null,
+      options: p.options.map((o) => ({ label: o.label, price: o.price, oldPrice: o.oldPrice, stock: o.stock })),
+    };
+  }
+  return <ProductForm key={slug} initial={initial} canEdit={me.role === 'admin'} />;
+}

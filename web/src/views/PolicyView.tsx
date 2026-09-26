@@ -1,0 +1,146 @@
+// Sinh tự động từ design-system/components/PolicyLayout/preview.html — không sửa tay.
+// Chạy `npm run gen-views` sau khi đổi preview.html hoặc scripts/views.config.mjs.
+import Link from 'next/link';
+import { PolicyNav } from '@/components/PolicyNav';
+
+export function PolicyView() {
+  return (
+    <>
+      {' '}
+      <div style={{ padding: '12px 24px 0', background: 'var(--surface)' }}>
+        <div className="vx-crumb">
+          <Link href="/">Trang chủ</Link>/<Link href="/chinh-sach/gioi-thieu">Về Cây Cảnh Miền Tây</Link>/
+          <span>Giới thiệu</span>
+        </div>
+      </div>
+      <div className="vx-policypage">
+        <PolicyNav />
+        <article className="vx-policy">
+          <h1>Giới thiệu Cây Cảnh Miền Tây</h1>{' '}
+          <div className="vx-policy__meta">
+            <span>Cập nhật lần cuối: 15/09/2026</span>
+            <span>·</span>
+            <span>5 phút đọc</span>
+            <span className="acts">
+              <button className="vx-btn vx-btn--ghost vx-btn--sm">
+                <svg className="vx-ico" viewBox="0 0 24 24" style={{ width: '16px', height: '16px' }}>
+                  <path d="M7 9V3h10v6" />
+                  <rect x="4" y="9" width="16" height="8" rx="2" />
+                  <path d="M7 14h10v7H7z" />
+                </svg>
+                In
+              </button>
+              <button className="vx-btn vx-btn--ghost vx-btn--sm">
+                <svg className="vx-ico" viewBox="0 0 24 24" style={{ width: '16px', height: '16px' }}>
+                  <circle cx="6" cy="12" r="2.5" />
+                  <circle cx="18" cy="6" r="2.5" />
+                  <circle cx="18" cy="18" r="2.5" />
+                  <path d="m8.2 11 7.6-4M8.2 13l7.6 4" />
+                </svg>
+                Chia sẻ
+              </button>
+            </span>
+          </div>{' '}
+          <h2>I. Về chúng tôi</h2>{' '}
+          <div className="vx-quote">
+            <svg viewBox="0 0 32 32">
+              <path d="M4 26V16c0-6 3-10 9-11l1 3c-3 1-5 3-5 7h5v11zm15 0V16c0-6 3-10 9-11l1 3c-3 1-5 3-5 7h5v11z" />
+            </svg>
+            <p>
+              Cây Cảnh Miền Tây là hệ thống cung cấp cây cảnh, thuốc bảo vệ thực vật, phân bón và vật tư làm vườn. Chúng
+              tôi sở hữu vườn ươm riêng, đội ngũ kỹ sư nông nghiệp tư vấn miễn phí, và giao cây tận nơi với chính sách
+              bảo hành cây sống.
+            </p>
+          </div>{' '}
+          <div className="vx-facts">
+            <div>
+              <b>2 ha</b>
+              <span>Vườn ươm tại Đà Lạt</span>
+            </div>
+            <div>
+              <b>1.200+</b>
+              <span>Mã cây và vật tư</span>
+            </div>
+            <div>
+              <b>8</b>
+              <span>Kỹ sư, nghệ nhân</span>
+            </div>
+            <div>
+              <b>7 ngày</b>
+              <span>Bảo hành cây sống</span>
+            </div>
+          </div>{' '}
+          <h2>II. Sứ mệnh</h2>
+          <p>
+            Mang cây xanh đến gần hơn với mọi gia đình và văn phòng, kèm kiến thức chăm sóc đúng để cây sống khỏe lâu
+            dài, thay vì mua về rồi bỏ.
+          </p>{' '}
+          <h2>III. Cam kết</h2>
+          <ul>
+            <li>
+              <b>Cây thật như ảnh:</b>
+              {' ảnh chụp tại vườn, gửi ảnh cây trước khi giao.'}
+            </li>
+            <li>
+              <b>Vật tư chính hãng:</b>
+              {' thuốc BVTV có số đăng ký, phân bón có nguồn gốc rõ ràng.'}
+            </li>
+            <li>
+              <b>Tư vấn trọn đời:</b>
+              {' hỏi kỹ sư miễn phí qua Zalo cho mọi cây đã mua.'}
+            </li>
+          </ul>{' '}
+          <h2>IV. Thời gian bảo hành theo loại cây</h2>{' '}
+          <div className="vx-table-wrap">
+            <table className="vx-table">
+              <thead>
+                <tr>
+                  <th>Loại</th>
+                  <th>Thời gian</th>
+                  <th>Điều kiện</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Cây kiểng lá, cây văn phòng</td>
+                  <td>7 ngày</td>
+                  <td>Ảnh cây khi nhận, chăm theo hướng dẫn</td>
+                </tr>
+                <tr>
+                  <td>Lan, cây hoa</td>
+                  <td>3 ngày</td>
+                  <td>Không áp dụng rụng hoa tự nhiên</td>
+                </tr>
+                <tr>
+                  <td>Bonsai, cây thế</td>
+                  <td>14 ngày</td>
+                  <td>Kèm hướng dẫn chăm riêng</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>{' '}
+          <div className="vx-callout">
+            <svg className="vx-ico" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 11v5M12 8v.5" />
+            </svg>
+            <div>
+              {'Xem đầy đủ điều kiện tại '}
+              <a>Chính sách bảo hành cây</a>. Mọi thắc mắc vui lòng gọi 1800 xxxx (8:00 – 21:00).
+            </div>
+          </div>{' '}
+          <div className="vx-feedback">
+            <span>Nội dung này có hữu ích với bạn?</span>
+            <button className="vx-btn vx-btn--outline vx-btn--sm">
+              <svg className="vx-ico" viewBox="0 0 24 24" style={{ width: '14px', height: '14px' }}>
+                <path d="M7 11v9H4v-9zM7 11l4-8a2 2 0 0 1 2 2v4h6a2 2 0 0 1 2 2l-2 7a2 2 0 0 1-2 2H7" />
+              </svg>
+              Có
+            </button>
+            <button className="vx-btn vx-btn--ghost vx-btn--sm">Không</button>
+          </div>
+        </article>
+      </div>{' '}
+    </>
+  );
+}

@@ -1,0 +1,39 @@
+{
+  "name": "caycanhmientay-web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "sync-ds": "node scripts/sync-ds.mjs",
+    "predev": "npm run sync-ds",
+    "dev": "next dev",
+    "prebuild": "npm run sync-ds",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "gen-views": "node scripts/gen-views.mjs",
+    "db:generate": "drizzle-kit generate",
+    "db:studio": "drizzle-kit studio"
+  },
+  "dependencies": {
+    "better-sqlite3": "^13.0.3",
+    "drizzle-orm": "^0.45.3",
+    "leaflet": "^1.9.4",
+    "next": "^16.3.6",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "server-only": "^0.0.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/leaflet": "^1.9.22",
+    "@types/node": "^22.20.4",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "drizzle-kit": "^0.31.11",
+    "parse5": "^7.3.0",
+    "prettier": "^3.9.9",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3"
+  }
+}

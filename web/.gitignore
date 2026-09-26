@@ -1,0 +1,10 @@
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+# Chép từ ../design-system bằng `npm run sync-ds`
+src/styles/ds/
+
+# Database SQLite khi chạy dev
+data/
+!.env.example

@@ -1,0 +1,234 @@
+import 'server-only';
+import { and, count, desc, eq, inArray, like, or, sql } from 'drizzle-orm';
+import { randomInt } from 'node:crypto';
+import * as z from 'zod';
+import type { Product, Unit } from '@/lib/catalog';
+import { computeTotals } from '@/lib/pricing';
+import { normalizePhone, isPhone, type SessionUser } from './auth';
+import { getProducts } from './catalog';
+import { PLANT_ZONE_KM, plantZone } from '@/lib/stock';
+import { getAddress } from './addresses';
+import { applyStock, listStores, restoreOrderStock, type Tx } from './inventory';
+import { notify, orderOwner } from './notify';
+import { db, schema } from './db';
+import { PAYMENT_METHODS, type OrderStatus } from './db/schema';
+
+const { orders, orderItems, orderEvents, productOptions } = schema;
+
+/** Mã đơn vừa đặt trên trình duyệt này — cho phép khách vãng lai xem trang Đặt hàng thành công. */
+export const LAST_ORDER_COOKIE = 'ccmt_last_order';
+
+export const PlaceOrderSchema = z.object({
+  items: z.array(z.object({ slug: z.string().max(120), option: z.number().int().min(0).max(20), qty: z.number().int().min(1).max(99) })).min(1).max(50),
+  name: z.string().trim().min(2, 'Vui lòng nhập họ tên').max(80),
+  phone: z.string().trim().refine(isPhone, 'Số điện thoại chưa đúng'),
+  delivery: z.enum(['ship', 'pickup']),
+  address: z.string().trim().max(300).optional(),
+  slot: z.string().trim().max(60).optional(),
+  note: z.string().trim().max(500).optional(),
+  payment: z.enum(PAYMENT_METHODS),
+  safetyAck: z.boolean(),
+  /** Địa chỉ chọn từ sổ địa chỉ (nếu có) — để kiểm tra vùng giao cây sống theo ghim bản đồ. */
+  addressId: z.number().int().positive().optional(),
+}).superRefine((v, ctx) => {
+  if (v.delivery === 'ship' && !v.address) ctx.addIssue({ code: 'custom', path: ['address'], message: 'Vui lòng nhập địa chỉ nhận hàng' });
+  if (v.delivery === 'ship' && !v.slot) ctx.addIssue({ code: 'custom', path: ['slot'], message: 'Chọn khung giờ giao' });
+});
+export type PlaceOrderInput = z.infer<typeof PlaceOrderSchema>;
+
+export type PlaceOrderResult = { ok: true; code: string } | { ok: false; error: string };
+
+/** Tạo đơn: giá, phí giao, quy tắc Flash sale & thuốc BVTV đều tính lại từ database — không tin số liệu từ trình duyệt. */
+export function createOrder(input: PlaceOrderInput, user: SessionUser | null): PlaceOrderResult {
+  const products = new Map(getProducts([...new Set(input.items.map((i) => i.slug))]).map((p) => [p.slug, p]));
+  const lines: { p: Product; u: Unit; it: PlaceOrderInput['items'][number] }[] = [];
+  for (const it of input.items) {
+    const p = products.get(it.slug);
+    const u = p?.options[it.option];
+    if (!p || !u) return { ok: false, error: 'Có sản phẩm trong giỏ không còn bán. Vui lòng xem lại giỏ hàng.' };
+    lines.push({ p, u, it });
+  }
+  const hasFlash = lines.some((l) => l.p.flash);
+  const hasPesticide = lines.some((l) => l.p.pesticide);
+  if (hasFlash && input.payment === 'cod') return { ok: false, error: 'Đơn có sản phẩm Flash sale không áp dụng thanh toán khi nhận hàng' };
+  if (hasPesticide && !input.safetyAck) return { ok: false, error: 'Vui lòng xác nhận đã đọc hướng dẫn an toàn thuốc BVTV' };
+
+  // Cây sống chỉ giao trong vùng quanh cửa hàng (khi địa chỉ đã ghim bản đồ).
+  if (input.delivery === 'ship' && user && input.addressId && lines.some((l) => l.p.ship === 'plant')) {
+    const a = getAddress(user.id, input.addressId);
+    const zone = a?.lat != null && a.lng != null ? plantZone({ lat: a.lat, lng: a.lng }, listStores()) : null;
+    if (zone && !zone.inZone) {
+      return { ok: false, error: `Địa chỉ này ngoài vùng giao cây sống (${PLANT_ZONE_KM} km quanh cửa hàng). Vui lòng chọn Nhận tại vườn hoặc bỏ cây sống khỏi giỏ.` };
+    }
+  }
+
+  // Kiểm tra tồn kho theo quy cách
+  for (const { p, it } of lines) {
+    const opt = db.select({ stock: productOptions.stock }).from(productOptions)
+      .where(and(eq(productOptions.productSlug, p.slug), eq(productOptions.idx, it.option))).get();
+    if (!opt || opt.stock < it.qty) return { ok: false, error: `“${p.name}” chỉ còn ${opt?.stock ?? 0} sản phẩm` };
+  }
+
+  const totals = computeTotals(
+    lines.map(({ p, u, it }) => ({ price: u.price, oldPrice: u.oldPrice, qty: it.qty, ship: p.ship, pesticide: p.pesticide })),
+    input.delivery,
+  );
+
+  try {
+    return db.transaction((tx) => createOrderTx(tx, input, user, lines, totals));
+  } catch (e) {
+    if (e instanceof OutOfStock) return { ok: false, error: `“${e.product}” vừa hết hàng. Vui lòng giảm số lượng hoặc chọn sản phẩm khác.` };
+    throw e;
+  }
+}
+
+/** Ném ra trong transaction khi tồn không đủ, để hủy toàn bộ đơn. */
+class OutOfStock extends Error {
+  constructor(public product: string) { super('out of stock'); }
+}
+
+/** Mã đơn MT + 7 số, không trùng. Trả về '' nếu 5 lần thử đều trùng. */
+export function newOrderCode(tx: Tx) {
+  for (let i = 0; i < 5; i++) {
+    const c = `MT${String(randomInt(0, 10_000_000)).padStart(7, '0')}`;
+    if (!tx.select({ id: orders.id }).from(orders).where(eq(orders.code, c)).get()) return c;
+  }
+  return '';
+}
+
+function createOrderTx(
+  tx: Tx,
+  input: PlaceOrderInput,
+  user: SessionUser | null,
+  lines: { p: Product; u: Unit; it: PlaceOrderInput['items'][number] }[],
+  totals: ReturnType<typeof computeTotals>,
+): PlaceOrderResult {
+  const code = newOrderCode(tx);
+  if (!code) return { ok: false as const, error: 'Không tạo được mã đơn, vui lòng thử lại' };
+
+  const order = tx.insert(orders).values({
+    code, userId: user?.id ?? null, customerName: input.name, phone: normalizePhone(input.phone),
+    delivery: input.delivery, address: input.delivery === 'ship' ? input.address : null,
+    slot: input.delivery === 'ship' ? input.slot : null, note: input.note || null, paymentMethod: input.payment,
+    original: totals.original, subtotal: totals.subtotal, plantShip: totals.plantShip, supplyShip: totals.supplyShip, total: totals.total,
+  }).returning({ id: orders.id }).get();
+
+  for (const { p, u, it } of lines) {
+    tx.insert(orderItems).values({
+      orderId: order.id, productSlug: p.slug, optionIdx: it.option, name: p.name, label: u.label, unit: p.unit,
+      icon: p.icon, ship: p.ship, price: u.price, oldPrice: u.oldPrice ?? null, qty: it.qty,
+    }).run();
+    if (applyStock(tx, p.slug, it.option, -it.qty, 'order', user ? 'Khách hàng' : 'Khách vãng lai', code) === null) {
+      throw new OutOfStock(p.name);
+    }
+  }
+  tx.insert(orderEvents).values({ orderId: order.id, status: 'pending', actor: user ? 'Khách hàng' : 'Khách vãng lai' }).run();
+  if (user) notify(tx, user.id, { kind: 'order', text: STATUS_NOTICE.pending(code), href: `/tai-khoan/don-hang/${code}` });
+  return { ok: true as const, code };
+}
+
+// ---- Đọc đơn ---------------------------------------------------------------------------------
+
+export type OrderFull = typeof orders.$inferSelect & {
+  items: (typeof orderItems.$inferSelect)[];
+  events: (typeof orderEvents.$inferSelect)[];
+};
+
+function withDetails(rows: (typeof orders.$inferSelect)[]): OrderFull[] {
+  if (!rows.length) return [];
+  const ids = rows.map((r) => r.id);
+  const items = db.select().from(orderItems).where(inArray(orderItems.orderId, ids)).all();
+  const events = db.select().from(orderEvents).where(inArray(orderEvents.orderId, ids)).orderBy(orderEvents.id).all();
+  return rows.map((r) => ({ ...r, items: items.filter((i) => i.orderId === r.id), events: events.filter((e) => e.orderId === r.id) }));
+}
+
+export const getOrderByCode = (code: string) => withDetails(db.select().from(orders).where(eq(orders.code, code)).all())[0];
+
+/** Nhóm tab "Đơn hàng của tôi". */
+export const ORDER_TABS = {
+  'tat-ca': { label: 'Tất cả', statuses: null },
+  'dang-xu-ly': { label: 'Đang xử lý', statuses: ['pending', 'confirmed', 'preparing'] },
+  'dang-giao': { label: 'Đang giao', statuses: ['shipping'] },
+  'da-giao': { label: 'Đã giao', statuses: ['delivered'] },
+  'da-huy': { label: 'Đã hủy', statuses: ['cancelled'] },
+} as const satisfies Record<string, { label: string; statuses: readonly OrderStatus[] | null }>;
+export type OrderTab = keyof typeof ORDER_TABS;
+
+/** Đơn của khách: đặt khi đã đăng nhập, hoặc đặt vãng lai bằng đúng SĐT đã xác thực OTP của tài khoản. */
+const ownedBy = (u: Pick<SessionUser, 'id' | 'phone'>) => or(eq(orders.userId, u.id), eq(orders.phone, u.phone));
+export const canViewOrder = (o: { userId: number | null; phone: string }, u: Pick<SessionUser, 'id' | 'phone'>) =>
+  o.userId === u.id || o.phone === u.phone;
+
+export function listOrdersForUser(user: SessionUser, tab: OrderTab = 'tat-ca') {
+  const st = ORDER_TABS[tab].statuses;
+  return withDetails(db.select().from(orders)
+    .where(and(ownedBy(user), st ? inArray(orders.status, [...st]) : undefined))
+    .orderBy(desc(orders.id)).limit(50).all());
+}
+
+export function countOrdersByTab(user: SessionUser) {
+  const rows = db.select({ status: orders.status, n: count() }).from(orders).where(ownedBy(user)).groupBy(orders.status).all();
+  const by = Object.fromEntries(rows.map((r) => [r.status, r.n])) as Partial<Record<OrderStatus, number>>;
+  return Object.fromEntries(Object.entries(ORDER_TABS).map(([k, t]) => [k, t.statuses ? t.statuses.reduce((s, x) => s + (by[x] ?? 0), 0) : rows.reduce((s, r) => s + r.n, 0)])) as Record<OrderTab, number>;
+}
+
+// ---- Admin -----------------------------------------------------------------------------------
+
+/** Danh sách đơn cho admin; q tìm theo mã đơn, tên hoặc SĐT khách. */
+export function listOrders({ status, q, limit = 100 }: { status?: OrderStatus; q?: string; limit?: number } = {}) {
+  const term = q?.trim() ? `%${q.trim().replace(/[%_]/g, '')}%` : undefined;
+  return withDetails(db.select().from(orders)
+    .where(and(
+      status ? eq(orders.status, status) : undefined,
+      term ? or(like(orders.code, term), like(orders.customerName, term), like(orders.phone, term)) : undefined,
+    ))
+    .orderBy(desc(orders.id)).limit(limit).all());
+}
+
+export function countOrdersByStatus() {
+  const rows = db.select({ status: orders.status, n: count() }).from(orders).groupBy(orders.status).all();
+  return Object.fromEntries(rows.map((r) => [r.status, r.n])) as Partial<Record<OrderStatus, number>>;
+}
+
+/** Bước tiếp theo hợp lệ của mỗi trạng thái (không nhảy cóc, không mở lại đơn đã xong). */
+export const NEXT_STATUS: Record<OrderStatus, OrderStatus[]> = {
+  pending: ['confirmed', 'cancelled'],
+  confirmed: ['preparing', 'cancelled'],
+  preparing: ['shipping', 'cancelled'],
+  shipping: ['delivered'],
+  delivered: [],
+  cancelled: [],
+};
+
+const STATUS_NOTICE: Record<OrderStatus, (code: string) => string> = {
+  pending: (c) => `Đã nhận đơn **${c}**`,
+  confirmed: (c) => `Đơn **${c}** đã được xác nhận`,
+  preparing: (c) => `Shop đang chuẩn bị cây cho đơn **${c}**`,
+  shipping: (c) => `Đơn **${c}** đang được giao đến bạn`,
+  delivered: (c) => `Đơn **${c}** đã giao thành công. Cảm ơn bạn!`,
+  cancelled: (c) => `Đơn **${c}** đã bị hủy`,
+};
+
+export function setOrderStatus(code: string, next: OrderStatus, actor: string, note?: string) {
+  const o = db.select().from(orders).where(eq(orders.code, code)).get();
+  if (!o) return { ok: false as const, error: 'Không tìm thấy đơn' };
+  if (!NEXT_STATUS[o.status].includes(next)) return { ok: false as const, error: 'Không thể chuyển sang trạng thái này' };
+  db.transaction((tx) => {
+    tx.update(orders).set({
+      status: next,
+      updatedAt: new Date(),
+      // Tiền mặt: coi như đã thu khi giao xong. Thanh toán online: TODO cập nhật từ webhook cổng thanh toán.
+      ...(next === 'delivered' && o.paymentMethod === 'cod' ? { paid: true } : {}),
+    }).where(eq(orders.id, o.id)).run();
+    tx.insert(orderEvents).values({ orderId: o.id, status: next, actor, note: note || null }).run();
+    // Trả hàng về đúng lô / cửa hàng đã xuất
+    if (next === 'cancelled') restoreOrderStock(tx, o.code, actor);
+    const owner = orderOwner(tx, o);
+    // Tích điểm: 10.000đ = 1 điểm, cộng khi nhận hàng — cho tài khoản đặt đơn, hoặc tài khoản có đúng SĐT đặt hàng.
+    if (next === 'delivered' && owner && o.total > 0) {
+      tx.update(schema.users).set({ points: sql`${schema.users.points} + ${Math.floor(o.total / 10000)}` }).where(eq(schema.users.id, owner)).run();
+    }
+    if (owner) notify(tx, owner, { kind: 'order', text: STATUS_NOTICE[next](o.code), href: `/tai-khoan/don-hang/${o.code}`, external: next === 'shipping' || next === 'cancelled' });
+  });
+  return { ok: true as const };
+}

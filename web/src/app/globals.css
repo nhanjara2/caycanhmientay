@@ -1,0 +1,184 @@
+/*
+ * Lớp riêng của web app, đặt sau tokens.css + components.css của design system.
+ * Chỉ thêm những gì preview tĩnh không cần: header dính, sidebar dính, link, toast,
+ * và các mốc màn hình trong BRANDBOOK (mobile < 768, tablet 768–1023, desktop ≥ 1024).
+ * Không đổi màu hay token ở đây — sửa design-system/tokens.json.
+ */
+
+:root {
+  --font-sans: var(--font-be-vietnam), "Be Vietnam Pro", "Segoe UI", Roboto, Arial, sans-serif;
+  --header-h: 96px;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+/* Preview dùng <a> không href (không gạch chân, cùng màu chữ); giữ nguyên dáng đó khi đã thành link thật.
+   :where() có độ ưu tiên 0 nên mọi class của design system vẫn thắng. */
+a:where([href]) { color: inherit; text-decoration: none; }
+.app-plain { text-decoration: none; }
+.vx-header .vx-search { min-width: 0; }
+a.vx-btn, a.vx-link { text-decoration: none; }
+.vx-sum, .vx-toc { top: calc(var(--header-h) + var(--space-4)); }
+.vx-pcard__media, .vx-logo, .vx-cartbtn, .vx-keywords a, .vx-fcol a, .vx-side__promo a, .vx-acc__list a { text-decoration: none; color: inherit; }
+.vx-side__promo a { color: var(--sale); }
+.vx-side__promo a.plain { color: var(--ink); }
+.vx-acc__list a[aria-current="true"] { color: var(--primary); }
+.vx-keywords a:hover, .vx-fcol a:hover { text-decoration: underline; }
+
+/* Header dính trên cùng */
+.app-header { position: sticky; top: 0; z-index: 40; }
+.app-menubtn { display: none; background: none; border: 0; color: inherit; padding: 8px; margin: -8px 0 -8px -8px; cursor: pointer; }
+.app-menubtn .vx-ico { width: 24px; height: 24px; }
+
+/* ShopLayout: sidebar 248px dính dưới header, nội dung tối đa 1200px */
+.app-shop { display: grid; grid-template-columns: 248px minmax(0, 1fr); background: var(--surface-page); }
+.app-side { position: sticky; top: var(--header-h); height: calc(100vh - var(--header-h)); max-height: none; }
+.app-main { padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+.app-scrim { display: none; }
+.app-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+/* Màn rộng: nội dung giãn full, thêm cột để thẻ sản phẩm giữ kích thước vừa phải */
+@media (min-width: 1440px) { .app-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+@media (min-width: 1760px) { .app-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+@media (min-width: 2200px) { .app-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); } }
+.app-page { max-width: 1200px; margin: 0 auto; width: 100%; }
+
+/* Toast + FAB */
+.app-fab { position: fixed; right: var(--space-4); bottom: var(--space-4); z-index: 30; }
+.app-toast { position: fixed; top: calc(var(--header-h) + 12px); right: var(--space-4); z-index: 60; }
+
+/* Ô chọn dạng nút (thay cho div trong preview) */
+button.vx-tslot, button.vx-pay__opt { font: inherit; color: inherit; cursor: pointer; width: 100%; text-align: left; }
+button.vx-tslot { text-align: center; }
+button.vx-tslot[aria-disabled="true"] { cursor: not-allowed; }
+.vx-pay { border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
+button.vx-pay__opt { border-left: 0; border-right: 0; border-bottom: 0; }
+button.vx-pay__opt:first-child { border-top: 0; }
+.vx-check input { accent-color: var(--primary); width: 18px; height: 18px; margin: 0; flex: none; }
+.vx-item__name a { text-decoration: none; }
+.fb-sort a { text-decoration: none; }
+.pl-sub { text-decoration: none; color: var(--ink); }
+.pl-subs { overflow-x: auto; }
+
+
+/* design-system dùng .pos cho cả khung AdminPOS lẫn số tiền "Miễn phí" -> trả lại kiểu chữ cho số tiền */
+.vx-lines .pos { display: inline; height: auto; background: none; font-size: inherit; grid-template-columns: none; }
+
+/* Hộp thoại (AuthModal…): nền mờ, hộp giữa màn hình */
+.app-modal { position: fixed; inset: 0; z-index: 80; background: rgba(12, 24, 16, .5); display: grid; place-items: center; padding: var(--space-4); }
+.app-modal .vx-modal { max-height: calc(100vh - 32px); overflow: auto; }
+.app-modal .au-box { width: min(400px, 100%); max-width: 100%; max-height: calc(100vh - 32px); overflow: auto; }
+.au-head .x { cursor: pointer; }
+.au-sbtn { position: relative; cursor: pointer; }
+.au-otp { cursor: text; position: relative; }
+.app-sr { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+/* Header: nút Đăng nhập / tên người dùng + menu tài khoản */
+.app-hbtn { display: flex; align-items: center; gap: 6px; background: none; border: 0; color: inherit; font: inherit; font-weight: 600; cursor: pointer; padding: 0; }
+.app-dd { position: absolute; right: 0; top: calc(100% + 10px); z-index: 50; color: var(--ink); font-weight: 400; }
+
+/* Cookie: hộp nhỏ góc trái dưới */
+.app-ck { position: fixed; left: var(--space-4); bottom: var(--space-4); z-index: 75; max-width: calc(100vw - 32px); }
+.app-ck-pref { position: fixed; left: 50%; top: 50%; right: auto; transform: translate(-50%, -50%); z-index: 75; max-width: calc(100vw - 32px); }
+
+/* Admin: khung cao bằng màn hình, menu trái dính */
+.app-admin { min-height: 100vh; }
+.app-admin-side { position: sticky; top: 0; height: 100vh; overflow: auto; }
+.app-bare { border: 0; outline: 0; background: transparent; font: inherit; color: inherit; flex: 1; min-width: 0; }
+.ad-side a:hover:not([aria-current="true"]) { background: rgba(255, 255, 255, .08); }
+.ad .code { color: var(--primary); font-weight: 700; text-decoration: none; }
+
+/* App nhân viên: khung điện thoại canh giữa */
+.app-staff { min-height: 100vh; background: var(--surface-page); display: flex; justify-content: center; }
+
+/* Tablet 768–1023: SidebarMenu thành bảng trượt trái, nút Danh mục ở header */
+@media (max-width: 1023px) {
+  :root { --header-h: 64px; }
+  .app-menubtn { display: grid; }
+  .vx-keywords, .vx-loc { display: none; }
+  .app-shop { grid-template-columns: minmax(0, 1fr); }
+  .app-side { position: fixed; top: 0; left: 0; bottom: 0; height: 100vh; z-index: 70; transform: translateX(-100%); transition: transform .2s; box-shadow: var(--shadow-pop); }
+  body[data-sidebar-open] .app-side { transform: none; }
+  body[data-sidebar-open] .app-scrim { display: block; position: fixed; inset: 0; background: rgba(28, 42, 34, .4); z-index: 65; }
+  .app-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .vx-checkout { grid-template-columns: minmax(0, 1fr); }
+  .vx-acctgrid, .vx-policypage { grid-template-columns: minmax(0, 1fr); }
+  .vx-sum { position: static; }
+  .vx-content { grid-template-columns: minmax(0, 1fr); }
+  .vx-toc { display: none; }
+  .vx-fcols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* Mobile < 768: lưới 2 cột, header gọn */
+/* Ô chọn trong khung nhập nổi (.vx-fl) — cùng kiểu với input */
+.vx-fl select { font: inherit; font-size: 15px; line-height: 22px; border: 0; outline: 0; background: transparent; color: var(--ink); padding: 0; width: 100%; }
+
+/* Chuông thông báo trên Header */
+.app-bell { position: relative; }
+.app-bell { margin-right: 4px; }
+.app-bell em { position: absolute; top: 0; left: 20px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: var(--sale); color: var(--on-sale); font-size: 10px; font-style: normal; font-weight: 700; line-height: 16px; text-align: center; }
+.app-nc { position: absolute; right: 0; left: auto; top: calc(100% + 10px); z-index: 50; color: var(--ink); font-weight: 400; max-width: calc(100vw - 24px); white-space: normal; text-align: left; }
+.app-nc .nc-item > span:nth-child(2) { display: block; min-width: 0; overflow-wrap: anywhere; }
+.app-nc .nc-item .i { display: grid; }
+.app-nc .nc-item .dot { display: block; }
+.app-nc__list { max-height: min(460px, 70vh); overflow-y: auto; }
+.app-nc .nc-item:hover { filter: brightness(0.98); }
+
+@media (max-width: 767px) {
+  :root { --header-h: 60px; }
+  .vx-header__main { gap: var(--space-3); padding: var(--space-2) var(--space-4); }
+  .app-logo-text, .app-hide-sm, .vx-hactions .app-hide-sm, .vx-fab .app-hide-sm { display: none; }
+  .vx-fab a { padding: 12px; }
+  .vx-slot { flex: none; white-space: nowrap; }
+  .vx-search { padding-left: 14px; }
+  .app-main, .vx-pdpage, .vx-checkout, .os-page { padding: var(--space-3); }
+  .app-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
+  .vx-pd { grid-template-columns: minmax(0, 1fr); padding: var(--space-4); }
+  .vx-banner { height: auto; padding: var(--space-4); }
+  .vx-banner b { font-size: 20px; line-height: 26px; }
+  .vx-quick { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .vx-flash__bar { flex-wrap: wrap; gap: var(--space-2); }
+  .vx-slots { overflow-x: auto; }
+  .vx-slots2, .vx-fields { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .vx-item { grid-template-columns: 56px minmax(0, 1fr) auto; }
+  .vx-item__price { grid-column: 2; text-align: left; }
+  .vx-item__qty { grid-column: 3; grid-row: 1 / span 2; }
+  .fb-sort { overflow-x: auto; white-space: nowrap; }
+  .vx-fcols { grid-template-columns: minmax(0, 1fr); }
+  .vx-fnews .f { min-width: 0; width: 100%; margin-left: 0; }
+  .vx-fband, .vx-fnews { flex-direction: column; align-items: flex-start; }
+  .os-grid, .os-next { grid-template-columns: minmax(0, 1fr); }
+  .nf .vx-search { width: 100%; }
+  .app-toast { left: var(--space-3); right: var(--space-3); }
+  .app-toast .ts { min-width: 0; max-width: none; }
+  .app-admin { grid-template-columns: minmax(0, 1fr); }
+  .ad-main { overflow-x: hidden; }
+  .ad-card { overflow-x: auto; }
+  .ad-kv { grid-template-columns: 100px minmax(0, 1fr); }
+  .vx-hitem { grid-template-columns: 96px minmax(0, 1fr); }
+  .nw-card > *, .nw-hero > *, .vx-hero > * { min-width: 0; }
+  /* App nhân viên: bỏ khung điện thoại mô phỏng, dùng toàn màn hình */
+  .app-staff { display: block; }
+  .app-staff .m-stage { padding: 0; gap: 0; width: 100%; }
+  .app-staff .m-stage > div { flex: 1 1 100%; }
+  .app-staff .m-stage > div:not(:first-child), .app-staff .m-cap { display: none; }
+  .app-staff .m-phone { width: 100%; height: auto; min-height: 100vh; border: 0; border-radius: 0; box-shadow: none; }
+  .app-admin-side { display: none; }
+}
+
+/* MapPicker: bản đồ Leaflet thật nằm dưới các lớp phủ của thiết kế */
+.app-modal--top { z-index: 90; }
+.app-map .app-map__canvas { position: absolute; inset: 0; z-index: 0; }
+.app-map .vx-map__search, .app-map .vx-map__pin, .app-map .vx-map__tip, .app-map .vx-map__me { z-index: 500; }
+.app-map .vx-map__pin { pointer-events: none; }
+.app-map .vx-map__search { right: 56px; }
+.app-map .vx-map__tip { bottom: 22px; }
+.app-map .vx-map__me { bottom: 22px; cursor: pointer; }
+.app-map .leaflet-control-attribution { font-size: 10px; }
+.app-modal .vx-zone, .app-modal .vx-sel { flex-direction: row; flex-wrap: nowrap; }
+.app-modal .vx-zone > span, .app-modal .vx-sel > span { min-width: 0; }
+.app-zone--out { color: var(--danger); }
+.app-zone--out .vx-ico { color: var(--danger); }
+
+@media (max-width: 640px) {
+  .app-nc { position: fixed; left: 12px; right: 12px; top: 64px; width: auto; max-width: none; }
+}

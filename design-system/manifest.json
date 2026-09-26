@@ -1,0 +1,948 @@
+{
+  "manifestVersion": 3,
+  "name": "Cây Cảnh Miền Tây",
+  "namespace": "VuonXanh",
+  "files": [
+    "components/AccountLayout/README.md",
+    "components/AccountMenu/README.md",
+    "components/AccountSidebar/README.md",
+    "components/AddressBookLayout/README.md",
+    "components/AddressCard/README.md",
+    "components/AddressModal/README.md",
+    "components/AdminContent/README.md",
+    "components/AdminCustomers/README.md",
+    "components/AdminDashboard/README.md",
+    "components/AdminDelivery/README.md",
+    "components/AdminInventory/README.md",
+    "components/AdminOrderDetail/README.md",
+    "components/AdminOrders/README.md",
+    "components/AdminPOS/README.md",
+    "components/AdminProductForm/README.md",
+    "components/AdminPromotions/README.md",
+    "components/AdminPurchasing/README.md",
+    "components/AdminReports/README.md",
+    "components/AdminReviews/README.md",
+    "components/AdminRoles/README.md",
+    "components/AdminServiceRequests/README.md",
+    "components/AdminShell/README.md",
+    "components/AdminShippingSettings/README.md",
+    "components/AdminWarranty/README.md",
+    "components/ArticleCard/README.md",
+    "components/ArticleDetailLayout/README.md",
+    "components/AuthModal/README.md",
+    "components/Badge/README.md",
+    "components/BlogCategoryBlock/README.md",
+    "components/BlogFeatureBlock/README.md",
+    "components/BlogHero/README.md",
+    "components/BlogLayout/README.md",
+    "components/BusinessLayout/README.md",
+    "components/Button/README.md",
+    "components/BuyBox/README.md",
+    "components/CampaignLayout/README.md",
+    "components/CareInfo/README.md",
+    "components/CareScheduleLayout/README.md",
+    "components/CartItem/README.md",
+    "components/CategoryTile/README.md",
+    "components/CheckoutForm/README.md",
+    "components/CheckoutLayout/README.md",
+    "components/Chip/README.md",
+    "components/CollectionStrip/README.md",
+    "components/ConfirmDialog/README.md",
+    "components/ContactFab/README.md",
+    "components/CookieConsent/README.md",
+    "components/DataTable/README.md",
+    "components/DeliveryToggle/README.md",
+    "components/DiseaseDetailLayout/README.md",
+    "components/DiseaseGroupGrid/README.md",
+    "components/DiseaseLibraryLayout/README.md",
+    "components/EmptyState/README.md",
+    "components/ExpertList/README.md",
+    "components/FAQ/README.md",
+    "components/FilterBar/README.md",
+    "components/FlashSale/README.md",
+    "components/FlashSaleLayout/README.md",
+    "components/Footer/README.md",
+    "components/GiftOptions/README.md",
+    "components/Header/README.md",
+    "components/KpiCard/README.md",
+    "components/LinkedAccounts/README.md",
+    "components/LogoBrief/README.md",
+    "components/LogoDirections/README.md",
+    "components/MapPicker/README.md",
+    "components/MegaMenu/README.md",
+    "components/MessageTemplates/README.md",
+    "components/MiniCart/README.md",
+    "components/MobileAccount/README.md",
+    "components/MobileAddress/README.md",
+    "components/MobileAuth/README.md",
+    "components/MobileBlog/README.md",
+    "components/MobileCart/README.md",
+    "components/MobileCategory/README.md",
+    "components/MobileCheckout/README.md",
+    "components/MobileDiseaseLibrary/README.md",
+    "components/MobileGarden/README.md",
+    "components/MobileHome/README.md",
+    "components/MobileNews/README.md",
+    "components/MobileOrders/README.md",
+    "components/MobilePlantClinic/README.md",
+    "components/MobileProductDetail/README.md",
+    "components/MobileProductList/README.md",
+    "components/MobileShell/README.md",
+    "components/MobileStores/README.md",
+    "components/MobileVoucher/README.md",
+    "components/MyGardenLayout/README.md",
+    "components/NewsCategoryLayout/README.md",
+    "components/NewsHero/README.md",
+    "components/NewsListCard/README.md",
+    "components/NotFoundPage/README.md",
+    "components/NotificationCenter/README.md",
+    "components/OrderCard/README.md",
+    "components/OrderDetail/README.md",
+    "components/OrderDetailLayout/README.md",
+    "components/OrderSuccessLayout/README.md",
+    "components/OrderSummary/README.md",
+    "components/OrderTabs/README.md",
+    "components/OrderTimeline/README.md",
+    "components/OrdersLayout/README.md",
+    "components/PaymentMethods/README.md",
+    "components/PaymentQR/README.md",
+    "components/PhotoGuide/README.md",
+    "components/PhotoShotList/README.md",
+    "components/PlantClinic/README.md",
+    "components/PlantPartMap/README.md",
+    "components/PolicyArticle/README.md",
+    "components/PolicyLayout/README.md",
+    "components/PolicyNav/README.md",
+    "components/PrintTemplates/README.md",
+    "components/ProductCard/README.md",
+    "components/ProductContent/README.md",
+    "components/ProductDetailLayout/README.md",
+    "components/ProductGallery/README.md",
+    "components/ProductListingLayout/README.md",
+    "components/ProfileForm/README.md",
+    "components/PromoNewsLayout/README.md",
+    "components/QnA/README.md",
+    "components/QuickActions/README.md",
+    "components/QuoteRequestForm/README.md",
+    "components/Reviews/README.md",
+    "components/SearchResultsLayout/README.md",
+    "components/SearchSuggest/README.md",
+    "components/SectionHeader/README.md",
+    "components/ServiceDetailLayout/README.md",
+    "components/ServicesHubLayout/README.md",
+    "components/ShopLayout/README.md",
+    "components/ShortVideoRow/README.md",
+    "components/SidebarMenu/README.md",
+    "components/Skeleton/README.md",
+    "components/SocialButtons/README.md",
+    "components/SpecTable/README.md",
+    "components/StaffDeliveryApp/README.md",
+    "components/StaffWarehouseApp/README.md",
+    "components/StickyBuyBar/README.md",
+    "components/StoreDetail/README.md",
+    "components/StoreFinder/README.md",
+    "components/StoreLocatorLayout/README.md",
+    "components/TabletHome/README.md",
+    "components/TabletProductDetail/README.md",
+    "components/Toast/README.md",
+    "components/TopicList/README.md",
+    "components/VoiceTone/README.md",
+    "components/VoucherItem/README.md",
+    "components/VoucherModal/README.md",
+    "components/WarrantyRequest/README.md",
+    "components/WishlistLayout/README.md",
+    "components/bundle.css",
+    "tokens.css"
+  ],
+  "libraries": [],
+  "components": [
+    {
+      "name": "AccountLayout",
+      "group": "Bố cục",
+      "summary": "Khung chung cho mọi trang tài khoản: Header → breadcrumb → lưới 2 cột (AccountSidebar 290px | nội dung).",
+      "page": true
+    },
+    {
+      "name": "AccountMenu",
+      "group": "Tài khoản",
+      "summary": "Menu tài khoản xổ xuống khi rê chuột/bấm vào tên người dùng trên Header, cạnh nút Giỏ hàng có số lượng."
+    },
+    {
+      "name": "AccountSidebar",
+      "group": "Tài khoản",
+      "summary": "Cột trái các trang tài khoản: thẻ hồ sơ nền primary-deep + danh sách mục."
+    },
+    {
+      "name": "AddressBookLayout",
+      "group": "Bố cục",
+      "summary": "Trang Sổ địa chỉ trong AccountLayout: AccountSidebar (mục \"Sổ địa chỉ nhận hàng\" đang chọn) + danh sách AddressCard.",
+      "page": true
+    },
+    {
+      "name": "AddressCard",
+      "group": "Tài khoản",
+      "summary": "Danh sách sổ địa chỉ: tiêu đề + nút Thêm địa chỉ mới, bên dưới là các thẻ địa chỉ trong một khối surface."
+    },
+    {
+      "name": "AddressModal",
+      "group": "Tài khoản",
+      "summary": "Hộp thoại Thêm / Chỉnh sửa địa chỉ, rộng tối đa 560px, nền mờ phía sau."
+    },
+    {
+      "name": "AdminContent",
+      "group": "Admin",
+      "summary": "Soạn bài Góc chăm cây, trang bệnh cây và video.",
+      "page": true
+    },
+    {
+      "name": "AdminCustomers",
+      "group": "Admin",
+      "summary": "Danh sách khách hàng + bảng chi tiết bên phải (mở khi bấm một dòng, không rời trang).",
+      "page": true
+    },
+    {
+      "name": "AdminDashboard",
+      "group": "Bố cục",
+      "summary": "Trang Tổng quan khi đăng nhập admin:",
+      "page": true
+    },
+    {
+      "name": "AdminDelivery",
+      "group": "Admin",
+      "summary": "Bảng xếp chuyến giao theo ngày — màn riêng của shop cây vì cây lớn cần xe và người phù hợp.",
+      "page": true
+    },
+    {
+      "name": "AdminInventory",
+      "group": "Admin",
+      "summary": "Tồn kho theo từng kho/cửa hàng.",
+      "page": true
+    },
+    {
+      "name": "AdminOrderDetail",
+      "group": "Admin",
+      "summary": "Chi tiết một đơn phía admin (mở từ mã đơn ở AdminOrders).",
+      "page": true
+    },
+    {
+      "name": "AdminOrders",
+      "group": "Bố cục",
+      "summary": "Danh sách đơn hàng: AdminShell + DataTable.",
+      "page": true
+    },
+    {
+      "name": "AdminPOS",
+      "group": "Admin",
+      "summary": "Bán tại quầy cho cửa hàng/vườn — màn toàn màn hình, không có menu admin, dùng được trên máy tính bảng.",
+      "page": true
+    },
+    {
+      "name": "AdminProductForm",
+      "group": "Bố cục",
+      "summary": "Form thêm / sửa sản phẩm, 2 cột: nội dung chính bên trái, thiết lập bên phải; thanh Lưu dính đáy.",
+      "page": true
+    },
+    {
+      "name": "AdminPromotions",
+      "group": "Admin",
+      "summary": "Quản lý khuyến mãi: 4 KpiCard (đang chạy, doanh thu có KM, lượt dùng, chi phí) + bảng.",
+      "page": true
+    },
+    {
+      "name": "AdminPurchasing",
+      "group": "Admin",
+      "summary": "Nhập hàng và nhà cung cấp.",
+      "page": true
+    },
+    {
+      "name": "AdminReports",
+      "group": "Admin",
+      "summary": "Báo cáo tổng hợp, chọn khoảng thời gian và cửa hàng, xuất Excel.",
+      "page": true
+    },
+    {
+      "name": "AdminReviews",
+      "group": "Admin",
+      "summary": "Duyệt đánh giá và trả lời hỏi đáp.",
+      "page": true
+    },
+    {
+      "name": "AdminRoles",
+      "group": "Admin",
+      "summary": "Phân quyền theo vai trò: ma trận chức năng × vai trò với 3 mức (Toàn quyền primary · Chỉ xem primary-soft · Ẩn surface-sunken).",
+      "page": true
+    },
+    {
+      "name": "AdminServiceRequests",
+      "group": "Admin",
+      "summary": "Quản lý yêu cầu dịch vụ (từ QuoteRequestForm, BusinessLayout, hotline) dạng bảng kéo thả theo giai đoạn:",
+      "page": true
+    },
+    {
+      "name": "AdminShell",
+      "group": "Admin",
+      "summary": "Khung chung của trang quản trị: menu trái 232px nền primary-deep + thanh trên + vùng nội dung trên surface-page."
+    },
+    {
+      "name": "AdminShippingSettings",
+      "group": "Admin",
+      "summary": "Cài đặt giao hàng:",
+      "page": true
+    },
+    {
+      "name": "AdminWarranty",
+      "group": "Bố cục",
+      "summary": "Xử lý một yêu cầu bảo hành cây — màn riêng của shop cây, không có bên trang dược.",
+      "page": true
+    },
+    {
+      "name": "ArticleCard",
+      "group": "Nội dung",
+      "summary": "Thẻ bài viết cho mục \"Góc chăm cây\": ảnh 16:9, nhãn chuyên mục, tiêu đề tối đa 2 dòng, ngày đăng."
+    },
+    {
+      "name": "ArticleDetailLayout",
+      "group": "Bố cục",
+      "summary": "Trang bài viết Góc chăm cây, 3 cột: mục lục dính (220px) | bài (tối đa 720px, chữ 16px, dòng 27px — dễ đọc lâu) | cột phải dính (280px).",
+      "page": true
+    },
+    {
+      "name": "AuthModal",
+      "group": "Tài khoản",
+      "summary": "Hộp Đăng nhập / Đăng ký gộp làm một (không tách 2 trang), mở từ \"Đăng nhập\" trên Header, khi thêm vào giỏ lần đầu, hoặc khi bấm Nhận ưu đãi."
+    },
+    {
+      "name": "Badge",
+      "group": "Hiển thị",
+      "summary": "Nhãn nhỏ gắn trên thẻ sản phẩm và trang chi tiết."
+    },
+    {
+      "name": "BlogCategoryBlock",
+      "group": "Góc chăm cây",
+      "summary": "Khối một chuyên mục trên trang Góc chăm cây, cấu trúc như trang dược:"
+    },
+    {
+      "name": "BlogFeatureBlock",
+      "group": "Góc chăm cây",
+      "summary": "Biến thể khối chuyên mục kiểu tạp chí: 1 bài lớn bên trái (ảnh 16:10, tiêu đề 20px) + 4 bài nhỏ bên phải."
+    },
+    {
+      "name": "BlogHero",
+      "group": "Góc chăm cây",
+      "summary": "Đầu trang \"Góc chăm cây\": breadcrumb → tiêu đề 28px → hàng chip chuyên mục → khối nổi bật: 1 bài lớn (ảnh 16:9, chuyên mục, ngày, thời gian đọc, tiêu đề 22px,…"
+    },
+    {
+      "name": "BlogLayout",
+      "group": "Bố cục",
+      "summary": "Trang chủ Góc chăm cây, bố cục theo trang Góc sức khỏe của chuỗi nhà thuốc:",
+      "page": true
+    },
+    {
+      "name": "BusinessLayout",
+      "group": "Bố cục",
+      "summary": "Trang Khách doanh nghiệp:",
+      "page": true
+    },
+    {
+      "name": "Button",
+      "group": "Hành động",
+      "summary": "Nút bấm dạng viên thuốc (bo tròn radius-pill), học theo nút \"Chọn mua\" của các trang thương mại dược phẩm."
+    },
+    {
+      "name": "BuyBox",
+      "group": "Chi tiết sản phẩm",
+      "summary": "Khối mua bên phải trang chi tiết, theo đúng thứ tự của trang dược:"
+    },
+    {
+      "name": "CampaignLayout",
+      "group": "Bố cục",
+      "summary": "Trang chiến dịch theo mùa, ví dụ Cây Tết đặt trước.",
+      "page": true
+    },
+    {
+      "name": "CareInfo",
+      "group": "Thương mại",
+      "summary": "Khối thông số trên trang chi tiết, ngay dưới giá."
+    },
+    {
+      "name": "CareScheduleLayout",
+      "group": "Tài khoản",
+      "summary": "Lịch chăm cây — tính năng giữ khách quay lại của Cây Cảnh Miền Tây.",
+      "page": true
+    },
+    {
+      "name": "CartItem",
+      "group": "Giỏ hàng",
+      "summary": "Danh sách sản phẩm trong giỏ, chia nhóm theo cách giao hàng: \"Cây sống\" (giao riêng, chỉ nội thành) và \"Vật tư – Thuốc – Phân bón\" (giao nhanh)."
+    },
+    {
+      "name": "CategoryTile",
+      "group": "Thương mại",
+      "summary": "Ô danh mục nổi bật: icon/ảnh 56px trên primary-soft, tên danh mục, số sản phẩm ink-muted."
+    },
+    {
+      "name": "CheckoutForm",
+      "group": "Giỏ hàng",
+      "summary": "Khối thông tin đặt hàng, theo thứ tự: hình thức nhận hàng → Thông tin người đặt → Thông tin nhận hàng → Khung giờ giao → Ghi chú → Hóa đơn điện tử."
+    },
+    {
+      "name": "CheckoutLayout",
+      "group": "Bố cục",
+      "summary": "Trang thanh toán 2 cột, học theo trang thanh toán của chuỗi nhà thuốc: cột trái các bước điền thông tin, cột phải OrderSummary dính theo khi cuộn.",
+      "page": true
+    },
+    {
+      "name": "Chip",
+      "group": "Nhập liệu",
+      "summary": "Chip lọc nhanh và bộ chọn đơn vị tính."
+    },
+    {
+      "name": "CollectionStrip",
+      "group": "Thương mại",
+      "summary": "Dải bộ sưu tập theo dịp và nhu cầu, đặt trên cùng vùng nội dung, như dải \"Tết Trung Thu / Tiệc tại gia\" của siêu thị bách hóa."
+    },
+    {
+      "name": "ConfirmDialog",
+      "group": "Hiển thị",
+      "summary": "Hộp xác nhận nhỏ (360px) cho thao tác quan trọng hoặc không hoàn tác được."
+    },
+    {
+      "name": "ContactFab",
+      "group": "Hành động",
+      "summary": "Nút liên hệ nổi cố định góc phải dưới, luôn hiện trên mọi trang."
+    },
+    {
+      "name": "CookieConsent",
+      "group": "Hiển thị",
+      "summary": "Xin đồng ý cookie và dữ liệu cá nhân khi khách vào website lần đầu."
+    },
+    {
+      "name": "DataTable",
+      "group": "Admin",
+      "summary": "Bảng dữ liệu dùng cho mọi danh sách trong admin (đơn hàng, sản phẩm, khách hàng, bài viết…)."
+    },
+    {
+      "name": "DeliveryToggle",
+      "group": "Giỏ hàng",
+      "summary": "Công tắc 2 lựa chọn ở đầu trang thanh toán: Giao tận nơi hoặc Nhận tại vườn/cửa hàng."
+    },
+    {
+      "name": "DiseaseDetailLayout",
+      "group": "Bố cục",
+      "summary": "Trang chi tiết một bệnh trong thư viện bệnh cây:",
+      "page": true
+    },
+    {
+      "name": "DiseaseGroupGrid",
+      "group": "Bắt bệnh cây",
+      "summary": "Lưới nhóm bệnh theo nguyên nhân, học theo khối \"Nhóm bệnh chuyên khoa\" của trang dược: 4 cột, mỗi ô có ảnh tròn 72px, tên nhóm, số bài viết."
+    },
+    {
+      "name": "DiseaseLibraryLayout",
+      "group": "Bố cục",
+      "summary": "Trang Tìm hiểu bệnh cây trồng: Header → breadcrumb → tiêu đề canh giữa + dòng dẫn sang Bắt bệnh cho cây (PlantClinic) → ô tìm theo triệu chứng → PlantPartMap →…",
+      "page": true
+    },
+    {
+      "name": "EmptyState",
+      "group": "Hiển thị",
+      "summary": "Trạng thái trống và lỗi, dùng chung cho mọi màn."
+    },
+    {
+      "name": "ExpertList",
+      "group": "Góc chăm cây",
+      "summary": "Thẻ Đội ngũ chuyên môn ở cột phải: avatar tròn 40px, chức danh (11px ink-muted), tên (600), lĩnh vực."
+    },
+    {
+      "name": "FAQ",
+      "group": "Chi tiết sản phẩm",
+      "summary": "Câu hỏi thường gặp dạng accordion, 4–6 câu, câu đầu mở sẵn."
+    },
+    {
+      "name": "FilterBar",
+      "group": "Thương mại",
+      "summary": "Thanh bộ lọc trên trang danh mục desktop (đặt ngang, vì cột trái đã dành cho SidebarMenu)."
+    },
+    {
+      "name": "FlashSale",
+      "group": "Thương mại",
+      "summary": "Khối khuyến mãi theo khung giờ: dải sun có đồng hồ đếm ngược, hàng khung giờ, lưới ProductCard kèm thanh \"Đã bán\"."
+    },
+    {
+      "name": "FlashSaleLayout",
+      "group": "Bố cục",
+      "summary": "Trang Flash sale đầy đủ (mở từ khối FlashSale trên trang chủ và lối tắt ở SidebarMenu):",
+      "page": true
+    },
+    {
+      "name": "Footer",
+      "group": "Bố cục",
+      "summary": "Footer chung cho mọi trang, cấu trúc theo footer chuỗi nhà thuốc:"
+    },
+    {
+      "name": "GiftOptions",
+      "group": "Giỏ hàng",
+      "summary": "Tùy chọn quà tặng trong trang thanh toán (bật công tắc \"Đây là quà tặng\"), và trên chi tiết sản phẩm thuộc danh mục Quà tặng cây."
+    },
+    {
+      "name": "Header",
+      "group": "Điều hướng",
+      "summary": "Header gọn 2 tầng trên nền primary-deep, đi cùng SidebarMenu (không còn hàng menu ngang trên desktop)."
+    },
+    {
+      "name": "KpiCard",
+      "group": "Admin",
+      "summary": "Ô chỉ số ở đầu trang Tổng quan: nhãn có icon, số lớn 22px, dòng so sánh."
+    },
+    {
+      "name": "LinkedAccounts",
+      "group": "Tài khoản",
+      "summary": "Mục Đăng nhập & bảo mật trong trang Tài khoản (thêm vào AccountSidebar, dưới Thông tin cá nhân)."
+    },
+    {
+      "name": "LogoBrief",
+      "group": "Thương hiệu",
+      "summary": "Bản brief gửi designer làm logo và bộ nhận diện, dạng văn bản 1 trang (có thể xuất PDF gửi đi)."
+    },
+    {
+      "name": "LogoDirections",
+      "group": "Thương hiệu",
+      "summary": "3 hướng logo cho Cây Cảnh Miền Tây — là phác thảo định hướng để chọn ý, không phải logo cuối cùng."
+    },
+    {
+      "name": "MapPicker",
+      "group": "Tài khoản",
+      "summary": "Hộp chọn vị trí trên bản đồ: ô tìm kiếm nổi trên bản đồ, ghim cố định giữa khung (kéo bản đồ để đặt), nhắc \"Kéo bản đồ để đặt ghim\", nút Vị trí của tôi, rồi đị…"
+    },
+    {
+      "name": "MegaMenu",
+      "group": "Điều hướng",
+      "summary": "Bảng danh mục 2 cột: cột trái là nhóm cấp 1, lưới phải là nhóm cấp 2 kèm ảnh nhỏ."
+    },
+    {
+      "name": "MessageTemplates",
+      "group": "Admin",
+      "summary": "Mẫu tin nhắn tự động gửi khách qua Zalo (ZNS/OA), email, SMS dự phòng.",
+      "page": true
+    },
+    {
+      "name": "MiniCart",
+      "group": "Giỏ hàng",
+      "summary": "Hai phản hồi sau khi thêm vào giỏ, trên desktop:"
+    },
+    {
+      "name": "MobileAccount",
+      "group": "Mobile",
+      "summary": "Tab Tài khoản trên điện thoại (thay AccountSidebar):"
+    },
+    {
+      "name": "MobileAddress",
+      "group": "Mobile",
+      "summary": "Sổ địa chỉ trên điện thoại:"
+    },
+    {
+      "name": "MobileAuth",
+      "group": "Mobile",
+      "summary": "Đăng nhập trên điện thoại: màn toàn màn hình trượt từ dưới lên, nút ✕ để đóng; cùng các bước như AuthModal."
+    },
+    {
+      "name": "MobileBlog",
+      "group": "Mobile",
+      "summary": "Góc chăm cây trên điện thoại:"
+    },
+    {
+      "name": "MobileCart",
+      "group": "Mobile",
+      "summary": "Giỏ hàng trên điện thoại:"
+    },
+    {
+      "name": "MobileCategory",
+      "group": "Mobile",
+      "summary": "Màn Danh mục (tab thứ 2) — thay cho SidebarMenu trên điện thoại, kiểu màn danh mục 2 cột quen thuộc của app siêu thị:"
+    },
+    {
+      "name": "MobileCheckout",
+      "group": "Mobile",
+      "summary": "Thanh toán trên điện thoại — 1 cột, mỗi phần là một khối surface có thể bấm để sửa:"
+    },
+    {
+      "name": "MobileDiseaseLibrary",
+      "group": "Mobile",
+      "summary": "Thư viện bệnh cây trên điện thoại (bản mobile của DiseaseLibraryLayout):"
+    },
+    {
+      "name": "MobileGarden",
+      "group": "Mobile",
+      "summary": "Vườn của tôi và Lịch chăm cây trên điện thoại (vào từ Tài khoản, hoặc từ thông báo nhắc việc)."
+    },
+    {
+      "name": "MobileHome",
+      "group": "Mobile",
+      "summary": "Trang chủ trên điện thoại, cùng thứ tự với desktop nhưng xếp 1 cột:"
+    },
+    {
+      "name": "MobileNews",
+      "group": "Mobile",
+      "summary": "Trang Tin khuyến mãi / Truyền thông trên điện thoại:"
+    },
+    {
+      "name": "MobileOrders",
+      "group": "Mobile",
+      "summary": "Đơn hàng trên điện thoại:"
+    },
+    {
+      "name": "MobilePlantClinic",
+      "group": "Mobile",
+      "summary": "Tab Bắt bệnh (nút giữa thanh đáy) — tính năng riêng của Cây Cảnh Miền Tây, bản mobile của PlantClinic:"
+    },
+    {
+      "name": "MobileProductDetail",
+      "group": "Mobile",
+      "summary": "Chi tiết sản phẩm trên điện thoại (ẩn thanh điều hướng đáy):"
+    },
+    {
+      "name": "MobileProductList",
+      "group": "Mobile",
+      "summary": "Danh sách sản phẩm trên điện thoại:"
+    },
+    {
+      "name": "MobileShell",
+      "group": "Mobile",
+      "summary": "Khung chung trên điện thoại (thiết kế ở khung 390 × 844, dùng tốt từ 360px)."
+    },
+    {
+      "name": "MobileStores",
+      "group": "Mobile",
+      "summary": "Hệ thống cửa hàng trên điện thoại:"
+    },
+    {
+      "name": "MobileVoucher",
+      "group": "Mobile",
+      "summary": "Hộp ưu đãi dạng toàn màn hình trên điện thoại (VoucherModal): nút đóng ✕ trái, ô nhập mã, danh sách 3 nhóm (Đang áp dụng / Có thể dùng / Không dùng chung được)…"
+    },
+    {
+      "name": "MyGardenLayout",
+      "group": "Tài khoản",
+      "summary": "Vườn của tôi — danh sách cây của khách (mua tại Cây Cảnh Miền Tây tự vào, cây mua nơi khác thêm tay).",
+      "page": true
+    },
+    {
+      "name": "NewsCategoryLayout",
+      "group": "Bố cục",
+      "summary": "Trang Truyền thông (tin hoạt động công ty): Header → breadcrumb → NewsHero → danh sách NewsListCard + cột phải 280px (Xem nhiều, Liên hệ báo chí kèm bộ nhận di…",
+      "page": true
+    },
+    {
+      "name": "NewsHero",
+      "group": "Tin tức",
+      "summary": "Đầu trang tin tức (Truyền thông, Tin khuyến mãi), học theo trang tin của chuỗi nhà thuốc:"
+    },
+    {
+      "name": "NewsListCard",
+      "group": "Tin tức",
+      "summary": "Thẻ tin dạng ngang dùng cho danh sách bên dưới khối nổi bật: ảnh 200px (16:10) trái → nhãn chuyên mục + ngày → tiêu đề 16px → tóm tắt 2 dòng ink-muted → (tùy c…"
+    },
+    {
+      "name": "NotFoundPage",
+      "group": "Bố cục",
+      "summary": "Trang 404 (không tìm thấy): số 404 lớn primary-soft với chiếc lá thay số 0, tiêu đề vui nhẹ, giải thích ngắn, ô tìm kiếm, 2 nút Về trang chủ · Xem cây bán chạy.",
+      "page": true
+    },
+    {
+      "name": "NotificationCenter",
+      "group": "Điều hướng",
+      "summary": "Trung tâm thông báo, mở từ nút chuông trên Header (số chưa đọc sale)."
+    },
+    {
+      "name": "OrderCard",
+      "group": "Đơn hàng",
+      "summary": "Thẻ đơn hàng trong danh sách, theo cấu trúc của trang dược:"
+    },
+    {
+      "name": "OrderDetail",
+      "group": "Đơn hàng",
+      "summary": "Chi tiết một đơn hàng, 2 cột như trang dược: cột trái thông tin đơn, cột phải khối Thông tin thanh toán dạng hóa đơn (mép dưới răng cưa)."
+    },
+    {
+      "name": "OrderDetailLayout",
+      "group": "Bố cục",
+      "summary": "Trang chi tiết đơn hàng: Header → breadcrumb (Trang chủ / Tài khoản / Đơn hàng của tôi / Chi tiết đơn hàng) → OrderDetail toàn chiều rộng (ẩn AccountSidebar để…",
+      "page": true
+    },
+    {
+      "name": "OrderSuccessLayout",
+      "group": "Bố cục",
+      "summary": "Trang Đặt hàng thành công:",
+      "page": true
+    },
+    {
+      "name": "OrderSummary",
+      "group": "Giỏ hàng",
+      "summary": "Khối tổng tiền cột phải, dính theo khi cuộn (sticky) trên desktop; trên mobile thu thành thanh đáy cố định (Thành tiền + nút Đặt hàng), bấm vào mở chi tiết."
+    },
+    {
+      "name": "OrderTabs",
+      "group": "Đơn hàng",
+      "summary": "Tiêu đề \"Đơn hàng của tôi\" kèm nút tìm đơn và menu thêm, bên dưới là hàng tab trạng thái."
+    },
+    {
+      "name": "OrderTimeline",
+      "group": "Đơn hàng",
+      "summary": "Thanh tiến trình 5 bước của đơn: Đặt hàng → Xác nhận → Chuẩn bị cây → Đang giao → Đã giao."
+    },
+    {
+      "name": "OrdersLayout",
+      "group": "Bố cục",
+      "summary": "Trang Đơn hàng của tôi trong AccountLayout: AccountSidebar + OrderTabs + danh sách OrderCard (tải thêm khi cuộn, 10 đơn mỗi lần).",
+      "page": true
+    },
+    {
+      "name": "PaymentMethods",
+      "group": "Giỏ hàng",
+      "summary": "Danh sách phương thức thanh toán dạng radio, mỗi dòng có ô logo 32px, tên và dòng mô tả."
+    },
+    {
+      "name": "PaymentQR",
+      "group": "Giỏ hàng",
+      "summary": "Màn chờ chuyển khoản QR sau khi bấm Đặt hàng với phương thức Chuyển khoản."
+    },
+    {
+      "name": "PhotoGuide",
+      "group": "Thương hiệu",
+      "summary": "Hướng dẫn chụp ảnh sản phẩm — ảnh là yếu tố quyết định website trông chuyên nghiệp."
+    },
+    {
+      "name": "PhotoShotList",
+      "group": "Thương hiệu",
+      "summary": "Danh sách ảnh cần chụp cho từng loại hàng — dùng làm checklist cho người chụp và cho màn AdminProductForm (thiếu ảnh bắt buộc thì cảnh báo)."
+    },
+    {
+      "name": "PlantClinic",
+      "group": "Nội dung",
+      "summary": "Khối \"Bắt bệnh cho cây\", tương đương khối kiểm tra sức khỏe của trang dược: khách chọn triệu chứng → trả lời 3–5 câu hỏi → nhận chẩn đoán, cách xử lý và gợi ý…"
+    },
+    {
+      "name": "PlantPartMap",
+      "group": "Bắt bệnh cây",
+      "summary": "Tra cứu bệnh theo bộ phận của cây, học theo khối \"Cơ thể người\" của trang tìm hiểu bệnh bên dược:"
+    },
+    {
+      "name": "PolicyArticle",
+      "group": "Trang thông tin",
+      "summary": "Bài viết giới thiệu / chính sách, rộng tối đa 760px để dễ đọc (chữ 15px, dòng 25px)."
+    },
+    {
+      "name": "PolicyLayout",
+      "group": "Bố cục",
+      "summary": "Khung chung cho mọi trang giới thiệu, chính sách, hướng dẫn, điều khoản: Header → breadcrumb → 2 cột (PolicyNav 260px | PolicyArticle) trên nền surface.",
+      "page": true
+    },
+    {
+      "name": "PolicyNav",
+      "group": "Trang thông tin",
+      "summary": "Menu trái của các trang giới thiệu, chính sách, điều khoản (\"Bài viết trong danh mục\"), dính khi cuộn."
+    },
+    {
+      "name": "PrintTemplates",
+      "group": "Admin",
+      "summary": "Mẫu in ấn cho vận hành — nền trắng chữ đen, không dùng màu (in nhiệt/đen trắng)."
+    },
+    {
+      "name": "ProductCard",
+      "group": "Thương mại",
+      "summary": "Thẻ sản phẩm dùng chung cho cây, thuốc, phân bón và vật tư, theo cấu trúc thẻ của chuỗi nhà thuốc."
+    },
+    {
+      "name": "ProductContent",
+      "group": "Chi tiết sản phẩm",
+      "summary": "Phần nội dung dài dưới khối mua: mục lục dính bên trái, bài viết bên phải."
+    },
+    {
+      "name": "ProductDetailLayout",
+      "group": "Bố cục",
+      "summary": "Trang chi tiết sản phẩm hoàn chỉnh, cấu trúc học theo trang chi tiết của chuỗi nhà thuốc:",
+      "page": true
+    },
+    {
+      "name": "ProductGallery",
+      "group": "Chi tiết sản phẩm",
+      "summary": "Khối ảnh bên trái trang chi tiết: ảnh chính vuông, hàng ảnh nhỏ, ghi chú và 3 cam kết."
+    },
+    {
+      "name": "ProductListingLayout",
+      "group": "Bố cục",
+      "summary": "Trang danh mục / danh sách sản phẩm trên desktop, trong ShopLayout (SidebarMenu trái):",
+      "page": true
+    },
+    {
+      "name": "ProfileForm",
+      "group": "Tài khoản",
+      "summary": "Form thông tin cá nhân trong khối surface có tiêu đề, nội dung canh giữa rộng tối đa 420px."
+    },
+    {
+      "name": "PromoNewsLayout",
+      "group": "Bố cục",
+      "summary": "Trang Tin khuyến mãi, cùng khuôn với NewsCategoryLayout, thêm các phần riêng cho khuyến mãi:",
+      "page": true
+    },
+    {
+      "name": "QnA",
+      "group": "Chi tiết sản phẩm",
+      "summary": "Khối hỏi đáp công khai dưới đánh giá: ô nhập câu hỏi → chip sắp xếp → danh sách câu hỏi và trả lời."
+    },
+    {
+      "name": "QuickActions",
+      "group": "Điều hướng",
+      "summary": "Hàng lối tắt ngay dưới banner, giống hàng \"Cần mua thuốc / Tư vấn với dược sĩ / Đơn của tôi\" của chuỗi nhà thuốc."
+    },
+    {
+      "name": "QuoteRequestForm",
+      "group": "Bố cục",
+      "summary": "Form Đặt lịch khảo sát & báo giá cho mọi dịch vụ; mở từ các nút CTA ở trang dịch vụ (điền sẵn dịch vụ, số cây từ máy tính ước tính).",
+      "page": true
+    },
+    {
+      "name": "Reviews",
+      "group": "Chi tiết sản phẩm",
+      "summary": "Khối đánh giá: điểm trung bình + phân bố sao → chip lọc → danh sách đánh giá → \"Xem thêm\"."
+    },
+    {
+      "name": "SearchResultsLayout",
+      "group": "Bố cục",
+      "summary": "Trang kết quả tìm kiếm, trong ShopLayout:",
+      "page": true
+    },
+    {
+      "name": "SearchSuggest",
+      "group": "Điều hướng",
+      "summary": "Hộp gợi ý hiện ngay khi gõ vào ô tìm kiếm trên Header (sau 2 ký tự, trễ ~150ms)."
+    },
+    {
+      "name": "SectionHeader",
+      "group": "Bố cục",
+      "summary": "Tiêu đề mỗi khối trên trang chủ: ô icon vuông màu primary, tiêu đề heading-1/20px, link \"Xem tất cả\" bên phải."
+    },
+    {
+      "name": "ServiceDetailLayout",
+      "group": "Bố cục",
+      "summary": "Trang chi tiết một dịch vụ, ví dụ Cho thuê cây văn phòng:",
+      "page": true
+    },
+    {
+      "name": "ServicesHubLayout",
+      "group": "Bố cục",
+      "summary": "Trang Dịch vụ (menu Dịch vụ sân vườn ở Header/Footer): trang giới thiệu dạng landing, mục tiêu là nhận yêu cầu khảo sát / báo giá.",
+      "page": true
+    },
+    {
+      "name": "ShopLayout",
+      "group": "Bố cục",
+      "summary": "Khung trang cho website nhiều mặt hàng: Header trên cùng, SidebarMenu cố định bên trái, vùng nội dung bên phải.",
+      "page": true
+    },
+    {
+      "name": "ShortVideoRow",
+      "group": "Góc chăm cây",
+      "summary": "Hàng video ngắn dạng dọc 9:16, 6 thẻ, cuộn ngang có nút mũi tên."
+    },
+    {
+      "name": "SidebarMenu",
+      "group": "Điều hướng",
+      "summary": "Menu danh mục cố định bên trái, học theo cách siêu thị bách hóa trực tuyến trình bày hàng chục nghìn mã hàng: luôn nhìn thấy, bấm nhóm lớn thì nhóm con xổ ngay…"
+    },
+    {
+      "name": "Skeleton",
+      "group": "Hiển thị",
+      "summary": "Khung chờ tải, giữ đúng hình dạng nội dung thật để trang không bị nhảy khi dữ liệu về."
+    },
+    {
+      "name": "SocialButtons",
+      "group": "Tài khoản",
+      "summary": "Nút đăng nhập bằng tài khoản bên ngoài, cao 44px, bo viên thuốc, logo đặt trái, chữ canh giữa \"Tiếp tục với …\"."
+    },
+    {
+      "name": "SpecTable",
+      "group": "Chi tiết sản phẩm",
+      "summary": "Bảng thông số 2 cột (nhãn ink-muted 140px, giá trị ink), đặt trong BuyBox dưới đoạn mô tả ngắn."
+    },
+    {
+      "name": "StaffDeliveryApp",
+      "group": "App nhân viên",
+      "summary": "App (hoặc web mobile) cho tài xế giao hàng — vai trò Giao hàng chỉ thấy phần này."
+    },
+    {
+      "name": "StaffWarehouseApp",
+      "group": "App nhân viên",
+      "summary": "App cho nhân viên kho / vườn — vai trò Kho."
+    },
+    {
+      "name": "StickyBuyBar",
+      "group": "Chi tiết sản phẩm",
+      "summary": "Thanh mua dính ở đáy màn hình, hiện khi khách cuộn qua khỏi BuyBox (khi đọc mô tả, đánh giá)."
+    },
+    {
+      "name": "StoreDetail",
+      "group": "Cửa hàng",
+      "summary": "Thông tin cửa hàng đang chọn, theo trang hệ thống nhà thuốc:"
+    },
+    {
+      "name": "StoreFinder",
+      "group": "Cửa hàng",
+      "summary": "Cột tìm cửa hàng, theo trang hệ thống nhà thuốc:"
+    },
+    {
+      "name": "StoreLocatorLayout",
+      "group": "Bố cục",
+      "summary": "Trang Hệ thống cửa hàng: Header → breadcrumb → tiêu đề + giờ mở cửa chung → 2 cột (StoreFinder 360px | StoreDetail).",
+      "page": true
+    },
+    {
+      "name": "TabletHome",
+      "group": "Tablet",
+      "summary": "Trang chủ trên tablet dọc (768–1023px, thiết kế ở 820px):"
+    },
+    {
+      "name": "TabletProductDetail",
+      "group": "Tablet",
+      "summary": "Chi tiết sản phẩm trên tablet dọc:"
+    },
+    {
+      "name": "Toast",
+      "group": "Hiển thị",
+      "summary": "Thông báo nhỏ sau một thao tác, nền ink chữ surface, bo radius-md."
+    },
+    {
+      "name": "TopicList",
+      "group": "Góc chăm cây",
+      "summary": "Thẻ Chủ đề nổi bật ở cột phải: nền primary-soft, mỗi dòng là thẻ hashtag (# Tên chủ đề, 600) + số bài viết (ink-muted), 6–8 chủ đề, cuối có Xem tất cả."
+    },
+    {
+      "name": "VoiceTone",
+      "group": "Thương hiệu",
+      "summary": "Giọng văn thương hiệu — áp dụng cho website, tin Zalo, trả lời khách, bài viết, quảng cáo."
+    },
+    {
+      "name": "VoucherItem",
+      "group": "Giỏ hàng",
+      "summary": "Một ưu đãi trong danh sách: ô icon 48px → tiêu đề → điều kiện → dòng phụ → ô chọn tròn bên phải."
+    },
+    {
+      "name": "VoucherModal",
+      "group": "Giỏ hàng",
+      "summary": "Hộp Ưu đãi dành cho bạn, mở từ \"Thêm ưu đãi\" trong OrderSummary."
+    },
+    {
+      "name": "WarrantyRequest",
+      "group": "Tài khoản",
+      "summary": "Form gửi yêu cầu bảo hành cây phía khách (phía admin là AdminWarranty).",
+      "page": true
+    },
+    {
+      "name": "WishlistLayout",
+      "group": "Tài khoản",
+      "summary": "Sản phẩm yêu thích: lưới ProductCard (3 cột trong khung tài khoản) có nút tim đỏ sale để bỏ lưu.",
+      "page": true
+    }
+  ],
+  "assetGroups": []
+}
