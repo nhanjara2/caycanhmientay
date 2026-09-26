@@ -8,6 +8,23 @@ export type ShipGroup = 'plant' | 'supply';
 export type SubCategory = { slug: string; name: string };
 export type Category = { slug: string; name: string; icon: IconName; subs: SubCategory[] };
 
+/** Ngũ hành — mệnh hợp với cây. */
+export const ELEMENTS = [
+  { key: 'kim', name: 'Kim' }, { key: 'moc', name: 'Mộc' }, { key: 'thuy', name: 'Thủy' }, { key: 'hoa', name: 'Hỏa' }, { key: 'tho', name: 'Thổ' },
+] as const;
+export type ElementKey = (typeof ELEMENTS)[number]['key'];
+export const elementName = (k: ElementKey) => ELEMENTS.find((e) => e.key === k)?.name ?? k;
+
+/** Thông tin phong thủy (bỏ trống thì không hiện). */
+export type FengShui = {
+  elements: ElementKey[];
+  /** Hợp tuổi, ví dụ "Tý, Thìn, Thân". */
+  ages: string;
+  meaning: string;
+  /** Vị trí / hướng đặt. */
+  placement: string;
+};
+
 export type Unit = { label: string; price: number; oldPrice?: number };
 
 export type Product = {
@@ -36,6 +53,9 @@ export type Product = {
   images?: string[];
   /** Video hướng dẫn trên YouTube (mã 11 ký tự). */
   youtubeId?: string;
+  fengshui?: FengShui;
+  /** Đăng trong NEW_DAYS ngày gần đây → thẻ có nhãn "Mới" + viền xanh. Tính trên server. */
+  isNew?: boolean;
 };
 
 export const categories: Category[] = [
@@ -122,5 +142,12 @@ export function parseYoutubeId(input: string): string | null {
   }
   return id && /^[\w-]{11}$/.test(id) ? id : null;
 }
+
+/** Số ngày sản phẩm mới đăng được gắn nhãn "Mới". */
+export const NEW_DAYS = 30;
+/** 18 sản phẩm mẫu nạp lúc chuyển sang Supabase (26/09/2026 09:45 UTC) không tính là hàng mới. */
+const SEED_BATCH_END = Date.parse('2026-09-26T10:00:00Z');
+export const isNewProduct = (createdAt: Date, now = Date.now()) =>
+  createdAt.getTime() > SEED_BATCH_END && now - createdAt.getTime() < NEW_DAYS * 86_400_000;
 
 export const discountPct = (u: Unit) => (u.oldPrice ? Math.round((1 - u.price / u.oldPrice) * 100) : 0);

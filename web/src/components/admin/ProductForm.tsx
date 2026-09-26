@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition, type FormEvent } from 'react';
 import { saveProductAction } from '@/app/actions/admin';
 import { Art, type IconName } from '@/components/Icon';
-import { categories, parseYoutubeId } from '@/lib/catalog';
+import { categories, ELEMENTS, parseYoutubeId, type FengShui } from '@/lib/catalog';
 import { ProductImages, type AdminImage } from './ProductImages';
 
 type Option = { label: string; price: string; oldPrice: string; stock: string; existingStock?: number };
@@ -28,6 +28,7 @@ export type ProductFormValue = {
   /** Link YouTube, bỏ trống = không có video. */
   video: string;
   images: AdminImage[];
+  fengshui: FengShui;
   options: { label: string; price: number; oldPrice: number | null; stock: number }[];
 };
 
@@ -57,6 +58,7 @@ export function ProductForm({ initial, canEdit }: { initial: ProductFormValue; c
   const set = <K extends keyof ProductFormValue>(k: K, val: ProductFormValue[K]) => { setV((x) => ({ ...x, [k]: val })); setSaved(false); };
   const kind = kindOf(v);
   const videoId = parseYoutubeId(v.video);
+  const setFs = (patch: Partial<FengShui>) => set('fengshui', { ...v.fengshui, ...patch });
   const cat = categories.find((c) => c.slug === v.category) ?? categories[0];
 
   const pickKind = (k: Kind) => {
@@ -152,6 +154,43 @@ export function ProductForm({ initial, canEdit }: { initial: ProductFormValue; c
                     ))}
                   </span>
                 </div>
+              </div>
+            </div>
+
+            <div className="ad-card">
+              <div className="ad-card__h">Phong thủy</div>
+              <div className="ad-card__b">
+                <div className="ad-f">
+                  <label>Hợp mệnh</label>
+                  <span className="vx-seg" style={{ flexWrap: 'wrap' }}>
+                    {ELEMENTS.map((e) => {
+                      const on = v.fengshui.elements.includes(e.key);
+                      return (
+                        <button key={e.key} type="button" className="vx-chip" aria-pressed={on}
+                          onClick={() => setFs({ elements: on ? v.fengshui.elements.filter((x) => x !== e.key) : ELEMENTS.map((x) => x.key).filter((k) => k === e.key || v.fengshui.elements.includes(k)) })}>
+                          {e.name}
+                        </button>
+                      );
+                    })}
+                  </span>
+                  <span className="hint">Chọn được nhiều mệnh.</span>
+                </div>
+                <div className="ad-frow">
+                  <div className="ad-f">
+                    <label htmlFor="pf-ages">Hợp tuổi</label>
+                    <input id="pf-ages" className="vx-input" value={v.fengshui.ages} onChange={(e) => setFs({ ages: e.target.value })} maxLength={80} placeholder="Tý, Thìn, Thân" />
+                  </div>
+                  <div className="ad-f">
+                    <label htmlFor="pf-place">Vị trí / hướng đặt</label>
+                    <input id="pf-place" className="vx-input" value={v.fengshui.placement} onChange={(e) => setFs({ placement: e.target.value })} maxLength={300} placeholder="Phòng khách, hướng Đông hoặc Đông Nam" />
+                  </div>
+                </div>
+                <div className="ad-f">
+                  <label htmlFor="pf-meaning">Ý nghĩa phong thủy</label>
+                  <textarea id="pf-meaning" className="vx-input" style={{ minHeight: 72 }} value={v.fengshui.meaning} onChange={(e) => setFs({ meaning: e.target.value })} maxLength={1000}
+                    placeholder="Lá xẻ tượng trưng cho sự rộng mở, đón tài lộc…" />
+                </div>
+                <span className="hint">Bỏ trống hết nếu sản phẩm không liên quan phong thủy — trang sản phẩm sẽ không hiện mục này.</span>
               </div>
             </div>
 

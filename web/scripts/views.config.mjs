@@ -6,7 +6,6 @@ export const ROUTES = {
   orders: '/tai-khoan/don-hang',
   order: '/tai-khoan/don-hang/MT0095402',
   article: '/goc-cham-cay/5-dau-hieu-thoi-re-mua-mua',
-  disease: '/benh-cay/thoi-re',
   service: '/dich-vu/cho-thue-cay-van-phong',
   quote: '/dich-vu/dat-lich-khao-sat',
   adminOrder: '/admin/don-hang',
@@ -85,17 +84,13 @@ export const views = [
   account('CareScheduleView', 'CareScheduleLayout'),
   account('WishlistView', 'WishlistLayout'),
 
-  // Góc chăm cây, bệnh cây
+  // Góc chăm cây
   site('BlogView', 'BlogLayout', {
     linkByClass: { 'vx-hero__main': ROUTES.article, 'vx-hitem': ROUTES.article, 'vx-feat': ROUTES.article, 'vx-bfeat__main': ROUTES.article, 'vx-promo-card': '/khuyen-mai' },
     linkInside: { '.vx-blog__main': ROUTES.article },
   }),
   site('ArticleView', 'ArticleDetailLayout', { linkInside: { '.ar-side': ROUTES.article } }),
-  site('DiseaseLibraryView', 'DiseaseLibraryLayout', {
-    linkByClass: { 'vx-part': '/benh-cay', 'vx-dtile': '/benh-cay' },
-    linkInside: { '.vx-dlist': ROUTES.disease },
-  }),
-  site('DiseaseDetailView', 'DiseaseDetailLayout', { links: { 'Rễ': '/benh-cay' } }),
+  // Bệnh cây (/benh-cay) đã viết tay với dữ liệu thật.
 
   // Cửa hàng, chính sách, tin tức
   site('StoreLocatorView', 'StoreLocatorLayout'),

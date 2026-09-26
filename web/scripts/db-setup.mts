@@ -4,7 +4,7 @@ import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import pg from 'pg';
 import * as schema from '../src/server/db/schema';
-import { seedIfEmpty } from '../src/server/db/seed';
+import { seedDiseasesIfEmpty, seedIfEmpty } from '../src/server/db/seed';
 
 const url = process.env.DATABASE_URL;
 if (!url) {
@@ -16,4 +16,5 @@ const db = drizzle({ client, schema });
 await migrate(db, { migrationsFolder: 'drizzle' });
 console.log('[db] Đã cập nhật bảng');
 if (await seedIfEmpty(db)) console.log('[db] Đã nạp dữ liệu mẫu');
+if (await seedDiseasesIfEmpty(db)) console.log('[db] Đã nạp bài bệnh cây mẫu');
 await client.end();

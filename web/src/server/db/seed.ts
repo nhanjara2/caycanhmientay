@@ -1,6 +1,8 @@
-// Nạp dữ liệu mẫu khi database còn trống: 3 cửa hàng + sản phẩm mẫu (src/lib/seed-products.ts).
+// Nạp dữ liệu mẫu khi database còn trống: 3 cửa hàng + sản phẩm mẫu (src/lib/seed-products.ts)
+// + bài bệnh cây (src/lib/seed-diseases.ts).
 import { asc, count } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { seedDiseases } from '@/lib/seed-diseases';
 import { seedProducts } from '@/lib/seed-products';
 import { tracksLots } from '@/lib/stock';
 import * as schema from './schema';
@@ -37,5 +39,15 @@ export async function seedIfEmpty(db: NodePgDatabase<typeof schema>) {
       }
     }
   });
+  return true;
+}
+
+/** Nạp bài bệnh cây mẫu khi bảng `diseases` còn trống (chạy riêng: database đã có sản phẩm vẫn nạp). */
+export async function seedDiseasesIfEmpty(db: NodePgDatabase<typeof schema>) {
+  const [{ n }] = await db.select({ n: count() }).from(schema.diseases);
+  if (n > 0) return false;
+  await db.insert(schema.diseases).values(seedDiseases.map((d) => ({
+    ...d, aliases: d.aliases ?? [], confusions: d.confusions ?? [], prevention: d.prevention ?? [], safety: d.safety ?? '', products: d.products ?? [],
+  })));
   return true;
 }

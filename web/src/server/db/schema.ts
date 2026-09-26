@@ -1,5 +1,7 @@
 // Schema database (PostgreSQL / Supabase qua Drizzle). Đổi schema xong chạy `npm run db:generate` để tạo migration.
 import { sql } from 'drizzle-orm';
+import type { FengShui } from '../../lib/catalog';
+import type { Disease } from '../../lib/diseases';
 import { boolean, customType, doublePrecision, index, integer, jsonb, pgTable, primaryKey, serial, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 
 const ts = (name: string) => timestamp(name, { withTimezone: true, mode: 'date' });
@@ -69,6 +71,8 @@ export const products = pgTable('products', {
   active: boolean('active').notNull().default(true),
   /** Mã video YouTube (11 ký tự) hiện ở trang chi tiết — video để trên YouTube, web chỉ nhúng. */
   youtubeId: text('youtube_id'),
+  /** Phong thủy: mệnh hợp, hợp tuổi, ý nghĩa, vị trí đặt. */
+  fengshui: jsonb('fengshui').$type<FengShui>(),
   createdAt: createdAt(),
 }, (t) => [index('products_cat_idx').on(t.category, t.sub)]);
 
@@ -92,6 +96,32 @@ export const productOptions = pgTable('product_options', {
   oldPrice: integer('old_price'),
   stock: integer('stock').notNull().default(100),
 }, (t) => [primaryKey({ columns: [t.productSlug, t.idx] })]);
+
+// ---- Bệnh cây --------------------------------------------------------------------------------
+
+/** Thư viện bệnh cây (/benh-cay). Danh sách nhỏ → lọc, tìm trong bộ nhớ (src/server/diseases.ts). */
+export const diseases = pgTable('diseases', {
+  slug: text('slug').primaryKey(),
+  name: text('name').notNull(),
+  aliases: jsonb('aliases').$type<string[]>().notNull().default(sql`'[]'::jsonb`),
+  cause: text('cause').$type<Disease['cause']>().notNull(),
+  parts: jsonb('parts').$type<Disease['parts']>().notNull(),
+  plants: jsonb('plants').$type<Disease['plants']>().notNull().default(sql`'[]'::jsonb`),
+  severity: integer('severity').notNull().default(2),
+  spread: text('spread').notNull().default(''),
+  season: text('season').notNull().default(''),
+  summary: text('summary').notNull(),
+  symptoms: jsonb('symptoms').$type<Disease['symptoms']>().notNull(),
+  confusions: jsonb('confusions').$type<Disease['confusions']>().notNull().default(sql`'[]'::jsonb`),
+  steps: jsonb('steps').$type<Disease['steps']>().notNull(),
+  prevention: jsonb('prevention').$type<string[]>().notNull().default(sql`'[]'::jsonb`),
+  safety: text('safety').notNull().default(''),
+  /** Slug sản phẩm xử lý (không ràng buộc khóa ngoại: sản phẩm ẩn/xóa thì chỉ không hiện). */
+  products: jsonb('products').$type<string[]>().notNull().default(sql`'[]'::jsonb`),
+  active: boolean('active').notNull().default(true),
+  updatedAt: ts('updated_at').notNull().defaultNow(),
+  createdAt: createdAt(),
+});
 
 // ---- Đơn hàng -------------------------------------------------------------------------------
 

@@ -24,6 +24,7 @@ const I = {
   chat: <path d="M4 5h16v11H9l-5 4z" />,
   bell: <><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z" /><path d="M10 20a2 2 0 0 0 4 0" /></>,
   map: <><path d="M12 21s7-6 7-12a7 7 0 0 0-14 0c0 6 7 12 7 12z" /><circle cx="12" cy="9" r="2.5" /></>,
+  bug: <><rect x="8" y="7" width="8" height="12" rx="4" /><path d="M12 7V4M8 11H4M16 11h4M8 16H5M16 16h3M9 4l1 2M15 4l-1 2" /></>,
   gear: <><circle cx="12" cy="12" r="3" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2" /></>,
 };
 type Key = keyof typeof I;
@@ -50,6 +51,7 @@ export const ADMIN_NAV: { group: string; items: { href: string; label: string; i
   ] },
   { group: 'NỘI DUNG', items: [
     { href: '/admin/noi-dung', label: 'Bài viết & video', icon: 'doc' },
+    { href: '/admin/benh-cay', label: 'Bệnh cây', icon: 'bug' },
     { href: '/admin/danh-gia', label: 'Hỏi đáp & đánh giá', icon: 'chat' },
     { href: '/admin/mau-tin-nhan', label: 'Mẫu tin nhắn', icon: 'bell' },
   ] },

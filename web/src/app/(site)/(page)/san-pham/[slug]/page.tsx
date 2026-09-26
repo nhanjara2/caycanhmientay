@@ -5,7 +5,7 @@ import { BuyBox } from '@/components/BuyBox';
 import { Icon } from '@/components/Icon';
 import { ProductGallery } from '@/components/ProductGallery';
 import { ProductGrid } from '@/components/ProductCard';
-import { getCategory, type Product } from '@/lib/catalog';
+import { elementName, getCategory, type Product } from '@/lib/catalog';
 import { boughtTogether, getProduct } from '@/server/catalog';
 
 type Props = { params: Promise<{ slug: string }> };
@@ -26,6 +26,22 @@ const FAQ_SUPPLY = [
   ['Có xuất hóa đơn điện tử không?', 'Có. Bật "Yêu cầu xuất hóa đơn điện tử" ở bước thanh toán và điền thông tin công ty.'],
 ];
 
+function FengShuiBlock({ f }: { f: NonNullable<Product['fengshui']> }) {
+  return (
+    <>
+      <h3 id="phong-thuy">Ý nghĩa phong thủy</h3>
+      <dl className="app-fs">
+        {f.elements.length > 0 && (
+          <div><dt>Hợp mệnh</dt><dd>{f.elements.map((e) => <span key={e} className={`app-fs__el app-fs__el--${e}`}>{elementName(e)}</span>)}</dd></div>
+        )}
+        {f.ages && <div><dt>Hợp tuổi</dt><dd>{f.ages}</dd></div>}
+        {f.placement && <div><dt>Vị trí đặt</dt><dd>{f.placement}</dd></div>}
+      </dl>
+      {f.meaning && <p style={{ whiteSpace: 'pre-line' }}>{f.meaning}</p>}
+    </>
+  );
+}
+
 function Content({ p }: { p: Product }) {
   const isPlant = p.ship === 'plant';
   return (
@@ -33,6 +49,7 @@ function Content({ p }: { p: Product }) {
       <nav className="vx-toc">
         <a href="#mo-ta" aria-current="true">Mô tả sản phẩm</a>
         {p.youtubeId && <a href="#video">Video</a>}
+        {p.fengshui && <a href="#phong-thuy">Phong thủy</a>}
         <a href="#cach-dung">{isPlant ? 'Cách chăm sóc' : 'Cách sử dụng'}</a>
         <a href="#luu-y">Lưu ý</a>
         <a href="#hoi-dap">Câu hỏi thường gặp</a>
@@ -55,6 +72,7 @@ function Content({ p }: { p: Product }) {
             </div>
           </>
         )}
+        {p.fengshui && <FengShuiBlock f={p.fengshui} />}
         <h3 id="cach-dung">{isPlant ? 'Cách chăm sóc' : 'Cách sử dụng'}</h3>
         <ul>
           {p.specs.slice(0, 4).map(([k, v]) => (

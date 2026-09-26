@@ -58,37 +58,39 @@ export function ProductImages({ slug, initial, canEdit }: { slug?: string; initi
 
   return (
     <>
-      {images.length > 0 && (
-        <div className="ad-imgs">
-          {images.map((img, i) => (
-            <figure key={img.id} className="ad-img">
+      <input ref={input} type="file" accept="image/jpeg,image/png,image/webp" multiple hidden onChange={(e) => upload(e.target.files)} />
+      <div className="pi-grid">
+        {images.map((img, i) => {
+          const main = i === 0;
+          return (
+            <figure key={img.id} className={main ? 'pi-tile pi-tile--main' : 'pi-tile'}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={img.url} alt={`Ảnh ${i + 1}`} loading="lazy" />
-              {i === 0 && <span className="vx-badge vx-badge--success ad-img__main">Ảnh đại diện</span>}
+              <img src={img.url} alt={main ? 'Ảnh chính' : `Ảnh phụ ${i}`} loading="lazy" />
+              <span className={main ? 'pi-tag pi-tag--main' : 'pi-tag'}>{main ? '★ Ảnh chính' : `Ảnh phụ ${i}`}</span>
               {canEdit && (
                 <figcaption>
-                  {i > 0 && <button type="button" onClick={() => edit(img.id, 'first')} disabled={!!busy} title="Đặt làm ảnh đại diện">★</button>}
-                  {i > 0 && <button type="button" onClick={() => edit(img.id, 'left')} disabled={!!busy} aria-label="Dời sang trái">‹</button>}
-                  {i < images.length - 1 && <button type="button" onClick={() => edit(img.id, 'right')} disabled={!!busy} aria-label="Dời sang phải">›</button>}
-                  <button type="button" onClick={() => edit(img.id, 'delete')} disabled={!!busy} aria-label="Xóa ảnh">✕</button>
+                  {!main && <button type="button" className="pi-primary" onClick={() => edit(img.id, 'first')} disabled={!!busy}>★ Làm ảnh chính</button>}
+                  <span className="pi-tools">
+                    {i > 1 && <button type="button" onClick={() => edit(img.id, 'left')} disabled={!!busy} aria-label="Dời sang trái" title="Dời sang trái">‹</button>}
+                    {i > 0 && i < images.length - 1 && <button type="button" onClick={() => edit(img.id, 'right')} disabled={!!busy} aria-label="Dời sang phải" title="Dời sang phải">›</button>}
+                    <button type="button" onClick={() => edit(img.id, 'delete')} disabled={!!busy} aria-label="Xóa ảnh" title="Xóa ảnh">✕</button>
+                  </span>
                 </figcaption>
               )}
             </figure>
-          ))}
-        </div>
-      )}
-      {canEdit && images.length < MAX_PRODUCT_IMAGES && (
-        <div>
-          <input ref={input} type="file" accept="image/jpeg,image/png,image/webp" multiple hidden onChange={(e) => upload(e.target.files)} />
-          <button type="button" className="vx-btn vx-btn--outline" disabled={!!busy} onClick={() => input.current?.click()}>
-            {busy || '+ Tải ảnh lên'}
+          );
+        })}
+        {canEdit && images.length < MAX_PRODUCT_IMAGES && (
+          <button type="button" className={images.length ? 'pi-tile pi-tile--add' : 'pi-tile pi-tile--add pi-tile--main'} disabled={!!busy} onClick={() => input.current?.click()}>
+            <b>{busy || (images.length ? '+ Thêm ảnh phụ' : '+ Tải ảnh chính')}</b>
+            {!busy && <small>{images.length ? 'Chọn được nhiều ảnh' : 'Chọn nhiều ảnh: ảnh đầu làm ảnh chính'}</small>}
           </button>
-        </div>
-      )}
+        )}
+      </div>
       {busy && images.length >= MAX_PRODUCT_IMAGES && <span className="hint">{busy}</span>}
       {error && <span className="vx-err" role="alert">{error}</span>}
       <span className="hint">
-        {images.length}/{MAX_PRODUCT_IMAGES} ảnh · Chọn nhiều ảnh một lần được, ảnh tự thu nhỏ và đóng chữ ký “{WATERMARK}” chống lấy ảnh. Ảnh đầu tiên hiện trên thẻ sản phẩm. Ảnh lưu ngay, không cần bấm Lưu.
+        {images.length}/{MAX_PRODUCT_IMAGES} ảnh · Chọn nhiều ảnh một lần được, ảnh tự thu nhỏ và đóng chữ ký “{WATERMARK}” chống lấy ảnh. <b>Ảnh chính</b> (khung lớn) hiện trên thẻ sản phẩm, giỏ hàng và đầu trang chi tiết; <b>ảnh phụ</b> hiện ở dải ảnh nhỏ bên dưới. Ảnh lưu ngay, không cần bấm Lưu.
       </span>
     </>
   );

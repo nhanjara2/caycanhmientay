@@ -1,7 +1,7 @@
 import 'server-only';
 import { and, asc, count, desc, eq, ilike, or, sql } from 'drizzle-orm';
 import * as z from 'zod';
-import { categories, getCategory, MAX_PRODUCT_IMAGES, normalize, parseYoutubeId, productImageUrl } from '@/lib/catalog';
+import { categories, ELEMENTS, getCategory, MAX_PRODUCT_IMAGES, normalize, parseYoutubeId, productImageUrl, type FengShui } from '@/lib/catalog';
 import { db, schema } from './db';
 import { applyStock } from './inventory';
 import type { SavedImage } from './uploads';
@@ -37,6 +37,13 @@ export const ProductInputSchema = z.object({
     if (!id) ctx.addIssue({ code: 'custom', message: 'Link YouTube chưa đúng (ví dụ: https://youtu.be/abc123XYZ_0)' });
     return id;
   }),
+  // Phong thủy: điền mục nào lưu mục đó, bỏ trống hết = không có
+  fengshui: z.object({
+    elements: z.array(z.enum(ELEMENTS.map((e) => e.key) as [string, ...string[]])).max(5),
+    ages: z.string().trim().max(80),
+    meaning: z.string().trim().max(1000),
+    placement: z.string().trim().max(300),
+  }).optional().transform((f) => (f && (f.elements.length || f.ages || f.meaning || f.placement) ? (f as FengShui) : null)),
   options: z.array(z.object({
     label: z.string().trim().min(1, 'Nhập tên quy cách').max(40),
     price: money.min(1000, 'Giá bán tối thiểu 1.000đ'),
@@ -126,6 +133,7 @@ export async function saveProduct(input: ProductInput, actor: string): Promise<S
     name: input.name, category: input.category, sub: input.sub, icon: input.icon, origin: input.origin, ship: input.ship,
     pesticide: input.pesticide, unit: input.unit, spec: input.spec, lead: input.lead, specs: input.specs, active: input.active,
     youtubeId: input.video,
+    fengshui: input.fengshui,
   };
 
   if (input.slug) {

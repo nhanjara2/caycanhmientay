@@ -29,6 +29,20 @@
       "when": 1790424639430,
       "tag": "0003_product_media",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790426444180,
+      "tag": "0004_fengshui",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790427490465,
+      "tag": "0005_diseases",
+      "breakpoints": true
     }
   ]
 }

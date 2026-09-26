@@ -3,7 +3,7 @@ import { connection } from 'next/server';
 import { cache } from 'react';
 import { and, asc, eq, inArray, isNotNull } from 'drizzle-orm';
 import type { IconName } from '@/components/Icon';
-import { normalize, productImageUrl, type Product } from '@/lib/catalog';
+import { isNewProduct, normalize, productImageUrl, type Product } from '@/lib/catalog';
 import { db, schema } from './db';
 
 const { products: P, productOptions: O, productImages: I } = schema;
@@ -25,6 +25,8 @@ async function hydrate(rows: Row[]): Promise<Product[]> {
     options: opts.filter((o) => o.productSlug === r.slug).map((o) => ({ label: o.label, price: o.price, oldPrice: o.oldPrice ?? undefined })),
     images: imgs.filter((i) => i.slug === r.slug).map((i) => productImageUrl(i.file)),
     youtubeId: r.youtubeId ?? undefined,
+    fengshui: r.fengshui ?? undefined,
+    isNew: isNewProduct(r.createdAt) || undefined,
   }));
 }
 
