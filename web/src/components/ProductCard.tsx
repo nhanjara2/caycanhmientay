@@ -13,19 +13,17 @@ export function ProductCard({ product: p, showFlash = false }: { product: Produc
   const u = p.options[opt];
   const pct = discountPct(u);
   const href = `/san-pham/${p.slug}`;
-  // Viền theo loại: Flash sale đỏ, đang giảm giá cam, hàng mới xanh.
-  const tone = p.flash ? ' vx-pcard--flash' : pct > 0 ? ' vx-pcard--sale' : p.isNew ? ' vx-pcard--new' : '';
+  // Viền cam quanh khung ảnh cho Flash sale và đang giảm giá.
+  const tone = p.flash ? ' vx-pcard--flash' : pct > 0 ? ' vx-pcard--sale' : '';
 
   return (
     <article className={`vx-pcard${tone}`}>
       <Link href={href} className="vx-pcard__media" aria-label={p.name}>
         {p.images?.[0] ? <img src={p.images[0]} alt={p.name} loading="lazy" /> : <Art name={p.icon} />}
+        {p.isNew && <span className="app-pcard__new">Mới</span>}
       </Link>
       <div className="vx-pcard__tags">
-        <span className="app-pcard__tagl">
-          <span className="vx-badge vx-badge--origin">{p.origin}</span>
-          {p.isNew && <span className="vx-badge vx-badge--new">Mới</span>}
-        </span>
+        <span className="vx-badge vx-badge--origin">{p.origin}</span>
         {pct > 0 ? <span className="vx-badge vx-badge--sale">-{pct}%</span> : <span />}
       </div>
       <h3 className="vx-pcard__name">

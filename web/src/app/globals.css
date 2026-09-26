@@ -232,12 +232,9 @@ a.vx-chip[aria-current="true"] { background: var(--primary-soft); border-color: 
 .dd-sym .img { aspect-ratio: 2 / 1; }
 #danh-sach { scroll-margin-top: 140px; }
 
-/* Thẻ sản phẩm: viền màu theo loại (ProductCard) */
-.vx-pcard--flash { --pcard-tone: var(--danger); }
-.vx-pcard--sale { --pcard-tone: var(--sale); }
-.vx-pcard--new { --pcard-tone: var(--primary); }
-/* Viền dày 2px bằng box-shadow để nội dung thẻ không bị lệch so với thẻ thường */
-.vx-pcard--flash, .vx-pcard--sale, .vx-pcard--new { border-color: var(--pcard-tone); box-shadow: 0 0 0 1px var(--pcard-tone); }
-.vx-pcard--flash:hover, .vx-pcard--sale:hover, .vx-pcard--new:hover { border-color: var(--pcard-tone); box-shadow: 0 0 0 1px var(--pcard-tone), var(--shadow-card); }
-.app-pcard__tagl { display: flex; gap: 4px; flex-wrap: wrap; }
-.vx-badge--new { background: var(--primary); color: #fff; }
+/* Thẻ sản phẩm: viền khung ảnh theo loại (ProductCard) */
+/* Flash sale, giảm giá: viền cam. Outline vẽ đè lên ảnh nên không làm ảnh co lại */
+:is(.vx-pcard--flash, .vx-pcard--sale) .vx-pcard__media { outline: 2px solid var(--sale); outline-offset: -2px; }
+/* Hàng mới: sticker góc trái dưới khung ảnh */
+.vx-pcard__media { position: relative; }
+.app-pcard__new { position: absolute; left: 6px; bottom: 6px; background: var(--primary); color: #fff; font-size: 12px; line-height: 16px; font-weight: 700; padding: 3px 10px; border-radius: 999px; box-shadow: 0 1px 3px rgb(0 0 0 / .2); pointer-events: none; }
