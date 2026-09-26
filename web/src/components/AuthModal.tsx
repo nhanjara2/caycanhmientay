@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { isPhone, normalizePhone, useAuth } from '@/lib/auth';
 import { Icon } from './Icon';
 
-/** Hộp Đăng nhập / Đăng ký gộp: SĐT → OTP 6 số (gửi qua Zalo, SMS dự phòng). */
+/** Hộp Đăng nhập / Đăng ký gộp: SĐT → OTP 6 số (gửi qua Zalo, SMS dự phòng), hoặc Google. */
 export function AuthModal() {
   const { modalOpen, closeLogin } = useAuth();
   useEffect(() => {
@@ -22,10 +22,11 @@ export function AuthModal() {
 }
 
 /** Hộp đăng nhập OTP (dùng trong AuthModal và trang đăng nhập quản trị). */
-export function OtpLoginBox({ onDone, onClose, title = 'Đăng nhập Cây Cảnh Miền Tây', subtitle = 'Theo dõi đơn, bảo hành cây và nhận lịch chăm cây' }: {
-  onDone: () => void; onClose?: () => void; title?: string; subtitle?: string;
+export function OtpLoginBox({ onDone, onClose, googleNext, title = 'Đăng nhập Cây Cảnh Miền Tây', subtitle = 'Theo dõi đơn, bảo hành cây và nhận lịch chăm cây' }: {
+  /** Trang quay về sau khi đăng nhập Google (mặc định: trang đang xem). */
+  onDone: () => void; onClose?: () => void; googleNext?: string; title?: string; subtitle?: string;
 }) {
-  const { requestOtp, verifyOtp } = useAuth();
+  const { requestOtp, verifyOtp, google } = useAuth();
   const closeLogin = onClose ?? (() => {});
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [phone, setPhone] = useState('');
@@ -67,16 +68,30 @@ export function OtpLoginBox({ onDone, onClose, title = 'Đăng nhập Cây Cản
     else setError(r.error ?? 'Mã xác thực chưa đúng');
   };
 
+  const loginWithGoogle = () => {
+    const params = new URLSearchParams(location.search);
+    params.delete('dang-nhap');
+    const next = googleNext ?? location.pathname + (params.size ? `?${params}` : '');
+    location.href = `/api/auth/google?next=${encodeURIComponent(next)}`;
+  };
+
   return (
       <div className="au-box">
         <div className="au-head">
           {onClose && <button type="button" className="x" aria-label="Đóng" onClick={onClose}><Icon name="close" /></button>}
           <span className="mark"><Icon name={step === 'phone' ? 'leaf' : 'shield'} /></span>
           {step === 'phone' ? (
-            <>
-              <h2>{title}</h2>
-              <p>{subtitle}</p>
-            </>
+            google.pendingEmail ? (
+              <>
+                <h2>Xác thực số điện thoại</h2>
+                <p>Đã xác thực Google <b>{google.pendingEmail}</b>. Nhập số điện thoại để hoàn tất — chỉ cần làm một lần, lần sau bấm Google là vào.</p>
+              </>
+            ) : (
+              <>
+                <h2>{title}</h2>
+                <p>{subtitle}</p>
+              </>
+            )
           ) : (
             <>
               <h2>Nhập mã xác thực</h2>
@@ -90,19 +105,21 @@ export function OtpLoginBox({ onDone, onClose, title = 'Đăng nhập Cây Cản
 
         {step === 'phone' ? (
           <form className="au-body" onSubmit={sendOtp}>
-            <div className="au-perk"><span>Tặng voucher 50.000đ</span><span>Tích điểm mọi đơn</span></div>
+            {!google.pendingEmail && <div className="au-perk"><span>Tặng voucher 50.000đ</span><span>Tích điểm mọi đơn</span></div>}
             <div className="au-phone">
               <span>+84</span>
               <input autoFocus inputMode="tel" autoComplete="tel" placeholder="Nhập số điện thoại" value={phone} onChange={(e) => setPhone(e.target.value)} />
             </div>
-            {error && <span className="vx-err">{error}</span>}
+            {(error || google.error) && <span className="vx-err">{error || google.error}</span>}
             <button className="vx-btn vx-btn--primary vx-btn--lg vx-btn--block" disabled={busy}>Tiếp tục</button>
-            <div className="au-or">hoặc</div>
-            <div className="au-social">
-              <button type="button" className="au-sbtn"><span className="logo">G</span>Tiếp tục với Google</button>
-              <button type="button" className="au-sbtn"><span className="logo">Zalo</span>Tiếp tục với Zalo</button>
-              <button type="button" className="au-sbtn dark"><span className="logo" />Tiếp tục với Apple</button>
-            </div>
+            {google.enabled && !google.pendingEmail && (
+              <>
+                <div className="au-or">hoặc</div>
+                <div className="au-social">
+                  <button type="button" className="au-sbtn" onClick={loginWithGoogle}><span className="logo">G</span>Tiếp tục với Google</button>
+                </div>
+              </>
+            )}
             <p className="au-terms">
               Bằng việc tiếp tục, bạn đồng ý với <Link href="/chinh-sach/dieu-khoan" onClick={closeLogin}>Điều khoản sử dụng</Link> và{' '}
               <Link href="/chinh-sach/bao-mat" onClick={closeLogin}>Chính sách bảo mật dữ liệu cá nhân</Link> của Cây Cảnh Miền Tây.

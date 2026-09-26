@@ -24,7 +24,7 @@ npx tsc --noEmit                          # typecheck
 - Tạo bảng + nạp 18 sản phẩm mẫu + 3 cửa hàng: `npm run db:setup` (`scripts/db-setup.mts`, tự chạy trong `prebuild` nên Vercel tự migrate mỗi lần deploy).
 - Đổi schema (`web/src/server/db/schema.ts`) → `npm run db:generate` (tạo file trong `web/drizzle/`) → `npm run db:setup`. Bảng mới phải thêm `ALTER TABLE … ENABLE ROW LEVEL SECURITY` vào migration (khóa API công khai của Supabase).
 - Driver: `pg` (node-postgres). **Không dùng thư viện `postgres`** — nó pipelining và treo qua Supabase pooler. Mọi truy vấn là async (`await`); ghi nhiều bước dùng `db.transaction(async (tx) => …)`, khóa dòng bằng `.for('update')` (tồn kho, đơn, bảo hành, sổ địa chỉ).
-- Deploy: Vercel (tài khoản nhanjara3), repo GitHub `nhanjara-flora-global/caycanhmientay`, Root Directory `web`, vùng chạy `bom1` (`web/vercel.json`, cùng vùng database). Biến môi trường trên Vercel: `DATABASE_URL`, `AUTH_SECRET`, `ADMIN_PHONES`, `OTP_DEMO=1` (chạy thử: hiện mã OTP trên màn hình — tắt khi bán thật), `SITE_URL`.
+- Deploy: Vercel (tài khoản nhanjara3), repo GitHub `nhanjara-flora-global/caycanhmientay`, Root Directory `web`, vùng chạy `bom1` (`web/vercel.json`, cùng vùng database). Biến môi trường trên Vercel: `DATABASE_URL`, `AUTH_SECRET`, `ADMIN_PHONES`, `OTP_DEMO=1` (chạy thử: hiện mã OTP trên màn hình — tắt khi bán thật), `SITE_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`.
 
 ## Kiến trúc `web/src`
 
@@ -51,6 +51,7 @@ Quy tắc đã chốt:
 - Cây sống chỉ giao trong 30 km quanh cửa hàng gần nhất (`PLANT_ZONE_KM`), kiểm tra khi địa chỉ đã ghim bản đồ; server chặn lúc đặt hàng.
 - Bản đồ: **không dùng tên miền openstreetmap.org** (nhà mạng VNPT chặn). Đang dùng nền `tile.openstreetmap.de` + tìm địa chỉ Photon (`photon.komoot.io`); CARTO đã đòi API key.
 - Tài khoản định danh bằng SĐT đã xác thực; đơn đặt vãng lai bằng đúng SĐT đó thuộc về tài khoản (`canViewOrder`).
+- Đăng nhập Google (`/api/auth/google` → `/api/auth/google/callback`, OAuth + PKCE, code trong `server/auth.ts`): Google đã gắn (`users.google_sub`) → vào thẳng; chưa gắn → cookie ký `ccmt_google_link` + mở hộp đăng nhập `?google=gan-sdt`, xác thực OTP xong thì gắn Google vào tài khoản SĐT đó. Đang đăng nhập sẵn thì gắn luôn. **Không tự gắn theo email.** Thiếu `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` thì nút Google ẩn. Nút Zalo/Apple (chưa làm) đã gỡ khỏi hộp đăng nhập.
 - Thuốc BVTV: bắt buộc Số đăng ký, Hoạt chất, Liều pha, Thời gian cách ly; giỏ có thuốc phải xác nhận an toàn.
 - Đơn Flash sale không cho COD. Nhận tại vườn không tính phí giao.
 - Server action nhận tối đa 7MB (`next.config.ts`) cho ảnh bảo hành — nhưng Vercel giới hạn thân request **4,5MB**. Ảnh bảo hành lưu trong cột `warranty_photos.data` (bytea), không ghi ổ đĩa.

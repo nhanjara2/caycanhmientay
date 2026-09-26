@@ -27,6 +27,7 @@ export function AdminLogin({ loggedInAsCustomer }: { loggedInAsCustomer: boolean
         <OtpLoginBox
           title="Quản trị Cây Cảnh Miền Tây"
           subtitle="Đăng nhập bằng số điện thoại nhân viên"
+          googleNext="/admin"
           onDone={() => { router.push('/admin'); router.refresh(); }}
         />
       )}

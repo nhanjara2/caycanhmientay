@@ -17,6 +17,8 @@ export const users = pgTable('users', {
   phone: text('phone').notNull().unique(),
   name: text('name'),
   email: text('email'),
+  /** Tài khoản Google đã gắn (claim `sub`) — gắn sau khi xác thực SĐT một lần. */
+  googleSub: text('google_sub').unique(),
   role: text('role', { enum: ROLES }).notNull().default('customer'),
   points: integer('points').notNull().default(0),
   createdAt: createdAt(),

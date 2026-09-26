@@ -103,8 +103,140 @@ export async function verifyOtp(rawPhone: string, code: string): Promise<VerifyR
   if (adminPhones().includes(phone) && user.role !== 'admin') {
     [user] = await db.update(users).set({ role: 'admin' }).where(eq(users.id, user.id)).returning();
   }
+  // Vừa đăng nhập Google mà chưa gắn tài khoản: SĐT vừa xác thực chính là tài khoản để gắn.
+  const google = await takePendingGoogle();
+  if (google) user = await linkGoogle(user, google);
   await createSession(user.id);
   return { ok: true, user: { id: user.id, phone: user.phone, name: user.name, role: user.role, points: user.points } };
+}
+
+// ---- Đăng nhập Google (OAuth 2.0 + PKCE) ----------------------------------------------------
+// Tài khoản vẫn định danh bằng SĐT: lần đầu đăng nhập Google phải xác thực SĐT một lần để gắn;
+// các lần sau Google đăng nhập thẳng. Không tự gắn theo email (email trong hồ sơ chưa được xác thực).
+
+const GOOGLE_FLOW_COOKIE = 'ccmt_google_flow';
+const GOOGLE_LINK_COOKIE = 'ccmt_google_link';
+const GOOGLE_TTL_MS = 10 * 60 * 1000;
+
+type GoogleProfile = { sub: string; email: string; name: string | null };
+
+export const googleEnabled = () => Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
+const googleRedirectUri = (origin: string) => `${origin}/api/auth/google/callback`;
+
+/** Cookie có chữ ký HMAC + hạn dùng (client đọc được nhưng không sửa được). */
+function seal(data: object) {
+  const body = Buffer.from(JSON.stringify({ ...data, exp: Date.now() + GOOGLE_TTL_MS })).toString('base64url');
+  return `${body}.${hmac(body)}`;
+}
+function unseal<T>(value: string | undefined): T | null {
+  const [body, sig] = value?.split('.') ?? [];
+  if (!body || !sig) return null;
+  const a = Buffer.from(sig, 'hex');
+  const b = Buffer.from(hmac(body), 'hex');
+  if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
+  const data = JSON.parse(Buffer.from(body, 'base64url').toString()) as T & { exp: number };
+  return data.exp > Date.now() ? data : null;
+}
+const shortCookie = { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax' as const, path: '/', maxAge: GOOGLE_TTL_MS / 1000 };
+
+/** Chỉ cho quay về đường dẫn trong site (chặn open redirect). */
+export const safeNext = (next: string | null | undefined) => (next && /^\/(?![/\\])/.test(next) ? next : '/');
+
+/** Bước 1: tạo state + PKCE, trả về URL trang đồng ý của Google. */
+export async function startGoogleLogin(origin: string, next: string) {
+  const state = randomBytes(16).toString('base64url');
+  const verifier = randomBytes(32).toString('base64url');
+  (await cookies()).set(GOOGLE_FLOW_COOKIE, seal({ state, verifier, next: safeNext(next) }), shortCookie);
+  const url = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+  url.search = new URLSearchParams({
+    client_id: process.env.GOOGLE_CLIENT_ID!,
+    redirect_uri: googleRedirectUri(origin),
+    response_type: 'code',
+    scope: 'openid email profile',
+    state,
+    code_challenge: createHash('sha256').update(verifier).digest('base64url'),
+    code_challenge_method: 'S256',
+    prompt: 'select_account',
+  }).toString();
+  return url.toString();
+}
+
+export type GoogleResult =
+  | { ok: true; next: string; linked: boolean } // linked=false: cần xác thực SĐT để gắn
+  | { ok: false; next: string; error: string };
+
+/** Bước 2: Google trả về `code` → đổi lấy id_token → đăng nhập hoặc chờ gắn SĐT. */
+export async function finishGoogleLogin(origin: string, params: URLSearchParams): Promise<GoogleResult> {
+  const store = await cookies();
+  const flow = unseal<{ state: string; verifier: string; next: string }>(store.get(GOOGLE_FLOW_COOKIE)?.value);
+  store.delete(GOOGLE_FLOW_COOKIE);
+  const next = flow?.next ?? '/';
+  const code = params.get('code');
+  if (params.get('error')) return { ok: false, next, error: 'huy' }; // người dùng bấm Hủy
+  if (!flow || !code || params.get('state') !== flow.state) return { ok: false, next, error: 'phien' };
+
+  const res = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      code,
+      client_id: process.env.GOOGLE_CLIENT_ID!,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+      redirect_uri: googleRedirectUri(origin),
+      grant_type: 'authorization_code',
+      code_verifier: flow.verifier,
+    }),
+  });
+  const tok = (await res.json().catch(() => ({}))) as { id_token?: string; error?: string };
+  if (!res.ok || !tok.id_token) {
+    console.error('[google] đổi code thất bại', res.status, tok.error);
+    return { ok: false, next, error: 'google' };
+  }
+  // id_token nhận trực tiếp từ Google qua HTTPS nên không cần kiểm chữ ký; vẫn kiểm tra người nhận + hạn.
+  const claims = JSON.parse(Buffer.from(tok.id_token.split('.')[1], 'base64url').toString()) as {
+    iss: string; aud: string; exp: number; sub: string; email?: string; email_verified?: boolean; name?: string;
+  };
+  if (!['accounts.google.com', 'https://accounts.google.com'].includes(claims.iss) || claims.aud !== process.env.GOOGLE_CLIENT_ID
+    || claims.exp * 1000 < Date.now() || !claims.email || !claims.email_verified) {
+    return { ok: false, next, error: 'google' };
+  }
+  const profile: GoogleProfile = { sub: claims.sub, email: claims.email, name: claims.name?.trim() || null };
+
+  const [owner] = await db.select().from(users).where(eq(users.googleSub, profile.sub));
+  if (owner) {
+    await createSession(owner.id);
+    return { ok: true, next, linked: true };
+  }
+  // Đang đăng nhập bằng SĐT rồi thì gắn luôn vào tài khoản hiện tại.
+  const current = await getCurrentUser();
+  if (current) {
+    const [u] = await db.select().from(users).where(eq(users.id, current.id));
+    await linkGoogle(u, profile);
+    return { ok: true, next, linked: true };
+  }
+  store.set(GOOGLE_LINK_COOKIE, seal(profile), shortCookie);
+  return { ok: true, next, linked: false };
+}
+
+/** Email Google đang chờ gắn (để hộp đăng nhập nhắc "xác thực SĐT để hoàn tất"). */
+export async function pendingGoogleEmail() {
+  return unseal<GoogleProfile>((await cookies()).get(GOOGLE_LINK_COOKIE)?.value)?.email ?? null;
+}
+
+async function takePendingGoogle() {
+  const store = await cookies();
+  const p = unseal<GoogleProfile>(store.get(GOOGLE_LINK_COOKIE)?.value);
+  if (p) store.delete(GOOGLE_LINK_COOKIE);
+  return p;
+}
+
+async function linkGoogle(user: typeof users.$inferSelect, g: GoogleProfile) {
+  if (user.googleSub) return user; // đã gắn tài khoản Google khác: giữ nguyên
+  const [u] = await db.update(users)
+    .set({ googleSub: g.sub, name: user.name ?? g.name, email: user.email ?? g.email })
+    .where(and(eq(users.id, user.id), isNull(users.googleSub)))
+    .returning();
+  return u ?? user;
 }
 
 // ---- Phiên đăng nhập -------------------------------------------------------------------------

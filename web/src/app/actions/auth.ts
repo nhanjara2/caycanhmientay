@@ -26,6 +26,11 @@ export async function meAction() {
   return u ? auth.publicUser(u) : null;
 }
 
+/** Nút Google có bật không, và email Google đang chờ xác thực SĐT để gắn (nếu có). */
+export async function googleStatusAction() {
+  return { enabled: auth.googleEnabled(), pendingEmail: await auth.pendingGoogleEmail() };
+}
+
 export async function logoutAction() {
   await auth.destroySession();
 }
