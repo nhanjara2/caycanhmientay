@@ -85,4 +85,4 @@ Quy tắc đã chốt:
 - Gợi ý thứ tự tiếp: admin Khách hàng (dữ liệu có sẵn: users, orders, addresses) → Yêu thích (bảng mới) → Khuyến mãi/voucher → Vườn của tôi + Lịch chăm cây.
 - Ảnh sản phẩm thật (hiện dùng icon).
 - Nhiều máy chủ → chuyển SQLite sang PostgreSQL (giữ schema Drizzle).
-- Chưa commit git lần nào kể từ khi tạo `web/`.
+- Đã commit toàn bộ `web/` (572603c). Đang chuyển repo sang GitHub của nhanjara3 để deploy Vercel; cần đổi SQLite → Supabase (Postgres + Storage) trước khi chạy trên Vercel.
