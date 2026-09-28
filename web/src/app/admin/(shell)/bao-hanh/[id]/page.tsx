@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { RefundConfirm, WarrantyDecision } from '@/components/admin/WarrantyDecision';
-import { Art, type IconName } from '@/components/Icon';
+import { Thumb } from '@/components/Icon';
 import { money } from '@/lib/format';
 import { fmtDateTime, PAY_LABEL } from '@/lib/order-labels';
 import { REFUND_STATUS_LABEL, WARRANTY_RESOLUTION_LABEL, WARRANTY_STATUS_LABEL } from '@/lib/warranty-labels';
@@ -88,7 +88,7 @@ export default async function AdminWarrantyPage({ params }: Props) {
             <div className="ad-card__h">Đơn hàng<Link href={`/admin/don-hang/${r.orderCode}`}>{r.orderCode}</Link></div>
             <div className="ad-card__b">
               <div className="ad-prod">
-                <span className="ad-thumb"><Art name={r.itemIcon as IconName} /></span>
+                <span className="ad-thumb"><Thumb src={r.itemImage} icon={r.itemIcon} /></span>
                 <span>{r.itemName}<small style={{ display: 'block', color: 'var(--ink-muted)', fontSize: 11 }}>{r.itemLabel} · {money(r.itemPrice)}</small></span>
               </div>
               <div className="ad-kv">

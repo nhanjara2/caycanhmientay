@@ -3,6 +3,8 @@ import { AdminShell } from '@/components/AdminShell';
 import { publicUser, requireStaff } from '@/server/auth';
 import { inventorySummary } from '@/server/inventory';
 import { countOrdersByStatus } from '@/server/orders';
+import { countQuestions } from '@/server/questions';
+import { countReviewsByStatus } from '@/server/reviews';
 import { countWarrantyByStatus } from '@/server/warranty';
 
 export const metadata: Metadata = {
@@ -18,6 +20,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     '/admin/don-hang': (await countOrdersByStatus()).pending ?? 0,
     '/admin/bao-hanh': (await countWarrantyByStatus()).pending,
     '/admin/kho': (await inventorySummary()).low,
+    // Đánh giá 1–2★ chờ duyệt + câu hỏi chưa trả lời
+    '/admin/danh-gia': (await countReviewsByStatus()).pending + (await countQuestions()).unanswered,
   };
   return <AdminShell me={publicUser(staff)} badges={badges}>{children}</AdminShell>;
 }

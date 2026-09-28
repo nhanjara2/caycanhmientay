@@ -4,12 +4,19 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, useTransition, type FormEvent } from 'react';
 import { deleteAddressAction, saveAddressAction } from '@/app/actions/addresses';
 import { CONDITION_LABEL, KIND_LABEL, type AddressDTO, type AddressKind, type DeliveryCondition } from '@/lib/address-labels';
+import { useAuth } from '@/lib/auth';
 import { plantZone, type StorePoint } from '@/lib/stock';
 import { EmptyState } from './Blocks';
 import { Icon } from './Icon';
 import { MapPicker } from './MapPicker';
 
 const EMPTY: Omit<AddressDTO, 'id'> = { name: '', phone: '', street: '', area: '', kind: 'home', conditions: [], isDefault: false, lat: null, lng: null };
+
+/** Địa chỉ mới: điền sẵn tên + SĐT của tài khoản (người nhận thường là chính khách). */
+export function useNewAddress(): Omit<AddressDTO, 'id'> {
+  const { user } = useAuth();
+  return { ...EMPTY, name: user?.name && user.name !== 'Khách hàng' ? user.name : '', phone: user?.phone ?? '' };
+}
 
 /** Nhãn vùng giao theo ghim bản đồ. */
 function ZoneBadge({ a, stores }: { a: Pick<AddressDTO, 'lat' | 'lng'>; stores: StorePoint[] }) {
@@ -24,12 +31,13 @@ function ZoneBadge({ a, stores }: { a: Pick<AddressDTO, 'lat' | 'lng'>; stores: 
 /** AddressBookLayout: danh sách AddressCard + AddressModal thêm/sửa. */
 export function AddressBook({ items, stores }: { items: AddressDTO[]; stores: StorePoint[] }) {
   const [editing, setEditing] = useState<AddressDTO | Omit<AddressDTO, 'id'> | null>(null);
+  const blank = useNewAddress();
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div className="vx-addr-head">
         <h2>Sổ địa chỉ nhận hàng</h2>
-        <button type="button" className="vx-btn vx-btn--primary" onClick={() => setEditing(EMPTY)}>+ Thêm địa chỉ mới</button>
+        <button type="button" className="vx-btn vx-btn--primary" onClick={() => setEditing(blank)}>+ Thêm địa chỉ mới</button>
       </div>
       {items.length ? (
         <div className="vx-addrs">
@@ -59,7 +67,14 @@ export function AddressBook({ items, stores }: { items: AddressDTO[]; stores: St
   );
 }
 
-export function AddressModal({ value, stores, onClose, onSaved }: { value: AddressDTO | Omit<AddressDTO, 'id'>; stores: StorePoint[]; onClose: () => void; onSaved?: () => void }) {
+export function AddressModal({ value, stores, onClose, onSaved, onDeleted }: {
+  value: AddressDTO | Omit<AddressDTO, 'id'>;
+  stores: StorePoint[];
+  onClose: () => void;
+  /** Lưu xong — kèm id địa chỉ vừa thêm/sửa. */
+  onSaved?: (id: number) => void;
+  onDeleted?: (id: number) => void;
+}) {
   const router = useRouter();
   const id = 'id' in value ? value.id : undefined;
   const [v, setV] = useState(value);
@@ -75,7 +90,7 @@ export function AddressModal({ value, stores, onClose, onSaved }: { value: Addre
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose, mapOpen]);
 
-  const done = () => { onClose(); onSaved?.(); router.refresh(); };
+  const done = () => { onClose(); router.refresh(); };
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -85,12 +100,13 @@ export function AddressModal({ value, stores, onClose, onSaved }: { value: Addre
       const r = await saveAddressAction({ name, phone, street, area, kind, conditions, isDefault, lat, lng }, id).catch(() => ({ ok: false as const, error: 'Có lỗi, vui lòng thử lại' }));
       if (!r.ok) { setError(r.error); return; }
       done();
+      onSaved?.(r.id);
     });
   };
 
   const remove = () => {
     if (!id || !confirm('Xóa địa chỉ này?')) return;
-    start(async () => { await deleteAddressAction(id); done(); });
+    start(async () => { await deleteAddressAction(id); done(); onDeleted?.(id); });
   };
 
   const toggle = (c: DeliveryCondition) => set('conditions', v.conditions.includes(c) ? v.conditions.filter((x) => x !== c) : [...v.conditions, c]);

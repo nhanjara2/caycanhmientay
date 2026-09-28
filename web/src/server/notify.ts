@@ -1,5 +1,5 @@
 import 'server-only';
-import { and, count, desc, eq, isNull } from 'drizzle-orm';
+import { and, count, desc, eq, isNull, sql } from 'drizzle-orm';
 import { after } from 'next/server';
 import { db, schema, type DB } from './db';
 import type { NOTIFICATION_KINDS } from './db/schema';
@@ -33,7 +33,9 @@ const plain = (t: string) => t.replace(/\*\*/g, '');
 const siteUrl = () => process.env.SITE_URL ?? 'http://localhost:3000';
 
 async function sendExternal(userId: number, n: Notice) {
-  const [u] = await db.select({ phone: users.phone, email: users.email, name: users.name }).from(users).where(eq(users.id, userId));
+  // Zalo gửi tới SĐT đã xác thực, không có thì SĐT khách tự khai (tài khoản Google).
+  const [u] = await db.select({ phone: sql<string | null>`coalesce(${users.phone}, ${users.contactPhone})`, email: users.email, name: users.name })
+    .from(users).where(eq(users.id, userId));
   if (!u) return;
   const subject = 'Cây Cảnh Miền Tây';
   const body = plain(n.text);
@@ -45,7 +47,7 @@ async function sendExternal(userId: number, n: Notice) {
   const token = process.env.ZALO_ZNS_ACCESS_TOKEN;
   const template = process.env.ZALO_ZNS_TEMPLATE_ID;
   if (!u.phone) {
-    // Tài khoản chỉ đăng nhập Google: không có SĐT để gửi Zalo.
+    // Tài khoản Google chưa khai SĐT: không gửi được Zalo.
   } else if (!token || !template) await log('zalo', u.phone, 'skipped', 'Chưa cấu hình ZALO_ZNS_ACCESS_TOKEN / ZALO_ZNS_TEMPLATE_ID');
   else {
     const phone = u.phone;

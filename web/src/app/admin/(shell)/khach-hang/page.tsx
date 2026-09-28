@@ -31,7 +31,7 @@ export default async function AdminCustomersPage({ searchParams }: Props) {
           {q && <Link href="/admin/khach-hang" className="vx-btn vx-btn--ghost vx-btn--sm">Xóa tìm kiếm</Link>}
         </form>
         <div className="ad-tablewrap">
-          <table className="ad-table">
+          <table className="ad-table app-mtable">
             <thead>
               <tr>
                 <th>Khách hàng</th><th>Hạng</th><th className="num">Đơn</th><th className="num">Chi tiêu</th><th className="num">Điểm</th><th>Tham gia</th>
@@ -45,14 +45,14 @@ export default async function AdminCustomersPage({ searchParams }: Props) {
                     <td>
                       <Link href={`/admin/khach-hang/${c.id}`} className="ad-prod" style={{ textDecoration: 'none', color: 'inherit' }}>
                         <span className="vx-avatar vx-avatar--sm">{customerInitials(c.name)}</span>
-                        <span>{c.name ?? 'Chưa đặt tên'}<small>{c.phone ? maskPhone(c.phone) : c.email ?? '—'}</small></span>
+                        <span>{c.name ?? 'Chưa đặt tên'}<small>{c.phone ?? c.contactPhone ? maskPhone((c.phone ?? c.contactPhone)!) : c.email ?? '—'}</small></span>
                       </Link>
                     </td>
-                    <td><span className="vx-tier" style={tier.gold ? undefined : { background: 'var(--surface-sunken)', color: 'var(--ink-muted)' }}>{tier.label}</span></td>
-                    <td className="num">{c.orderCount}</td>
-                    <td className="num"><b>{money(c.spend)}</b></td>
-                    <td className="num">{c.points}</td>
-                    <td>{fmtDate(c.createdAt)}</td>
+                    <td data-label="Hạng"><span className="vx-tier" style={tier.gold ? undefined : { background: 'var(--surface-sunken)', color: 'var(--ink-muted)' }}>{tier.label}</span></td>
+                    <td className="num" data-label="Đơn">{c.orderCount}</td>
+                    <td className="num" data-label="Chi tiêu"><b>{money(c.spend)}</b></td>
+                    <td className="num" data-label="Điểm">{c.points}</td>
+                    <td data-label="Tham gia">{fmtDate(c.createdAt)}</td>
                   </tr>
                 );
               })}

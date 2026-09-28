@@ -31,12 +31,12 @@ export { customerTier } from '@/lib/customer-labels';
 export async function listCustomers({ q, limit = 200 }: { q?: string; limit?: number } = {}) {
   const term = q?.trim() ? `%${q.trim().replace(/[%_]/g, '')}%` : undefined;
   return db.select({
-    id: users.id, name: users.name, phone: users.phone, email: users.email, points: users.points, createdAt: users.createdAt,
+    id: users.id, name: users.name, phone: users.phone, contactPhone: users.contactPhone, email: users.email, points: users.points, createdAt: users.createdAt,
     orderCount: orderCountExpr, spend: spendExpr, lastOrderAt: lastOrderAtExpr,
   }).from(users)
     .where(and(
       eq(users.role, 'customer'),
-      term ? or(ilike(users.name, term), ilike(users.phone, term), ilike(users.email, term)) : undefined,
+      term ? or(ilike(users.name, term), ilike(users.phone, term), ilike(users.contactPhone, term), ilike(users.email, term)) : undefined,
     ))
     .orderBy(desc(sql`coalesce(${lastOrderAtExpr}, ${users.createdAt})`))
     .limit(limit);

@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { Art, Icon, type IconName } from '@/components/Icon';
+import { Icon, Thumb } from '@/components/Icon';
 import { money } from '@/lib/format';
-import { fmtDate, fmtDateTime, PAY_LABEL, STATUS_LABEL, TIMELINE, type Status } from '@/lib/order-labels';
+import { fmtDate, fmtDateTime, PAY_LABEL, PAY_LOGO, STATUS_LABEL, TIMELINE, type Status } from '@/lib/order-labels';
 import type { OrderFull } from '@/server/orders';
 import { ReorderButton } from './ReorderButton';
 
@@ -28,7 +28,7 @@ export function warrantyDaysLeft(o: OrderFull) {
 function OrderLine({ i, children }: { i: OrderFull['items'][number]; children?: ReactNode }) {
   return (
     <div className="vx-oline">
-      <span className="vx-item__img"><Art name={i.icon as IconName} /></span>
+      <span className="vx-item__img"><Thumb src={i.image} icon={i.icon} /></span>
       <p>{i.name}<small>{i.label}</small>{children}</p>
       <span className="pr">{money(i.price)}{i.oldPrice ? <s>{money(i.oldPrice)}</s> : null}</span>
       <span className="qt">x{i.qty} {i.unit}</span>
@@ -149,6 +149,9 @@ export function OrderDetail({ o }: { o: OrderFull }) {
             {o.items.map((i) => (
               <OrderLine key={i.id} i={i}>
                 <Link href={`/san-pham/${i.productSlug}`}>{i.ship === 'plant' ? 'Xem cách chăm sóc' : 'Xem cách dùng'} <Icon name="chevron" size={14} /></Link>
+                {o.status === 'delivered' && (
+                  <> · <Link href={`/san-pham/${i.productSlug}#viet-danh-gia`}><Icon name="star" size={14} /> Viết đánh giá</Link></>
+                )}
               </OrderLine>
             ))}
           </div>
@@ -169,7 +172,14 @@ export function OrderDetail({ o }: { o: OrderFull }) {
             <span>Phương thức thanh toán</span>
             {o.paid ? <span className="ok"><Icon name="check" />Đã thanh toán</span> : <span>{o.paymentMethod === 'cod' ? 'Trả khi nhận hàng' : 'Chờ thanh toán'}</span>}
           </div>
-          <div className="vx-paym"><span className="vx-pay__mark"><Icon name={o.paymentMethod === 'cod' ? 'cash' : o.paymentMethod === 'qr' ? 'qr' : o.paymentMethod === 'card' ? 'card' : 'wallet'} /></span>{PAY_LABEL[o.paymentMethod]}</div>
+          <div className="vx-paym">
+            <span className="vx-pay__mark app-pay-logo">
+              {PAY_LOGO[o.paymentMethod]
+                ? <img src={`/images/pay/${PAY_LOGO[o.paymentMethod]}`} alt="" />
+                : <Icon name={o.paymentMethod === 'cod' ? 'cash' : o.paymentMethod === 'card' ? 'card' : 'wallet'} />}
+            </span>
+            {PAY_LABEL[o.paymentMethod]}
+          </div>
           <div className="vx-od__actions">
             <ReorderButton items={reorderItems(o)} className="vx-btn vx-btn--primary vx-btn--lg vx-btn--block" />
           </div>

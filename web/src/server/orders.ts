@@ -1,11 +1,11 @@
 import 'server-only';
-import { and, count, desc, eq, ilike, inArray, or, sql } from 'drizzle-orm';
+import { and, count, desc, eq, getTableColumns, ilike, inArray, or, sql } from 'drizzle-orm';
 import { randomInt } from 'node:crypto';
 import * as z from 'zod';
 import type { Product, Unit } from '@/lib/catalog';
 import { computeTotals } from '@/lib/pricing';
-import { normalizePhone, isPhone, type SessionUser } from './auth';
-import { getProducts } from './catalog';
+import { accountPhone, normalizePhone, isPhone, type SessionUser } from './auth';
+import { getProducts, mainImageOf } from './catalog';
 import { PLANT_ZONE_KM, plantZone } from '@/lib/stock';
 import { getAddress } from './addresses';
 import { applyStock, listStores, restoreOrderStock, type Tx } from './inventory';
@@ -38,10 +38,12 @@ export const PlaceOrderSchema = z.object({
 });
 export type PlaceOrderInput = z.infer<typeof PlaceOrderSchema>;
 
-export type PlaceOrderResult = { ok: true; code: string } | { ok: false; error: string };
+export type PlaceOrderResult = { ok: true; code: string } | { ok: false; error: string; needsPhone?: boolean };
 
 /** Tạo đơn: giá, phí giao, quy tắc Flash sale & thuốc BVTV đều tính lại từ database — không tin số liệu từ trình duyệt. */
 export async function createOrder(input: PlaceOrderInput, user: SessionUser | null): Promise<PlaceOrderResult> {
+  // Tài khoản (Google) phải có SĐT liên hệ trước khi đặt — khách vãng lai thì SĐT nằm ngay trong đơn.
+  if (user && !accountPhone(user)) return { ok: false, error: 'Vui lòng cập nhật số điện thoại cho tài khoản trước khi đặt hàng', needsPhone: true };
   const products = new Map((await getProducts([...new Set(input.items.map((i) => i.slug))])).map((p) => [p.slug, p]));
   const lines: { p: Product; u: Unit; it: PlaceOrderInput['items'][number] }[] = [];
   for (const it of input.items) {
@@ -159,7 +161,7 @@ export async function previewVoucher(code: string, items: PlaceOrderInput['items
 // ---- Đọc đơn ---------------------------------------------------------------------------------
 
 export type OrderFull = typeof orders.$inferSelect & {
-  items: (typeof orderItems.$inferSelect)[];
+  items: (typeof orderItems.$inferSelect & { image: string | null })[];
   events: (typeof orderEvents.$inferSelect)[];
 };
 
@@ -167,7 +169,7 @@ async function withDetails(rows: (typeof orders.$inferSelect)[]): Promise<OrderF
   if (!rows.length) return [];
   const ids = rows.map((r) => r.id);
   const [items, events] = await Promise.all([
-    db.select().from(orderItems).where(inArray(orderItems.orderId, ids)).orderBy(orderItems.id),
+    db.select({ ...getTableColumns(orderItems), image: mainImageOf(orderItems.productSlug) }).from(orderItems).where(inArray(orderItems.orderId, ids)).orderBy(orderItems.id),
     db.select().from(orderEvents).where(inArray(orderEvents.orderId, ids)).orderBy(orderEvents.id),
   ]);
   return rows.map((r) => ({ ...r, items: items.filter((i) => i.orderId === r.id), events: events.filter((e) => e.orderId === r.id) }));

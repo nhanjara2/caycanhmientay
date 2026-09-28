@@ -1,6 +1,7 @@
 import 'server-only';
 import { and, desc, eq, inArray, or } from 'drizzle-orm';
 import * as z from 'zod';
+import { mainImageOf } from './catalog';
 import { db, schema } from './db';
 import type { SessionUser } from './auth';
 import { saveImage } from './uploads';
@@ -41,7 +42,7 @@ export type GardenPlant = Awaited<ReturnType<typeof listGarden>>[number];
 export async function listGarden(u: Owner) {
   await syncGarden(u);
   const rows = await db.select({
-    g: gardenPlants, itemName: orderItems.name, itemIcon: orderItems.icon, itemLabel: orderItems.label, orderCode: orders.code,
+    g: gardenPlants, itemName: orderItems.name, itemIcon: orderItems.icon, itemImage: mainImageOf(orderItems.productSlug), itemLabel: orderItems.label, orderCode: orders.code,
   }).from(gardenPlants)
     .innerJoin(orderItems, eq(orderItems.id, gardenPlants.orderItemId))
     .innerJoin(orders, eq(orders.id, orderItems.orderId))
@@ -59,6 +60,7 @@ export async function listGarden(u: Owner) {
     id: r.g.id,
     name: r.itemName,
     icon: r.itemIcon,
+    image: r.itemImage,
     label: r.itemLabel,
     orderCode: r.orderCode,
     nickname: r.g.nickname,

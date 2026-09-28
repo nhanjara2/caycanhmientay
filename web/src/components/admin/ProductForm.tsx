@@ -222,17 +222,17 @@ export function ProductForm({ initial, canEdit }: { initial: ProductFormValue; c
                 <a style={{ cursor: 'pointer' }} onClick={() => setOpts((o) => [...o, { label: '', price: '', oldPrice: '', stock: '' }])}>+ Thêm quy cách</a>
               </div>
               <div className="ad-tablewrap">
-                <table className="ad-table ad-vtable">
+                <table className="ad-table ad-vtable app-mtable">
                   <thead><tr><th>Quy cách</th><th>Giá bán</th><th>Giá gốc</th><th className="num">Tồn</th><th /></tr></thead>
                   <tbody>
                     {opts.map((o, i) => {
                       const upd = (k: keyof Option, val: string) => { setOpts((x) => x.map((y, j) => (j === i ? { ...y, [k]: val } : y))); setSaved(false); };
                       return (
                         <tr key={i}>
-                          <td><input className="vx-input" value={o.label} onChange={(e) => upd('label', e.target.value)} placeholder="Chậu sứ Ø25" aria-label="Tên quy cách" /></td>
-                          <td><input className="vx-input" inputMode="numeric" value={o.price} onChange={(e) => upd('price', fmt(e.target.value))} placeholder="289.000" aria-label="Giá bán" /></td>
-                          <td><input className="vx-input" inputMode="numeric" value={o.oldPrice} onChange={(e) => upd('oldPrice', fmt(e.target.value))} placeholder="Không giảm" aria-label="Giá gốc" /></td>
-                          <td className="num">
+                          <td data-label="Quy cách"><input className="vx-input" value={o.label} onChange={(e) => upd('label', e.target.value)} placeholder="Chậu sứ Ø25" aria-label="Tên quy cách" /></td>
+                          <td data-label="Giá bán"><input className="vx-input" inputMode="numeric" value={o.price} onChange={(e) => upd('price', fmt(e.target.value))} placeholder="289.000" aria-label="Giá bán" /></td>
+                          <td data-label="Giá gốc"><input className="vx-input" inputMode="numeric" value={o.oldPrice} onChange={(e) => upd('oldPrice', fmt(e.target.value))} placeholder="Không giảm" aria-label="Giá gốc" /></td>
+                          <td className="num" data-label={o.existingStock !== undefined ? 'Tồn' : 'Tồn đầu kỳ'}>
                             {o.existingStock !== undefined
                               ? <Link href="/admin/kho" title="Đổi tồn ở trang Kho">{o.existingStock}</Link>
                               : <input className="vx-input" inputMode="numeric" style={{ width: 80 }} value={o.stock} onChange={(e) => upd('stock', digits(e.target.value))} placeholder="0" aria-label="Tồn đầu kỳ" />}
@@ -258,7 +258,7 @@ export function ProductForm({ initial, canEdit }: { initial: ProductFormValue; c
                   const upd = (pos: 0 | 1, s: string) => set('specs', v.specs.map((row, j) => (j === i ? (pos === 0 ? [s, row[1]] : [row[0], s]) : row)) as [string, string][]);
                   const required = v.pesticide && ['Số đăng ký', 'Hoạt chất', 'Liều pha', 'Thời gian cách ly'].includes(k);
                   return (
-                    <div key={i} className="ad-frow" style={{ gridTemplateColumns: '180px 1fr auto' }}>
+                    <div key={i} className="ad-frow app-specrow">
                       <input className="vx-input" value={k} onChange={(e) => upd(0, e.target.value)} placeholder="Tên thông số" aria-label="Tên thông số" />
                       <input className="vx-input" value={val} onChange={(e) => upd(1, e.target.value)} placeholder={required ? 'Bắt buộc với thuốc BVTV' : 'Giá trị'} aria-label={k || 'Giá trị'} style={required && !val ? { borderColor: 'var(--danger)' } : undefined} />
                       <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" onClick={() => set('specs', v.specs.filter((_, j) => j !== i))} aria-label="Xóa dòng">✕</button>

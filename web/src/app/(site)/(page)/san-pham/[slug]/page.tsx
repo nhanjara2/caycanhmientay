@@ -5,9 +5,15 @@ import { BuyBox } from '@/components/BuyBox';
 import { Icon } from '@/components/Icon';
 import { ProductGallery } from '@/components/ProductGallery';
 import { ProductGrid } from '@/components/ProductCard';
+import { ProductQnA } from '@/components/ProductQnA';
+import { ProductReviews } from '@/components/ProductReviews';
 import { elementName, getCategory, type Product } from '@/lib/catalog';
+import { YOUTUBE_URL } from '@/lib/contact';
+import { reviewStats } from '@/lib/reviews';
 import { boughtTogether, getProduct } from '@/server/catalog';
 import { getCurrentUser } from '@/server/auth';
+import { productQuestions } from '@/server/questions';
+import { productReviews } from '@/server/reviews';
 import { isWishlisted } from '@/server/wishlist';
 
 type Props = { params: Promise<{ slug: string }> };
@@ -72,6 +78,9 @@ function Content({ p }: { p: Product }) {
                 allowFullScreen
               />
             </div>
+            <p className="app-yt-more">
+              Xem thêm video chăm cây trên <a href={YOUTUBE_URL} target="_blank" rel="noreferrer">kênh YouTube Cây Cảnh Miền Tây</a>
+            </p>
           </>
         )}
         {p.fengshui && <FengShuiBlock f={p.fengshui} />}
@@ -110,7 +119,13 @@ export default async function ProductPage({ params }: Props) {
   const p = await getProduct((await params).slug);
   if (!p) notFound();
   const [together, user] = await Promise.all([boughtTogether(p), getCurrentUser()]);
-  const wishlisted = user ? await isWishlisted(user.id, p.slug) : false;
+  const [wishlisted, reviews, questions] = await Promise.all([
+    user ? isWishlisted(user.id, p.slug) : false,
+    productReviews(p.slug, user?.id ?? null),
+    productQuestions(p.slug, user?.id ?? null),
+  ]);
+  // Số sao ở BuyBox tính từ đánh giá thật (products.rating/reviews là số mẫu, không dùng để hiển thị)
+  const rs = reviewStats(reviews);
   const cat = getCategory(p.category);
   const sub = cat?.subs.find((s) => s.slug === p.sub);
   const faq = p.ship === 'plant' ? FAQ_PLANT : FAQ_SUPPLY;
@@ -137,7 +152,7 @@ export default async function ProductPage({ params }: Props) {
             <div><Icon name="chat" /><span><b>Kỹ sư tư vấn</b><small>miễn phí qua Zalo</small></span></div>
           </div>
         </div>
-        <BuyBox product={p} wishlisted={wishlisted} />
+        <BuyBox product={{ ...p, rating: rs.avg, reviews: rs.count }} wishlisted={wishlisted} />
       </section>
 
       <Content p={p} />
@@ -159,21 +174,8 @@ export default async function ProductPage({ params }: Props) {
         </div>
       </section>
 
-      <section className="vx-card" id="danh-gia">
-        <div className="vx-sect">
-          <h2 style={{ fontSize: 18 }}>
-            Đánh giá sản phẩm <small style={{ fontWeight: 400, color: 'var(--ink-muted)', fontSize: 14 }}>({p.reviews} đánh giá)</small>
-          </h2>
-        </div>
-        <div className="vx-review">
-          <span className="vx-avatar vx-avatar--sm">NH</span>
-          <div className="vx-review__body">
-            <div className="vx-review__who">Ngọc Hân<span className="vx-verified">Đã mua hàng</span><small>2 ngày trước</small></div>
-            <span className="vx-stars">★★★★★</span>
-            <span>Hàng giao về đúng mô tả, đóng gói kỹ. Có kèm thẻ hướng dẫn rất dễ hiểu.</span>
-          </div>
-        </div>
-      </section>
+      <ProductReviews slug={p.slug} items={reviews} isPlant={p.ship === 'plant'} />
+      <ProductQnA slug={p.slug} items={questions} />
     </div>
   );
 }

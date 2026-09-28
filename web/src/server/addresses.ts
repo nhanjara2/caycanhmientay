@@ -37,9 +37,12 @@ export async function saveAddress(userId: number, input: AddressInput, id?: numb
     if (count >= 20 && !own) return { ok: false as const, error: 'Sổ địa chỉ tối đa 20 địa chỉ' };
     if (isDefault) await tx.update(addresses).set({ isDefault: false }).where(eq(addresses.userId, userId));
     const values = { ...input, phone: normalizePhone(input.phone), isDefault };
-    if (own) await tx.update(addresses).set(values).where(eq(addresses.id, own.id));
-    else await tx.insert(addresses).values({ ...values, userId });
-    return { ok: true as const };
+    if (own) {
+      await tx.update(addresses).set(values).where(eq(addresses.id, own.id));
+      return { ok: true as const, id: own.id };
+    }
+    const [row] = await tx.insert(addresses).values({ ...values, userId }).returning({ id: addresses.id });
+    return { ok: true as const, id: row.id };
   });
 }
 

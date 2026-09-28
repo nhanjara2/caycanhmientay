@@ -2,6 +2,7 @@ import 'server-only';
 import { and, desc, eq, inArray, ne, or, sql } from 'drizzle-orm';
 import * as z from 'zod';
 import type { SessionUser } from './auth';
+import { mainImageOf } from './catalog';
 import { db, schema } from './db';
 import { WARRANTY_RESOLUTIONS, WARRANTY_STATUSES } from './db/schema';
 import { applyStock, type Tx } from './inventory';
@@ -25,7 +26,7 @@ const ownedBy = (u: Owner) => (u.phone ? or(eq(orders.userId, u.id), eq(orders.p
 /** Cây sống trong đơn đã giao, còn hạn bảo hành, chưa có yêu cầu đang mở / đã duyệt. */
 export async function eligibleItems(u: Owner) {
   const rows = await db.select({
-    itemId: orderItems.id, name: orderItems.name, label: orderItems.label, icon: orderItems.icon, price: orderItems.price,
+    itemId: orderItems.id, name: orderItems.name, label: orderItems.label, icon: orderItems.icon, image: mainImageOf(orderItems.productSlug), price: orderItems.price,
     orderId: orders.id, code: orders.code, updatedAt: orders.updatedAt,
   })
     .from(orderItems).innerJoin(orders, eq(orders.id, orderItems.orderId))
@@ -85,8 +86,8 @@ export async function createWarranty(u: Owner, input: z.infer<typeof WarrantyInp
 
 function base() {
   return db.select({
-    w: W, itemName: orderItems.name, itemLabel: orderItems.label, itemIcon: orderItems.icon, itemPrice: orderItems.price, itemQty: orderItems.qty,
-    orderCode: orders.code, customer: users.name, customerPhone: users.phone, paymentMethod: orders.paymentMethod,
+    w: W, itemName: orderItems.name, itemLabel: orderItems.label, itemIcon: orderItems.icon, itemImage: mainImageOf(orderItems.productSlug), itemPrice: orderItems.price, itemQty: orderItems.qty,
+    orderCode: orders.code, customer: users.name, customerPhone: sql<string | null>`coalesce(${users.phone}, ${users.contactPhone})`, paymentMethod: orders.paymentMethod,
     replacementCode: sql<string | null>`(select code from orders r where r.id = ${W.replacementOrderId})`,
   })
     .from(W)

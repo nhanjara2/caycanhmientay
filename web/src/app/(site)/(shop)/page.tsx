@@ -3,6 +3,7 @@ import { CategoryBlock } from '@/components/CategoryBlock';
 import { FlashSale } from '@/components/FlashSale';
 import { Icon, type IconName } from '@/components/Icon';
 import { categories } from '@/lib/catalog';
+import { ZALO_URL } from '@/lib/contact';
 import { flashProducts, productsIn } from '@/server/catalog';
 
 const COLLECTIONS: { label: string; icon: IconName; q: string; hot?: boolean; href?: string }[] = [
@@ -18,7 +19,7 @@ const COLLECTIONS: { label: string; icon: IconName; q: string; hot?: boolean; hr
 ];
 
 const QUICK: { label: string; icon: IconName; href: string }[] = [
-  { label: 'Tư vấn chăm cây', icon: 'chat', href: 'https://zalo.me' },
+  { label: 'Tư vấn chăm cây', icon: 'chat', href: ZALO_URL },
   { label: 'Bắt bệnh cho cây', icon: 'bug', href: '/benh-cay' },
   { label: 'Tra cứu thuốc BVTV', icon: 'flask', href: '/danh-muc/thuoc-bvtv' },
   { label: 'Đơn của tôi', icon: 'receipt', href: '/tai-khoan/don-hang' },
@@ -49,7 +50,12 @@ export default async function HomePage() {
 
       <nav className="vx-quick" aria-label="Lối tắt">
         {QUICK.map((q) => (
-          <Link key={q.label} href={q.href} className="vx-quick__item app-plain">
+          <Link
+            key={q.label}
+            href={q.href}
+            className="vx-quick__item app-plain"
+            {...(q.href.startsWith('http') && { target: '_blank', rel: 'noreferrer' })}
+          >
             <span className="vx-quick__icon"><Icon name={q.icon} /></span>
             {q.label}
           </Link>

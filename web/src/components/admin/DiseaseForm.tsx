@@ -25,7 +25,7 @@ function Rows<T>({ title, hint, items, max, blank, onChange, render }: {
       </div>
       <div className="ad-card__b">
         {items.map((it, i) => (
-          <div key={i} className="ad-frow" style={{ gridTemplateColumns: '1fr auto', alignItems: 'start' }}>
+          <div key={i} className="ad-frow app-rowx">
             <div style={{ display: 'grid', gap: 6 }}>
               {render(it, (patch) => onChange(items.map((x, j) => (j === i ? { ...x, ...patch } : x))), i)}
             </div>
@@ -130,7 +130,7 @@ export function DiseaseForm({ initial, canEdit, products, diseases }: {
             <Rows title={<>Triệu chứng <i style={{ color: 'var(--danger)', fontStyle: 'normal' }}>*</i></>} items={v.symptoms} max={8} blank={{ part: 'la' as PartKey, text: '' }}
               onChange={(x) => set('symptoms', x)} hint="Mỗi dòng một dấu hiệu nhìn thấy được, kèm bộ phận có dấu hiệu đó."
               render={(s, upd) => (
-                <div className="ad-frow" style={{ gridTemplateColumns: '150px 1fr' }}>
+                <div className="ad-frow app-symrow">
                   <select className="vx-input" value={s.part} onChange={(e) => upd({ part: e.target.value as PartKey })} aria-label="Bộ phận">
                     {PARTS.map((p) => <option key={p.key} value={p.key}>{p.name}</option>)}
                   </select>
@@ -142,7 +142,7 @@ export function DiseaseForm({ initial, canEdit, products, diseases }: {
               onChange={(x) => set('confusions', x)} hint="Giúp khách phân biệt với bệnh có dấu hiệu giống. Chọn bài liên kết để hiện nút “Xem bài”."
               render={(c, upd) => (
                 <>
-                  <div className="ad-frow" style={{ gridTemplateColumns: '1fr 1fr' }}>
+                  <div className="ad-frow app-pair">
                     <input className="vx-input" value={c.name} onChange={(e) => upd({ name: e.target.value })} maxLength={60} placeholder="Tên bệnh dễ nhầm" aria-label="Tên bệnh dễ nhầm" />
                     <select className="vx-input" value={c.slug ?? ''} onChange={(e) => upd({ slug: e.target.value, name: c.name || diseases.find((d) => d.slug === e.target.value)?.name || '' })} aria-label="Liên kết tới bài">
                       <option value="">Không liên kết</option>
@@ -230,7 +230,7 @@ export function DiseaseForm({ initial, canEdit, products, diseases }: {
                 {v.products.map((s, i) => {
                   const p = byslug.get(s);
                   return (
-                    <div key={s} className="ad-frow" style={{ gridTemplateColumns: '1fr auto', alignItems: 'center' }}>
+                    <div key={s} className="ad-frow app-rowx" style={{ alignItems: 'center' }}>
                       <span style={{ fontSize: 13 }}>
                         {p ? p.name : <s>{s}</s>}
                         <small style={{ display: 'block', color: p?.active ? 'var(--ink-muted)' : 'var(--danger)' }}>{!p ? 'Sản phẩm đã bị xóa' : p.active ? p.sku : `${p.sku} · Đang ẩn, không hiện trên web`}</small>
@@ -247,7 +247,7 @@ export function DiseaseForm({ initial, canEdit, products, diseases }: {
                   <div className="ad-f">
                     <input className="vx-input" value={find} onChange={(e) => setFind(e.target.value)} placeholder="Tìm sản phẩm để thêm (tên hoặc SKU)" aria-label="Tìm sản phẩm" />
                     {matches.map((p) => (
-                      <button key={p.slug} type="button" className="vx-btn vx-btn--ghost vx-btn--sm" style={{ justifyContent: 'flex-start', textAlign: 'left' }}
+                      <button key={p.slug} type="button" className="vx-btn vx-btn--ghost vx-btn--sm" style={{ justifyContent: 'flex-start', textAlign: 'left', whiteSpace: 'normal' }}
                         onClick={() => { set('products', [...v.products, p.slug]); setFind(''); }}>
                         + {p.name} <small style={{ color: 'var(--ink-muted)' }}>{p.sku}</small>
                       </button>

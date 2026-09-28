@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { AccountSidebar } from '@/components/AccountSidebar';
 import { EmptyState } from '@/components/Blocks';
-import { Art, type IconName } from '@/components/Icon';
+import { Thumb } from '@/components/Icon';
 import { WarrantyForm } from '@/components/WarrantyForm';
 import { fmtDate } from '@/lib/order-labels';
 import { money } from '@/lib/format';
@@ -16,7 +16,7 @@ export const metadata: Metadata = { title: 'Bảo hành cây' };
 export default async function WarrantyPage() {
   const user = await getCurrentUser();
   if (!user) return null; // AccountGate (layout) mời đăng nhập
-  const items = (await eligibleItems(user)).map((i) => ({ itemId: i.itemId, name: i.name, label: i.label, icon: i.icon, code: i.code, daysLeft: i.daysLeft }));
+  const items = (await eligibleItems(user)).map((i) => ({ itemId: i.itemId, name: i.name, label: i.label, icon: i.icon, image: i.image, code: i.code, daysLeft: i.daysLeft }));
   const requests = await listWarrantyForUser(user.id);
 
   return (
@@ -57,7 +57,7 @@ export default async function WarrantyPage() {
                   </div>
                   <div className="vx-order__body">
                     <div className="vx-oline">
-                      <span className="vx-item__img"><Art name={r.itemIcon as IconName} /></span>
+                      <span className="vx-item__img"><Thumb src={r.itemImage} icon={r.itemIcon} /></span>
                       <p>{r.itemName}<small>{r.w.symptoms.join(', ')}</small></p>
                       <span className="pr" />
                       <span className="qt">{r.photos.length} ảnh</span>

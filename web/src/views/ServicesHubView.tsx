@@ -25,7 +25,7 @@ export function ServicesHubView() {
                 <svg className="vx-ico" viewBox="0 0 24 24" style={{ width: '16px', height: '16px' }}>
                   <path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a1 1 0 0 1-1 1A16 16 0 0 1 4 5a1 1 0 0 1 1-1z" />
                 </svg>
-                1800 xxxx
+                0927 291 989
               </button>
             </div>
             <div className="sv-proof">

@@ -2,17 +2,18 @@
 
 import Link from 'next/link';
 import { useCart } from '@/lib/cart';
+import { SALES_PHONE, ZALO_URL } from '@/lib/contact';
 import { Icon } from './Icon';
 
 /** Nút liên hệ nổi góc phải dưới, hiện trên mọi trang. */
 export function ContactFab() {
   return (
     <div className="vx-fab app-fab">
-      <a className="alt" href="https://zalo.me" target="_blank" rel="noreferrer">
-        <Icon name="chat" />
+      <a className="alt" href={ZALO_URL} target="_blank" rel="noreferrer">
+        <img src="/images/social/zalo.svg" alt="" className="app-fab-logo" />
         <span className="app-hide-sm">Chat Zalo</span>
       </a>
-      <a href="tel:1800xxxx">
+      <a href={`tel:${SALES_PHONE}`}>
         <Icon name="phone" />
         <span className="app-hide-sm">Gọi tư vấn</span>
       </a>

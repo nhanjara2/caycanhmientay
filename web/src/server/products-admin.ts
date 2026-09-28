@@ -2,6 +2,7 @@ import 'server-only';
 import { and, asc, count, desc, eq, ilike, or, sql } from 'drizzle-orm';
 import * as z from 'zod';
 import { categories, ELEMENTS, getCategory, MAX_PRODUCT_IMAGES, normalize, parseYoutubeId, productImageUrl, type FengShui } from '@/lib/catalog';
+import { mainImageOf } from './catalog';
 import { db, schema } from './db';
 import { applyStock } from './inventory';
 import type { SavedImage } from './uploads';
@@ -69,7 +70,7 @@ const slugify = (s: string) => normalize(s).replace(/[^a-z0-9]+/g, '-').replace(
 export async function listProductsAdmin({ q, category }: { q?: string; category?: string } = {}) {
   const term = q?.trim() ? `%${q.trim().replace(/[%_]/g, '')}%` : undefined;
   const rows = await db.select({
-    slug: products.slug, sku: products.sku, name: products.name, icon: products.icon, category: products.category, sub: products.sub,
+    slug: products.slug, sku: products.sku, name: products.name, icon: products.icon, image: mainImageOf(products.slug), category: products.category, sub: products.sub,
     unit: products.unit, active: products.active, pesticide: products.pesticide, ship: products.ship, sold: products.sold,
     minPrice: sql`min(${productOptions.price})`.mapWith(Number), stock: sql`coalesce(sum(${productOptions.stock}), 0)`.mapWith(Number), variants: count(productOptions.idx),
   })

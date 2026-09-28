@@ -3,6 +3,10 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { isPhone, normalizePhone, useAuth } from '@/lib/auth';
+import { money } from '@/lib/format';
+import { fmtDate } from '@/lib/order-labels';
+import { welcomeText, type WelcomeOffer } from '@/lib/voucher-labels';
+import { CopyVoucherCode } from './CopyVoucherCode';
 import { Icon } from './Icon';
 
 /** Hộp Đăng nhập / Đăng ký gộp: SĐT → OTP 6 số (gửi qua Zalo, SMS dự phòng), hoặc Google. */
@@ -22,12 +26,15 @@ export function AuthModal() {
 }
 
 /** Hộp đăng nhập OTP (dùng trong AuthModal và trang đăng nhập quản trị). */
-export function OtpLoginBox({ onDone, onClose, googleNext, title = 'Đăng nhập Cây Cảnh Miền Tây', subtitle = 'Theo dõi đơn, bảo hành cây và nhận lịch chăm cây' }: {
+export function OtpLoginBox({ onDone, onClose, googleNext, perks = true, title = 'Đăng nhập Cây Cảnh Miền Tây', subtitle = 'Theo dõi đơn, bảo hành cây và nhận lịch chăm cây' }: {
   /** Trang quay về sau khi đăng nhập Google (mặc định: trang đang xem). */
   onDone: () => void; onClose?: () => void; googleNext?: string; title?: string; subtitle?: string;
+  /** Quyền lợi khách hàng (quà tài khoản mới, tích điểm) + hộp chào sau lần đăng nhập đầu — tắt ở trang đăng nhập nhân viên. */
+  perks?: boolean;
 }) {
   const { requestOtp, verifyOtp, options } = useAuth();
   const closeLogin = onClose ?? (() => {});
+  const [gift, setGift] = useState<WelcomeOffer | null>(null);
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
@@ -62,10 +69,11 @@ export function OtpLoginBox({ onDone, onClose, googleNext, title = 'Đăng nhậ
   const confirm = async (e: FormEvent) => {
     e.preventDefault();
     setBusy(true);
-    const r = await verifyOtp(phone, code).catch(() => ({ ok: false, error: 'Có lỗi, vui lòng thử lại' }));
+    const r = await verifyOtp(phone, code).catch(() => ({ ok: false, error: 'Có lỗi, vui lòng thử lại', welcome: null }));
     setBusy(false);
-    if (r.ok) onDone();
-    else setError(r.error ?? 'Mã xác thực chưa đúng');
+    if (!r.ok) setError(r.error ?? 'Mã xác thực chưa đúng');
+    else if (perks && r.welcome) setGift(r.welcome); // lần đăng nhập đầu: báo quà trước khi đóng hộp
+    else onDone();
   };
 
   const loginWithGoogle = () => {
@@ -74,6 +82,32 @@ export function OtpLoginBox({ onDone, onClose, googleNext, title = 'Đăng nhậ
     const next = googleNext ?? location.pathname + (params.size ? `?${params}` : '');
     location.href = `/api/auth/google?next=${encodeURIComponent(next)}`;
   };
+
+  if (gift) {
+    return (
+      <div className="au-box">
+        <div className="au-head">
+          {onClose && <button type="button" className="x" aria-label="Đóng" onClick={onDone}><Icon name="close" /></button>}
+          <span className="mark"><Icon name="gift" /></span>
+          <h2>Chào mừng bạn!</h2>
+          <p>Tài khoản đã tạo xong. Cây Cảnh Miền Tây tặng bạn mã giảm giá:</p>
+        </div>
+        <div className="au-body">
+          <div className="vx-voucher">
+            <span className="vx-voucher__ic sale"><Icon name="gift" /></span>
+            <span className="vx-voucher__body">
+              <b>{welcomeText(gift, money)}</b>
+              <span className="cond">Mã: <b style={{ color: 'var(--primary)' }}>{gift.code}</b></span>
+              <span className="exp">Dùng đến {fmtDate(new Date(gift.expiresAt))}</span>
+            </span>
+            <CopyVoucherCode code={gift.code} />
+          </div>
+          <p className="vx-help" style={{ margin: 0 }}>Ở trang thanh toán bấm <b>Dùng</b> để áp mã — không cần gõ. Mỗi tài khoản dùng 1 lần.</p>
+          <button type="button" className="vx-btn vx-btn--primary vx-btn--lg vx-btn--block" onClick={onDone}>Bắt đầu mua sắm</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
       <div className="au-box">
@@ -98,7 +132,21 @@ export function OtpLoginBox({ onDone, onClose, googleNext, title = 'Đăng nhậ
 
         {step === 'phone' ? (
           <form className="au-body" onSubmit={sendOtp}>
-            <div className="au-perk"><span>Tặng voucher 50.000đ</span><span>Tích điểm mọi đơn</span></div>
+            {perks && (
+              <>
+                <div className="au-perk">
+                  {options.welcome && (
+                    <span>Tặng voucher {options.welcome.discountType === 'amount' ? money(options.welcome.discountValue) : `giảm ${options.welcome.discountValue}%`}</span>
+                  )}
+                  <span>Tích điểm mọi đơn</span>
+                </div>
+                {options.welcome && (
+                  <p className="au-terms" style={{ margin: 0 }}>
+                    Tài khoản mới: {welcomeText(options.welcome, money).toLowerCase()}, dùng trong {options.welcome.days} ngày kể từ lần đăng nhập đầu tiên.
+                  </p>
+                )}
+              </>
+            )}
             {options.phone && (
               <>
                 <div className="au-phone">

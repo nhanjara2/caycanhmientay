@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { OrderPill } from '@/components/admin/OrderPill';
-import { Art, Icon, type IconName } from '@/components/Icon';
+import { Icon, Thumb } from '@/components/Icon';
 import { money } from '@/lib/format';
 import { fmtDateTime, PAY_LABEL, STATUS_LABEL, type Status } from '@/lib/order-labels';
 import { maskPhone, requireStaff } from '@/server/auth';
@@ -45,7 +45,7 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
           {q && <Link href={href(status)} className="vx-btn vx-btn--ghost vx-btn--sm">Xóa tìm kiếm</Link>}
         </form>
         <div className="ad-tablewrap">
-          <table className="ad-table">
+          <table className="ad-table app-mtable">
             <thead>
               <tr>
                 <th>Mã đơn</th><th>Khách hàng</th><th>Sản phẩm</th><th className="num">Tổng tiền</th><th>Giao nhận</th><th>Trạng thái</th>
@@ -58,10 +58,10 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
                 return (
                   <tr key={o.id}>
                     <td><Link className="code" href={`/admin/don-hang/${o.code}`}>{o.code}</Link>{o.kind === 'warranty' && <span className="vx-badge vx-badge--info" style={{ marginLeft: 6 }}>Bảo hành 0đ</span>}<small>{fmtDateTime(o.createdAt)}</small></td>
-                    <td>{o.customerName}<small>{maskPhone(o.phone)}</small></td>
-                    <td>
+                    <td data-label="Khách hàng">{o.customerName}<small>{maskPhone(o.phone)}</small></td>
+                    <td data-label="Sản phẩm" data-wide>
                       <span className="ad-prod">
-                        <span className="ad-thumb"><Art name={first.icon as IconName} /></span>
+                        <span className="ad-thumb"><Thumb src={first.image} icon={first.icon} /></span>
                         <span>
                           {first.name}{o.items.length > 1 ? ` + ${o.items.length - 1} SP` : ''}
                           <small>
@@ -71,9 +71,9 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
                         </span>
                       </span>
                     </td>
-                    <td className="num"><b>{money(o.total)}</b><small>{PAY_LABEL[o.paymentMethod]} · {o.paid ? 'Đã trả' : 'Chưa trả'}</small></td>
-                    <td>{o.delivery === 'ship' ? 'Giao tận nơi' : 'Nhận tại vườn'}{o.slot && <small>{o.slot}</small>}</td>
-                    <td><OrderPill status={o.status} /></td>
+                    <td className="num" data-label="Tổng tiền"><b>{money(o.total)}</b><small>{PAY_LABEL[o.paymentMethod]} · {o.paid ? 'Đã trả' : 'Chưa trả'}</small></td>
+                    <td data-label="Giao nhận">{o.delivery === 'ship' ? 'Giao tận nơi' : 'Nhận tại vườn'}{o.slot && <small>{o.slot}</small>}</td>
+                    <td data-label="Trạng thái"><OrderPill status={o.status} /></td>
                   </tr>
                 );
               })}

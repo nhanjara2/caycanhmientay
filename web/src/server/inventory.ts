@@ -1,6 +1,7 @@
 import 'server-only';
 import { and, asc, count, desc, eq, gt, ilike, inArray, lt, or, sql } from 'drizzle-orm';
 import { addDays, EXPIRY_WARN_DAYS, todayVN } from '@/lib/stock';
+import { mainImageOf } from './catalog';
 import { db, schema, type DB } from './db';
 import type { STOCK_REASONS } from './db/schema';
 
@@ -156,7 +157,7 @@ export type LotRow = typeof L.$inferSelect;
 export async function listInventory({ tab = 'tat-ca', q }: { tab?: InventoryTab; q?: string } = {}) {
   const term = q?.trim() ? `%${q.trim().replace(/[%_]/g, '')}%` : undefined;
   const rows = await db.select({
-    slug: products.slug, sku: products.sku, name: products.name, icon: products.icon, unit: products.unit,
+    slug: products.slug, sku: products.sku, name: products.name, icon: products.icon, image: mainImageOf(products.slug), unit: products.unit,
     ship: products.ship, pesticide: products.pesticide, category: products.category, active: products.active,
     idx: productOptions.idx, label: productOptions.label, price: productOptions.price, stock: productOptions.stock,
   })

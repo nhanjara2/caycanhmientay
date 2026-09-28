@@ -1,10 +1,12 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState, type ReactNode } from 'react';
+import { Icon } from '@/components/Icon';
 import { useAuth } from '@/lib/auth';
 import type { PublicUser } from '@/server/auth';
-import type { ReactNode } from 'react';
 
 // Icon riêng của menu admin, lấy từ design-system/components/AdminShell/preview.html.
 const I = {
@@ -26,6 +28,7 @@ const I = {
   map: <><path d="M12 21s7-6 7-12a7 7 0 0 0-14 0c0 6 7 12 7 12z" /><circle cx="12" cy="9" r="2.5" /></>,
   bug: <><rect x="8" y="7" width="8" height="12" rx="4" /><path d="M12 7V4M8 11H4M16 11h4M8 16H5M16 16h3M9 4l1 2M15 4l-1 2" /></>,
   gear: <><circle cx="12" cy="12" r="3" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2" /></>,
+  logout: <><path d="M9 4H5v16h4" /><path d="m14 8 4 4-4 4M18 12H9" /></>,
 };
 type Key = keyof typeof I;
 const ico = (k: Key) => <svg className="vx-ico" viewBox="0 0 24 24" aria-hidden="true">{I[k]}</svg>;
@@ -61,20 +64,38 @@ export const ADMIN_NAV: { group: string; items: { href: string; label: string; i
   ] },
 ];
 
-/** AdminShell: menu trái primary-deep + thanh trên + vùng nội dung trên surface-page. */
+/**
+ * AdminShell: menu trái primary-deep + thanh trên + vùng nội dung trên surface-page.
+ * Dưới 1024px menu trái thành bảng trượt, mở bằng nút ☰ trên thanh trên (CSS cuối globals.css).
+ */
 export function AdminShell({ children, me, badges = {} }: { children: ReactNode; me: PublicUser; badges?: Record<string, number> }) {
   const pathname = usePathname();
   const router = useRouter();
   const { logout } = useAuth();
+  // Menu mở gắn với trang đang xem: chuyển trang (kể cả nút Quay lại) là tự đóng
+  const [menuAt, setMenuAt] = useState<string | null>(null);
+  const menu = menuAt === pathname;
   const current = (href: string) => (href === '/admin' ? pathname === href : pathname.startsWith(href));
+  const close = () => setMenuAt(null);
+
+  useEffect(() => {
+    if (!menu) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenuAt(null); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [menu]);
 
   return (
-    <div className="ad app-admin">
-      <aside className="ad-side app-admin-side">
-        <Link href="/admin" className="ad-brand" style={{ color: 'inherit', textDecoration: 'none', margin: 0, padding: '6px 16px 12px', background: 'none' }}>
-          <svg className="vx-ico" viewBox="0 0 24 24" style={{ width: 22, height: 22 }}><path d="M5 19c0-8 5-14 15-14 0 10-6 15-14 15" /><path d="M5 19 13 11" /></svg>
-          Cây Cảnh Miền Tây<small>ADMIN</small>
-        </Link>
+    <div className="ad app-admin" data-menu={menu ? 'open' : undefined}>
+      <div className="app-admin-scrim" onClick={close} />
+      <aside id="admin-menu" className="ad-side app-admin-side" aria-label="Menu quản trị">
+        <div className="app-admin-brandrow">
+          <Link href="/admin" className="ad-brand" onClick={close} style={{ color: 'inherit', textDecoration: 'none', margin: 0, padding: '6px 16px 12px', background: 'none' }}>
+            <svg className="vx-ico" viewBox="0 0 24 24" style={{ width: 22, height: 22 }}><path d="M5 19c0-8 5-14 15-14 0 10-6 15-14 15" /><path d="M5 19 13 11" /></svg>
+            Cây Cảnh Miền Tây<small>ADMIN</small>
+          </Link>
+          <button type="button" className="app-admin-close" aria-label="Đóng menu" onClick={close}><Icon name="close" /></button>
+        </div>
         <div className="ad-store">
           <span><small>Đang xem</small>Tất cả cửa hàng</span>
           <svg className="vx-ico" viewBox="0 0 24 24" style={{ width: 14, height: 14 }}><path d="m6 9 6 6 6-6" /></svg>
@@ -83,7 +104,7 @@ export function AdminShell({ children, me, badges = {} }: { children: ReactNode;
           <div key={g.group} style={{ display: 'contents' }}>
             <div className="ad-group">{g.group}</div>
             {g.items.map((it) => (
-              <Link key={it.href} href={it.href} aria-current={current(it.href) ? 'true' : undefined}>
+              <Link key={it.href} href={it.href} onClick={close} aria-current={current(it.href) ? 'true' : undefined}>
                 {ico(it.icon)}
                 {it.label}
                 {badges[it.href] ? <em>{badges[it.href]}</em> : null}
@@ -98,17 +119,24 @@ export function AdminShell({ children, me, badges = {} }: { children: ReactNode;
       </aside>
       <div className="ad-main">
         <div className="ad-top">
-          <div className="vx-sfind__search">
+          <button type="button" className="app-admin-menubtn" aria-label="Mở menu quản trị" aria-expanded={menu} aria-controls="admin-menu" onClick={() => setMenuAt(pathname)}>
+            <Icon name="menu" />
+          </button>
+          <Link href="/admin" className="app-admin-topbrand">
+            <Image src="/images/brand/logo-mark.png" alt="" width={362} height={239} />
+            Quản trị
+          </Link>
+          <div className="vx-sfind__search app-admin-search">
             <svg className="vx-ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
             <input className="app-bare" placeholder="Tìm đơn, sản phẩm, khách hàng… (Ctrl K)" aria-label="Tìm trong admin" />
           </div>
           <div className="sp">
-            <span className="ad-me">
+            <span className="ad-me" title={me.name}>
               <span className="vx-avatar vx-avatar--sm">{me.initials}</span>
-              <span>{me.name}<small>{me.role === 'admin' ? 'Quản trị viên' : 'Nhân viên'}</small></span>
+              <span className="app-admin-who">{me.name}<small>{me.role === 'admin' ? 'Quản trị viên' : 'Nhân viên'}</small></span>
             </span>
-            <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" onClick={async () => { await logout(); router.push('/admin/dang-nhap'); }}>
-              Đăng xuất
+            <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm app-admin-logout" aria-label="Đăng xuất" onClick={async () => { await logout(); router.push('/admin/dang-nhap'); }}>
+              {ico('logout')}<span>Đăng xuất</span>
             </button>
           </div>
         </div>

@@ -4,9 +4,9 @@ import { useRouter } from 'next/navigation';
 import { useRef, useState, useTransition } from 'react';
 import { createWarrantyAction } from '@/app/actions/warranty';
 import { compressImage as compress } from '@/lib/compress-image';
-import { Art, Icon, type IconName } from './Icon';
+import { Icon, Thumb } from './Icon';
 
-export type WarrantyItem = { itemId: number; name: string; label: string; icon: string; code: string; daysLeft: number };
+export type WarrantyItem = { itemId: number; name: string; label: string; icon: string; image: string | null; code: string; daysLeft: number };
 
 const SYMPTOMS = ['Lá vàng', 'Lá mềm, rũ', 'Đốm nâu', 'Rụng lá', 'Thối gốc', 'Có sâu, rệp', 'Dập, gãy khi nhận'];
 const SHOTS = [
@@ -100,7 +100,7 @@ export function WarrantyForm({ items }: { items: WarrantyItem[] }) {
                 {items.map((it) => (
                   <button key={it.itemId} type="button" role="radio" className="vx-pay__opt" aria-checked={item?.itemId === it.itemId} onClick={() => setItem(it)}>
                     <span className="vx-radio" />
-                    <span className="vx-pay__mark"><Art name={it.icon as IconName} /></span>
+                    <span className="vx-item__img" style={{ width: 40, height: 40, flex: 'none' }}><Thumb src={it.image} icon={it.icon} /></span>
                     <span>{it.name}<small>{it.label} · Đơn {it.code} · còn {it.daysLeft} ngày bảo hành</small></span>
                   </button>
                 ))}
@@ -110,7 +110,7 @@ export function WarrantyForm({ items }: { items: WarrantyItem[] }) {
 
           {step >= 2 && item && (
             <div className="au-who">
-              <span className="vx-item__img" style={{ width: 48, height: 48 }}><Art name={item.icon as IconName} /></span>
+              <span className="vx-item__img" style={{ width: 48, height: 48 }}><Thumb src={item.image} icon={item.icon} /></span>
               <span><b>{item.name}</b><small>{item.label} · Đơn {item.code}</small></span>
               <span className="vx-badge vx-badge--success" style={{ marginLeft: 'auto' }}>Còn {item.daysLeft} ngày</span>
             </div>

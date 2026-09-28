@@ -5,6 +5,7 @@ import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { seedDiseases } from '@/lib/seed-diseases';
 import { seedProducts } from '@/lib/seed-products';
 import { tracksLots } from '@/lib/stock';
+import { WELCOME_CODE, WELCOME_DEFAULT } from '@/lib/voucher-labels';
 import * as schema from './schema';
 
 /** Tọa độ ước lượng — cần cập nhật đúng vị trí cửa hàng. */
@@ -50,4 +51,17 @@ export async function seedDiseasesIfEmpty(db: NodePgDatabase<typeof schema>) {
     ...d, aliases: d.aliases ?? [], confusions: d.confusions ?? [], prevention: d.prevention ?? [], safety: d.safety ?? '', products: d.products ?? [],
   })));
   return true;
+}
+
+/** Tạo mã quà tài khoản mới (lib/voucher-labels.ts) nếu chưa có. Có rồi thì giữ nguyên — admin đã có thể sửa số tiền / tắt mã. */
+export async function seedWelcomeVoucher(db: NodePgDatabase<typeof schema>) {
+  const rows = await db.insert(schema.vouchers).values({
+    code: WELCOME_CODE,
+    label: 'Quà tài khoản mới',
+    discountType: 'amount',
+    discountValue: WELCOME_DEFAULT.discountValue,
+    minOrder: WELCOME_DEFAULT.minOrder,
+    perCustomerLimit: 1,
+  }).onConflictDoNothing({ target: schema.vouchers.code }).returning({ id: schema.vouchers.id });
+  return rows.length > 0;
 }

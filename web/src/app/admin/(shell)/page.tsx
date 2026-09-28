@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Art, Icon, type IconName } from '@/components/Icon';
+import { Icon, Thumb } from '@/components/Icon';
 import { getCategory } from '@/lib/catalog';
 import { money } from '@/lib/format';
 import { requireStaff } from '@/server/auth';
@@ -97,7 +97,7 @@ export default async function AdminDashboardPage() {
             <tbody>
               {s.lowStock.map((r, i) => (
                 <tr key={i}>
-                  <td><span className="ad-prod"><span className="ad-thumb"><Art name={r.icon as IconName} /></span><span>{r.name}<small>{r.label}</small></span></span></td>
+                  <td><span className="ad-prod"><span className="ad-thumb"><Thumb src={r.image} icon={r.icon} /></span><span>{r.name}<small>{r.label}</small></span></span></td>
                   <td className="num">{r.stock}</td>
                   <td>{r.pesticide ? <span className="ad-pill new">Thuốc BVTV</span> : <span className="ad-pill wait">Dưới mức</span>}</td>
                 </tr>

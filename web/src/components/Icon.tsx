@@ -68,3 +68,8 @@ export function Art({ name }: { name: IconName }) {
     </svg>
   );
 }
+
+/** Ảnh chính của sản phẩm nếu có, chưa có thì hiện icon — đặt trong .vx-item__img / .ad-thumb. */
+export function Thumb({ src, icon, alt = '' }: { src?: string | null; icon: string; alt?: string }) {
+  return src ? <img src={src} alt={alt} loading="lazy" /> : <Art name={icon as IconName} />;
+}

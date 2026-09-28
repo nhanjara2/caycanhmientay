@@ -21,6 +21,7 @@ const ICON: Record<Kind, { icon: IconName; cls: string }> = {
   warranty: { icon: 'shield', cls: '' },
   care: { icon: 'drop', cls: 's' },
   promo: { icon: 'tag', cls: 'p' },
+  reply: { icon: 'chat', cls: '' },
 };
 
 /** "**đậm**" → <b>. */

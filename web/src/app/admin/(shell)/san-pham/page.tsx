@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ProductActiveToggle } from '@/components/admin/ProductActiveToggle';
-import { Art, Icon, type IconName } from '@/components/Icon';
+import { Icon, Thumb } from '@/components/Icon';
 import { categories, getCategory } from '@/lib/catalog';
 import { money } from '@/lib/format';
 import { requireStaff } from '@/server/auth';
@@ -42,7 +42,7 @@ export default async function AdminProductsPage({ searchParams }: Props) {
           <button className="vx-btn vx-btn--outline vx-btn--sm">Tìm</button>
         </form>
         <div className="ad-tablewrap">
-          <table className="ad-table">
+          <table className="ad-table app-mtable">
             <thead>
               <tr><th>Sản phẩm</th><th>Danh mục</th><th className="num">Giá từ</th><th className="num">Tồn</th><th className="num">Đã bán</th><th>Trạng thái</th></tr>
             </thead>
@@ -53,15 +53,15 @@ export default async function AdminProductsPage({ searchParams }: Props) {
                   <tr key={r.slug}>
                     <td>
                       <Link href={`/admin/san-pham/${r.slug}`} className="ad-prod" style={{ color: 'inherit' }}>
-                        <span className="ad-thumb"><Art name={r.icon as IconName} /></span>
+                        <span className="ad-thumb"><Thumb src={r.image} icon={r.icon} /></span>
                         <span><b>{r.name}</b><small>{r.sku} · {r.variants} quy cách{r.pesticide ? ' · Thuốc BVTV' : ''}</small></span>
                       </Link>
                     </td>
-                    <td>{cat?.name}<small>{cat?.subs.find((s) => s.slug === r.sub)?.name}</small></td>
-                    <td className="num">{money(r.minPrice ?? 0)}<small>/ {r.unit}</small></td>
-                    <td className="num">{(r.stock ?? 0) < MIN_STOCK ? <b style={{ color: 'var(--sale)' }}>{r.stock ?? 0}</b> : r.stock}</td>
-                    <td className="num">{r.sold}</td>
-                    <td>{isAdmin ? <ProductActiveToggle slug={r.slug} active={r.active} /> : <span className={`ad-pill ${r.active ? 'done' : 'wait'}`}>{r.active ? 'Đang bán' : 'Ẩn'}</span>}</td>
+                    <td data-label="Danh mục">{cat?.name}<small>{cat?.subs.find((s) => s.slug === r.sub)?.name}</small></td>
+                    <td className="num" data-label="Giá từ">{money(r.minPrice ?? 0)}<small>/ {r.unit}</small></td>
+                    <td className="num" data-label="Tồn">{(r.stock ?? 0) < MIN_STOCK ? <b style={{ color: 'var(--sale)' }}>{r.stock ?? 0}</b> : r.stock}</td>
+                    <td className="num" data-label="Đã bán">{r.sold}</td>
+                    <td data-label="Trạng thái">{isAdmin ? <ProductActiveToggle slug={r.slug} active={r.active} /> : <span className={`ad-pill ${r.active ? 'done' : 'wait'}`}>{r.active ? 'Đang bán' : 'Ẩn'}</span>}</td>
                   </tr>
                 );
               })}

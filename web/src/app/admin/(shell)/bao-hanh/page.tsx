@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Art, type IconName } from '@/components/Icon';
+import { Thumb } from '@/components/Icon';
 import { fmtDateTime } from '@/lib/order-labels';
 import { WARRANTY_RESOLUTION_LABEL, WARRANTY_STATUS_LABEL } from '@/lib/warranty-labels';
 import { maskPhone, requireStaff } from '@/server/auth';
@@ -33,16 +33,16 @@ export default async function AdminWarrantyListPage({ searchParams }: Props) {
           ))}
         </div>
         <div className="ad-tablewrap">
-          <table className="ad-table">
+          <table className="ad-table app-mtable">
             <thead><tr><th>Mã</th><th>Cây</th><th>Khách</th><th>Triệu chứng</th><th>Trạng thái</th></tr></thead>
             <tbody>
               {rows.map((r) => (
                 <tr key={r.w.id}>
                   <td><Link className="code" href={`/admin/bao-hanh/${r.w.id}`}>{r.code}</Link><small>{fmtDateTime(r.w.createdAt)}</small></td>
-                  <td><span className="ad-prod"><span className="ad-thumb"><Art name={r.itemIcon as IconName} /></span><span>{r.itemName}<small>Đơn {r.orderCode} · {r.photos.length} ảnh</small></span></span></td>
-                  <td>{r.customer ?? 'Khách hàng'}<small>{r.customerPhone ? maskPhone(r.customerPhone) : ''}</small></td>
-                  <td>{r.w.symptoms.join(', ')}</td>
-                  <td>
+                  <td data-label="Cây" data-wide><span className="ad-prod"><span className="ad-thumb"><Thumb src={r.itemImage} icon={r.itemIcon} /></span><span>{r.itemName}<small>Đơn {r.orderCode} · {r.photos.length} ảnh</small></span></span></td>
+                  <td data-label="Khách">{r.customer ?? 'Khách hàng'}<small>{r.customerPhone ? maskPhone(r.customerPhone) : ''}</small></td>
+                  <td data-label="Triệu chứng">{r.w.symptoms.join(', ')}</td>
+                  <td data-label="Trạng thái">
                     <span className={`ad-pill ${PILL[r.w.status]}`}>{WARRANTY_STATUS_LABEL[r.w.status]}</span>
                     {r.w.resolution && <small>{WARRANTY_RESOLUTION_LABEL[r.w.resolution]}</small>}
                   </td>

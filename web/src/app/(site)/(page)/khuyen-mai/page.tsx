@@ -5,7 +5,7 @@ import { CopyVoucherCode } from '@/components/CopyVoucherCode';
 import { Icon } from '@/components/Icon';
 import { money } from '@/lib/format';
 import { fmtDate } from '@/lib/order-labels';
-import { voucherValueText } from '@/lib/voucher-labels';
+import { voucherValueText, WELCOME_CODE, WELCOME_DAYS } from '@/lib/voucher-labels';
 import { listActiveVouchers } from '@/server/vouchers';
 
 export const metadata: Metadata = { title: 'Khuyến mãi' };
@@ -24,12 +24,17 @@ export default async function PromotionsPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {vouchers.map((v) => (
             <div key={v.id} className="vx-voucher">
-              <span className="vx-voucher__ic sale"><Icon name="tag" /></span>
+              <span className="vx-voucher__ic sale"><Icon name={v.code === WELCOME_CODE ? 'gift' : 'tag'} /></span>
               <span className="vx-voucher__body">
                 <b>{v.label}</b>
                 <span className="cond">
                   {voucherValueText(v, money)} · {v.minOrder > 0 ? `Đơn từ ${money(v.minOrder)}` : 'Không điều kiện'}
                 </span>
+                {v.code === WELCOME_CODE && (
+                  <span className="cond">
+                    Dành cho tài khoản mới: đăng nhập để dùng, trong {WELCOME_DAYS} ngày kể từ lần đăng nhập đầu tiên, mỗi tài khoản / số điện thoại {v.perCustomerLimit} lần.
+                  </span>
+                )}
                 <span className="cond">
                   Mã: <b style={{ color: 'var(--primary)' }}>{v.code}</b>
                   {v.endsAt && <span className="exp"> · Hết hạn {fmtDate(v.endsAt)}</span>}

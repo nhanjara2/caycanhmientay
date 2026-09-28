@@ -6,10 +6,10 @@ import { markCareDoneAction, updateGardenPlantAction, uploadGardenPhotoAction } 
 import { compressImage } from '@/lib/compress-image';
 import { fmtDate } from '@/lib/order-labels';
 import { GARDEN_STATUS_LABEL, plantAgeDays, plantAgeText, type GardenStatus } from '@/lib/garden-labels';
-import { Art, Icon, type IconName } from './Icon';
+import { Icon, Thumb, type IconName } from './Icon';
 
 export type GardenCardData = {
-  id: number; name: string; icon: string; nickname: string | null; location: string | null;
+  id: number; name: string; icon: string; image: string | null; nickname: string | null; location: string | null;
   status: GardenStatus; plantedAt: string; photo: string | null; warrantyDaysLeft: number;
   water: { due: string; overdue: boolean; daysLeft: number };
   fertilize: { due: string; overdue: boolean; daysLeft: number };
@@ -69,7 +69,7 @@ function GardenCard({ p }: { p: GardenCardData }) {
   return (
     <div className="gd-card">
       <div className={`gd-card__img${status === 'attention' ? ' sick' : ''}`}>
-        {p.photo ? <img src={`/api/garden-photos/${p.photo}`} alt={p.nickname ?? p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Art name={p.icon as IconName} />}
+        {p.photo ? <img src={`/api/garden-photos/${p.photo}`} alt={p.nickname ?? p.name} /> : <Thumb src={p.image} icon={p.icon} alt={p.name} />}
         <button
           type="button"
           className={`hl h ${status === 'attention' ? 'watch' : 'ok'}`}

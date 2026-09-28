@@ -109,11 +109,10 @@ export const views = [
   site('QuoteView', 'QuoteRequestForm'),
   site('BusinessView', 'BusinessLayout'),
 
-  // Admin — khung AdminShell ở src/app/admin/(shell)/layout.tsx. Tổng quan, đơn hàng, khách hàng, khuyến mãi đã viết tay với dữ liệu thật.
+  // Admin — khung AdminShell ở src/app/admin/(shell)/layout.tsx. Tổng quan, đơn hàng, khách hàng, khuyến mãi, đánh giá đã viết tay với dữ liệu thật.
   admin('AdminDeliveryView', 'AdminDelivery'),
   admin('AdminPurchasingView', 'AdminPurchasing'),
   admin('AdminContentView', 'AdminContent'),
-  admin('AdminReviewsView', 'AdminReviews'),
   admin('AdminRolesView', 'AdminRoles'),
   admin('AdminServiceRequestsView', 'AdminServiceRequests'),
   admin('AdminShippingView', 'AdminShippingSettings'),

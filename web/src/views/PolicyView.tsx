@@ -126,7 +126,7 @@ export function PolicyView() {
             </svg>
             <div>
               {'Xem đầy đủ điều kiện tại '}
-              <a>Chính sách bảo hành cây</a>. Mọi thắc mắc vui lòng gọi 1800 xxxx (8:00 – 21:00).
+              <a>Chính sách bảo hành cây</a>. Mọi thắc mắc vui lòng gọi 0973 806 842 (8:00 – 21:00).
             </div>
           </div>{' '}
           <div className="vx-feedback">

@@ -104,7 +104,7 @@ export function StockDialog({ slug, idx, name, label, stock, lotTracked, stores,
                 <>
                   {storeSelect('sd-store', storeId, setStoreId, 'Nhập vào cửa hàng')}
                   {lotTracked && (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
                       <div className="vx-fl"><label htmlFor="sd-lot">Số lô</label><input id="sd-lot" value={lotCode} onChange={(e) => setLotCode(e.target.value.toUpperCase())} maxLength={40} placeholder="L2609-01" /></div>
                       <div className="vx-fl"><label htmlFor="sd-exp">Hạn dùng</label><input id="sd-exp" type="date" value={expiry} onChange={(e) => setExpiry(e.target.value)} /></div>
                     </div>
@@ -155,9 +155,12 @@ export function StockDialog({ slug, idx, name, label, stock, lotTracked, stores,
                       return (
                         <div key={l.id}>
                           <span>{storeCode(l.storeId)}</span>
-                          {lotText(l)} · <b>{l.qty}</b>
-                          {lv === 'expired' && <b style={{ color: 'var(--danger)' }}> · Đã hết hạn — kiểm kê về 0 khi hủy</b>}
-                          {lv === 'soon' && <b style={{ color: 'var(--warning, #b7791f)' }}> · Sắp hết hạn</b>}
+                          {/* gói trong 1 span: .ad-log là lưới 2 cột, mỗi thẻ <b> rời sẽ rớt xuống hàng mới */}
+                          <span style={{ color: 'var(--ink)' }}>
+                            {lotText(l)} · <b>{l.qty}</b>
+                            {lv === 'expired' && <b style={{ color: 'var(--danger)' }}> · Đã hết hạn — kiểm kê về 0 khi hủy</b>}
+                            {lv === 'soon' && <b style={{ color: 'var(--warning, #b7791f)' }}> · Sắp hết hạn</b>}
+                          </span>
                         </div>
                       );
                     })}

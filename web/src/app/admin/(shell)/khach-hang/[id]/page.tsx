@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { OrderPill } from '@/components/admin/OrderPill';
 import { CustomerNotes } from '@/components/admin/CustomerNotes';
-import { Art, type IconName } from '@/components/Icon';
+import { Thumb } from '@/components/Icon';
 import { CONDITION_LABEL, fullAddress, KIND_LABEL } from '@/lib/address-labels';
 import { customerInitials, customerTier } from '@/lib/customer-labels';
 import { money } from '@/lib/format';
@@ -43,7 +43,7 @@ export default async function AdminCustomerDetailPage({ params }: Props) {
             <div className="ad-card__b">
               <div className="ad-prod">
                 <span className="vx-avatar">{customerInitials(user.name)}</span>
-                <span>{user.name ?? 'Chưa đặt tên'}<small>{user.phone ? maskPhone(user.phone) : 'Chỉ đăng nhập Google'}</small></span>
+                <span>{user.name ?? 'Chưa đặt tên'}<small>{user.phone ?? user.contactPhone ? maskPhone((user.phone ?? user.contactPhone)!) : 'Chưa có số điện thoại'}</small></span>
               </div>
               <div className="ad-mini">
                 <div><b>{orders.filter((o) => o.kind === 'sale' && o.status !== 'cancelled').length}</b>Đơn</div>
@@ -51,6 +51,15 @@ export default async function AdminCustomerDetailPage({ params }: Props) {
                 <div><b>{user.points}</b>Điểm</div>
               </div>
               <div className="ad-kv">
+                {(user.phone ?? user.contactPhone) && (
+                  <>
+                    <span>Điện thoại</span>
+                    <span>
+                      <a href={`tel:${user.phone ?? user.contactPhone}`} style={{ color: 'var(--primary)' }}>{user.phone ?? user.contactPhone}</a>
+                      <small style={{ display: 'block', color: 'var(--ink-muted)' }}>{user.phone ? 'Đã xác thực OTP' : 'Khách tự khai, chưa xác thực'}</small>
+                    </span>
+                  </>
+                )}
                 {user.email && <><span>Email</span><span>{user.email}</span></>}
                 <span>Tham gia</span><span>{fmtDate(user.createdAt)}</span>
               </div>
@@ -85,7 +94,7 @@ export default async function AdminCustomerDetailPage({ params }: Props) {
           <div className="ad-card">
             <div className="ad-card__h">Đơn hàng ({orders.length})</div>
             <div className="ad-tablewrap">
-              <table className="ad-table">
+              <table className="ad-table app-mtable">
                 <thead><tr><th>Mã đơn</th><th>Sản phẩm</th><th className="num">Tổng tiền</th><th>Trạng thái</th></tr></thead>
                 <tbody>
                   {orders.map((o) => {
@@ -93,16 +102,16 @@ export default async function AdminCustomerDetailPage({ params }: Props) {
                     return (
                       <tr key={o.id}>
                         <td><Link className="code" href={`/admin/don-hang/${o.code}`}>{o.code}</Link>{o.kind === 'warranty' && <span className="vx-badge vx-badge--info" style={{ marginLeft: 6 }}>Bảo hành 0đ</span>}<small>{fmtDateTime(o.createdAt)}</small></td>
-                        <td>
+                        <td data-label="Sản phẩm" data-wide>
                           {first && (
                             <span className="ad-prod">
-                              <span className="ad-thumb"><Art name={first.icon as IconName} /></span>
+                              <span className="ad-thumb"><Thumb src={first.image} icon={first.icon} /></span>
                               <span>{first.name}{o.items.length > 1 ? ` + ${o.items.length - 1} SP` : ''}</span>
                             </span>
                           )}
                         </td>
-                        <td className="num"><b>{money(o.total)}</b></td>
-                        <td><OrderPill status={o.status} /></td>
+                        <td className="num" data-label="Tổng tiền"><b>{money(o.total)}</b></td>
+                        <td data-label="Trạng thái"><OrderPill status={o.status} /></td>
                       </tr>
                     );
                   })}

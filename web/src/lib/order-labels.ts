@@ -37,6 +37,13 @@ export const PAY_LABEL = {
   card: 'Thẻ quốc tế',
 } as const;
 
+/** Logo cổng thanh toán trong public/images/pay/ (tiền mặt, thẻ dùng icon). */
+export const PAY_LOGO: Partial<Record<keyof typeof PAY_LABEL, string>> = {
+  qr: 'vietqr.svg',
+  momo: 'momo.svg',
+  zalopay: 'zalopay.svg',
+};
+
 const tz = { timeZone: 'Asia/Ho_Chi_Minh' } as const;
 export const fmtDate = (d: Date) => d.toLocaleDateString('vi-VN', { ...tz, day: '2-digit', month: '2-digit', year: 'numeric' });
 export const fmtDateTime = (d: Date) =>

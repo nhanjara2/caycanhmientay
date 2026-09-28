@@ -3,14 +3,15 @@
 import { useRouter } from 'next/navigation';
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import { loginOptionsAction, logoutAction, meAction, requestOtpAction, verifyOtpAction } from '@/app/actions/auth';
+import type { WelcomeOffer, WelcomeProgram } from '@/lib/voucher-labels';
 import type { PublicUser } from '@/server/auth';
 
 // Đăng nhập Google hoặc SĐT + OTP (xem server/auth.ts). Phiên nằm trong cookie httpOnly do server đặt; client chỉ giữ bản hiển thị.
 
 export type User = PublicUser;
 
-/** Cách đăng nhập đang bật + lỗi Google vừa xảy ra (từ "?google=…"). */
-export type LoginOptions = { google: boolean; phone: boolean; googleError: string };
+/** Cách đăng nhập đang bật + lỗi Google vừa xảy ra (từ "?google=…") + quà tài khoản mới đang chạy. */
+export type LoginOptions = { google: boolean; phone: boolean; googleError: string; welcome: WelcomeProgram | null };
 
 const GOOGLE_ERRORS: Record<string, string> = {
   'chua-bat': 'Đăng nhập Google chưa được bật.',
@@ -26,7 +27,8 @@ type AuthCtx = {
   openLogin: () => void;
   closeLogin: () => void;
   requestOtp: (phone: string) => ReturnType<typeof requestOtpAction>;
-  verifyOtp: (phone: string, code: string) => Promise<{ ok: boolean; error?: string }>;
+  /** welcome: quà tài khoản mới nếu đây là lần đăng nhập đầu tiên. */
+  verifyOtp: (phone: string, code: string) => Promise<{ ok: boolean; error?: string; welcome?: WelcomeOffer | null }>;
   setUser: (u: User | null) => void;
   options: LoginOptions;
   logout: () => Promise<void>;
@@ -42,7 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [ready, setReady] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const [options, setOptions] = useState<LoginOptions>({ google: false, phone: true, googleError: '' });
+  const [options, setOptions] = useState<LoginOptions>({ google: false, phone: true, googleError: '', welcome: null });
 
   useEffect(() => {
     meAction().then(setUser).catch(() => setUser(null)).finally(() => setReady(true));
@@ -65,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!r.ok) return { ok: false, error: r.error };
     setUser(r.user);
     router.refresh(); // trang server (đơn hàng, tài khoản) đọc lại phiên mới
-    return { ok: true };
+    return { ok: true, welcome: r.welcome };
   }, [router]);
 
   const logout = useCallback(async () => {

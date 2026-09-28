@@ -28,6 +28,7 @@ export function AdminLogin({ loggedInAsCustomer }: { loggedInAsCustomer: boolean
           title="Quản trị Cây Cảnh Miền Tây"
           subtitle="Đăng nhập bằng tài khoản nhân viên"
           googleNext="/admin"
+          perks={false}
           onDone={() => { router.push('/admin'); router.refresh(); }}
         />
       )}

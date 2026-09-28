@@ -1,5 +1,6 @@
 import 'server-only';
 import { and, asc, count, countDistinct, eq, gte, lt, ne, sql } from 'drizzle-orm';
+import { mainImageOf } from './catalog';
 import { db, schema } from './db';
 
 const { orders, orderItems, products, productOptions } = schema;
@@ -40,7 +41,7 @@ export async function dashboardStats() {
     .where(and(notCancelled, gte(orders.createdAt, new Date(today0 - 29 * DAY))))
     .groupBy(products.category);
 
-  const lowStock = await db.select({ name: products.name, label: productOptions.label, unit: products.unit, icon: products.icon, stock: productOptions.stock, pesticide: products.pesticide })
+  const lowStock = await db.select({ name: products.name, label: productOptions.label, unit: products.unit, icon: products.icon, image: mainImageOf(products.slug), stock: productOptions.stock, pesticide: products.pesticide })
     .from(productOptions).innerJoin(products, eq(products.slug, productOptions.productSlug))
     .where(lt(productOptions.stock, 10)).orderBy(asc(productOptions.stock)).limit(6);
 

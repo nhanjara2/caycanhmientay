@@ -133,7 +133,7 @@ export function StoreLocatorView() {
                 </span>
                 <span>
                   {'Điện thoại: '}
-                  <b>1800 xxxx</b>
+                  <b>0703 005 001</b>
                 </span>{' '}
                 <div className="vx-svc">
                   <span className="vx-badge vx-badge--info">Bãi đỗ ô tô</span>

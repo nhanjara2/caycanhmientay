@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import * as z from 'zod';
 import { getCurrentUser, requireStaff } from '@/server/auth';
 import { previewVoucher } from '@/server/orders';
-import { createVoucher, setVoucherActive, updateVoucher, VoucherInputSchema } from '@/server/vouchers';
+import { createVoucher, setVoucherActive, updateVoucher, VoucherInputSchema, welcomeOffer } from '@/server/vouchers';
 
 const ItemsSchema = z.array(z.object({ slug: z.string().max(120), option: z.number().int().min(0).max(20), qty: z.number().int().min(1).max(99) })).min(1).max(50);
 
@@ -17,6 +17,12 @@ export async function applyVoucherAction(code: unknown, items: unknown, phone: u
   if (!pItems.success) return { ok: false as const, error: 'Giỏ hàng không hợp lệ' };
   const pPhone = typeof phone === 'string' ? phone : '';
   return previewVoucher(pCode.data, pItems.data, user, pPhone || user?.phone || '');
+}
+
+/** Quà tài khoản mới của khách đang đăng nhập — trang thanh toán gợi ý nút "Dùng". null = chưa đăng nhập / không có quà. */
+export async function welcomeOfferAction() {
+  const user = await getCurrentUser();
+  return user ? welcomeOffer(user.id) : null;
 }
 
 // ---- Admin -------------------------------------------------------------------------------

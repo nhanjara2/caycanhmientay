@@ -4,10 +4,16 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createHash, createHmac, randomBytes, randomInt, timingSafeEqual } from 'node:crypto';
 import { cache } from 'react';
+import type { WelcomeOffer } from '@/lib/voucher-labels';
 import { db, schema } from './db';
 import type { Role } from './db/schema';
+import { announceWelcome } from './vouchers';
 
 const { users, sessions, otpCodes } = schema;
+
+/** Lần đăng nhập đầu tiên (vừa tạo tài khoản khách): tặng quà tài khoản mới. Lỗi ở đây không được chặn đăng nhập. */
+const welcomeNewCustomer = (user: { id: number; role: Role }) =>
+  user.role === 'customer' ? announceWelcome(user.id).catch((e) => { console.error('[welcome]', e); return null; }) : Promise.resolve(null);
 
 export const SESSION_COOKIE = 'ccmt_session';
 const SESSION_DAYS = 30;
@@ -78,7 +84,8 @@ async function sendOtp(phone: string, code: string) {
   console.info(`[OTP] ${maskPhone(phone)}: ${code}`);
 }
 
-export type VerifyResult = { ok: true; user: SessionUser } | { ok: false; error: string };
+/** welcome: quà tài khoản mới khi đây là lần đăng nhập đầu tiên (null nếu không). */
+export type VerifyResult = { ok: true; user: SessionUser; welcome: WelcomeOffer | null } | { ok: false; error: string };
 
 export async function verifyOtp(rawPhone: string, code: string): Promise<VerifyResult> {
   const phone = normalizePhone(rawPhone);
@@ -103,13 +110,14 @@ export async function verifyOtp(rawPhone: string, code: string): Promise<VerifyR
   if (!used.length) return { ok: false, error: 'Mã đã được sử dụng. Vui lòng gửi lại mã.' };
 
   // Tài khoản định danh bằng SĐT: chưa có thì tạo mới, có rồi thì đăng nhập vào tài khoản đó.
-  await db.insert(users).values({ phone }).onConflictDoNothing({ target: users.phone });
+  const created = await db.insert(users).values({ phone }).onConflictDoNothing({ target: users.phone }).returning({ id: users.id });
   let [user] = await db.select().from(users).where(eq(users.phone, phone));
   if (adminPhones().includes(phone) && user.role !== 'admin') {
     [user] = await db.update(users).set({ role: 'admin' }).where(eq(users.id, user.id)).returning();
   }
   await createSession(user.id);
-  return { ok: true, user: toSessionUser(user) };
+  const welcome = created.length ? await welcomeNewCustomer(user) : null;
+  return { ok: true, user: toSessionUser(user), welcome };
 }
 
 // ---- Đăng nhập Google (OAuth 2.0 + PKCE) ----------------------------------------------------
@@ -211,14 +219,18 @@ export async function finishGoogleLogin(origin: string, params: URLSearchParams)
       .where(and(eq(users.id, current.id), isNull(users.googleSub)))
       .returning();
   }
+  let isNew = false;
   if (!user) {
-    await db.insert(users).values({ googleSub: g.sub, email: g.email, name: g.name }).onConflictDoNothing({ target: users.googleSub });
+    const created = await db.insert(users).values({ googleSub: g.sub, email: g.email, name: g.name }).onConflictDoNothing({ target: users.googleSub }).returning({ id: users.id });
+    isNew = created.length > 0;
     [user] = await db.select().from(users).where(eq(users.googleSub, g.sub));
   }
   if (adminEmails().includes(g.email) && user.role !== 'admin') {
     [user] = await db.update(users).set({ role: 'admin' }).where(eq(users.id, user.id)).returning();
   }
   await createSession(user.id);
+  // Google chuyển trang về `next` nên không hiện được hộp chào: quà chỉ báo qua chuông thông báo.
+  if (isNew) await welcomeNewCustomer(user);
   return { ok: true, next };
 }
 
@@ -244,9 +256,12 @@ export async function destroySession() {
   store.delete(SESSION_COOKIE);
 }
 
-export type SessionUser = Pick<typeof users.$inferSelect, 'id' | 'phone' | 'email' | 'googleSub' | 'name' | 'role' | 'points'>;
-const toSessionUser = ({ id, phone, email, googleSub, name, role, points }: typeof users.$inferSelect): SessionUser =>
-  ({ id, phone, email, googleSub, name, role, points });
+export type SessionUser = Pick<typeof users.$inferSelect, 'id' | 'phone' | 'contactPhone' | 'email' | 'googleSub' | 'name' | 'role' | 'points'>;
+const toSessionUser = ({ id, phone, contactPhone, email, googleSub, name, role, points }: typeof users.$inferSelect): SessionUser =>
+  ({ id, phone, contactPhone, email, googleSub, name, role, points });
+
+/** SĐT để liên lạc: SĐT đã xác thực OTP, không có thì SĐT khách tự khai. */
+export const accountPhone = (u: Pick<SessionUser, 'phone' | 'contactPhone'>) => u.phone ?? u.contactPhone ?? null;
 
 /** Người dùng của request hiện tại (gọi nhiều lần trong một request chỉ truy vấn một lần). */
 export const getCurrentUser = cache(async (): Promise<SessionUser | null> => {
@@ -275,12 +290,20 @@ export async function requireStaff(minRole: 'staff' | 'admin' = 'staff') {
 }
 
 /** Tên ghi vào lịch sử khi nhân viên thao tác. */
-export const staffName = (u: SessionUser) => u.name ?? (u.phone ? `NV ${u.phone.slice(-3)}` : u.email ?? 'Nhân viên');
+export const staffName = (u: SessionUser) => {
+  const phone = accountPhone(u);
+  return u.name ?? (phone ? `NV ${phone.slice(-3)}` : u.email ?? 'Nhân viên');
+};
 
+/** Bản hiển thị gửi về trình duyệt của chính người đó. */
 export const publicUser = (u: SessionUser) => ({
   name: u.name ?? 'Khách hàng',
-  /** SĐT che bớt, hoặc email với tài khoản chỉ đăng nhập Google. */
-  phoneMasked: u.phone ? maskPhone(u.phone) : u.email ?? '',
+  /** SĐT che bớt, hoặc email khi tài khoản Google chưa khai SĐT. */
+  phoneMasked: accountPhone(u) ? maskPhone(accountPhone(u)!) : u.email ?? '',
+  /** SĐT đầy đủ (điền sẵn ở thanh toán, sổ địa chỉ); '' = chưa có → phải khai trước khi đặt hàng. */
+  phone: accountPhone(u) ?? '',
+  /** SĐT đã xác thực OTP thì khóa, không cho sửa. */
+  phoneVerified: Boolean(u.phone),
   initials: (u.name ?? 'Khách hàng').split(/\s+/).map((w) => w[0]).slice(-2).join('').toUpperCase(),
   role: u.role,
   points: u.points,

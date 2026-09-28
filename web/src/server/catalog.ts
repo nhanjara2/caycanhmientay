@@ -1,7 +1,8 @@
 import 'server-only';
 import { connection } from 'next/server';
 import { cache } from 'react';
-import { and, asc, eq, inArray, isNotNull } from 'drizzle-orm';
+import { and, asc, eq, getTableName, inArray, isNotNull, sql } from 'drizzle-orm';
+import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import type { IconName } from '@/components/Icon';
 import { isNewProduct, normalize, productImageUrl, type Product } from '@/lib/catalog';
 import { db, schema } from './db';
@@ -29,6 +30,14 @@ async function hydrate(rows: Row[]): Promise<Product[]> {
     isNew: isNewProduct(r.createdAt) || undefined,
   }));
 }
+
+/** Cột phụ cho truy vấn ở nơi khác (đơn, kho, bảo hành…): URL ảnh chính của sản phẩm, null khi chưa có ảnh.
+ *  Tự ghi "bảng"."cột": truy vấn một bảng Drizzle bỏ tên bảng, khi đó cột bên ngoài bị hiểu nhầm thành cột của product_images. */
+export const mainImageOf = (slug: AnyPgColumn) => {
+  const outer = sql`${sql.identifier(getTableName(slug.table))}.${sql.identifier(slug.name)}`;
+  return sql<string | null>`(select pi.file from ${I} pi where pi.product_slug = ${outer} order by pi.idx, pi.id limit 1)`
+    .mapWith((f: string | null) => (f ? productImageUrl(f) : null));
+};
 
 const active = eq(P.active, true);
 

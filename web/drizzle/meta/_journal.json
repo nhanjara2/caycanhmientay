@@ -71,6 +71,34 @@
       "when": 1790586213881,
       "tag": "0009_giant_purifiers",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790606673914,
+      "tag": "0010_zippy_nuke",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1790607244695,
+      "tag": "0011_lonely_speed",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1790608818055,
+      "tag": "0012_careful_blade",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1790609133072,
+      "tag": "0013_service_requests",
+      "breakpoints": true
     }
   ]
 }

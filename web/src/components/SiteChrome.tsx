@@ -4,6 +4,7 @@ import { CookieConsent } from './CookieConsent';
 import { Footer } from './Footer';
 import { Header } from './Header';
 import { ContactFab, Toaster } from './Overlays';
+import { PhonePrompt } from './PhoneModal';
 
 export function SiteChrome({ children }: { children: ReactNode }) {
   return (
@@ -14,6 +15,7 @@ export function SiteChrome({ children }: { children: ReactNode }) {
       <ContactFab />
       <Toaster />
       <AuthModal />
+      <PhonePrompt />
       <CookieConsent />
     </>
   );

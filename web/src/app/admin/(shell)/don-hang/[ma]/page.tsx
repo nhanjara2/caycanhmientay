@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { OrderPill } from '@/components/admin/OrderPill';
 import { StatusActions } from '@/components/admin/StatusActions';
-import { Art, Icon, type IconName } from '@/components/Icon';
+import { Icon, Thumb } from '@/components/Icon';
 import { money } from '@/lib/format';
 import { fmtDateTime, PAY_LABEL, STATUS_LABEL, TIMELINE } from '@/lib/order-labels';
 import { requireStaff } from '@/server/auth';
@@ -47,7 +47,7 @@ export default async function AdminOrderDetailPage({ params }: Props) {
                   <tr key={i.id}>
                     <td>
                       <span className="ad-prod">
-                        <span className="ad-thumb"><Art name={i.icon as IconName} /></span>
+                        <span className="ad-thumb"><Thumb src={i.image} icon={i.icon} /></span>
                         <span>{i.name}<small>{i.label}{i.ship === 'plant' ? ' · Cây sống' : ''}</small></span>
                       </span>
                     </td>

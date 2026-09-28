@@ -12,6 +12,14 @@
 
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
+/* Chống trang bị kéo ngang trên điện thoại: chặn tràn ngang ở gốc (clip không phá position: sticky),
+   và cho chữ/link dài (URL) tự xuống dòng thay vì đẩy rộng trang. */
+html, body { overflow-x: clip; }
+body { overflow-wrap: break-word; }
+/* iPhone Safari tự phóng to trang khi chạm vào ô nhập có chữ < 16px, sau đó trang lệch và phải kéo tới lui. */
+@media (max-width: 1023px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), textarea, select { font-size: 16px !important; }
+}
 /* Preview dùng <a> không href (không gạch chân, cùng màu chữ); giữ nguyên dáng đó khi đã thành link thật.
    :where() có độ ưu tiên 0 nên mọi class của design system vẫn thắng. */
 a:where([href]) { color: inherit; text-decoration: none; }
@@ -125,8 +133,11 @@ button.vx-pay__opt:first-child { border-top: 0; }
 .app-nc .nc-item:hover { filter: brightness(0.98); }
 
 @media (max-width: 767px) {
-  :root { --header-h: 60px; }
-  .vx-header__main { gap: var(--space-3); padding: var(--space-2) var(--space-4); }
+  :root { --header-h: 102px; }
+  .vx-header__main { gap: var(--space-3); padding: var(--space-2) var(--space-4); flex-wrap: wrap; row-gap: var(--space-2); }
+  /* Ô tìm kiếm xuống hàng riêng, rộng hết màn hình (chung hàng thì chỉ còn 30–80px) */
+  .vx-header__main > .vx-search { order: 10; flex: 1 1 100%; }
+  .vx-hactions { margin-left: auto; }
   .app-logo-text, .app-hide-sm, .vx-hactions .app-hide-sm, .vx-fab .app-hide-sm { display: none; }
   .vx-fab a { padding: 12px; }
   .vx-slot { flex: none; white-space: nowrap; }
@@ -151,8 +162,6 @@ button.vx-pay__opt:first-child { border-top: 0; }
   .nf .vx-search { width: 100%; }
   .app-toast { left: var(--space-3); right: var(--space-3); }
   .app-toast .ts { min-width: 0; max-width: none; }
-  .app-admin { grid-template-columns: minmax(0, 1fr); }
-  .ad-main { overflow-x: hidden; }
   .ad-card { overflow-x: auto; }
   .ad-kv { grid-template-columns: 100px minmax(0, 1fr); }
   .vx-hitem { grid-template-columns: 96px minmax(0, 1fr); }
@@ -163,7 +172,6 @@ button.vx-pay__opt:first-child { border-top: 0; }
   .app-staff .m-stage > div { flex: 1 1 100%; }
   .app-staff .m-stage > div:not(:first-child), .app-staff .m-cap { display: none; }
   .app-staff .m-phone { width: 100%; height: auto; min-height: 100vh; border: 0; border-radius: 0; box-shadow: none; }
-  .app-admin-side { display: none; }
 }
 
 /* MapPicker: bản đồ Leaflet thật nằm dưới các lớp phủ của thiết kế */
@@ -185,12 +193,17 @@ button.vx-pay__opt:first-child { border-top: 0; }
 }
 
 /* Ảnh sản phẩm thật (thay biểu tượng) + video YouTube nhúng */
-.vx-pcard__media > img, .vx-gal__main > img, .vx-item__img > img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
-.vx-pcard__media:has(> img), .vx-gal__main:has(> img), .vx-item__img:has(> img) { overflow: hidden; }
+.vx-pcard__media > img, .vx-gal__main > img, .vx-item__img > img, .ad-thumb > img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
+.vx-pcard__media:has(> img), .vx-gal__main:has(> img), .vx-item__img:has(> img), .ad-thumb:has(> img) { overflow: hidden; }
+/* Vườn của tôi: ảnh nằm tuyệt đối để không kéo giãn khung 4:3 (ảnh khách tự chụp hoặc ảnh sản phẩm) */
+.gd-card__img { overflow: hidden; }
+.gd-card__img > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .vx-thumb { padding: 0; overflow: hidden; cursor: pointer; }
 .vx-thumb > img { width: 100%; height: 100%; object-fit: cover; }
 .app-yt { position: relative; max-width: 720px; aspect-ratio: 16 / 9; border-radius: var(--radius-md); overflow: hidden; background: #000; margin: var(--space-3) 0; }
 .app-yt iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.app-yt-more { margin-top: calc(-1 * var(--space-1)); font-size: 13px; color: var(--ink-muted); }
+.app-yt-more a { color: var(--primary); font-weight: 600; }
 
 /* Admin: ảnh chính (khung lớn 2×2) + ảnh phụ */
 .pi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: var(--space-2); }
@@ -252,3 +265,143 @@ a.vx-chip[aria-current="true"] { background: var(--primary-soft); border-color: 
 .vx-flash .vx-slot[aria-current="true"] { background: #dc2626; border-color: #dc2626; color: #fff; }
 @keyframes app-flash-bolt { 50% { transform: scale(1.2); opacity: .75; } }
 @media (prefers-reduced-motion: reduce) { .vx-flash__title svg { animation: none; } }
+
+/* Logo cổng thanh toán (public/images/pay/): chân trang + trang thanh toán */
+.vx-payl { background: #fff; padding: 0 5px; }
+.vx-payl img { display: block; height: 18px; width: auto; max-width: 52px; object-fit: contain; }
+.vx-hot b a { color: inherit; }
+.vx-pay__mark.app-pay-logo { width: 56px; background: #fff; padding: 4px; }
+.vx-pay__mark.app-pay-logo img { display: block; width: 48px; height: 24px; object-fit: contain; }
+.vx-pay__opt > span:last-child { flex: 1; min-width: 0; }
+.app-pay-cards { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.app-pay-cards img { height: 20px; width: auto; max-width: 48px; padding: 2px 4px; object-fit: contain; background: #fff; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+
+/* Chân trang: mạng xã hội + mã QR Zalo thật (lib/contact.ts) */
+.vx-social a { display: block; border-radius: 50%; }
+.vx-social img { display: block; width: 36px; height: 36px; }
+.vx-qr.app-qr { width: 112px; height: 112px; padding: 4px; background: #fff; }
+.vx-qr.app-qr img { display: block; width: 100%; height: 100%; }
+.app-fab-logo { display: block; width: 24px; height: 24px; }
+
+/* Thanh toán: địa chỉ đã lưu kèm nút Sửa (không lồng nút trong nút) */
+.app-addr-opt { position: relative; border-top: 1px solid var(--border); }
+.app-addr-opt:first-child { border-top: 0; }
+.app-addr-opt > button.vx-pay__opt { border-top: 0; padding-right: 60px; }
+.app-addr-opt__edit { position: absolute; top: 50%; right: var(--space-3); transform: translateY(-50%); background: none; border: 0; padding: 8px 4px; font: inherit; font-size: 13px; font-weight: 600; color: var(--primary); cursor: pointer; }
+.app-addr-opt__edit:hover { text-decoration: underline; }
+
+/* ===================== Admin trên tablet / điện thoại (AdminShell) =====================
+ * < 1024: menu trái thành bảng trượt, mở bằng nút ☰; thanh trên dính khi cuộn.
+ * < 768: thanh trên còn ☰ + logo + avatar + nút thoát; bảng có class .app-mtable thành thẻ
+ *        (mỗi dòng một thẻ, ô đầu là tiêu đề, ô còn lại 2 cột, nhãn lấy từ data-label của ô).
+ */
+.app-admin-scrim, .app-admin-menubtn, .app-admin-close, .app-admin-topbrand { display: none; }
+.app-admin-brandrow { display: flex; align-items: center; }
+.app-admin-logout .vx-ico { display: none; }
+.ad-prod > span > small { display: block; color: var(--ink-muted); font-size: 11px; line-height: 15px; }
+.ad-sticky { z-index: 5; }
+/* Hàng nhập nhiều ô trong form sản phẩm / bệnh cây: cột co lại được, không đẩy nút ✕ ra ngoài */
+.ad-frow.app-specrow { grid-template-columns: 180px minmax(0, 1fr) auto; }
+.ad-frow.app-rowx { grid-template-columns: minmax(0, 1fr) auto; align-items: start; }
+.ad-frow.app-symrow { grid-template-columns: 150px minmax(0, 1fr); }
+.ad-frow.app-pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+@media (max-width: 1023px) {
+  .app-admin { grid-template-columns: minmax(0, 1fr); }
+  /* clip thay vì hidden: hidden biến .ad-main thành khung cuộn riêng làm thanh trên / thanh Lưu hết dính */
+  .ad-main { overflow-x: clip; }
+  .ad-main > .ad-top { position: sticky; top: 0; z-index: 40; }
+  .app-admin-menubtn { display: grid; place-items: center; flex: none; width: 40px; height: 40px; margin-left: -8px; padding: 0; border: 0; border-radius: var(--radius-md); background: none; color: var(--ink); cursor: pointer; }
+  .app-admin-menubtn .vx-ico { width: 24px; height: 24px; }
+  .app-admin-side { position: fixed; top: 0; left: 0; bottom: 0; height: auto; width: min(300px, 86vw); z-index: 70; transform: translateX(-100%); visibility: hidden; transition: transform .2s, visibility .2s; box-shadow: var(--shadow-pop); overscroll-behavior: contain; }
+  .app-admin[data-menu] .app-admin-side { transform: none; visibility: visible; }
+  .app-admin[data-menu] .app-admin-scrim { display: block; position: fixed; inset: 0; z-index: 65; background: rgba(12, 24, 16, .45); }
+  .app-admin-close { display: grid; place-items: center; flex: none; width: 40px; height: 40px; margin: -6px var(--space-2) 0 auto; padding: 0; border: 0; border-radius: var(--radius-md); background: rgba(255, 255, 255, .1); color: inherit; cursor: pointer; }
+  .app-admin-close .vx-ico { width: 20px; height: 20px; }
+  .app-admin-side .ad-brand { flex-wrap: nowrap; min-width: 0; }
+  .app-admin-side .ad-brand small { display: none; } /* nhãn ADMIN: không đủ chỗ cạnh nút ✕ */
+  /* Mục menu cao ~44px cho dễ chạm */
+  .ad-side a { padding-top: 12px; padding-bottom: 12px; font-size: 14px; }
+}
+@media (max-width: 1023px) and (prefers-reduced-motion: reduce) {
+  .app-admin-side { transition: none; }
+}
+
+/* Điện thoại nhỏ: ô nhập trong form xếp 1 cột (các hàng đặc biệt bên dưới có selector mạnh hơn nên không bị ảnh hưởng) */
+@media (max-width: 479px) {
+  .ad-frow { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 767px) {
+  .ad-top { gap: var(--space-2); padding: 8px var(--space-3); min-height: 56px; }
+  .ad-top .app-admin-search { display: none; } /* ô tìm chung chưa nối chức năng */
+  .app-admin-topbrand { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 16px; font-weight: 700; color: var(--primary); white-space: nowrap; }
+  .app-admin-topbrand img { width: auto; height: 28px; }
+  .app-admin-who { display: none; }
+  .ad-top .app-admin-logout { padding: 8px; }
+  .app-admin-logout .vx-ico { display: block; width: 20px; height: 20px; }
+  .app-admin-logout > span { display: none; }
+
+  /* Bảng danh sách -> thẻ */
+  .app-mtable thead { display: none; }
+  .app-mtable, .app-mtable tbody { display: block; width: 100%; }
+  .app-mtable tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-flow: row dense; gap: 10px var(--space-3); padding: var(--space-3); border-bottom: 1px solid var(--border); }
+  .app-mtable td, .app-mtable td.num { display: block; min-width: 0; padding: 0; border: 0; text-align: left; }
+  .app-mtable td:nth-child(n) { width: auto; } /* bỏ độ rộng % của cột bảng (.ad-vtable) */
+  .app-mtable td:first-child, .app-mtable td[data-wide], .app-mtable td[colspan] { grid-column: 1 / -1; }
+  .app-mtable td[data-label]::before { content: attr(data-label); display: block; margin-bottom: 2px; font-size: 11px; line-height: 15px; font-weight: 400; color: var(--ink-muted); }
+  .app-mtable td:empty { display: none; }
+  .app-mtable tr:hover td { background: none; }
+  /* Ảnh nhỏ luôn nằm cạnh tên (responsive.css cho .ad-prod xuống dòng nên ảnh bị đẩy lên trên tên dài) */
+  .ad-prod { flex-wrap: nowrap; }
+  .ad-prod > span:last-child { min-width: 0; }
+
+  /* Hàng nhập nhiều ô: xếp chồng */
+  .ad-frow.app-specrow { grid-template-columns: minmax(0, 1fr) auto; gap: 6px; }
+  .ad-frow.app-specrow > :nth-child(2) { grid-column: 1 / -1; grid-row: 2; }
+  .app-specrow + .app-specrow { padding-top: 10px; border-top: 1px solid var(--border); }
+  .ad-frow.app-symrow, .ad-frow.app-pair { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+
+  /* Thanh Lưu dính đáy: ghi chú 1 dòng, nút chia đều */
+  .ad-sticky { gap: var(--space-2); padding: 8px var(--space-3) max(8px, env(safe-area-inset-bottom)); }
+  .ad-sticky .note { flex: 1 1 100%; margin-right: 0; font-size: 12px; line-height: 16px; }
+  .ad-sticky .vx-btn { flex: 1 1 0; }
+
+  .ad-filters .vx-sfind__search { min-width: 0; flex: 1 1 160px; }
+  .ad-filters .vx-seg { flex: 1 1 100%; flex-wrap: wrap; }
+  .ad-filters .vx-seg .vx-chip { white-space: nowrap; }
+  .ad .vx-check { flex-wrap: nowrap; }
+  .ad-mini { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .ad-kpis.k5 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ad-grid3 { grid-template-columns: minmax(0, 1fr); } /* thẻ có thanh tỉ lệ (.ad-bars) cần đủ bề ngang */
+  .ao-steps span { padding: 8px 6px; font-size: 11px; line-height: 14px; }
+  .ad .app-modal .vx-modal { max-height: calc(100dvh - 32px); }
+}
+
+/* ---- Đánh giá sản phẩm (components/ProductReviews.tsx, admin /admin/danh-gia) ---- */
+.rvw-form { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-4); border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-sunken); }
+.rvw-form textarea { resize: vertical; min-height: 96px; font: inherit; }
+.rvw-stars { display: flex; align-items: center; gap: 2px; flex-wrap: wrap; }
+.rvw-stars button { border: 0; background: none; padding: 0 2px; font-size: 32px; line-height: 36px; color: var(--border); cursor: pointer; }
+.rvw-stars button.on { color: var(--sun); }
+.rvw-stars span { margin-left: 8px; font-size: 14px; font-weight: 600; color: var(--ink-muted); }
+.rvw-pics { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+.rvw-pics > span, .rvw-add { position: relative; width: 72px; height: 72px; border-radius: var(--radius-sm); background: center / cover no-repeat var(--primary-soft); }
+.rvw-pics > span button { position: absolute; top: 3px; right: 3px; width: 22px; height: 22px; padding: 0; border: 0; border-radius: 50%; background: rgba(0, 0, 0, .55); color: #fff; font-size: 11px; line-height: 22px; cursor: pointer; }
+.rvw-add { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border: 1px dashed var(--primary); color: var(--primary); font: inherit; font-size: 12px; cursor: pointer; }
+.rvw-photos button, .rvw-photos a { display: block; width: 64px; height: 64px; padding: 0; border: 0; border-radius: var(--radius-sm); overflow: hidden; cursor: zoom-in; background: var(--primary-soft); }
+.rvw-photos img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.rv-item .rvw-photos a { width: 48px; height: 48px; }
+.rvw-zoom { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 16px; background: rgba(0, 0, 0, .85); cursor: zoom-out; }
+.rvw-zoom img { max-width: 100%; max-height: 100%; border-radius: var(--radius-md); }
+.rvw-zoom button { position: absolute; top: 12px; right: 12px; display: grid; place-items: center; width: 40px; height: 40px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, .15); color: #fff; cursor: pointer; }
+.rv-act textarea { resize: vertical; min-height: 64px; font: inherit; font-size: 13px; }
+.rv-item .who { color: var(--ink); font-weight: 600; }
+.rvw-help { display: inline-flex; align-items: center; gap: 4px; padding: 0; border: 0; background: none; font: inherit; font-size: 12px; color: var(--ink-muted); cursor: pointer; }
+button.rvw-help:hover, .rvw-help[aria-pressed="true"] { color: var(--primary); }
+.rvw-help[aria-pressed="true"] svg { fill: currentColor; }
+.app-qa .vx-ask { display: flex; flex-direction: column; gap: var(--space-2); }
+.app-qa .vx-ask textarea { min-height: 72px; resize: vertical; font: inherit; }
+.app-qa__bar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.app-qa__bar small { font-size: 12px; line-height: 16px; }
+.app-qa__wait { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--ink-muted); }

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition, type FormEvent } from 'react';
 import { saveVoucherAction } from '@/app/actions/vouchers';
-import type { DiscountType } from '@/lib/voucher-labels';
+import { WELCOME_CODE, WELCOME_DAYS, type DiscountType } from '@/lib/voucher-labels';
 
 export type VoucherFormValue = {
   id?: number;
@@ -64,6 +64,15 @@ export function VoucherForm({ initial }: { initial: VoucherFormValue }) {
         <h1>{v.id ? 'Sửa mã giảm giá' : 'Tạo mã giảm giá'}</h1>
         <span className="vx-crumb"><Link href="/admin/khuyen-mai">Khuyến mãi</Link>/<span>{v.code || 'Mới'}</span></span>
       </div>
+      {v.id && v.code === WELCOME_CODE && (
+        <div className="vx-note">
+          <div>
+            <b>Mã quà tài khoản mới.</b> Khách đăng nhập lần đầu được báo quà (hộp chào + chuông thông báo), trang thanh toán tự gợi ý nút “Dùng”.
+            Chỉ tài khoản đã đăng nhập, trong {WELCOME_DAYS} ngày kể từ lần đăng nhập đầu tiên mới dùng được; mỗi tài khoản / số điện thoại theo “Số lượt tối đa mỗi khách”.
+            Đổi số tiền, đơn tối thiểu, thời gian chạy hoặc tắt mã ngay ở đây.
+          </div>
+        </div>
+      )}
       <div className="ad-card">
         <div className="ad-card__b" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div className="ad-f">

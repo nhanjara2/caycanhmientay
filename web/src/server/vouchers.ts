@@ -1,10 +1,14 @@
 import 'server-only';
 import { and, desc, eq, ne, or, sql } from 'drizzle-orm';
 import * as z from 'zod';
+import { money } from '@/lib/format';
+import { fmtDate } from '@/lib/order-labels';
+import { voucherStatus, WELCOME_CODE, WELCOME_DAYS, welcomeText, type WelcomeOffer, type WelcomeProgram } from '@/lib/voucher-labels';
 import { db, schema } from './db';
 import type { Tx } from './inventory';
+import { notify } from './notify';
 
-const { vouchers, orders } = schema;
+const { vouchers, orders, users } = schema;
 
 export type Voucher = typeof vouchers.$inferSelect;
 
@@ -106,6 +110,12 @@ export async function checkVoucher(
   if (!v) return { ok: false, error: 'Mã giảm giá không tồn tại' };
   const status = v.active ? (v.startsAt && v.startsAt > new Date() ? 'scheduled' : v.endsAt && v.endsAt < new Date() ? 'expired' : 'active') : 'off';
   if (status !== 'active') return { ok: false, error: status === 'off' ? 'Mã đã ngừng áp dụng' : status === 'scheduled' ? 'Mã chưa đến thời gian áp dụng' : 'Mã đã hết hạn' };
+  if (v.code === WELCOME_CODE) {
+    // Quà tài khoản mới: phải đăng nhập, trong WELCOME_DAYS ngày kể từ lần đăng nhập đầu tiên.
+    if (!ctx.userId) return { ok: false, error: 'Mã dành cho tài khoản mới — vui lòng đăng nhập để dùng' };
+    const [u] = await executor.select({ createdAt: users.createdAt }).from(users).where(eq(users.id, ctx.userId));
+    if (!u || welcomeEnds(u.createdAt) < new Date()) return { ok: false, error: `Mã chỉ dùng trong ${WELCOME_DAYS} ngày đầu kể từ khi tạo tài khoản` };
+  }
   if (ctx.subtotal < v.minOrder) return { ok: false, error: `Đơn cần từ ${v.minOrder.toLocaleString('vi-VN')}đ để dùng mã này` };
 
   if (v.usageLimit != null) {
@@ -123,4 +133,63 @@ export async function checkVoucher(
   const raw = v.discountType === 'percent' ? Math.round((ctx.subtotal * v.discountValue) / 100) : v.discountValue;
   const discount = Math.min(raw, v.maxDiscount ?? raw, ctx.subtotal);
   return { ok: true, code: v.code, discount };
+}
+
+// ---- Quà tài khoản mới (luật chung ở lib/voucher-labels.ts) ----------------------------------
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+/** Quà hết hạn WELCOME_DAYS ngày sau lần đăng nhập đầu tiên (lúc tạo tài khoản). */
+const welcomeEnds = (createdAt: Date) => new Date(createdAt.getTime() + WELCOME_DAYS * DAY_MS);
+
+const toProgram = (v: Voucher): WelcomeProgram => ({
+  code: v.code, discountType: v.discountType, discountValue: v.discountValue, maxDiscount: v.maxDiscount, minOrder: v.minOrder, days: WELCOME_DAYS,
+});
+
+const countUses = (where: ReturnType<typeof and>) =>
+  db.select({ n: sql<number>`count(*)`.mapWith(Number) }).from(orders).where(where).then(([r]) => r.n);
+
+/** Mã quà đang chạy: có mã, đang bật, trong thời gian áp dụng, chưa hết tổng lượt. null = không có quà. */
+async function runningWelcome() {
+  const [v] = await db.select().from(vouchers).where(eq(vouchers.code, WELCOME_CODE));
+  if (!v || voucherStatus(v) !== 'active') return null;
+  if (v.usageLimit != null && await countUses(and(eq(orders.voucherCode, v.code), ne(orders.status, 'cancelled'))) >= v.usageLimit) return null;
+  return v;
+}
+
+/** Hộp đăng nhập hiện quà cho khách chưa có tài khoản. */
+export async function welcomeProgram(): Promise<WelcomeProgram | null> {
+  const v = await runningWelcome();
+  return v && toProgram(v);
+}
+
+/** Quà của một tài khoản: còn dùng được / đã dùng / hết hạn. null = không có chương trình quà. */
+export async function welcomeOffer(userId: number): Promise<WelcomeOffer | null> {
+  const v = await runningWelcome();
+  if (!v) return null;
+  const [u] = await db.select({ createdAt: users.createdAt, phone: users.phone }).from(users).where(eq(users.id, userId));
+  if (!u) return null;
+  const ends = welcomeEnds(u.createdAt);
+  const expiresAt = v.endsAt && v.endsAt < ends ? v.endsAt : ends;
+  const used = await countUses(and(
+    eq(orders.voucherCode, v.code), ne(orders.status, 'cancelled'),
+    u.phone ? or(eq(orders.userId, userId), eq(orders.phone, u.phone)) : eq(orders.userId, userId),
+  ));
+  const status = used >= v.perCustomerLimit ? 'used' : expiresAt < new Date() ? 'expired' : 'available';
+  return { ...toProgram(v), expiresAt: expiresAt.toISOString(), status };
+}
+
+/**
+ * Gọi ngay sau khi tạo tài khoản (lần đăng nhập đầu tiên): báo quà vào chuông thông báo (tab Khuyến mãi)
+ * và trả về để hộp đăng nhập hiện lời chào. Không gửi Zalo/email — tin khuyến mãi, tránh tốn phí ZNS.
+ */
+export async function announceWelcome(userId: number): Promise<WelcomeOffer | null> {
+  const offer = await welcomeOffer(userId);
+  if (offer?.status !== 'available') return null;
+  const what = welcomeText(offer, money);
+  await notify(db, userId, {
+    kind: 'promo',
+    text: `Chào mừng bạn! Tặng bạn mã **${offer.code}**: ${what.charAt(0).toLowerCase()}${what.slice(1)}, dùng đến ${fmtDate(new Date(offer.expiresAt))}.`,
+    href: '/khuyen-mai',
+  });
+  return offer;
 }

@@ -5,7 +5,9 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { getCategory, type Product } from '@/lib/catalog';
 import { useCart } from '@/lib/cart';
+import { ZALO_URL } from '@/lib/contact';
 import { compact, money } from '@/lib/format';
+import { starsText } from '@/lib/reviews';
 import { Icon } from './Icon';
 import { WishlistHeart } from './WishlistHeart';
 
@@ -27,9 +29,15 @@ export function BuyBox({ product: p, wishlisted = false }: { product: Product; w
       </div>
       <h1 className="vx-buy__title">{p.name}</h1>
       <div className="vx-buy__meta">
-        <span>{p.sku}</span>·<span>{p.rating.toFixed(1)}</span>
-        <span className="vx-stars">{'★'.repeat(Math.round(p.rating))}{'☆'.repeat(5 - Math.round(p.rating))}</span>·
-        <a href="#danh-gia">{p.reviews} đánh giá</a>·<span>Đã bán {compact(p.sold)}</span>
+        <span>{p.sku}</span>·
+        {p.reviews > 0 ? (
+          <>
+            <span>{p.rating.toFixed(1)}</span>
+            <span className="vx-stars">{starsText(p.rating)}</span>·
+            <a href="#danh-gia">{p.reviews} đánh giá</a>
+          </>
+        ) : <a href="#danh-gia">Chưa có đánh giá</a>}
+        ·<span>Đã bán {compact(p.sold)}</span>
       </div>
       <div className="vx-buy__price">
         <b>{money(u.price)}</b>
@@ -82,7 +90,7 @@ export function BuyBox({ product: p, wishlisted = false }: { product: Product; w
       </div>
       <div className="vx-promo">
         <div className="vx-promo__head"><Icon name="gift" />Tặng 1 gói phân tan chậm 100g khi mua kèm đất trộn</div>
-        <div className="vx-promo__row"><Icon name="chat" />Cần tư vấn? <a href="https://zalo.me" target="_blank" rel="noreferrer" className="vx-link">Chat Zalo với kỹ sư</a></div>
+        <div className="vx-promo__row"><Icon name="chat" />Cần tư vấn? <a href={ZALO_URL} target="_blank" rel="noreferrer" className="vx-link">Chat Zalo với kỹ sư</a></div>
       </div>
       <p className="vx-lead">{p.lead}</p>
       <dl className="vx-spec-t">

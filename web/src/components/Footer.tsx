@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { categories } from '@/lib/catalog';
+import { FACEBOOK_URL, SALES_PHONE, YOUTUBE_URL, ZALO_QR, ZALO_URL } from '@/lib/contact';
 import { Icon } from './Icon';
 
 const ABOUT: [string, string][] = [
@@ -15,11 +16,21 @@ const LEARN: [string, string][] = [
   ['Hướng dẫn dùng thuốc an toàn', '/chinh-sach/thuoc-bvtv-an-toan'], ['Dịch vụ sân vườn', '/dich-vu'],
   ['Khách doanh nghiệp', '/doanh-nghiep'], ['Tin khuyến mãi', '/khuyen-mai'], ['Truyền thông', '/tin-tuc'],
 ];
-const HOTLINES = [
-  ['Tư vấn mua hàng', 'Nhánh 1'], ['Tư vấn chăm cây, bắt bệnh', 'Nhánh 2'],
-  ['Dịch vụ sân vườn, công trình', 'Nhánh 3'], ['Góp ý, khiếu nại, bảo hành', 'Nhánh 4'],
+// [nội dung, số điện thoại, người phụ trách]
+const HOTLINES: [string, string, string?][] = [
+  ['Tư vấn mua hàng', SALES_PHONE, 'Nhân'],
+  ['Tư vấn chăm cây, bắt bệnh, dịch vụ sân vườn', '0927291989', 'Thịnh'],
+  ['Góp ý, khiếu nại, bảo hành', '0973806842', 'Trâm'],
 ];
-const PAY = ['VISA', 'Master', 'JCB', 'Napas', 'QR', 'MoMo', 'ZaloPay', 'VNPay', 'Apple Pay'];
+// Logo trong public/images/pay/
+const PAY: [string, string][] = [
+  ['Visa', 'visa.svg'], ['Mastercard', 'mastercard.svg'], ['JCB', 'jcb.svg'], ['Napas', 'napas.png'],
+  ['VietQR', 'vietqr.svg'], ['MoMo', 'momo.svg'], ['ZaloPay', 'zalopay.svg'], ['VNPay', 'vnpay.svg'],
+  ['Apple Pay', 'applepay.svg'],
+];
+
+/** 0703005001 → 0703 005 001 */
+const formatPhone = (p: string) => p.replace(/^(\d{4})(\d{3})(\d{3})$/, '$1 $2 $3');
 
 export function Footer() {
   return (
@@ -62,11 +73,11 @@ export function Footer() {
           {LEARN.map(([t, h]) => <Link key={t} href={h}>{t}</Link>)}
         </div>
         <div className="vx-fcol">
-          <h4>TỔNG ĐÀI (8:00 – 21:00)</h4>
-          {HOTLINES.map(([label, branch]) => (
+          <h4>HOTLINE (8:00 – 21:00)</h4>
+          {HOTLINES.map(([label, phone, name]) => (
             <div key={label} className="vx-hot">
               <span>{label}</span>
-              <b>1800 xxxx <small>({branch})</small></b>
+              <b><a href={`tel:${phone}`}>{formatPhone(phone)}</a>{name && <small> ({name})</small>}</b>
             </div>
           ))}
           <h4 style={{ marginTop: 8 }}>CHỨNG NHẬN BỞI</h4>
@@ -77,11 +88,21 @@ export function Footer() {
         </div>
         <div className="vx-fcol">
           <h4>KẾT NỐI VỚI CHÚNG TÔI</h4>
-          <div className="vx-social"><span>f</span><span>Zalo</span><span>TT</span><span>YT</span></div>
-          <h4 style={{ marginTop: 8 }}>NHẬN MẸO CHĂM CÂY QUA ZALO</h4>
-          <div className="vx-qr">Mã QR<br />Zalo OA</div>
+          <div className="vx-social">
+            <a href={FACEBOOK_URL} target="_blank" rel="noreferrer" title="Facebook"><img src="/images/social/facebook.svg" alt="Facebook" /></a>
+            <a href={ZALO_URL} target="_blank" rel="noreferrer" title="Zalo"><img src="/images/social/zalo.svg" alt="Zalo" /></a>
+            <a href={YOUTUBE_URL} target="_blank" rel="noreferrer" title="YouTube"><img src="/images/social/youtube.svg" alt="YouTube" /></a>
+          </div>
+          <h4 style={{ marginTop: 8 }}>QUÉT MÃ CHAT ZALO</h4>
+          <a className="vx-qr app-qr" href={ZALO_URL} target="_blank" rel="noreferrer">
+            <img src={ZALO_QR} alt="Mã QR Zalo Cây Cảnh Miền Tây" loading="lazy" />
+          </a>
           <h4 style={{ marginTop: 8 }}>HỖ TRỢ THANH TOÁN</h4>
-          <div className="vx-paylogos">{PAY.map((p) => <span key={p} className="vx-payl">{p}</span>)}</div>
+          <div className="vx-paylogos">
+            {PAY.map(([name, file]) => (
+              <span key={name} className="vx-payl" title={name}><img src={`/images/pay/${file}`} alt={name} loading="lazy" /></span>
+            ))}
+          </div>
         </div>
       </div>
       <div className="vx-flegal">

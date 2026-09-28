@@ -15,7 +15,7 @@ export default async function MyGardenPage() {
   const garden = await listGarden(user);
 
   const cards: GardenCardData[] = garden.map((p) => ({
-    id: p.id, name: p.name, icon: p.icon, nickname: p.nickname, location: p.location, status: p.status,
+    id: p.id, name: p.name, icon: p.icon, image: p.image, nickname: p.nickname, location: p.location, status: p.status,
     plantedAt: p.plantedAt.toISOString(), photo: p.photo,
     warrantyDaysLeft: Math.max(0, WARRANTY_DAYS - plantAgeDays(p.plantedAt)),
     water: { due: p.water.due.toISOString(), overdue: p.water.overdue, daysLeft: p.water.daysLeft },
