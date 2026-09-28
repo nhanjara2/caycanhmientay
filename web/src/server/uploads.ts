@@ -33,3 +33,6 @@ export const readProductImage = async (name: string) =>
 
 export const readUpload = async (name: string) =>
   (await db.select({ data: schema.warrantyPhotos.data }).from(schema.warrantyPhotos).where(eq(schema.warrantyPhotos.file, name)))[0]?.data ?? null;
+
+export const readGardenPhoto = async (name: string) =>
+  (await db.select({ data: schema.gardenPhotos.data, mime: schema.gardenPhotos.mime }).from(schema.gardenPhotos).where(eq(schema.gardenPhotos.file, name)))[0] ?? null;

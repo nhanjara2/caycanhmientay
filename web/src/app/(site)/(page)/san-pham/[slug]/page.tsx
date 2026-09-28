@@ -7,6 +7,8 @@ import { ProductGallery } from '@/components/ProductGallery';
 import { ProductGrid } from '@/components/ProductCard';
 import { elementName, getCategory, type Product } from '@/lib/catalog';
 import { boughtTogether, getProduct } from '@/server/catalog';
+import { getCurrentUser } from '@/server/auth';
+import { isWishlisted } from '@/server/wishlist';
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -107,7 +109,8 @@ function Content({ p }: { p: Product }) {
 export default async function ProductPage({ params }: Props) {
   const p = await getProduct((await params).slug);
   if (!p) notFound();
-  const together = await boughtTogether(p);
+  const [together, user] = await Promise.all([boughtTogether(p), getCurrentUser()]);
+  const wishlisted = user ? await isWishlisted(user.id, p.slug) : false;
   const cat = getCategory(p.category);
   const sub = cat?.subs.find((s) => s.slug === p.sub);
   const faq = p.ship === 'plant' ? FAQ_PLANT : FAQ_SUPPLY;
@@ -134,7 +137,7 @@ export default async function ProductPage({ params }: Props) {
             <div><Icon name="chat" /><span><b>Kỹ sư tư vấn</b><small>miễn phí qua Zalo</small></span></div>
           </div>
         </div>
-        <BuyBox product={p} />
+        <BuyBox product={p} wishlisted={wishlisted} />
       </section>
 
       <Content p={p} />

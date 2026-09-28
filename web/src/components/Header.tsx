@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState, type FormEvent } from 'react';
@@ -56,7 +57,7 @@ export function Header() {
           <Icon name="menu" />
         </button>
         <Link href="/" className="vx-logo">
-          <Icon name="leaf" size={28} />
+          <Image src="/images/brand/logo-mark.png" alt="" width={362} height={239} className="app-logo-mark" priority />
           <span className="app-logo-text">Cây Cảnh Miền Tây</span>
         </Link>
         <SearchBox />

@@ -13,6 +13,7 @@ import { useAuth } from '@/lib/auth';
 import { useCart } from '@/lib/cart';
 import { computeTotals } from '@/lib/pricing';
 import { plantZone, PLANT_ZONE_KM, type StorePoint } from '@/lib/stock';
+import { VoucherInput, type AppliedVoucher } from '@/components/VoucherInput';
 
 const SLOTS = [
   { day: 'Hôm nay', time: '8:00 – 12:00' },
@@ -52,6 +53,7 @@ export default function CheckoutPage() {
   const [saved, setSaved] = useState<AddressDTO[]>([]);
   const [savedId, setSavedId] = useState<number | null>(null);
   const [stores, setStores] = useState<StorePoint[]>([]);
+  const [voucher, setVoucher] = useState<AppliedVoucher | null>(null);
 
   useEffect(() => { deliveryStoresAction().then(setStores).catch(() => {}); }, []);
 
@@ -78,8 +80,8 @@ export default function CheckoutPage() {
     );
   }
 
-  // Nhận tại vườn thì không tính phí giao. Server tính lại đúng công thức này khi tạo đơn.
-  const totals = computeTotals(lines.map((l) => ({ ...l.snap, qty: l.qty })), delivery);
+  // Nhận tại vườn thì không tính phí giao. Server tính lại đúng công thức này (kể cả mã giảm giá) khi tạo đơn.
+  const totals = computeTotals(lines.map((l) => ({ ...l.snap, qty: l.qty })), delivery, voucher?.discount ?? 0);
 
   // Đơn có Flash sale không được trả tiền mặt.
   const pay = picked === 'cod' && hasFlash ? 'qr' : picked;
@@ -111,6 +113,7 @@ export default function CheckoutPage() {
       payment: pay,
       safetyAck: safety,
       addressId: delivery === 'ship' && savedId !== null ? savedId : undefined,
+      voucherCode: voucher?.code,
     }).catch(() => ({ ok: false as const, error: 'Không gửi được đơn. Vui lòng kiểm tra mạng và thử lại.' }));
     setBusy(false);
     if (!r.ok) { setServerError(r.error); return; }
@@ -219,6 +222,13 @@ export default function CheckoutPage() {
       </div>
 
       <OrderSummary totals={totals}>
+        <VoucherInput
+          items={lines.map((l) => ({ slug: l.slug, option: l.option, qty: l.qty }))}
+          phone={phone}
+          applied={voucher}
+          onApply={setVoucher}
+          onRemove={() => setVoucher(null)}
+        />
         {totals.hasPesticide && (
           <label className="vx-check">
             <input type="checkbox" checked={safety} onChange={(e) => setSafety(e.target.checked)} />

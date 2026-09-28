@@ -43,6 +43,34 @@
       "when": 1790427490465,
       "tag": "0005_diseases",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790582542608,
+      "tag": "0006_colossal_cammi",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790583477551,
+      "tag": "0007_oval_thanos",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790584491162,
+      "tag": "0008_public_lord_tyger",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790586213881,
+      "tag": "0009_giant_purifiers",
+      "breakpoints": true
     }
   ]
 }

@@ -80,6 +80,18 @@ Quy tắc đã chốt:
 - **Khối Flash sale** (`components/FlashSale.tsx`): dải nền đỏ → cam, chữ trắng, tia sét vàng nhấp nháy (tắt khi người dùng chọn giảm chuyển động), khung viền đỏ; ô đếm giờ `.vx-count b` nền đỏ ở mọi nơi. CSS cuối `globals.css` (ghi đè màu `--sun` của design system).
 - **Thông báo**: chuông trên Header (tab Đơn hàng/Bảo hành/Khuyến mãi, đánh dấu đã đọc) — khi đặt đơn, đổi trạng thái đơn, kết quả bảo hành, đã hoàn tiền.
 - **Sổ địa chỉ có bản đồ** (MapPicker, Leaflet): tìm đường, kéo ghim, vị trí của tôi, tự điền địa chỉ, báo trong/ngoài vùng giao cây sống; thẻ địa chỉ có nhãn vùng giao; thanh toán cảnh báo + server chặn giao cây sống ngoài vùng.
+- **Admin Khách hàng** (`/admin/khach-hang`, chi tiết `/admin/khach-hang/<id>`): danh sách tìm theo tên/SĐT/email, hạng theo tổng chi tiêu (Thành viên/Bạc/Vàng — chỉ hiển thị, không đổi giá), số đơn/chi tiêu/điểm tính từ đơn thật (gồm cả đơn đặt vãng lai cùng SĐT trước khi có tài khoản). Trang chi tiết: hồ sơ, lịch sử đơn hàng, sổ địa chỉ, lịch sử bảo hành, "Quan tâm" (nhóm hàng mua nhiều nhất theo số lượng), ghi chú nội bộ (cột `users.notes` — lưu ngay khi rời ô, khách không thấy).
+- **Yêu thích** (`/tai-khoan/yeu-thich`): bảng `wishlists` mới (user × sản phẩm). Tim ở trang chi tiết sản phẩm (BuyBox) để lưu/bỏ — bấm khi chưa đăng nhập thì mở hộp đăng nhập. Trang Yêu thích lọc Tất cả/Đang giảm giá, tim đỏ trên thẻ để bỏ lưu ngay (gỡ khỏi lưới không cần tải lại trang). Sản phẩm ẩn/ngừng bán tự biến mất khỏi danh sách.
+- **Khuyến mãi / mã giảm giá** — chỉ loại "mã khách tự nhập", không làm Flash sale/Tự động/Combo/Điểm thưởng/quy tắc dùng chung (bảng `vouchers` mới; `orders.voucher_code` + `orders.voucher_discount` chụp lại lúc đặt, không ràng buộc khóa ngoại):
+  - Trang thanh toán: ô "Nhập mã giảm giá" trong OrderSummary (`components/VoucherInput.tsx`) — xem trước số tiền giảm ngay (`previewVoucher` trong `server/orders.ts`), chưa chốt lượt dùng.
+  - Chốt thật khi tạo đơn: `createOrderTx` khóa dòng mã (`SELECT … FOR UPDATE`, giống khóa lô kho) rồi kiểm tra lại toàn bộ điều kiện (còn hiệu lực, đơn tối thiểu, tổng lượt, lượt/khách kể cả đơn vãng lai cùng SĐT) — 2 đơn cùng lúc không vượt quá lượt cho phép.
+  - Admin `/admin/khuyen-mai` (chỉ role `admin` tạo/sửa, `staff` chỉ xem): danh sách kèm lượt đã dùng + doanh thu tính từ đơn có mã; tạo/sửa mã (`/admin/khuyen-mai/moi` hoặc `/<id>`) — loại % hoặc số tiền cố định, trần giảm, đơn tối thiểu, tổng lượt, lượt/khách, thời gian áp dụng, bật/tắt. Mã không đổi được sau khi tạo.
+  - Trang khách `/khuyen-mai`: danh sách mã đang áp dụng thật (chưa hết lượt, trong thời gian), có nút chép mã. **Không phải** trang tin khuyến mãi đầy đủ theo thiết kế PromoNewsLayout (không có bài viết/thể lệ/workshop/Zalo opt-in) — nếu cần bản đầy đủ thì làm chung với phần Nội dung (CMS).
+- **Vườn của tôi** (`/tai-khoan/vuon-cua-toi`) **+ Lịch chăm cây** (`/tai-khoan/lich-cham-cay`) — bản đơn giản hóa nhiều so với thiết kế gốc (xem phần "Còn dở" bên dưới). Bảng mới `garden_plants` (1 dòng = 1 sản phẩm cây sống của 1 đơn đã giao) + `garden_photos` (ảnh khách tự cập nhật, phục vụ qua `/api/garden-photos/[file]` giống cơ chế ảnh bảo hành):
+  - Tự đồng bộ: mỗi lần mở trang Vườn của tôi, `syncGarden()` trong `server/garden.ts` quét đơn đã giao có cây sống (kể cả đơn vãng lai cùng SĐT) chưa có trong vườn thì thêm vào, `plantedAt` lấy từ lúc đơn chuyển "Đã giao".
+  - Lịch chăm tính bằng khoảng cách cố định — **không theo mẫu từng loài, không theo thời tiết**: tưới lại sau `WATER_INTERVAL_DAYS = 3` ngày, bón phân sau `FERTILIZE_INTERVAL_DAYS = 21` ngày kể từ lần bấm "Xong" gần nhất (`lib/garden-labels.ts`). Khách tự đổi trạng thái Khỏe/Cần chú ý; "Cần chú ý" sinh thêm việc "Kiểm tra" ở Lịch chăm cây kèm nút Bắt bệnh.
+  - Lịch chăm cây chỉ có danh sách Hôm nay + Sắp tới (7 ngày) — không có dải tuần/tháng, không tab Theo cây như thiết kế CareScheduleLayout.
+  - "Cập nhật ảnh" hoạt động thật (nén ở trình duyệt, không watermark); vị trí đặt cây sửa trực tiếp trên thẻ.
 
 **Còn dở / TODO trong phần đã làm:**
 - Hoàn tiền vẫn làm tay (chưa có cổng thanh toán) — chỗ nối API ở `confirmRefund()` trong `server/warranty.ts`.
@@ -87,17 +99,24 @@ Quy tắc đã chốt:
 - Chưa có ảnh "cây trước khi giao" do shop chụp để so sánh (thiết kế AdminWarranty có ô này).
 - Chưa có trang admin sửa cửa hàng (tên/địa chỉ/tọa độ) — đang sửa trong DB; ô "Đang xem: Tất cả cửa hàng" ở menu trái admin chưa nối; đơn online luôn xuất từ kho mặc định trước, chưa chọn kho theo địa chỉ khách.
 - Bản đồ dùng máy chủ miễn phí (giới hạn lượng dùng, không đảm bảo hiển thị chủ quyền Hoàng Sa – Trường Sa theo quy định VN): khi chạy thật nên chuyển Goong / Vietmap (đặt `NEXT_PUBLIC_MAP_TILES`, thay 2 hàm geocode trong `components/MapPicker.tsx`). Tọa độ 3 cửa hàng là ước lượng — cần cập nhật đúng.
+- Vườn của tôi / Lịch chăm cây: chưa có "thêm cây mua nơi khác" (chỉ tự động theo đơn đã giao), chưa có mẫu chăm theo loài (đang dùng chung 1 khoảng ngày cho mọi cây), chưa nhắc qua Zalo/app, chưa theo thời tiết, chưa có chuỗi ngày chăm liên tục, chưa nút "Mua phân" nối thẳng vào giỏ ở việc bón phân.
 
 ## Việc tiếp theo (chưa làm)
 
+- **Chưa chạy `npm run db:setup`**: đã thêm 4 migration mới (tất cả bảng mới đã tự thêm dòng RLS) —
+  - `drizzle/0006_colossal_cammi.sql`: cột `users.notes`.
+  - `drizzle/0007_oval_thanos.sql`: bảng `wishlists`.
+  - `drizzle/0008_public_lord_tyger.sql`: bảng `vouchers` + cột `orders.voucher_code`/`voucher_discount`.
+  - `drizzle/0009_giant_purifiers.sql`: bảng `garden_plants`, `garden_photos`.
+  Sandbox Claude Code không có mạng ra Supabase (timeout cổng 6543) nên chưa áp dụng được — **chạy `cd web && npm run db:setup` trên máy có mạng tới Supabase (hoặc để Vercel tự chạy lúc deploy, vì `db:setup` nằm trong `prebuild`) trước khi thử Khách hàng / Yêu thích / Khuyến mãi / Vườn của tôi / Lịch chăm cây**, không thì các trang này lỗi vì thiếu cột/bảng.
 - Kiểm thử ghi dữ liệu: **luôn tạo sản phẩm/bản ghi tạm rồi chỉ xóa đúng bản ghi đó** — dev và web thật dùng chung database (26/09/2026 bài thử đã xóa nhầm 3 ảnh thật của Monstera).
 - Bệnh cây: chưa có ảnh thật cho triệu chứng (đang là icon), chưa có công cụ "Bắt bệnh" (hỏi đáp / gửi ảnh cho kỹ sư ngoài bảo hành), chưa link bài Góc chăm cây ↔ bài bệnh.
 - Lọc / gợi ý cây theo mệnh (dữ liệu đã có ở `products.fengshui.elements`).
 
 - Gửi OTP thật qua Zalo ZNS / SMS (`sendOtp` trong `server/auth.ts`) — cần tài khoản nhà cung cấp.
 - Cổng thanh toán VietQR / MoMo / ZaloPay / thẻ + webhook đánh dấu đã trả.
-- Còn là giao diện mẫu (view sinh tự động, dữ liệu giả): Vườn của tôi, Lịch chăm cây, Yêu thích, Góc chăm cây/bài viết, Tin tức; admin Khách hàng, Khuyến mãi, Giao hàng, Nhập hàng (phiếu nhập/NCC), Nội dung, Đánh giá, Phân quyền, Báo cáo, POS, Mẫu tin nhắn, Cài đặt giao hàng, Yêu cầu dịch vụ; app nhân viên.
-- Gợi ý thứ tự tiếp: admin Khách hàng (dữ liệu có sẵn: users, orders, addresses) → Yêu thích (bảng mới) → Khuyến mãi/voucher → Vườn của tôi + Lịch chăm cây.
+- Còn là giao diện mẫu (view sinh tự động, dữ liệu giả): Góc chăm cây/bài viết, Tin tức, Cây Tết, Doanh nghiệp, Flash sale (trang phụ /flash-sale — khối Flash sale ở trang chủ đã thật), trang Chính sách động; admin Giao hàng, Nhập hàng (phiếu nhập/NCC), Nội dung, Đánh giá, Phân quyền, Báo cáo, POS, Mẫu tin nhắn, Cài đặt giao hàng, Yêu cầu dịch vụ; app nhân viên (2 màn). (Khách hàng, Yêu thích, Khuyến mãi, Vườn của tôi, Lịch chăm cây đã làm thật — xem mục Tiến độ.)
+- Gợi ý thứ tự tiếp theo độ ưu tiên kinh doanh — nhóm Nội dung (Góc chăm cây, Tin tức, admin Nội dung) nên làm chung một lượt vì cùng cần một hệ quản trị bài viết đơn giản; phần còn lại (Giao hàng, Nhập hàng, Đánh giá, Phân quyền, Báo cáo, POS, Mẫu tin nhắn, Cài đặt giao hàng, Yêu cầu dịch vụ, app nhân viên) độc lập với nhau, làm theo nhu cầu vận hành thực tế trước.
 - Ảnh sản phẩm: đã có chức năng tải lên — cần chụp và tải ảnh thật cho từng sản phẩm. Nếu ảnh nhiều (database Supabase gói miễn phí 500MB) thì chuyển sang Supabase Storage.
 - Nhiều máy chủ → chuyển SQLite sang PostgreSQL (giữ schema Drizzle).
 - Đã chuyển SQLite → Supabase PostgreSQL (26/09/2026), kiểm thử lại toàn bộ luồng (đặt hàng, 2 đơn tranh tồn, hủy trả kho, trạng thái, điểm, bảo hành duyệt trùng, kho nhập/chuyển/kiểm kê, sổ địa chỉ, sản phẩm) + Playwright các trang khách/admin.

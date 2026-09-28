@@ -7,9 +7,10 @@ import { getCategory, type Product } from '@/lib/catalog';
 import { useCart } from '@/lib/cart';
 import { compact, money } from '@/lib/format';
 import { Icon } from './Icon';
+import { WishlistHeart } from './WishlistHeart';
 
 /** Khối mua bên phải trang chi tiết: tên → meta → giá → chọn đơn vị/số lượng → CTA → khuyến mãi → mô tả ngắn → SpecTable. */
-export function BuyBox({ product: p }: { product: Product }) {
+export function BuyBox({ product: p, wishlisted = false }: { product: Product; wishlisted?: boolean }) {
   const { add } = useCart();
   const router = useRouter();
   const [opt, setOpt] = useState(0);
@@ -75,6 +76,9 @@ export function BuyBox({ product: p }: { product: Product }) {
           <Icon name="cart" />
           Thêm vào giỏ
         </button>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <WishlistHeart slug={p.slug} active={wishlisted} className="vx-btn vx-btn--ghost vx-btn--sm" labels={{ on: 'Đã lưu vào yêu thích', off: 'Lưu vào yêu thích' }} />
       </div>
       <div className="vx-promo">
         <div className="vx-promo__head"><Icon name="gift" />Tặng 1 gói phân tan chậm 100g khi mua kèm đất trộn</div>

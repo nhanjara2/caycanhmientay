@@ -6,8 +6,13 @@ import { discountPct, type Product } from '@/lib/catalog';
 import { useCart } from '@/lib/cart';
 import { money } from '@/lib/format';
 import { Art } from './Icon';
+import { WishlistHeart } from './WishlistHeart';
 
-export function ProductCard({ product: p, showFlash = false }: { product: Product; showFlash?: boolean }) {
+export function ProductCard({ product: p, showFlash = false, onRemoveFromWishlist }: {
+  product: Product; showFlash?: boolean;
+  /** Có thì hiện tim đỏ góc ảnh để bỏ yêu thích (trang /tai-khoan/yeu-thich) — gọi lại khi đã bỏ để ẩn thẻ khỏi lưới. */
+  onRemoveFromWishlist?: () => void;
+}) {
   const { add } = useCart();
   const [opt, setOpt] = useState(0);
   const u = p.options[opt];
@@ -19,6 +24,15 @@ export function ProductCard({ product: p, showFlash = false }: { product: Produc
         {p.images?.[0] ? <img src={p.images[0]} alt={p.name} loading="lazy" /> : <Art name={p.icon} />}
         {p.isNew && <span className="app-pcard__new">Mới</span>}
       </Link>
+      {onRemoveFromWishlist && (
+        <WishlistHeart
+          slug={p.slug}
+          active
+          onChange={(active) => { if (!active) onRemoveFromWishlist(); }}
+          className="wl-heart"
+          style={{ top: 12, right: 12 }}
+        />
+      )}
       <div className="vx-pcard__tags">
         <span className="vx-badge vx-badge--origin">{p.origin}</span>
         {pct > 0 ? <span className="vx-badge vx-badge--sale">-{pct}%</span> : <span />}

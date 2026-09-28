@@ -104,7 +104,8 @@ export function OrderSummary({ totals: t, children }: { totals: Totals; children
         {t.directDiscount > 0 && <div><span>Giảm giá trực tiếp</span><b className="neg">-{money(t.directDiscount)}</b></div>}
         {t.plantSubtotal > 0 && <div><span>Phí giao cây sống</span>{t.plantShip ? <b>{money(t.plantShip)}</b> : <b className="pos">Miễn phí</b>}</div>}
         {t.supplySubtotal > 0 && <div><span>Phí giao vật tư</span>{t.supplyShip ? <b>{money(t.supplyShip)}</b> : <b className="pos">Miễn phí</b>}</div>}
-        {t.directDiscount > 0 && <div><span>Tiết kiệm được</span><b className="neg">{money(t.directDiscount)}</b></div>}
+        {t.voucherDiscount > 0 && <div><span>Mã giảm giá</span><b className="neg">-{money(t.voucherDiscount)}</b></div>}
+        {(t.directDiscount > 0 || t.voucherDiscount > 0) && <div><span>Tiết kiệm được</span><b className="neg">{money(t.directDiscount + t.voucherDiscount)}</b></div>}
       </div>
       {plantLeft > 0 && (
         <div className="vx-freeship">
@@ -115,7 +116,7 @@ export function OrderSummary({ totals: t, children }: { totals: Totals; children
       <div className="vx-total">
         <b>Thành tiền</b>
         <span>
-          {t.directDiscount > 0 && <s>{money(t.original + t.plantShip + t.supplyShip)}</s>}
+          {(t.directDiscount > 0 || t.voucherDiscount > 0) && <s>{money(t.original + t.plantShip + t.supplyShip)}</s>}
           <span className="amt">{money(t.total)}</span>
         </span>
       </div>

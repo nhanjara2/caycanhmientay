@@ -12,6 +12,7 @@ import { applyStock, listStores, restoreOrderStock, type Tx } from './inventory'
 import { notify, orderOwner } from './notify';
 import { db, schema } from './db';
 import { PAYMENT_METHODS, type OrderStatus } from './db/schema';
+import { checkVoucher } from './vouchers';
 
 const { orders, orderItems, orderEvents, productOptions } = schema;
 
@@ -30,6 +31,7 @@ export const PlaceOrderSchema = z.object({
   safetyAck: z.boolean(),
   /** Địa chỉ chọn từ sổ địa chỉ (nếu có) — để kiểm tra vùng giao cây sống theo ghim bản đồ. */
   addressId: z.number().int().positive().optional(),
+  voucherCode: z.string().trim().max(30).optional(),
 }).superRefine((v, ctx) => {
   if (v.delivery === 'ship' && !v.address) ctx.addIssue({ code: 'custom', path: ['address'], message: 'Vui lòng nhập địa chỉ nhận hàng' });
   if (v.delivery === 'ship' && !v.slot) ctx.addIssue({ code: 'custom', path: ['slot'], message: 'Chọn khung giờ giao' });
@@ -78,6 +80,7 @@ export async function createOrder(input: PlaceOrderInput, user: SessionUser | nu
     return await db.transaction((tx) => createOrderTx(tx, input, user, lines, totals));
   } catch (e) {
     if (e instanceof OutOfStock) return { ok: false, error: `“${e.product}” vừa hết hàng. Vui lòng giảm số lượng hoặc chọn sản phẩm khác.` };
+    if (e instanceof InvalidVoucher) return { ok: false, error: e.message };
     throw e;
   }
 }
@@ -86,6 +89,9 @@ export async function createOrder(input: PlaceOrderInput, user: SessionUser | nu
 class OutOfStock extends Error {
   constructor(public product: string) { super('out of stock'); }
 }
+
+/** Ném ra trong transaction khi mã giảm giá không còn dùng được (hết lượt, hết hạn…) tại thời điểm chốt đơn. */
+class InvalidVoucher extends Error {}
 
 /** Mã đơn MT + 7 số, không trùng. Trả về '' nếu 5 lần thử đều trùng. */
 export async function newOrderCode(tx: Tx) {
@@ -106,11 +112,24 @@ async function createOrderTx(
   const code = await newOrderCode(tx);
   if (!code) return { ok: false as const, error: 'Không tạo được mã đơn, vui lòng thử lại' };
 
+  // Chốt lại mã giảm giá ngay trước khi tạo đơn (khóa dòng mã) để 2 đơn cùng lúc không vượt quá lượt cho phép.
+  let voucherCode: string | null = null;
+  let voucherDiscount = 0;
+  if (input.voucherCode) {
+    const phone = normalizePhone(input.phone);
+    const check = await checkVoucher(tx, input.voucherCode, { subtotal: totals.subtotal, userId: user?.id ?? null, phone }, { lock: true });
+    if (!check.ok) throw new InvalidVoucher(check.error);
+    voucherCode = check.code;
+    voucherDiscount = check.discount;
+  }
+  const total = Math.max(0, totals.total - voucherDiscount);
+
   const [order] = await tx.insert(orders).values({
     code, userId: user?.id ?? null, customerName: input.name, phone: normalizePhone(input.phone),
     delivery: input.delivery, address: input.delivery === 'ship' ? input.address : null,
     slot: input.delivery === 'ship' ? input.slot : null, note: input.note || null, paymentMethod: input.payment,
-    original: totals.original, subtotal: totals.subtotal, plantShip: totals.plantShip, supplyShip: totals.supplyShip, total: totals.total,
+    original: totals.original, subtotal: totals.subtotal, plantShip: totals.plantShip, supplyShip: totals.supplyShip,
+    voucherCode, voucherDiscount, total,
   }).returning({ id: orders.id });
 
   for (const { p, u, it } of lines) {
@@ -125,6 +144,16 @@ async function createOrderTx(
   await tx.insert(orderEvents).values({ orderId: order.id, status: 'pending', actor: user ? 'Khách hàng' : 'Khách vãng lai' });
   if (user) await notify(tx, user.id, { kind: 'order', text: STATUS_NOTICE.pending(code), href: `/tai-khoan/don-hang/${code}` });
   return { ok: true as const, code };
+}
+
+/** Xem trước mã giảm giá ở trang thanh toán (chưa chốt lượt dùng — chốt thật khi tạo đơn ở createOrderTx). */
+export async function previewVoucher(code: string, items: PlaceOrderInput['items'], user: SessionUser | null, phone: string) {
+  const products = new Map((await getProducts([...new Set(items.map((i) => i.slug))])).map((p) => [p.slug, p]));
+  const lines = items
+    .map((it) => { const p = products.get(it.slug); const u = p?.options[it.option]; return p && u ? { p, u, it } : null; })
+    .filter((x): x is { p: Product; u: Unit; it: PlaceOrderInput['items'][number] } => x !== null);
+  const totals = computeTotals(lines.map(({ p, u, it }) => ({ price: u.price, oldPrice: u.oldPrice, qty: it.qty, ship: p.ship, pesticide: p.pesticide })));
+  return checkVoucher(db, code, { subtotal: totals.subtotal, userId: user?.id ?? null, phone: phone ? normalizePhone(phone) : '' });
 }
 
 // ---- Đọc đơn ---------------------------------------------------------------------------------
@@ -167,6 +196,11 @@ export async function listOrdersForUser(user: SessionUser, tab: OrderTab = 'tat-
   return withDetails(await db.select().from(orders)
     .where(and(ownedBy(user), st ? inArray(orders.status, [...st]) : undefined))
     .orderBy(desc(orders.id)).limit(50));
+}
+
+/** Toàn bộ đơn của một khách cụ thể (admin xem chi tiết khách hàng ở server/customers.ts). */
+export async function listOrdersForCustomer(user: Pick<SessionUser, 'id' | 'phone'>, limit = 50) {
+  return withDetails(await db.select().from(orders).where(ownedBy(user)).orderBy(desc(orders.id)).limit(limit));
 }
 
 export async function countOrdersByTab(user: SessionUser) {

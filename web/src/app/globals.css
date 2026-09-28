@@ -29,6 +29,7 @@ a.vx-btn, a.vx-link { text-decoration: none; }
 .app-header { position: sticky; top: 0; z-index: 40; }
 .app-menubtn { display: none; background: none; border: 0; color: inherit; padding: 8px; margin: -8px 0 -8px -8px; cursor: pointer; }
 .app-menubtn .vx-ico { width: 24px; height: 24px; }
+.app-logo-mark { height: 34px; width: auto; object-fit: contain; flex-shrink: 0; }
 
 /* ShopLayout: sidebar 248px dính dưới header, nội dung tối đa 1200px */
 .app-shop { display: grid; grid-template-columns: 248px minmax(0, 1fr); background: var(--surface-page); }

@@ -79,10 +79,7 @@ const admin = (name, from, extra = {}) => ({
 });
 
 export const views = [
-  // Tài khoản — khung AccountSidebar dùng chung. Hồ sơ và đơn hàng đã viết tay với dữ liệu thật.
-  account('MyGardenView', 'MyGardenLayout'),
-  account('CareScheduleView', 'CareScheduleLayout'),
-  account('WishlistView', 'WishlistLayout'),
+  // Tài khoản — khung AccountSidebar dùng chung. Hồ sơ, đơn hàng, yêu thích, vườn, lịch chăm cây đã viết tay với dữ liệu thật.
 
   // Góc chăm cây
   site('BlogView', 'BlogLayout', {
@@ -99,9 +96,9 @@ export const views = [
     imports: { '@/components/PolicyNav': ['PolicyNav'] },
   }),
   site('NewsView', 'NewsCategoryLayout', { linkByClass: { 'nw-hero__main': ROUTES.article, 'nw-sitem': ROUTES.article, 'nw-card': ROUTES.article } }),
-  site('PromoNewsView', 'PromoNewsLayout', { linkByClass: { 'nw-hero__main': '/flash-sale', 'nw-sitem': '/flash-sale', 'nw-card': '/flash-sale' } }),
+  // Khuyến mãi (/khuyen-mai) đã viết tay với dữ liệu thật.
 
-  // Khuyến mãi, dịch vụ
+  // Flash sale (trang phụ), dịch vụ
   site('FlashSaleView', 'FlashSaleLayout', {
     replace: { 'div.vx-grid': '<FlashSaleGrid />' },
     imports: { '@/components/FlashSaleGrid': ['FlashSaleGrid'] },
@@ -112,10 +109,8 @@ export const views = [
   site('QuoteView', 'QuoteRequestForm'),
   site('BusinessView', 'BusinessLayout'),
 
-  // Admin — khung AdminShell ở src/app/admin/(shell)/layout.tsx. Tổng quan và đơn hàng đã viết tay với dữ liệu thật.
+  // Admin — khung AdminShell ở src/app/admin/(shell)/layout.tsx. Tổng quan, đơn hàng, khách hàng, khuyến mãi đã viết tay với dữ liệu thật.
   admin('AdminDeliveryView', 'AdminDelivery'),
-  admin('AdminCustomersView', 'AdminCustomers'),
-  admin('AdminPromotionsView', 'AdminPromotions'),
   admin('AdminPurchasingView', 'AdminPurchasing'),
   admin('AdminContentView', 'AdminContent'),
   admin('AdminReviewsView', 'AdminReviews'),

@@ -18,11 +18,12 @@ export type Totals = {
   supplySubtotal: number;
   plantShip: number;
   supplyShip: number;
+  voucherDiscount: number;
   total: number;
   hasPesticide: boolean;
 };
 
-export function computeTotals(lines: PricedLine[], delivery: 'ship' | 'pickup' = 'ship'): Totals {
+export function computeTotals(lines: PricedLine[], delivery: 'ship' | 'pickup' = 'ship', voucherDiscount = 0): Totals {
   let subtotal = 0, original = 0, plantSubtotal = 0, supplySubtotal = 0, count = 0;
   for (const l of lines) {
     const line = l.price * l.qty;
@@ -39,7 +40,8 @@ export function computeTotals(lines: PricedLine[], delivery: 'ship' | 'pickup' =
   return {
     count, subtotal, original, plantSubtotal, supplySubtotal, plantShip, supplyShip,
     directDiscount: original - subtotal,
-    total: subtotal + plantShip + supplyShip,
+    voucherDiscount,
+    total: Math.max(0, subtotal + plantShip + supplyShip - voucherDiscount),
     hasPesticide: lines.some((l) => l.pesticide),
   };
 }

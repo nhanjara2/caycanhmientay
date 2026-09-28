@@ -24,6 +24,8 @@ export const users = pgTable('users', {
   googleSub: text('google_sub').unique(),
   role: text('role', { enum: ROLES }).notNull().default('customer'),
   points: integer('points').notNull().default(0),
+  /** Ghi chú nội bộ của shop về khách (admin Khách hàng) — khách không thấy. */
+  notes: text('notes'),
   createdAt: createdAt(),
 });
 
@@ -123,6 +125,31 @@ export const diseases = pgTable('diseases', {
   createdAt: createdAt(),
 });
 
+// ---- Khuyến mãi ------------------------------------------------------------------------------
+
+export const VOUCHER_DISCOUNT_TYPES = ['percent', 'amount'] as const;
+
+/** Mã giảm giá khách tự nhập lúc thanh toán. Một đơn dùng tối đa một mã. */
+export const vouchers = pgTable('vouchers', {
+  id: serial('id').primaryKey(),
+  /** Luôn lưu chữ hoa; không đổi sau khi tạo. */
+  code: text('code').notNull().unique(),
+  label: text('label').notNull(),
+  discountType: text('discount_type', { enum: VOUCHER_DISCOUNT_TYPES }).notNull(),
+  /** Phần trăm (1–100) hoặc số tiền (đ) tùy discountType. */
+  discountValue: integer('discount_value').notNull(),
+  /** Trần số tiền giảm — chỉ áp dụng khi discountType = percent. */
+  maxDiscount: integer('max_discount'),
+  minOrder: integer('min_order').notNull().default(0),
+  /** null = không giới hạn tổng lượt dùng. */
+  usageLimit: integer('usage_limit'),
+  perCustomerLimit: integer('per_customer_limit').notNull().default(1),
+  startsAt: ts('starts_at'),
+  endsAt: ts('ends_at'),
+  active: boolean('active').notNull().default(true),
+  createdAt: createdAt(),
+});
+
 // ---- Đơn hàng -------------------------------------------------------------------------------
 
 /** Tiến trình đơn theo OrderTimeline: Đặt hàng → Xác nhận → Chuẩn bị cây → Đang giao → Đã giao. */
@@ -152,6 +179,9 @@ export const orders = pgTable('orders', {
   subtotal: integer('subtotal').notNull(),
   plantShip: integer('plant_ship').notNull(),
   supplyShip: integer('supply_ship').notNull(),
+  /** Chụp lại mã + số tiền giảm lúc đặt — không ràng buộc khóa ngoại, mã đổi/tắt sau đó không ảnh hưởng đơn cũ. */
+  voucherCode: text('voucher_code'),
+  voucherDiscount: integer('voucher_discount').notNull().default(0),
   total: integer('total').notNull(),
   createdAt: createdAt(),
   updatedAt: ts('updated_at').notNull().defaultNow(),
@@ -205,6 +235,15 @@ export const addresses = pgTable('addresses', {
   isDefault: boolean('is_default').notNull().default(false),
   createdAt: createdAt(),
 }, (t) => [index('addresses_user_idx').on(t.userId)]);
+
+// ---- Yêu thích -------------------------------------------------------------------------------
+
+export const wishlists = pgTable('wishlists', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  productSlug: text('product_slug').notNull().references(() => products.slug, { onDelete: 'cascade' }),
+  createdAt: createdAt(),
+}, (t) => [uniqueIndex('wishlists_user_product_idx').on(t.userId, t.productSlug), index('wishlists_user_idx').on(t.userId)]);
 
 // ---- Kho -------------------------------------------------------------------------------------
 
@@ -296,6 +335,35 @@ export const warrantyPhotos = pgTable('warranty_photos', {
   data: bytea('data'),
   createdAt: createdAt(),
 });
+
+// ---- Vườn của tôi -----------------------------------------------------------------------------
+
+export const GARDEN_STATUSES = ['healthy', 'attention'] as const;
+
+/** Một cây trong vườn khách = một dòng hàng cây sống của đơn đã giao. Tự tạo lần đầu khách mở trang Vườn của tôi. */
+export const gardenPlants = pgTable('garden_plants', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  orderItemId: integer('order_item_id').notNull().references(() => orderItems.id, { onDelete: 'cascade' }).unique(),
+  /** Ngày cây về nhà (lấy từ lúc đơn chuyển trạng thái "Đã giao") — tính tuổi cây từ đây, không phải từ lúc đồng bộ. */
+  plantedAt: ts('planted_at').notNull(),
+  nickname: text('nickname'),
+  location: text('location'),
+  status: text('status', { enum: GARDEN_STATUSES }).notNull().default('healthy'),
+  lastWateredAt: ts('last_watered_at'),
+  lastFertilizedAt: ts('last_fertilized_at'),
+  createdAt: createdAt(),
+}, (t) => [index('garden_plants_user_idx').on(t.userId)]);
+
+/** Ảnh khách tự cập nhật theo dõi cây lớn lên — ảnh mới nhất (id lớn nhất) là ảnh đại diện. */
+export const gardenPhotos = pgTable('garden_photos', {
+  id: serial('id').primaryKey(),
+  plantId: integer('plant_id').notNull().references(() => gardenPlants.id, { onDelete: 'cascade' }),
+  file: text('file').notNull().unique(),
+  mime: text('mime').notNull(),
+  data: bytea('data'),
+  createdAt: createdAt(),
+}, (t) => [index('garden_photos_plant_idx').on(t.plantId)]);
 
 // ---- Thông báo -------------------------------------------------------------------------------
 
