@@ -54,6 +54,26 @@ export const policies: Policy[] = [
   { slug: 'dieu-khoan', title: 'Điều khoản sử dụng', group: POLICY_GROUPS[2], body: [
     { h: 'Phạm vi', p: ['Điều khoản áp dụng cho mọi khách truy cập và mua hàng tại website.'] },
   ] },
+  { slug: 'nguon-anh', title: 'Nguồn ảnh minh họa', group: POLICY_GROUPS[2], body: [
+    { h: 'Ảnh minh họa', p: ['Một số sản phẩm đang dùng ảnh minh họa từ Wikimedia Commons theo giấy phép mở (Creative Commons hoặc phạm vi công cộng), không phải ảnh chụp sản phẩm thực tế. Sản phẩm giao cho khách có thể khác ảnh; ảnh sẽ được thay bằng ảnh shop tự chụp.'] },
+    { h: 'Tác giả và giấy phép', p: [
+    'Philodendron Birkin chậu sứ Ø15: ảnh của Yercaud-elango, CC BY 4.0, nguồn https://commons.wikimedia.org/wiki/File:Philodendron_birkin-5-R.M.Nagar-bengaluru-India.jpg',
+    'Trầu bà Nam Mỹ chậu treo: ảnh của Ra Boe, CC BY-SA 3.0 de, nguồn https://commons.wikimedia.org/wiki/File:Wikipedia_13._Fotoworkshop_Botanischer_Garten_Erlangen_2013_by-RaBoe_137.jpg',
+    'Kim tiền chậu men xanh: ảnh của Dbwolfe, CC BY-SA 4.0, nguồn https://commons.wikimedia.org/wiki/File:Zamioculcas_zamiifolia_Chameleon_1.jpg',
+    'Lan hồ điệp 2 cành màu trắng: ảnh của Alvesgaspar, CC BY-SA 4.0, nguồn https://commons.wikimedia.org/wiki/File:Phalaenopsis_July_2020-2.jpg',
+    'Combo sen đá mix 6 chậu mini: ảnh của brewbooks from near Seattle, USA, CC BY-SA 2.0, nguồn https://commons.wikimedia.org/wiki/File:Flickr_-_brewbooks_-_Succulent_Pot.jpg',
+    'Chế phẩm sinh học Trichoderma trị nấm, thối rễ: ảnh của Vicenny, CC BY-SA 4.0, nguồn https://commons.wikimedia.org/wiki/File:Trichoderma_asperellum.jpg',
+    'Thuốc trừ nấm bệnh Mancozeb 80WP: ảnh của Safapalanadan94, CC BY-SA 4.0, nguồn https://commons.wikimedia.org/wiki/File:Knapsack_sprayer.jpg',
+    'Dầu khoáng trừ rệp sáp, nhện đỏ: ảnh của Theornamentalist, CC BY-SA 3.0, nguồn https://commons.wikimedia.org/wiki/File:Wikibooks_planting-water.jpg',
+    'Phân bón lá kích hoa cho lan: ảnh của PumpkinSky, CC BY-SA 3.0, nguồn https://commons.wikimedia.org/wiki/File:White_Orchid_1_NBG.jpg',
+    'Phân tan chậm NPK 14-14-14 cho kiểng lá: ảnh của Rasbak, CC BY-SA 3.0, nguồn https://commons.wikimedia.org/wiki/File:Kalkammonsalpeter.jpg',
+    'Phân trùn quế nguyên chất: ảnh của Red58bill, CC BY 3.0, nguồn https://commons.wikimedia.org/wiki/File:Worm.casts.jpg',
+    'Đất trộn sẵn chuyên kiểng lá, thoát nước tốt: ảnh của Không rõ tác giả, phạm vi công cộng, nguồn https://commons.wikimedia.org/wiki/File:Pro-Mix_Potting_Soil.jpg',
+    'Viên nén xơ dừa ươm hạt (100 viên): ảnh của MatiasMiika, CC BY 3.0, nguồn https://commons.wikimedia.org/wiki/File:Brick_of_coco_coir.JPG',
+    'Kéo cắt tỉa cành lưỡi thép SK5: ảnh của KoS, phạm vi công cộng, nguồn https://commons.wikimedia.org/wiki/File:Secateur_ouvert.jpg',
+    'Hạt giống rau muống lá tre: ảnh của Wee Hong, CC BY-SA 4.0, nguồn https://commons.wikimedia.org/wiki/File:Ipomoea_aquatica_at_Organic_Unit,_FP,_UPM.jpg',
+    ] },
+  ] },
 ];
 
 export const getPolicy = (slug: string) => policies.find((p) => p.slug === slug);
