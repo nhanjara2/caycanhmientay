@@ -358,6 +358,13 @@ export const questionAnswers = pgTable('question_answers', {
   index('question_answers_status_idx').on(t.status),
 ]);
 
+/** Lượt bấm "Hữu ích" cho câu trả lời của khách. */
+export const questionAnswerVotes = pgTable('question_answer_votes', {
+  answerId: integer('answer_id').notNull().references(() => questionAnswers.id, { onDelete: 'cascade' }),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: createdAt(),
+}, (t) => [primaryKey({ columns: [t.answerId, t.userId] })]);
+
 // ---- Câu hỏi thường gặp (FAQ ở trang sản phẩm) ----------------------------------------------
 
 /**
@@ -456,8 +463,12 @@ export const warrantyRequests = pgTable('warranty_requests', {
   refundRef: text('refund_ref'),
   refundedBy: text('refunded_by'),
   refundedAt: ts('refunded_at'),
+  /** Nhân viên tạo thay khách (null = khách tự gửi). */
+  createdBy: text('created_by'),
+  /** Tạo từ đánh giá xấu của khách (admin Hỏi đáp & đánh giá). */
+  reviewId: integer('review_id').references(() => reviews.id, { onDelete: 'set null' }),
   createdAt: createdAt(),
-}, (t) => [index('warranty_user_idx').on(t.userId), index('warranty_status_idx').on(t.status)]);
+}, (t) => [index('warranty_user_idx').on(t.userId), index('warranty_status_idx').on(t.status), index('warranty_review_idx').on(t.reviewId)]);
 
 /** Ảnh khách gửi: lưu ngay trong database (cột data), chỉ chủ yêu cầu và nhân viên xem được. */
 export const warrantyPhotos = pgTable('warranty_photos', {

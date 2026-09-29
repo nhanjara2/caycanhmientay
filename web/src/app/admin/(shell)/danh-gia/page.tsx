@@ -176,7 +176,7 @@ export default async function AdminReviewsPage({ searchParams }: Props) {
               customer: r.customer, userId: r.userId, productSlug: r.productSlug, productName: r.productName,
               image: r.image, icon: r.icon, photos: r.photos, flags: r.flags, reply: r.reply ?? '',
               createdAt: r.createdAt.getTime(), edited: r.updatedAt.getTime() - r.createdAt.getTime() > 60_000,
-              moderatedBy: r.moderatedBy, helpful: r.helpful, suggestion: r.suggestion,
+              moderatedBy: r.moderatedBy, helpful: r.helpful, suggestion: r.suggestion, warranty: r.warranty,
             }}
           />
         ))}

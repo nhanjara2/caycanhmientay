@@ -50,7 +50,7 @@ export default async function WarrantyPage() {
               {requests.map((r) => (
                 <article key={r.w.id} className="vx-order">
                   <div className="vx-order__head">
-                    <b>{r.code}</b><span className="dot" /><span>Gửi {fmtDate(r.w.createdAt)}</span><span className="dot" /><span>Đơn {r.orderCode}</span>
+                    <b>{r.code}</b><span className="dot" /><span>{r.w.createdBy ? 'Shop tạo từ đánh giá của bạn' : 'Gửi'} {fmtDate(r.w.createdAt)}</span><span className="dot" /><span>Đơn {r.orderCode}</span>
                     <span className={`vx-status vx-status--${r.w.status === 'pending' ? 'processing' : r.w.status === 'approved' ? 'done' : 'cancel'}`}>
                       {r.w.status === 'pending' ? 'Kỹ sư đang xem' : r.w.status === 'approved' ? 'Đã duyệt' : 'Từ chối'}
                     </span>

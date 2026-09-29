@@ -63,6 +63,9 @@ export type AnswerView = {
   /** Nhân viên shop trả lời bằng tài khoản trên web. */
   staff: boolean;
   mine: boolean;
+  /** Số lượt "Hữu ích" + người xem đã bấm. */
+  helpful: number;
+  voted: boolean;
 };
 
 /** Một câu hỏi gửi về trình duyệt. */
@@ -95,7 +98,7 @@ export const FAQ_ANSWER_MAX_CHARS = 1000;
 export const FAQ_SCOPES = { product: 'Chỉ sản phẩm này', plant: 'Mọi cây sống', supply: 'Mọi vật tư', all: 'Mọi sản phẩm' } as const;
 export type FaqScope = keyof typeof FAQ_SCOPES;
 
-export type VoteKind = 'review' | 'question';
+export type VoteKind = 'review' | 'question' | 'answer';
 
 export type ReviewStats = {
   count: number;

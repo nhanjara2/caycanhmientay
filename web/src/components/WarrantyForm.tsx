@@ -4,11 +4,11 @@ import { useRouter } from 'next/navigation';
 import { useRef, useState, useTransition } from 'react';
 import { createWarrantyAction } from '@/app/actions/warranty';
 import { compressImage as compress } from '@/lib/compress-image';
+import { SYMPTOMS } from '@/lib/warranty-labels';
 import { Icon, Thumb } from './Icon';
 
 export type WarrantyItem = { itemId: number; name: string; label: string; icon: string; image: string | null; code: string; daysLeft: number };
 
-const SYMPTOMS = ['Lá vàng', 'Lá mềm, rũ', 'Đốm nâu', 'Rụng lá', 'Thối gốc', 'Có sâu, rệp', 'Dập, gãy khi nhận'];
 const SHOTS = [
   { title: 'Toàn cây', hint: 'Chụp cả chậu, đủ sáng' },
   { title: 'Cận lá bệnh', hint: 'Mặt trên và mặt dưới lá' },

@@ -1,5 +1,11 @@
 // Nhãn bảo hành cây — dùng chung trang khách và admin.
 
+/** Chip triệu chứng (WarrantyRequest) — form khách + nhân viên tạo thay khách. */
+export const SYMPTOMS = ['Lá vàng', 'Lá mềm, rũ', 'Đốm nâu', 'Rụng lá', 'Thối gốc', 'Có sâu, rệp', 'Dập, gãy khi nhận'] as const;
+
+/** Mã yêu cầu bảo hành hiển thị: BH-0012. */
+export const warrantyCode = (id: number) => `BH-${String(id).padStart(4, '0')}`;
+
 export const WARRANTY_RESOLUTION_LABEL = {
   replace: 'Đổi cây mới',
   rescue: 'Hướng dẫn cứu cây + tặng vật tư',

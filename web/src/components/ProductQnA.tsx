@@ -233,14 +233,17 @@ function AnswerItem({ a }: { a: AnswerView }) {
           <small suppressHydrationWarning>{timeAgo(a.createdAt)}</small>
         </div>
         <span style={{ whiteSpace: 'pre-line' }}>{a.content}</span>
-        {a.mine && (
-          <div className="vx-review__acts">
-            <span>Câu trả lời của bạn</span>
-            <a role="button" tabIndex={0} onClick={pending ? undefined : remove} onKeyDown={(e) => e.key === 'Enter' && remove()}>
-              {pending ? 'Đang xóa…' : 'Xóa'}
-            </a>
-          </div>
-        )}
+        <div className="vx-review__acts">
+          <HelpfulButton kind="answer" id={a.id} count={a.helpful} voted={a.voted} own={a.mine} />
+          {a.mine && (
+            <>
+              <span>Câu trả lời của bạn</span>
+              <a role="button" tabIndex={0} onClick={pending ? undefined : remove} onKeyDown={(e) => e.key === 'Enter' && remove()}>
+                {pending ? 'Đang xóa…' : 'Xóa'}
+              </a>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

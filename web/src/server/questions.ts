@@ -49,6 +49,7 @@ export async function productQuestions(slug: string, viewer: Viewer | null): Pro
     : [];
   const byQ = new Map<number, typeof answerRows>();
   for (const r of answerRows) byQ.set(r.a.questionId, [...(byQ.get(r.a.questionId) ?? []), r]);
+  const ansVotes = await voteInfo('answer', answerRows.map((r) => r.a.id), viewerId);
 
   const items: QuestionView[] = [];
   for (const { q, name } of rows) {
@@ -64,10 +65,12 @@ export async function productQuestions(slug: string, viewer: Viewer | null): Pro
       // Câu hỏi bị ẩn: người hỏi vẫn thấy câu hỏi của mình nhưng không thấy trả lời
       answer: hidden ? null : q.answer, answeredAt: hidden ? null : q.answeredAt?.getTime() ?? null,
       mine, helpful: 0, voted: false,
+      // Câu trả lời nhiều người thấy hữu ích lên trước, cùng số lượt thì theo thứ tự thời gian
       answers: answers.map(({ a, name: n, role }): AnswerView => ({
         id: a.id, name: displayName(n), content: a.content, createdAt: a.createdAt.getTime(),
         verified: a.verified, staff: isStaffRole(role), mine: a.userId === viewerId,
-      })),
+        helpful: ansVotes.counts.get(a.id) ?? 0, voted: ansVotes.mine.has(a.id),
+      })).sort((x, y) => y.helpful - x.helpful || x.createdAt - y.createdAt),
       open: !hidden,
       askBuyer: !mine && !q.answer && !answers.length,
     });
@@ -174,7 +177,7 @@ const filterOrder = (f: QuestionFilter) =>
 
 export type AdminAnswer = {
   id: number; customer: string; userId: number; content: string; status: ReviewStatus;
-  verified: boolean; staff: boolean; createdAt: number; moderatedBy: string | null; flags: ReviewFlag[];
+  verified: boolean; staff: boolean; createdAt: number; moderatedBy: string | null; flags: ReviewFlag[]; helpful: number;
 };
 
 /** Kho câu đã trả lời (để gợi ý + đếm câu hỏi lặp lại): câu hỏi đã trả lời + FAQ đang bật. */
@@ -218,11 +221,13 @@ export async function listQuestionsAdmin({ filter, q }: { filter: QuestionFilter
     knowledgeBase(),
   ]);
   const answers = new Map<number, AdminAnswer[]>();
+  const ansVotes = await voteInfo('answer', answerRows.map((r) => r.a.id), null);
   for (const { a, name, role } of answerRows) {
     answers.set(a.questionId, [...(answers.get(a.questionId) ?? []), {
       id: a.id, customer: displayName(name), userId: a.userId, content: a.content, status: a.status, verified: a.verified,
       staff: isStaffRole(role), createdAt: a.createdAt.getTime(), moderatedBy: a.moderatedBy,
       flags: looksLikeAd(a.content) ? [AD_FLAG] : [],
+      helpful: ansVotes.counts.get(a.id) ?? 0,
     }]);
   }
   const faqOf = new Map(faqRows.map((f) => [f.questionId!, f.id]));

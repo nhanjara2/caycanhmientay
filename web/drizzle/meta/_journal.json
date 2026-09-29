@@ -106,6 +106,13 @@
       "when": 1790647374529,
       "tag": "0014_qna_faq",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1790650006063,
+      "tag": "0015_answer_votes_warranty_review",
+      "breakpoints": true
     }
   ]
 }

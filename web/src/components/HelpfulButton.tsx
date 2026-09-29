@@ -5,7 +5,7 @@ import { toggleHelpfulAction } from '@/app/actions/reviews';
 import { useAuth } from '@/lib/auth';
 import type { VoteKind } from '@/lib/reviews';
 
-/** Nút "Hữu ích (n)" dưới đánh giá / câu hỏi. Chưa đăng nhập → mở hộp đăng nhập; mục của chính mình chỉ hiện số. */
+/** Nút "Hữu ích (n)" dưới đánh giá / câu hỏi / câu trả lời của khách. Chưa đăng nhập → mở hộp đăng nhập; mục của chính mình chỉ hiện số. */
 export function HelpfulButton({ kind, id, count, voted, own }: { kind: VoteKind; id: number; count: number; voted: boolean; own?: boolean }) {
   const { user, ready, openLogin } = useAuth();
   const [state, setState] = useState({ count, voted });

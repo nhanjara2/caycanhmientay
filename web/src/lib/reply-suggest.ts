@@ -196,7 +196,11 @@ export function suggestQuestionReply(q: { content: string; customer: string }, p
 }
 
 /** Gợi ý trả lời đánh giá theo số sao; đánh giá nghi quảng cáo thì không gợi ý (nên ẩn). */
-export function suggestReviewReply(r: { stars: number; customer: string; verified: boolean; isPlant: boolean; shipping: boolean; ad: boolean }): Suggestion | null {
+export function suggestReviewReply(r: {
+  stars: number; customer: string; verified: boolean; isPlant: boolean; shipping: boolean; ad: boolean;
+  /** Nhân viên đã tạo yêu cầu bảo hành thay khách từ đánh giá này. */
+  warrantyCode?: string | null;
+}): Suggestion | null {
   if (r.ad) return null;
   const hi = `${greet(r.customer)},`;
   const ship = r.shipping ? 'Shop xin lỗi vì khâu giao hàng chưa làm anh/chị hài lòng, shop đã nhắc bộ phận giao hàng rút kinh nghiệm. ' : '';
@@ -210,7 +214,9 @@ export function suggestReviewReply(r: { stars: number; customer: string; verifie
   } else if (r.stars === 3) {
     text = `${hi} cảm ơn anh/chị đã góp ý. ${ship || 'Shop rất muốn biết thêm điều gì chưa làm anh/chị hài lòng để khắc phục. '}Anh/chị ${zalo} giúp shop nhé.`;
   } else {
-    const fix = r.isPlant
+    const fix = r.warrantyCode
+      ? `Shop đã tạo yêu cầu bảo hành #${r.warrantyCode} cho anh/chị (xem trong mục Tài khoản → Bảo hành cây), kỹ sư sẽ liên hệ trong 24 giờ để đổi cây hoặc hướng dẫn cứu cây. `
+      : r.isPlant
       ? (r.verified
         ? 'Cây được bảo hành 7 ngày: anh/chị chụp ảnh cây và gửi yêu cầu trong mục Tài khoản → Bảo hành cây, kỹ sư sẽ xem và đổi cây hoặc hướng dẫn cứu cây trong 24 giờ. '
         : `Anh/chị ${zalo} kèm ảnh cây và mã đơn để kỹ sư kiểm tra giúp. `)

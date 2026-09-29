@@ -33,8 +33,9 @@ export default async function AdminWarrantyPage({ params }: Props) {
       <div className="ad-grid2">
         <div className="ad-fcol">
           <div className="ad-card">
-            <div className="ad-card__h">Ảnh khách gửi ({r.photos.length})</div>
+            <div className="ad-card__h">{w.reviewId || r.reviewStars ? 'Ảnh từ đánh giá của khách' : 'Ảnh khách gửi'} ({r.photos.length})</div>
             <div className="ad-card__b">
+              {!r.photos.length && <p className="vx-help" style={{ marginTop: 0 }}>Chưa có ảnh — gọi hoặc nhắn Zalo xin ảnh cây trước khi quyết định.</p>}
               <div className="ad-cmp">
                 {r.photos.map((f, i) => (
                   <a key={f} className="ad-cmp__col" href={`/api/uploads/${f}`} target="_blank" rel="noreferrer">
@@ -45,8 +46,17 @@ export default async function AdminWarrantyPage({ params }: Props) {
                 ))}
               </div>
               <div className="ad-kv">
+                {w.createdBy && (
+                  <>
+                    <span>Nguồn</span>
+                    <span>
+                      {w.createdBy} tạo thay khách{r.reviewStars ? ` từ đánh giá ${r.reviewStars}★` : ''}
+                      {r.reviewSlug && <> · <Link href={`/san-pham/${r.reviewSlug}#danh-gia`} target="_blank" style={{ color: 'var(--primary)' }}>xem đánh giá</Link></>}
+                    </span>
+                  </>
+                )}
                 <span>Triệu chứng</span><span>{w.symptoms.join(', ')}</span>
-                {w.description && <><span>Khách mô tả</span><span>{w.description}</span></>}
+                {w.description && <><span>{w.createdBy ? 'Mô tả' : 'Khách mô tả'}</span><span>{w.description}</span></>}
                 {w.placement && <><span>Vị trí đặt</span><span>{w.placement}</span></>}
                 {w.watering && <><span>Tưới</span><span>{w.watering}</span></>}
               </div>

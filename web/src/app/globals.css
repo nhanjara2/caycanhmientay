@@ -425,6 +425,13 @@ button.rvw-help:hover, .rvw-help[aria-pressed="true"] { color: var(--primary); }
 .rv-faq textarea { resize: vertical; min-height: 72px; font: inherit; font-size: 13px; }
 .rv-faq .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .rv-faq select { max-width: 100%; min-width: 0; text-overflow: ellipsis; }
+/* Tạo yêu cầu bảo hành thay khách từ đánh giá (components/admin/ReviewWarranty.tsx) */
+.rv-wr small { display: block; font-size: 12px; line-height: 17px; color: var(--ink-muted); }
+.rv-wr__items { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.rv-wr__items legend, .rv-wr__lbl { display: block; padding: 0; margin-bottom: 4px; font-size: 12px; font-weight: 600; }
+.rv-wr__items .vx-check { align-items: flex-start; gap: 8px; font-size: 13px; font-weight: 400; flex-direction: row; }
+.rv-wr__items .vx-check input { margin-top: 3px; flex: none; }
+.rv-wr__items .vx-check[aria-disabled="true"] { opacity: .55; }
 .faq-item { display: grid; grid-template-columns: 44px minmax(0, 1fr) 200px; gap: var(--space-3); padding: var(--space-3); border-bottom: 1px solid var(--border); font-size: 13px; line-height: 19px; }
 .faq-item .ad-thumb { width: 44px; height: 44px; }
 .faq-item .meta { color: var(--ink-muted); font-size: 12px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }

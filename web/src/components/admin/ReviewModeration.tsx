@@ -9,6 +9,7 @@ import { Icon, Thumb } from '@/components/Icon';
 import { stripGreeting, type Suggestion } from '@/lib/reply-suggest';
 import { REVIEW_REPLY_MAX_CHARS, starsText, timeAgo } from '@/lib/reviews';
 import { FaqForm } from './FaqAdmin';
+import { ReviewWarranty } from './ReviewWarranty';
 
 export type AdminReviewRow = {
   id: number;
@@ -30,7 +31,12 @@ export type AdminReviewRow = {
   moderatedBy: string | null;
   helpful: number;
   suggestion: Suggestion | null;
+  /** Yêu cầu bảo hành nhân viên đã tạo thay khách từ đánh giá này. */
+  warranty: { id: number; code: string } | null;
 };
+
+/** Nhãn tự động của đánh giá xấu cây sống đã mua → có nút tạo yêu cầu bảo hành thay khách. */
+const NEEDS_WARRANTY = 'Có thể cần bảo hành';
 
 const TONE = { danger: 'vx-badge--danger', info: 'vx-badge--info', warn: 'vx-badge--sun' } as const;
 
@@ -53,8 +59,10 @@ export function ReviewRow({ r }: { r: AdminReviewRow }) {
   const router = useRouter();
   const [reply, setReply] = useState(r.reply);
   const [error, setError] = useState('');
+  const [wOpen, setWOpen] = useState(false);
   const [pending, start] = useTransition();
   const changed = reply.trim() !== r.reply;
+  const canWarranty = r.flags.some((f) => f.label === NEEDS_WARRANTY);
 
   const act = (action: 'publish' | 'hide' | 'reply') => {
     if (action === 'hide' && !confirm('Chỉ ẩn đánh giá vi phạm (quảng cáo, lộ thông tin cá nhân, xúc phạm). Ẩn đánh giá này?')) return;
@@ -91,8 +99,11 @@ export function ReviewRow({ r }: { r: AdminReviewRow }) {
         {r.flags.length > 0 && (
           <span className="flags">
             {r.flags.map((f) => <span key={f.label} className={`vx-badge ${TONE[f.tone]}`}>{f.label}</span>)}
-            {r.flags.some((f) => f.label === 'Có thể cần bảo hành') && (
+            {canWarranty && (
               <Link href={`/admin/khach-hang/${r.userId}`} className="vx-badge">Xem đơn &amp; bảo hành của khách →</Link>
+            )}
+            {r.warranty && (
+              <Link href={`/admin/bao-hanh/${r.warranty.id}`} className="vx-badge vx-badge--success">Đã tạo bảo hành {r.warranty.code} →</Link>
             )}
           </span>
         )}
@@ -132,8 +143,12 @@ export function ReviewRow({ r }: { r: AdminReviewRow }) {
               {changed && <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" disabled={pending} onClick={() => act('reply')}>Lưu trả lời</button>}
             </>
           )}
+          {canWarranty && !r.warranty && !wOpen && (
+            <button type="button" className="vx-btn vx-btn--outline vx-btn--sm" disabled={pending} onClick={() => setWOpen(true)}>Tạo yêu cầu bảo hành</button>
+          )}
         </span>
       </span>
+      {wOpen && <ReviewWarranty reviewId={r.id} userId={r.userId} onClose={() => setWOpen(false)} />}
     </div>
   );
 }
@@ -149,6 +164,7 @@ export type AdminAnswerRow = {
   createdAt: number;
   moderatedBy: string | null;
   flags: { label: string; tone: 'danger' | 'info' | 'warn' }[];
+  helpful: number;
 };
 
 export type AdminQuestionRow = {
@@ -300,6 +316,7 @@ function AnswerLine({ a }: { a: AdminAnswerRow }) {
         <Link href={`/admin/khach-hang/${a.userId}`} className="who">{a.customer}</Link>
         {' trả lời · '}
         <span suppressHydrationWarning>{timeAgo(a.createdAt)}</span>
+        {a.helpful > 0 && <>{' · '}{a.helpful} người thấy hữu ích</>}
         {a.staff ? <span className="vx-staff">Nhân viên</span> : a.verified && <span className="vx-verified">Đã mua hàng</span>}
         {st && <span className={`vx-badge ${st[1]}`}>{st[0]}</span>}
         {a.flags.map((f) => <span key={f.label} className={`vx-badge ${TONE[f.tone]}`}>{f.label}</span>)}

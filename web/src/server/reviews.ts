@@ -3,6 +3,7 @@ import { and, count, desc, eq, gte, inArray, or, sql } from 'drizzle-orm';
 import * as z from 'zod';
 import { normalize } from '@/lib/catalog';
 import { suggestReviewReply } from '@/lib/reply-suggest';
+import { warrantyCode } from '@/lib/warranty-labels';
 import {
   MAX_REVIEW_PHOTOS, REVIEW_HOLD_STARS, REVIEW_MAX_CHARS, REVIEW_MIN_CHARS, REVIEW_REPLY_MAX_CHARS,
   reviewPhotoUrl, type ReviewView, type VoteKind,
@@ -14,7 +15,10 @@ import type { ReviewStatus } from './db/schema';
 import { notify } from './notify';
 import { saveImage, type SavedImage } from './uploads';
 
-const { reviews: R, reviewPhotos: RP, reviewVotes: RV, questions: Q, questionVotes: QV, users, products, orders, orderItems } = schema;
+const {
+  reviews: R, reviewPhotos: RP, reviewVotes: RV, questions: Q, questionVotes: QV, questionAnswers: QA, questionAnswerVotes: AV,
+  users, products, orders, orderItems,
+} = schema;
 
 type Owner = Pick<SessionUser, 'id' | 'phone'>;
 
@@ -31,7 +35,7 @@ export async function hasPurchased(u: Owner, slug: string) {
 
 export const displayName = (name: string | null) => name?.trim() || 'Khách hàng';
 
-// ---- "Hữu ích" (đánh giá và câu hỏi) ----------------------------------------------------------
+// ---- "Hữu ích" (đánh giá, câu hỏi, câu trả lời của khách) ----------------------------------------------------------
 
 /** Số lượt "Hữu ích" của từng mục + các mục người xem đã bấm. */
 export async function voteInfo(kind: VoteKind, ids: number[], viewerId: number | null) {
@@ -40,7 +44,9 @@ export async function voteInfo(kind: VoteKind, ids: number[], viewerId: number |
   if (!ids.length) return { counts, mine };
   const rows = kind === 'review'
     ? await db.select({ id: RV.reviewId, userId: RV.userId }).from(RV).where(inArray(RV.reviewId, ids))
-    : await db.select({ id: QV.questionId, userId: QV.userId }).from(QV).where(inArray(QV.questionId, ids));
+    : kind === 'question'
+      ? await db.select({ id: QV.questionId, userId: QV.userId }).from(QV).where(inArray(QV.questionId, ids))
+      : await db.select({ id: AV.answerId, userId: AV.userId }).from(AV).where(inArray(AV.answerId, ids));
   for (const r of rows) {
     counts.set(r.id, (counts.get(r.id) ?? 0) + 1);
     if (r.userId === viewerId) mine.add(r.id);
@@ -51,8 +57,8 @@ export async function voteInfo(kind: VoteKind, ids: number[], viewerId: number |
 type VoteResult = { ok: true; helpful: number; voted: boolean } | { ok: false; error: string };
 
 /**
- * Bấm / bỏ "Hữu ích". Chỉ cho mục khách khác đang thấy (đánh giá đã hiện, câu hỏi đã trả lời và không bị ẩn),
- * không tự bấm cho mục của mình.
+ * Bấm / bỏ "Hữu ích". Chỉ cho mục khách khác đang thấy (đánh giá đã hiện, câu hỏi đã có người trả lời và không bị ẩn,
+ * câu trả lời đã hiện dưới câu hỏi không bị ẩn), không tự bấm cho mục của mình.
  */
 export async function toggleVote(kind: VoteKind, id: number, userId: number): Promise<VoteResult> {
   if (kind === 'review') {
@@ -62,6 +68,16 @@ export async function toggleVote(kind: VoteKind, id: number, userId: number): Pr
     const ins = await db.insert(RV).values({ reviewId: id, userId }).onConflictDoNothing().returning({ id: RV.reviewId });
     if (!ins.length) await db.delete(RV).where(and(eq(RV.reviewId, id), eq(RV.userId, userId)));
     const [{ n }] = await db.select({ n: count() }).from(RV).where(eq(RV.reviewId, id));
+    return { ok: true, helpful: n, voted: ins.length > 0 };
+  }
+  if (kind === 'answer') {
+    const [a] = await db.select({ userId: QA.userId, status: QA.status, qStatus: Q.status })
+      .from(QA).innerJoin(Q, eq(Q.id, QA.questionId)).where(eq(QA.id, id));
+    if (!a || a.status !== 'published' || a.qStatus !== 'visible') return { ok: false, error: 'Không tìm thấy câu trả lời' };
+    if (a.userId === userId) return { ok: false, error: 'Không bình chọn cho câu trả lời của chính bạn' };
+    const ins = await db.insert(AV).values({ answerId: id, userId }).onConflictDoNothing().returning({ id: AV.answerId });
+    if (!ins.length) await db.delete(AV).where(and(eq(AV.answerId, id), eq(AV.userId, userId)));
+    const [{ n }] = await db.select({ n: count() }).from(AV).where(eq(AV.answerId, id));
     return { ok: true, helpful: n, voted: ins.length > 0 };
   }
   const [q] = await db.select({
@@ -219,6 +235,8 @@ export async function listReviewsAdmin({ tab, stars, photo, q }: { tab: ReviewTa
   const rows = await db.select({
     r: R, customer: users.name, phone: sql<string | null>`coalesce(${users.phone}, ${users.contactPhone})`, email: users.email,
     productName: products.name, icon: products.icon, ship: products.ship, image: mainImageOf(products.slug),
+    // Yêu cầu bảo hành nhân viên đã tạo thay khách từ đánh giá này (mới nhất)
+    warrantyId: sql<number | null>`(select max(w.id) from "warranty_requests" w where w.review_id = "reviews"."id")`,
   }).from(R)
     .innerJoin(users, eq(users.id, R.userId))
     .innerJoin(products, eq(products.slug, R.productSlug))
@@ -239,10 +257,12 @@ export async function listReviewsAdmin({ tab, stars, photo, q }: { tab: ReviewTa
     photos: (photos.get(x.r.id) ?? []).map((ph) => ph.url),
     flags: flagsOf({ ...x.r, ship: x.ship }),
     helpful: votes.counts.get(x.r.id) ?? 0,
+    warranty: x.warrantyId ? { id: x.warrantyId, code: warrantyCode(x.warrantyId) } : null,
     // Nháp cho nhân viên sửa (chỉ khi chưa trả lời)
     suggestion: x.r.reply || x.r.status === 'hidden' ? null : suggestReviewReply({
       stars: x.r.stars, customer: displayName(x.customer), verified: x.r.verified, isPlant: x.ship === 'plant',
       shipping: SHIP_RE.test(normalize(x.r.content)), ad: looksLikeAd(x.r.content),
+      warrantyCode: x.warrantyId ? warrantyCode(x.warrantyId) : null,
     }),
   }));
 }

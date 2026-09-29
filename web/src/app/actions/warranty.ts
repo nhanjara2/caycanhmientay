@@ -1,8 +1,12 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import * as z from 'zod';
 import { getCurrentUser, requireStaff, staffName } from '@/server/auth';
-import { confirmRefund, createWarranty, DecideSchema, decideWarranty, RefundSchema, WarrantyInputSchema } from '@/server/warranty';
+import {
+  confirmRefund, createWarranty, createWarrantyFromReview, DecideSchema, decideWarranty, RefundSchema, reviewWarrantyOptions,
+  ReviewWarrantySchema, WarrantyInputSchema,
+} from '@/server/warranty';
 
 /** Khách gửi yêu cầu bảo hành (FormData: orderItemId, symptoms[], description, placement, watering, photos[]). */
 export async function createWarrantyAction(fd: FormData) {
@@ -44,6 +48,28 @@ export async function confirmRefundAction(input: unknown) {
   const p = RefundSchema.safeParse(input);
   if (!p.success) return { ok: false as const, error: p.error.issues[0].message };
   const r = await confirmRefund(p.data, staffName(staff));
+  if (r.ok) {
+    revalidatePath('/admin', 'layout');
+    revalidatePath('/tai-khoan/bao-hanh');
+  }
+  return r;
+}
+
+/** Cây của khách để tạo yêu cầu bảo hành từ đánh giá (nhân viên + admin). */
+export async function reviewWarrantyOptionsAction(reviewId: unknown) {
+  await requireStaff();
+  const p = z.number().int().positive().safeParse(reviewId);
+  if (!p.success) return { ok: false as const, error: 'Đánh giá không hợp lệ' };
+  const r = await reviewWarrantyOptions(p.data);
+  return r ? { ok: true as const, ...r } : { ok: false as const, error: 'Không tìm thấy đánh giá' };
+}
+
+/** Nhân viên tạo yêu cầu bảo hành thay khách từ đánh giá xấu. */
+export async function createWarrantyFromReviewAction(input: unknown) {
+  const staff = await requireStaff();
+  const p = ReviewWarrantySchema.safeParse(input);
+  if (!p.success) return { ok: false as const, error: p.error.issues[0].message };
+  const r = await createWarrantyFromReview(p.data, staffName(staff));
   if (r.ok) {
     revalidatePath('/admin', 'layout');
     revalidatePath('/tai-khoan/bao-hanh');
