@@ -41,13 +41,14 @@ export async function deleteReviewAction(slug: unknown) {
   return ok ? { ok: true as const } : { ok: false as const, error: 'Không tìm thấy đánh giá' };
 }
 
-/** Bấm / bỏ "Hữu ích" cho đánh giá, câu hỏi hoặc câu trả lời của khách. */
-export async function toggleHelpfulAction(kind: unknown, id: unknown) {
+/** Bấm / bỏ "Hữu ích" cho đánh giá, câu hỏi hoặc câu trả lời của khách. addOnly: chỉ thêm (bấm tiếp sau khi đăng nhập). */
+export async function toggleHelpfulAction(kind: unknown, id: unknown, addOnly?: unknown) {
   const user = await getCurrentUser();
   if (!user) return { ok: false as const, error: 'Vui lòng đăng nhập' };
-  const p = z.object({ kind: z.enum(['review', 'question', 'answer']), id: z.number().int().positive() }).safeParse({ kind, id });
+  const p = z.object({ kind: z.enum(['review', 'question', 'answer']), id: z.number().int().positive(), addOnly: z.boolean().optional() })
+    .safeParse({ kind, id, addOnly });
   if (!p.success) return { ok: false as const, error: 'Yêu cầu không hợp lệ' };
-  return toggleVote(p.data.kind, p.data.id, user.id);
+  return toggleVote(p.data.kind, p.data.id, user.id, p.data.addOnly);
 }
 
 export async function askQuestionAction(input: unknown) {

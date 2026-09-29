@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { deleteReviewAction, saveReviewAction } from '@/app/actions/reviews';
+import { saveAfterLogin, takeAfterLogin } from '@/lib/after-login';
 import { useAuth } from '@/lib/auth';
 import { compressImage } from '@/lib/compress-image';
 import {
@@ -35,14 +36,15 @@ export function ProductReviews({ slug, items, isPlant }: { slug: string; items: 
   const write = () => {
     setNotice('');
     if (!ready) return;
-    if (!user) { openLogin(); return; }
+    if (!user) { saveAfterLogin({ kind: 'review', slug }); openLogin(); return; }
     setEditing(true);
   };
 
-  // Link "#viet-danh-gia" (từ trang đơn hàng) mở sẵn khung viết
+  // Mở sẵn khung viết: link "#viet-danh-gia" (từ trang đơn hàng), hoặc vừa đăng nhập sau khi bấm "Gửi đánh giá" (lib/after-login.ts)
   useEffect(() => {
-    if (location.hash === '#viet-danh-gia' && user) setEditing(true);
-  }, [user]);
+    if (!user) return;
+    if (takeAfterLogin('review', (a) => a.slug === slug) || location.hash === '#viet-danh-gia') setEditing(true);
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (editing) formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, [editing]);
@@ -105,6 +107,7 @@ export function ProductReviews({ slug, items, isPlant }: { slug: string; items: 
       {editing && (
         <div ref={formRef} id="viet-danh-gia">
           <ReviewForm
+            key={mine?.id ?? 0} // vừa đăng nhập: đánh giá cũ của khách về sau khi khung đã mở → dựng lại khung với nội dung cũ
             slug={slug}
             mine={mine}
             isPlant={isPlant}

@@ -59,16 +59,17 @@ type VoteResult = { ok: true; helpful: number; voted: boolean } | { ok: false; e
 /**
  * Bấm / bỏ "Hữu ích". Chỉ cho mục khách khác đang thấy (đánh giá đã hiện, câu hỏi đã có người trả lời và không bị ẩn,
  * câu trả lời đã hiện dưới câu hỏi không bị ẩn), không tự bấm cho mục của mình.
+ * addOnly: chỉ thêm, đã bấm rồi thì giữ nguyên (tự bấm tiếp sau khi đăng nhập — không được gỡ lượt khách đã bấm từ trước).
  */
-export async function toggleVote(kind: VoteKind, id: number, userId: number): Promise<VoteResult> {
+export async function toggleVote(kind: VoteKind, id: number, userId: number, addOnly = false): Promise<VoteResult> {
   if (kind === 'review') {
     const [r] = await db.select({ userId: R.userId, status: R.status }).from(R).where(eq(R.id, id));
     if (!r || r.status !== 'published') return { ok: false, error: 'Không tìm thấy đánh giá' };
     if (r.userId === userId) return { ok: false, error: 'Không bình chọn cho đánh giá của chính bạn' };
     const ins = await db.insert(RV).values({ reviewId: id, userId }).onConflictDoNothing().returning({ id: RV.reviewId });
-    if (!ins.length) await db.delete(RV).where(and(eq(RV.reviewId, id), eq(RV.userId, userId)));
+    if (!ins.length && !addOnly) await db.delete(RV).where(and(eq(RV.reviewId, id), eq(RV.userId, userId)));
     const [{ n }] = await db.select({ n: count() }).from(RV).where(eq(RV.reviewId, id));
-    return { ok: true, helpful: n, voted: ins.length > 0 };
+    return { ok: true, helpful: n, voted: ins.length > 0 || addOnly };
   }
   if (kind === 'answer') {
     const [a] = await db.select({ userId: QA.userId, status: QA.status, qStatus: Q.status })
@@ -76,9 +77,9 @@ export async function toggleVote(kind: VoteKind, id: number, userId: number): Pr
     if (!a || a.status !== 'published' || a.qStatus !== 'visible') return { ok: false, error: 'Không tìm thấy câu trả lời' };
     if (a.userId === userId) return { ok: false, error: 'Không bình chọn cho câu trả lời của chính bạn' };
     const ins = await db.insert(AV).values({ answerId: id, userId }).onConflictDoNothing().returning({ id: AV.answerId });
-    if (!ins.length) await db.delete(AV).where(and(eq(AV.answerId, id), eq(AV.userId, userId)));
+    if (!ins.length && !addOnly) await db.delete(AV).where(and(eq(AV.answerId, id), eq(AV.userId, userId)));
     const [{ n }] = await db.select({ n: count() }).from(AV).where(eq(AV.answerId, id));
-    return { ok: true, helpful: n, voted: ins.length > 0 };
+    return { ok: true, helpful: n, voted: ins.length > 0 || addOnly };
   }
   const [q] = await db.select({
     userId: Q.userId, status: Q.status, answer: Q.answer,
@@ -88,9 +89,9 @@ export async function toggleVote(kind: VoteKind, id: number, userId: number): Pr
   if (!q || q.status !== 'visible' || !(q.answer || q.replied)) return { ok: false, error: 'Không tìm thấy câu hỏi' };
   if (q.userId === userId) return { ok: false, error: 'Không bình chọn cho câu hỏi của chính bạn' };
   const ins = await db.insert(QV).values({ questionId: id, userId }).onConflictDoNothing().returning({ id: QV.questionId });
-  if (!ins.length) await db.delete(QV).where(and(eq(QV.questionId, id), eq(QV.userId, userId)));
+  if (!ins.length && !addOnly) await db.delete(QV).where(and(eq(QV.questionId, id), eq(QV.userId, userId)));
   const [{ n }] = await db.select({ n: count() }).from(QV).where(eq(QV.questionId, id));
-  return { ok: true, helpful: n, voted: ins.length > 0 };
+  return { ok: true, helpful: n, voted: ins.length > 0 || addOnly };
 }
 
 async function photosOf(ids: number[]) {

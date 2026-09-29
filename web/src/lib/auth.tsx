@@ -1,8 +1,9 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { loginOptionsAction, logoutAction, meAction, requestOtpAction, verifyOtpAction } from '@/app/actions/auth';
+import { clearAfterLogin } from './after-login';
 import type { WelcomeOffer, WelcomeProgram } from '@/lib/voucher-labels';
 import type { PublicUser } from '@/server/auth';
 
@@ -61,6 +62,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Link "?dang-nhap=1" (trang cần đăng nhập chuyển về) mở sẵn hộp đăng nhập.
     if (params.has('dang-nhap') || g) setModalOpen(true);
   }, []);
+
+  // Đóng hộp đăng nhập mà chưa đăng nhập → bỏ việc khách vừa bấm (lib/after-login.ts), không tự làm vào lần đăng nhập sau.
+  const modalWasOpen = useRef(false);
+  useEffect(() => {
+    if (modalWasOpen.current && !modalOpen && !user) clearAfterLogin();
+    modalWasOpen.current = modalOpen;
+  }, [modalOpen, user]);
 
   const verifyOtp = useCallback(async (phone: string, code: string) => {
     const r = await verifyOtpAction(phone, code);

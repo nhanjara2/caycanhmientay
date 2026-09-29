@@ -11,11 +11,12 @@ export async function isWishlisted(userId: number, slug: string) {
   return Boolean(row);
 }
 
-export async function toggleWishlist(userId: number, slug: string) {
+/** addOnly: chỉ lưu, đã lưu rồi thì giữ nguyên (lưu tiếp sau khi đăng nhập — không được bỏ sản phẩm khách đã lưu từ trước). */
+export async function toggleWishlist(userId: number, slug: string, addOnly = false) {
   const on = await isWishlisted(userId, slug);
-  if (on) await db.delete(wishlists).where(and(eq(wishlists.userId, userId), eq(wishlists.productSlug, slug)));
-  else await db.insert(wishlists).values({ userId, productSlug: slug }).onConflictDoNothing();
-  return { wishlisted: !on };
+  if (on && !addOnly) await db.delete(wishlists).where(and(eq(wishlists.userId, userId), eq(wishlists.productSlug, slug)));
+  else if (!on) await db.insert(wishlists).values({ userId, productSlug: slug }).onConflictDoNothing();
+  return { wishlisted: addOnly || !on };
 }
 
 /** Sản phẩm đã lưu, mới nhất trước; sản phẩm đã ẩn/ngừng bán thì tự bỏ khỏi danh sách (getProducts chỉ lấy hàng đang bán). */

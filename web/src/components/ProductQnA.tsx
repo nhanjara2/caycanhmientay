@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { answerAsCustomerAction, askQuestionAction, deleteAnswerAction, deleteQuestionAction } from '@/app/actions/reviews';
+import { peekAfterLogin, saveAfterLogin, takeAfterLogin } from '@/lib/after-login';
 import { useAuth } from '@/lib/auth';
 import { initials, QUESTION_MAX_CHARS, QUESTION_MIN_CHARS, timeAgo, type AnswerView, type QuestionView } from '@/lib/reviews';
 import { HelpfulButton } from './HelpfulButton';
@@ -37,20 +38,40 @@ export function ProductQnA({ slug, items, pesticide }: { slug: string; items: Qu
     sort === 'old' ? a.createdAt - b.createdAt : sort === 'helpful' ? b.helpful - a.helpful || b.createdAt - a.createdAt : b.createdAt - a.createdAt);
   const list = [...mine, ...others];
 
+  const send = (content: string) => start(async () => {
+    const r = await askQuestionAction({ slug, content }).catch(() => ({ ok: false as const, error: 'Không gửi được. Vui lòng kiểm tra mạng và thử lại.' }));
+    if (!r.ok) { setError(r.error); return; }
+    setText('');
+    setNotice('Đã gửi câu hỏi. Kỹ sư sẽ trả lời trong 2 giờ làm việc, bạn sẽ nhận thông báo khi có trả lời.');
+    router.refresh();
+  });
+
   const submit = () => {
     setError('');
     setNotice('');
     if (!ready) return;
-    if (!user) { openLogin(); return; }
     if (len < QUESTION_MIN_CHARS) { setError(`Câu hỏi cần ít nhất ${QUESTION_MIN_CHARS} ký tự`); boxRef.current?.focus(); return; }
-    start(async () => {
-      const r = await askQuestionAction({ slug, content: text }).catch(() => ({ ok: false as const, error: 'Không gửi được. Vui lòng kiểm tra mạng và thử lại.' }));
-      if (!r.ok) { setError(r.error); return; }
-      setText('');
-      setNotice('Đã gửi câu hỏi. Kỹ sư sẽ trả lời trong 2 giờ làm việc, bạn sẽ nhận thông báo khi có trả lời.');
-      router.refresh();
-    });
+    if (!user) { saveAfterLogin({ kind: 'question', slug, text }); openLogin(); return; }
+    send(text);
   };
+
+  // Câu hỏi gửi lúc chưa đăng nhập (lib/after-login.ts): đăng nhập xong (SĐT ngay trên trang, hoặc quay về từ Google) → trả chữ vào ô và gửi luôn.
+  // Chưa đăng nhập (vd. hủy chọn tài khoản Google) → chỉ trả chữ vào ô.
+  useEffect(() => {
+    if (!ready) return;
+    // Đang muốn trả lời một câu hỏi: mở rộng danh sách tới câu đó, QuestionItem tự mở ô trả lời.
+    const reply = peekAfterLogin('reply', (a) => a.slug === slug);
+    const i = reply ? list.findIndex((q) => q.id === reply.questionId) : -1;
+    if (i >= shown) setShown(i + 1);
+    const p = (user ? takeAfterLogin : peekAfterLogin)('question', (a) => a.slug === slug);
+    if (!p) return;
+    setText(p.text);
+    document.getElementById('cau-hoi')?.scrollIntoView({ block: 'start' });
+    if (!user) return;
+    setError('');
+    setNotice('');
+    send(p.text);
+  }, [ready, user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <section className="vx-card app-qa" id="cau-hoi">
@@ -88,7 +109,7 @@ export function ProductQnA({ slug, items, pesticide }: { slug: string; items: Qu
         </div>
       )}
 
-      {list.slice(0, shown).map((q) => <QuestionItem key={q.id} q={q} pesticide={pesticide} />)}
+      {list.slice(0, shown).map((q) => <QuestionItem key={q.id} slug={slug} q={q} pesticide={pesticide} />)}
       {!list.length && <p style={{ color: 'var(--ink-muted)', fontSize: 14, margin: 0 }}>Chưa có câu hỏi nào. Bạn cần tư vấn gì về sản phẩm này?</p>}
       {list.length > shown && (
         <button type="button" className="vx-btn vx-btn--ghost" style={{ alignSelf: 'center' }} onClick={() => setShown((n) => n + 10)}>
@@ -99,7 +120,7 @@ export function ProductQnA({ slug, items, pesticide }: { slug: string; items: Qu
   );
 }
 
-function QuestionItem({ q, pesticide }: { q: QuestionView; pesticide?: boolean }) {
+function QuestionItem({ slug, q, pesticide }: { slug: string; q: QuestionView; pesticide?: boolean }) {
   const { user, ready, openLogin } = useAuth();
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -109,6 +130,17 @@ function QuestionItem({ q, pesticide }: { q: QuestionView; pesticide?: boolean }
   const [notice, setNotice] = useState('');
   const boxRef = useRef<HTMLTextAreaElement>(null);
   const len = text.trim().length;
+
+  // Bấm "Trả lời" lúc chưa đăng nhập → đăng nhập xong mở lại ô trả lời đúng câu hỏi này.
+  useEffect(() => {
+    if (!ready || !user) return;
+    if (!takeAfterLogin('reply', (a) => a.slug === slug && a.questionId === q.id) || !q.open) return;
+    setReplying(true);
+    setTimeout(() => {
+      boxRef.current?.scrollIntoView({ block: 'center' });
+      boxRef.current?.focus({ preventScroll: true });
+    }, 0);
+  }, [ready, user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const remove = () => {
     if (!confirm('Xóa câu hỏi này?')) return;
@@ -122,7 +154,7 @@ function QuestionItem({ q, pesticide }: { q: QuestionView; pesticide?: boolean }
   const openReply = () => {
     setNotice('');
     if (!ready) return;
-    if (!user) { openLogin(); return; }
+    if (!user) { saveAfterLogin({ kind: 'reply', slug, questionId: q.id }); openLogin(); return; }
     setReplying(true);
     setTimeout(() => boxRef.current?.focus(), 0);
   };
