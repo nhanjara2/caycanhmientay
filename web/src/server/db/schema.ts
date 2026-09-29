@@ -306,8 +306,9 @@ export const QUESTION_STATUSES = ['visible', 'hidden'] as const;
 export type QuestionStatus = (typeof QUESTION_STATUSES)[number];
 
 /**
- * Câu hỏi của khách về sản phẩm; shop trả lời công khai.
- * Khách khác chỉ thấy câu hỏi đã có trả lời; người hỏi luôn thấy câu hỏi của mình (kèm "Đang chờ shop trả lời").
+ * Câu hỏi của khách về sản phẩm; shop trả lời công khai (khách khác trả lời ở bảng question_answers).
+ * Khách khác chỉ thấy câu hỏi đã có người trả lời; người đã mua sản phẩm thấy cả câu chưa ai trả lời;
+ * người hỏi luôn thấy câu hỏi của mình (kèm "Đang chờ shop trả lời").
  * hidden = admin ẩn vì vi phạm / spam.
  */
 export const questions = pgTable('questions', {
