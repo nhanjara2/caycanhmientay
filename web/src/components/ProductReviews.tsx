@@ -19,7 +19,7 @@ const PAGE = 5;
  * Khách đã đăng nhập viết / sửa / xóa đánh giá của mình ngay tại đây (mỗi người 1 đánh giá / sản phẩm).
  */
 export function ProductReviews({ slug, items, isPlant }: { slug: string; items: ReviewView[]; isPlant: boolean }) {
-  const { user, openLogin } = useAuth();
+  const { user, ready, openLogin } = useAuth();
   const [filter, setFilter] = useState<Filter>('all');
   const [shown, setShown] = useState(PAGE);
   const [editing, setEditing] = useState(false);
@@ -34,6 +34,7 @@ export function ProductReviews({ slug, items, isPlant }: { slug: string; items: 
 
   const write = () => {
     setNotice('');
+    if (!ready) return;
     if (!user) { openLogin(); return; }
     setEditing(true);
   };

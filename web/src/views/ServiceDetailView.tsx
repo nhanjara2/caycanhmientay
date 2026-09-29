@@ -54,7 +54,7 @@ export function ServiceDetailView() {
                   Báo cáo tình trạng cây hằng tháng
                 </li>
               </ul>
-              <Link href="/dich-vu/dat-lich-khao-sat" className="vx-btn vx-btn--outline vx-btn--block">
+              <Link href="/dich-vu/dat-lich-khao-sat?loai=van-phong" className="vx-btn vx-btn--outline vx-btn--block">
                 Chọn gói này
               </Link>
             </div>
@@ -96,7 +96,7 @@ export function ServiceDetailView() {
                   Báo cáo tình trạng cây hằng tháng
                 </li>
               </ul>
-              <Link href="/dich-vu/dat-lich-khao-sat" className="vx-btn vx-btn--primary vx-btn--block">
+              <Link href="/dich-vu/dat-lich-khao-sat?loai=van-phong" className="vx-btn vx-btn--primary vx-btn--block">
                 Chọn gói này
               </Link>
             </div>
@@ -137,7 +137,7 @@ export function ServiceDetailView() {
                   Báo cáo tình trạng cây hằng tháng
                 </li>
               </ul>
-              <Link href="/dich-vu/dat-lich-khao-sat" className="vx-btn vx-btn--outline vx-btn--block">
+              <Link href="/dich-vu/dat-lich-khao-sat?loai=van-phong" className="vx-btn vx-btn--outline vx-btn--block">
                 Chọn gói này
               </Link>
             </div>
@@ -194,7 +194,7 @@ export function ServiceDetailView() {
                 1.620.000đ<small>{' / tháng'}</small>
               </span>
               <span>24 cây × 75.000đ, đã giảm 10% cho hợp đồng 12 tháng. Giá chính xác sau khảo sát.</span>
-              <Link href="/dich-vu/dat-lich-khao-sat" className="vx-btn vx-btn--primary vx-btn--block">
+              <Link href="/dich-vu/dat-lich-khao-sat?loai=van-phong" className="vx-btn vx-btn--primary vx-btn--block">
                 Nhận báo giá chính thức
               </Link>
               <span style={{ fontSize: '12px', color: 'var(--ink-muted)' }}>

@@ -52,7 +52,6 @@ export function QuoteForm({ defaults, slots }: { defaults: QuoteDefaults; slots:
       const raw = localStorage.getItem(DRAFT_KEY);
       if (!raw) return;
       const d = JSON.parse(raw) as Partial<Draft>;
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- đọc localStorage chỉ làm được sau khi gắn vào trang
       setV((x) => ({
         ...x, ...d,
         service: defaults.service ?? d.service ?? x.service,
@@ -238,16 +237,14 @@ export function QuoteForm({ defaults, slots }: { defaults: QuoteDefaults; slots:
 
       <div className="qf-sec">
         <h3><b>4</b>Chọn lịch khảo sát</h3>
-        <div className="vx-slots2 app-cols" style={{ '--cols': `repeat(${days.length},1fr)` } as React.CSSProperties}>
-          {(Object.keys(SLOT_TIMES) as SlotTime[]).flatMap((t) => days.map((d) => {
-            const s = slots.find((x) => x.date === d && x.time === t)!;
-            return (
-              <button key={s.key} type="button" className="vx-tslot" aria-pressed={v.slot === s.key} aria-disabled={s.full || undefined}
-                onClick={() => !s.full && set('slot', v.slot === s.key ? '' : s.key)}>
-                {fmtSlotDay(d)}<small>{s.full ? 'Đã kín' : SLOT_TIMES[t]}</small>
-              </button>
-            );
-          }))}
+        {/* Máy tính: mỗi cột một ngày (sáng trên, chiều dưới). Điện thoại: mỗi hàng một ngày. */}
+        <div className="vx-slots2 app-qf-slots" style={{ '--days': days.length } as React.CSSProperties}>
+          {slots.map((s) => (
+            <button key={s.key} type="button" className="vx-tslot" aria-pressed={v.slot === s.key} aria-disabled={s.full || undefined}
+              onClick={() => !s.full && set('slot', v.slot === s.key ? '' : s.key)}>
+              {fmtSlotDay(s.date)}<small>{s.full ? 'Đã kín' : SLOT_TIMES[s.time]}</small>
+            </button>
+          ))}
         </div>
         <span className="vx-help">{v.slot ? 'Bấm lại ô đã chọn để bỏ chọn.' : 'Chưa tiện ngày nào? Bỏ trống, kỹ sư sẽ gọi để hẹn giờ phù hợp.'}</span>
       </div>

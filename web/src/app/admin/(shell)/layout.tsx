@@ -5,6 +5,7 @@ import { inventorySummary } from '@/server/inventory';
 import { countOrdersByStatus } from '@/server/orders';
 import { countQuestions } from '@/server/questions';
 import { countReviewsByStatus } from '@/server/reviews';
+import { countNewServiceRequests } from '@/server/service-requests';
 import { countWarrantyByStatus } from '@/server/warranty';
 
 export const metadata: Metadata = {
@@ -19,9 +20,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const badges = {
     '/admin/don-hang': (await countOrdersByStatus()).pending ?? 0,
     '/admin/bao-hanh': (await countWarrantyByStatus()).pending,
+    // Yêu cầu dịch vụ mới chưa gọi lại
+    '/admin/dich-vu': await countNewServiceRequests(),
     '/admin/kho': (await inventorySummary()).low,
-    // Đánh giá 1–2★ chờ duyệt + câu hỏi chưa trả lời
-    '/admin/danh-gia': (await countReviewsByStatus()).pending + (await countQuestions()).unanswered,
+    // Đánh giá 1–2★ chờ duyệt + câu hỏi chưa trả lời + câu trả lời của khách chờ duyệt
+    '/admin/danh-gia': await (async () => {
+      const qc = await countQuestions();
+      return (await countReviewsByStatus()).pending + qc.unanswered + qc.pendingAnswers;
+    })(),
   };
   return <AdminShell me={publicUser(staff)} badges={badges}>{children}</AdminShell>;
 }

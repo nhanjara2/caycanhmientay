@@ -7,7 +7,7 @@ import type { VoteKind } from '@/lib/reviews';
 
 /** Nút "Hữu ích (n)" dưới đánh giá / câu hỏi. Chưa đăng nhập → mở hộp đăng nhập; mục của chính mình chỉ hiện số. */
 export function HelpfulButton({ kind, id, count, voted, own }: { kind: VoteKind; id: number; count: number; voted: boolean; own?: boolean }) {
-  const { user, openLogin } = useAuth();
+  const { user, ready, openLogin } = useAuth();
   const [state, setState] = useState({ count, voted });
   const [error, setError] = useState('');
   const [pending, start] = useTransition();
@@ -20,6 +20,7 @@ export function HelpfulButton({ kind, id, count, voted, own }: { kind: VoteKind;
   if (own) return state.count ? <span className="rvw-help" aria-label={`${state.count} người thấy hữu ích`}>{icon} Hữu ích ({state.count})</span> : null;
 
   const click = () => {
+    if (!ready) return; // chưa biết đã đăng nhập hay chưa — tránh mở nhầm hộp đăng nhập
     if (!user) { openLogin(); return; }
     setError('');
     const prev = state;

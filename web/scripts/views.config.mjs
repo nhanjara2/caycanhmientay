@@ -105,16 +105,22 @@ export const views = [
   }),
   site('CampaignView', 'CampaignLayout'),
   site('ServicesHubView', 'ServicesHubLayout', { links: { 'Xem chi tiết': ROUTES.service } }),
-  site('ServiceDetailView', 'ServiceDetailLayout'),
-  site('QuoteView', 'QuoteRequestForm'),
+  // Trang cho thuê cây văn phòng: nút báo giá mở form Đặt lịch khảo sát chọn sẵn "Cây văn phòng".
+  site('ServiceDetailView', 'ServiceDetailLayout', {
+    buttonLinks: {
+      'Chọn gói này': `${ROUTES.quote}?loai=van-phong`,
+      'Nhận báo giá chính thức': `${ROUTES.quote}?loai=van-phong`,
+      'Yêu cầu báo giá': `${ROUTES.quote}?loai=van-phong`,
+    },
+  }),
+  // Đặt lịch khảo sát (/dich-vu/dat-lich-khao-sat) đã viết tay: lưu thật, admin xem ở /admin/dich-vu.
   site('BusinessView', 'BusinessLayout'),
 
-  // Admin — khung AdminShell ở src/app/admin/(shell)/layout.tsx. Tổng quan, đơn hàng, khách hàng, khuyến mãi, đánh giá đã viết tay với dữ liệu thật.
+  // Admin — khung AdminShell ở src/app/admin/(shell)/layout.tsx. Tổng quan, đơn hàng, khách hàng, khuyến mãi, đánh giá, yêu cầu dịch vụ đã viết tay với dữ liệu thật.
   admin('AdminDeliveryView', 'AdminDelivery'),
   admin('AdminPurchasingView', 'AdminPurchasing'),
   admin('AdminContentView', 'AdminContent'),
   admin('AdminRolesView', 'AdminRoles'),
-  admin('AdminServiceRequestsView', 'AdminServiceRequests'),
   admin('AdminShippingView', 'AdminShippingSettings'),
   admin('AdminMessagesView', 'MessageTemplates'),
   admin('AdminReportsView', 'AdminReports'),

@@ -4,7 +4,10 @@ import { revalidatePath } from 'next/cache';
 import * as z from 'zod';
 import { MAX_REVIEW_PHOTOS } from '@/lib/reviews';
 import { getCurrentUser, requireStaff, staffName } from '@/server/auth';
-import { AnswerSchema, answerQuestion, askQuestion, AskSchema, deleteQuestion } from '@/server/questions';
+import {
+  AnswerSchema, answerAsCustomer, answerQuestion, askQuestion, AskSchema, CustomerAnswerSchema, deleteAnswer, deleteQuestion,
+  ModerateAnswerSchema, moderateAnswer,
+} from '@/server/questions';
 import { deleteReview, ModerateSchema, moderateReview, ReviewInputSchema, saveReview, toggleVote } from '@/server/reviews';
 
 /** FormData: slug, stars, content, keep (tên ảnh cũ giữ lại, lặp), photos (ảnh mới đã nén, lặp). */
@@ -70,6 +73,45 @@ export async function deleteQuestionAction(id: unknown) {
   revalidatePath(`/san-pham/${slug}`);
   revalidatePath('/admin', 'layout');
   return { ok: true as const };
+}
+
+/** Khách trả lời dưới câu hỏi của khách khác (hoặc bổ sung dưới câu hỏi của mình). */
+export async function answerAsCustomerAction(input: unknown) {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false as const, error: 'Vui lòng đăng nhập để trả lời' };
+  const p = CustomerAnswerSchema.safeParse(input);
+  if (!p.success) return { ok: false as const, error: p.error.issues[0].message };
+  const r = await answerAsCustomer(user, p.data);
+  if (r.ok) {
+    if (r.slug) revalidatePath(`/san-pham/${r.slug}`);
+    revalidatePath('/admin', 'layout');
+  }
+  return r.ok ? { ok: true as const } : r;
+}
+
+export async function deleteAnswerAction(id: unknown) {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false as const, error: 'Vui lòng đăng nhập' };
+  const p = z.number().int().positive().safeParse(id);
+  if (!p.success) return { ok: false as const, error: 'Câu trả lời không hợp lệ' };
+  const slug = await deleteAnswer(user.id, p.data);
+  if (!slug) return { ok: false as const, error: 'Không tìm thấy câu trả lời' };
+  revalidatePath(`/san-pham/${slug}`);
+  revalidatePath('/admin', 'layout');
+  return { ok: true as const };
+}
+
+/** Nhân viên và admin đều được duyệt / ẩn câu trả lời của khách. */
+export async function moderateAnswerAction(input: unknown) {
+  const staff = await requireStaff();
+  const p = ModerateAnswerSchema.safeParse(input);
+  if (!p.success) return { ok: false as const, error: p.error.issues[0].message };
+  const r = await moderateAnswer(p.data, staffName(staff));
+  if (r.ok) {
+    revalidatePath('/admin', 'layout');
+    if (r.slug) revalidatePath(`/san-pham/${r.slug}`);
+  }
+  return r;
 }
 
 /** Nhân viên và admin đều được trả lời / ẩn câu hỏi. */

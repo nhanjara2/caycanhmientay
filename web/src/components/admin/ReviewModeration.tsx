@@ -3,9 +3,12 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
-import { answerQuestionAction, moderateReviewAction } from '@/app/actions/reviews';
-import { Thumb } from '@/components/Icon';
+import { saveFaqAction } from '@/app/actions/faqs';
+import { answerQuestionAction, moderateAnswerAction, moderateReviewAction } from '@/app/actions/reviews';
+import { Icon, Thumb } from '@/components/Icon';
+import { stripGreeting, type Suggestion } from '@/lib/reply-suggest';
 import { REVIEW_REPLY_MAX_CHARS, starsText, timeAgo } from '@/lib/reviews';
+import { FaqForm } from './FaqAdmin';
 
 export type AdminReviewRow = {
   id: number;
@@ -26,9 +29,24 @@ export type AdminReviewRow = {
   edited: boolean;
   moderatedBy: string | null;
   helpful: number;
+  suggestion: Suggestion | null;
 };
 
 const TONE = { danger: 'vx-badge--danger', info: 'vx-badge--info', warn: 'vx-badge--sun' } as const;
+
+/** Khung "Gợi ý trả lời" (thiết kế AdminReviews): nháp để nhân viên sửa — bấm "Dùng gợi ý" chỉ chép vào ô trả lời, không tự gửi. */
+function SuggestBox({ s, current, onUse }: { s: Suggestion; current: string; onUse: (text: string) => void }) {
+  return (
+    <div className="rv-ai">
+      <b><Icon name="spark" size={11} /> GỢI Ý TRẢ LỜI</b>
+      <p>{s.text}</p>
+      <small>{s.basis}</small>
+      <button type="button" className="vx-btn vx-btn--outline vx-btn--sm" disabled={current.trim() === s.text} onClick={() => onUse(s.text)}>
+        {current.trim() ? 'Thay bằng gợi ý' : 'Dùng gợi ý'}
+      </button>
+    </div>
+  );
+}
 
 /** Một dòng AdminReviews: nội dung + nhãn tự động bên trái, ô trả lời công khai + Duyệt / Ẩn bên phải. */
 export function ReviewRow({ r }: { r: AdminReviewRow }) {
@@ -81,6 +99,7 @@ export function ReviewRow({ r }: { r: AdminReviewRow }) {
         {r.status === 'hidden' && r.moderatedBy && <small style={{ display: 'block', color: 'var(--ink-muted)', marginTop: 4 }}>Ẩn bởi {r.moderatedBy}</small>}
       </span>
       <span className="rv-act">
+        {!r.reply && r.suggestion && <SuggestBox s={r.suggestion} current={reply} onUse={setReply} />}
         <textarea
           className="vx-input"
           value={reply}
@@ -119,6 +138,19 @@ export function ReviewRow({ r }: { r: AdminReviewRow }) {
   );
 }
 
+export type AdminAnswerRow = {
+  id: number;
+  customer: string;
+  userId: number;
+  content: string;
+  status: 'published' | 'pending' | 'hidden';
+  verified: boolean;
+  staff: boolean;
+  createdAt: number;
+  moderatedBy: string | null;
+  flags: { label: string; tone: 'danger' | 'info' | 'warn' }[];
+};
+
 export type AdminQuestionRow = {
   id: number;
   status: 'visible' | 'hidden';
@@ -135,13 +167,26 @@ export type AdminQuestionRow = {
   createdAt: number;
   moderatedBy: string | null;
   helpful: number;
+  answers: AdminAnswerRow[];
+  /** Đã đưa lên Câu hỏi thường gặp. */
+  faqId: number | null;
+  /** Số câu hỏi khác gần giống câu này. */
+  repeats: number;
+  suggestion: Suggestion | null;
 };
 
-/** Một câu hỏi của khách (tab Câu hỏi): trả lời công khai → hiện trên trang sản phẩm + báo cho người hỏi. */
+/** Nên đưa lên FAQ: được hỏi lại nhiều hoặc nhiều người thấy hữu ích. */
+const FAQ_WORTHY = (q: AdminQuestionRow) => Boolean(q.answer) && !q.faqId && (q.repeats >= 2 || q.helpful >= 3);
+
+/**
+ * Một câu hỏi của khách (tab Câu hỏi): trả lời công khai → hiện trên trang sản phẩm + báo cho người hỏi;
+ * duyệt / ẩn câu trả lời của khách khác; đưa câu hỏi hay lên Câu hỏi thường gặp.
+ */
 export function QuestionRow({ q }: { q: AdminQuestionRow }) {
   const router = useRouter();
   const [answer, setAnswer] = useState(q.answer);
   const [error, setError] = useState('');
+  const [faqOpen, setFaqOpen] = useState(false);
   const [pending, start] = useTransition();
   const changed = answer.trim() !== q.answer;
 
@@ -168,15 +213,24 @@ export function QuestionRow({ q }: { q: AdminQuestionRow }) {
           {q.helpful > 0 && <>{' · '}{q.helpful} người thấy hữu ích</>}
         </span>
         <p className="txt" style={{ whiteSpace: 'pre-line' }}>{q.content}</p>
-        {q.flags.length > 0 && (
+        {(q.flags.length > 0 || q.repeats > 0 || q.faqId || FAQ_WORTHY(q)) && (
           <span className="flags">
             {q.flags.map((f) => <span key={f.label} className={`vx-badge ${TONE[f.tone]}`}>{f.label}</span>)}
+            {q.repeats > 0 && <span className="vx-badge vx-badge--info">Được hỏi lại {q.repeats} lần</span>}
+            {FAQ_WORTHY(q) && <span className="vx-badge vx-badge--sun">Nên đưa lên FAQ</span>}
+            {q.faqId && <Link href="/admin/danh-gia?tab=faq" className="vx-badge vx-badge--success">Đã ở Câu hỏi thường gặp →</Link>}
           </span>
         )}
         {q.answer && q.answerBy && <small style={{ display: 'block', color: 'var(--ink-muted)', marginTop: 4 }}>Trả lời bởi {q.answerBy}</small>}
         {q.status === 'hidden' && q.moderatedBy && <small style={{ display: 'block', color: 'var(--ink-muted)', marginTop: 4 }}>Ẩn bởi {q.moderatedBy}</small>}
+        {q.answers.length > 0 && (
+          <span className="rv-ans">
+            {q.answers.map((a) => <AnswerLine key={a.id} a={a} />)}
+          </span>
+        )}
       </span>
       <span className="rv-act">
+        {!q.answer && q.status === 'visible' && q.suggestion && <SuggestBox s={q.suggestion} current={answer} onUse={setAnswer} />}
         <textarea
           className="vx-input"
           value={answer}
@@ -193,11 +247,73 @@ export function QuestionRow({ q }: { q: AdminQuestionRow }) {
                 {q.answer ? 'Lưu trả lời' : 'Trả lời'}
               </button>
               <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" disabled={pending} onClick={() => act('hide')}>Ẩn</button>
+              {q.answer && !q.faqId && !faqOpen && (
+                <button type="button" className="vx-btn vx-btn--outline vx-btn--sm" disabled={pending} onClick={() => setFaqOpen(true)}>Đưa lên FAQ</button>
+              )}
             </>
           ) : (
             <button type="button" className="vx-btn vx-btn--outline vx-btn--sm" disabled={pending} onClick={() => act('show')}>Hiện lại</button>
           )}
         </span>
+      </span>
+      {faqOpen && (
+        <FaqForm
+          initial={{ question: q.content, answer: stripGreeting(q.answer), scope: 'product', active: true }}
+          productName={q.productName}
+          submitLabel="Đưa lên Câu hỏi thường gặp"
+          onCancel={() => setFaqOpen(false)}
+          onSubmit={async (v) => {
+            const r = await saveFaqAction({ questionId: q.id, ...v });
+            if (!r.ok) return r.error;
+            setFaqOpen(false);
+            router.refresh();
+            return null;
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+const ANSWER_STATUS = { pending: ['Chờ duyệt', 'vx-badge--sun'], hidden: ['Đã ẩn', ''], published: null } as const;
+
+/** Câu trả lời của khách dưới câu hỏi (admin): có SĐT/link → chờ duyệt; nhân viên duyệt / ẩn / hiện lại. */
+function AnswerLine({ a }: { a: AdminAnswerRow }) {
+  const router = useRouter();
+  const [error, setError] = useState('');
+  const [pending, start] = useTransition();
+  const st = ANSWER_STATUS[a.status];
+
+  const act = (action: 'publish' | 'hide') => {
+    if (action === 'hide' && !confirm('Ẩn câu trả lời này (quảng cáo, sai thông tin, xúc phạm)?')) return;
+    setError('');
+    start(async () => {
+      const res = await moderateAnswerAction({ id: a.id, action }).catch(() => ({ ok: false as const, error: 'Không lưu được, vui lòng thử lại' }));
+      if (!res.ok) { setError(res.error); return; }
+      router.refresh();
+    });
+  };
+
+  return (
+    <div>
+      <span className="meta">
+        <Link href={`/admin/khach-hang/${a.userId}`} className="who">{a.customer}</Link>
+        {' trả lời · '}
+        <span suppressHydrationWarning>{timeAgo(a.createdAt)}</span>
+        {a.staff ? <span className="vx-staff">Nhân viên</span> : a.verified && <span className="vx-verified">Đã mua hàng</span>}
+        {st && <span className={`vx-badge ${st[1]}`}>{st[0]}</span>}
+        {a.flags.map((f) => <span key={f.label} className={`vx-badge ${TONE[f.tone]}`}>{f.label}</span>)}
+      </span>
+      <span style={{ whiteSpace: 'pre-line' }}>{a.content}</span>
+      <span className="acts">
+        {a.status !== 'published' && (
+          <button type="button" className="vx-btn vx-btn--outline vx-btn--sm" disabled={pending} onClick={() => act('publish')}>
+            {a.status === 'pending' ? 'Duyệt' : 'Hiện lại'}
+          </button>
+        )}
+        {a.status !== 'hidden' && <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" disabled={pending} onClick={() => act('hide')}>Ẩn</button>}
+        {a.status === 'hidden' && a.moderatedBy && <small style={{ color: 'var(--ink-muted)' }}>Ẩn bởi {a.moderatedBy}</small>}
+        {error && <small style={{ color: 'var(--danger)' }}>{error}</small>}
       </span>
     </div>
   );

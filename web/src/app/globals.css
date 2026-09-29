@@ -378,6 +378,10 @@ a.vx-chip[aria-current="true"] { background: var(--primary-soft); border-color: 
   .ad .app-modal .vx-modal { max-height: calc(100dvh - 32px); }
 }
 
+/* Quà tài khoản mới ở trang thanh toán (VoucherInput): thẻ .vx-voucher có nút "Dùng" thay cho ô chép 24px */
+.vx-voucher.app-vgift { grid-template-columns: 40px minmax(0, 1fr) auto; gap: var(--space-2); padding: var(--space-2) var(--space-3); margin-bottom: 4px; border-color: var(--sale); background: var(--warning-soft); }
+.app-vgift .vx-voucher__ic { width: 40px; height: 40px; }
+
 /* ---- Đánh giá sản phẩm (components/ProductReviews.tsx, admin /admin/danh-gia) ---- */
 .rvw-form { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-4); border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-sunken); }
 .rvw-form textarea { resize: vertical; min-height: 96px; font: inherit; }
@@ -405,3 +409,72 @@ button.rvw-help:hover, .rvw-help[aria-pressed="true"] { color: var(--primary); }
 .app-qa__bar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
 .app-qa__bar small { font-size: 12px; line-height: 16px; }
 .app-qa__wait { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--ink-muted); }
+/* Khách trả lời nhau: nền trắng viền mảnh để khác câu trả lời của shop (nền xám) */
+.vx-reply.app-qa__ans { background: var(--surface); border: 1px solid var(--border); }
+.app-qa__form { display: flex; flex-direction: column; gap: var(--space-2); }
+.app-qa__form textarea { min-height: 64px; resize: vertical; font: inherit; }
+.app-qa__bar > span { flex: none; }
+/* Admin: gợi ý trả lời (.rv-ai của design system) + câu trả lời của khách + form đưa lên FAQ */
+.rv-ai p { margin: 2px 0 6px; white-space: pre-line; }
+.rv-ai small { display: block; color: var(--ink-muted); font-size: 11px; line-height: 15px; margin-bottom: 6px; }
+.rv-ans { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; padding-left: 10px; border-left: 2px solid var(--border); }
+.rv-ans > div { display: flex; flex-direction: column; gap: 2px; }
+.rv-ans .acts { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+.rv-faq { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid var(--primary); border-radius: var(--radius-md); background: var(--primary-soft); }
+.rv-faq label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; }
+.rv-faq textarea { resize: vertical; min-height: 72px; font: inherit; font-size: 13px; }
+.rv-faq .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.faq-item { display: grid; grid-template-columns: 44px minmax(0, 1fr) 200px; gap: var(--space-3); padding: var(--space-3); border-bottom: 1px solid var(--border); font-size: 13px; line-height: 19px; }
+.faq-item .ad-thumb { width: 44px; height: 44px; }
+.faq-item .meta { color: var(--ink-muted); font-size: 12px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.faq-item .q { margin: 4px 0 2px; font-weight: 600; color: var(--ink); }
+.faq-item .a { margin: 0; white-space: pre-line; }
+.faq-item.off .q, .faq-item.off .a { opacity: .55; }
+.faq-item .acts { display: flex; gap: 4px; flex-wrap: wrap; align-content: flex-start; }
+.faq-item .rv-faq { margin-top: 4px; }
+@media (max-width: 767px) {
+  .faq-item { grid-template-columns: 44px minmax(0, 1fr); }
+  .faq-item .acts { grid-column: 1 / -1; }
+}
+
+/* ---- Yêu cầu dịch vụ: form Đặt lịch khảo sát (components/QuoteForm.tsx) + admin /admin/dich-vu ---- */
+button.qf-opt { font: inherit; color: inherit; background: var(--surface); cursor: pointer; text-align: left; }
+.qf-up .app-qf-photo { position: relative; background: center / cover no-repeat var(--primary-soft); }
+.app-qf-photo button { position: absolute; top: 4px; right: 4px; display: grid; place-items: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 50%; background: rgba(0, 0, 0, .55); color: #fff; cursor: pointer; }
+.app-qf-photo button .vx-ico { width: 14px; height: 14px; }
+.app-qf-add { width: 84px; height: 84px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 2px dashed var(--border); border-radius: var(--radius-md); background: var(--surface); color: var(--ink-muted); font: inherit; font-size: 11px; cursor: pointer; }
+.app-qf-add:hover { border-color: var(--primary); color: var(--primary); }
+.app-qf-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.vx-slots2.app-qf-slots { grid-auto-flow: column; grid-template-rows: auto auto; grid-template-columns: repeat(var(--days, 4), minmax(0, 1fr)); }
+.app-qf-done { align-items: center; text-align: center; padding: var(--space-6); }
+.app-qf-done p { margin: 0; max-width: 520px; color: var(--ink-muted); line-height: 22px; }
+.app-qf-done p b { color: var(--ink); }
+.app-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+select.ad-sel { font: inherit; font-size: 13px; color: var(--ink); cursor: pointer; }
+label.ad-sel { font-size: 13px; cursor: pointer; }
+.kb.app-kb { grid-template-columns: repeat(var(--kb-cols, 5), minmax(180px, 1fr)); overflow-x: auto; align-items: start; }
+.app-kb .kb-col { min-height: 120px; transition: box-shadow .15s, background .15s; }
+.app-kb .kb-col[data-over="true"] { background: var(--primary-soft); box-shadow: inset 0 0 0 2px var(--primary); }
+a.app-kb-card { color: inherit; text-decoration: none; cursor: grab; }
+a.app-kb-card:hover { border-color: var(--primary); }
+a.app-kb-card[data-dragging="true"] { opacity: .45; }
+.app-kb-card .vx-badge { align-self: flex-start; }
+.app-kb-card .row { gap: 8px; }
+.app-kb-card .row .val { white-space: nowrap; }
+.app-kb-card .row > :last-child { text-align: right; }
+/* Mũi tên ▲/▼ trong ô chỉ số admin nằm cùng dòng với chữ (thiết kế gốc để span thành flex nên bị xuống dòng) */
+.ad-kpi small .ad-up, .ad-kpi small .ad-down { display: inline; }
+.app-kb-empty { padding: 12px 4px; border: 1px dashed var(--border); border-radius: var(--radius-md); color: var(--ink-muted); font-size: 12px; text-align: center; }
+.app-sr-form { display: flex; flex-direction: column; gap: 12px; }
+.app-sr-note { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.app-sr-note textarea { resize: vertical; font: inherit; font-size: 13px; }
+.ad-log.app-sr-log div { grid-template-columns: 90px minmax(0, 1fr); }
+@media (max-width: 767px) {
+  /* Kanban cuộn ngang, mỗi cột ~ 3/4 màn hình (kéo thả không dùng được trên cảm ứng: bấm thẻ → đổi giai đoạn ở trang chi tiết) */
+  .kb.app-kb { grid-template-columns: repeat(var(--kb-cols, 5), 78vw); scroll-snap-type: x mandatory; padding-bottom: 4px; }
+  .app-kb .kb-col { scroll-snap-align: start; }
+  .app-qf-actions { flex-direction: column-reverse; }
+  .vx-slots2.app-qf-slots { grid-auto-flow: row; grid-template-rows: none; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .app-qf-actions .vx-btn { width: 100%; }
+  .ad-title .acts select.ad-sel, .ad-title .acts label.ad-sel { flex: 1 1 140px; }
+}

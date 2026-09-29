@@ -34,6 +34,10 @@ export const SPACES = ['Ban công chung cư', 'Sân thượng', 'Sân vườn nh
 export const SUNS = ['Đông · nắng sáng', 'Tây · nắng chiều', 'Nam · nắng cả ngày', 'Bắc · ít nắng', 'Trong nhà, ít nắng', 'Chưa rõ'] as const;
 export const STYLES = ['Nhiệt đới', 'Tối giản', 'Kiểu Nhật', 'Có góc trồng rau', 'Dễ chăm, ít tưới'] as const;
 export const BUDGETS = ['Dưới 10 triệu', '10 – 30 triệu', '30 – 100 triệu', 'Trên 100 triệu', 'Chưa rõ, cần tư vấn'] as const;
+/** Ngân sách viết gọn trên thẻ Kanban. */
+export const BUDGET_SHORT: Record<(typeof BUDGETS)[number], string> = {
+  'Dưới 10 triệu': '< 10 tr', '10 – 30 triệu': '10–30 tr', '30 – 100 triệu': '30–100 tr', 'Trên 100 triệu': '> 100 tr', 'Chưa rõ, cần tư vấn': 'Chưa rõ NS',
+};
 /** Nguồn yêu cầu: web = khách tự gửi form; còn lại do nhân viên nhập. */
 export const SOURCES = ['web', 'hotline', 'zalo', 'facebook', 'store'] as const;
 export type ServiceSource = (typeof SOURCES)[number];

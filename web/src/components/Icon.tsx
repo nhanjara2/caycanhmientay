@@ -47,6 +47,7 @@ const PATHS = {
   trash: <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />,
   heart: <path d="M12 20s-6.5-4.1-9-8.2C1.1 8.8 2.4 5 6 5c2 0 3.6 1.2 4.5 2.8C11.4 6.2 13 5 15 5c3.6 0 4.9 3.8 3 6.8C18.5 15.9 12 20 12 20z" />,
   camera: <><path d="M4 8h3l2-3h6l2 3h3v11H4z" /><circle cx="12" cy="13" r="3.5" /></>,
+  spark: <path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6" />,
 } as const;
 
 export type IconName = keyof typeof PATHS;

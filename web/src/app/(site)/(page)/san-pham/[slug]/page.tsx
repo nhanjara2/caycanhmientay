@@ -12,6 +12,7 @@ import { YOUTUBE_URL } from '@/lib/contact';
 import { reviewStats } from '@/lib/reviews';
 import { boughtTogether, getProduct } from '@/server/catalog';
 import { getCurrentUser } from '@/server/auth';
+import { productFaqs } from '@/server/faqs';
 import { productQuestions } from '@/server/questions';
 import { productReviews } from '@/server/reviews';
 import { isWishlisted } from '@/server/wishlist';
@@ -22,17 +23,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const p = await getProduct((await params).slug);
   return p ? { title: p.name, description: p.lead } : { title: 'Không tìm thấy' };
 }
-
-const FAQ_PLANT = [
-  ['Cây có trồng trong phòng máy lạnh được không?', 'Được. Tránh đặt ngay hướng gió máy lạnh thổi, và phun sương cho lá 2–3 lần/tuần vì không khí phòng lạnh khô.'],
-  ['Cây bị vàng lá sau khi nhận hàng có được đổi không?', 'Cây được bảo hành 7 ngày kể từ khi nhận. Bạn chụp ảnh cây và gửi yêu cầu bảo hành trong mục Đơn hàng, kỹ sư sẽ phản hồi trong 24 giờ.'],
-  ['Bao lâu thì nên thay chậu?', 'Khoảng 12–18 tháng, hoặc khi thấy rễ mọc ra lỗ thoát nước. Nên thay vào đầu mùa mưa.'],
-];
-const FAQ_SUPPLY = [
-  ['Pha thuốc thế nào cho đúng liều?', 'Làm đúng liều ghi trên bao bì và trong bảng thông số. Không tự tăng liều, không trộn nhiều loại thuốc khi chưa hỏi kỹ sư.'],
-  ['Hàng vật tư giao trong bao lâu?', 'Nội thành giao nhanh 2 giờ; tỉnh khác 2–4 ngày qua đơn vị vận chuyển.'],
-  ['Có xuất hóa đơn điện tử không?', 'Có. Bật "Yêu cầu xuất hóa đơn điện tử" ở bước thanh toán và điền thông tin công ty.'],
-];
 
 function FengShuiBlock({ f }: { f: NonNullable<Product['fengshui']> }) {
   return (
@@ -50,7 +40,7 @@ function FengShuiBlock({ f }: { f: NonNullable<Product['fengshui']> }) {
   );
 }
 
-function Content({ p }: { p: Product }) {
+function Content({ p, faq }: { p: Product; faq: boolean }) {
   const isPlant = p.ship === 'plant';
   return (
     <div className="vx-content">
@@ -60,7 +50,7 @@ function Content({ p }: { p: Product }) {
         {p.fengshui && <a href="#phong-thuy">Phong thủy</a>}
         <a href="#cach-dung">{isPlant ? 'Cách chăm sóc' : 'Cách sử dụng'}</a>
         <a href="#luu-y">Lưu ý</a>
-        <a href="#hoi-dap">Câu hỏi thường gặp</a>
+        {faq && <a href="#hoi-dap">Câu hỏi thường gặp</a>}
       </nav>
       <article className="vx-article">
         <h2 id="mo-ta">{p.name} là gì?</h2>
@@ -119,16 +109,16 @@ export default async function ProductPage({ params }: Props) {
   const p = await getProduct((await params).slug);
   if (!p) notFound();
   const [together, user] = await Promise.all([boughtTogether(p), getCurrentUser()]);
-  const [wishlisted, reviews, questions] = await Promise.all([
+  const [wishlisted, reviews, questions, faq] = await Promise.all([
     user ? isWishlisted(user.id, p.slug) : false,
     productReviews(p.slug, user?.id ?? null),
-    productQuestions(p.slug, user?.id ?? null),
+    productQuestions(p.slug, user),
+    productFaqs(p),
   ]);
   // Số sao ở BuyBox tính từ đánh giá thật (products.rating/reviews là số mẫu, không dùng để hiển thị)
   const rs = reviewStats(reviews);
   const cat = getCategory(p.category);
   const sub = cat?.subs.find((s) => s.slug === p.sub);
-  const faq = p.ship === 'plant' ? FAQ_PLANT : FAQ_SUPPLY;
 
   return (
     <div className="vx-pdpage app-page">
@@ -155,27 +145,40 @@ export default async function ProductPage({ params }: Props) {
         <BuyBox product={{ ...p, rating: rs.avg, reviews: rs.count }} wishlisted={wishlisted} />
       </section>
 
-      <Content p={p} />
+      <Content p={p} faq={faq.length > 0} />
 
       <section className="vx-card">
         <SectionHeader icon="cart" title="Thường mua kèm" />
         <ProductGrid products={together} />
       </section>
 
-      <section className="vx-card" id="hoi-dap">
-        <h3 className="vx-card__title">Câu hỏi thường gặp</h3>
-        <div className="vx-faq">
-          {faq.map(([q, a], i) => (
-            <details key={q} open={i === 0}>
-              <summary><span className="q">?</span>{q}<Icon name="chevron" /></summary>
-              <p>{a}</p>
-            </details>
-          ))}
-        </div>
-      </section>
+      {faq.length > 0 && (
+        <section className="vx-card" id="hoi-dap">
+          <h3 className="vx-card__title">Câu hỏi thường gặp</h3>
+          <div className="vx-faq">
+            {faq.map((f, i) => (
+              <details key={f.id} open={i === 0}>
+                <summary><span className="q">?</span>{f.question}<Icon name="chevron" /></summary>
+                <p style={{ whiteSpace: 'pre-line' }}>{f.answer}</p>
+              </details>
+            ))}
+          </div>
+          {/* Schema FAQPage để Google hiện câu hỏi thường gặp trên kết quả tìm kiếm (thiết kế FAQ) */}
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                '@context': 'https://schema.org',
+                '@type': 'FAQPage',
+                mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.question, acceptedAnswer: { '@type': 'Answer', text: f.answer } })),
+              }).replace(/</g, '\\u003c'),
+            }}
+          />
+        </section>
+      )}
 
       <ProductReviews slug={p.slug} items={reviews} isPlant={p.ship === 'plant'} />
-      <ProductQnA slug={p.slug} items={questions} />
+      <ProductQnA slug={p.slug} items={questions} pesticide={p.pesticide} />
     </div>
   );
 }

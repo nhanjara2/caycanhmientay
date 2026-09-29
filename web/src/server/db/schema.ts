@@ -335,6 +335,48 @@ export const questionVotes = pgTable('question_votes', {
   createdAt: createdAt(),
 }, (t) => [primaryKey({ columns: [t.questionId, t.userId] })]);
 
+/**
+ * Khách trả lời nhau dưới câu hỏi (câu trả lời chính thức của shop vẫn là questions.answer).
+ * published = hiện ngay; pending = có SĐT/link (nghi quảng cáo) → chờ nhân viên duyệt; hidden = nhân viên ẩn.
+ * Người viết luôn thấy câu trả lời của mình như đã đăng.
+ */
+export const questionAnswers = pgTable('question_answers', {
+  id: serial('id').primaryKey(),
+  questionId: integer('question_id').notNull().references(() => questions.id, { onDelete: 'cascade' }),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  content: text('content').notNull(),
+  status: text('status', { enum: REVIEW_STATUSES }).notNull(),
+  /** Người trả lời đã mua sản phẩm (đơn đã giao) lúc viết → nhãn "Đã mua hàng". */
+  verified: boolean('verified').notNull().default(false),
+  moderatedBy: text('moderated_by'),
+  moderatedAt: ts('moderated_at'),
+  createdAt: createdAt(),
+}, (t) => [
+  index('question_answers_question_idx').on(t.questionId),
+  index('question_answers_user_idx').on(t.userId, t.createdAt),
+  index('question_answers_status_idx').on(t.status),
+]);
+
+// ---- Câu hỏi thường gặp (FAQ ở trang sản phẩm) ----------------------------------------------
+
+/**
+ * productSlug có giá trị = câu riêng của sản phẩm đó; null = câu chung cho nhóm `ship` (null = mọi sản phẩm).
+ * Trang sản phẩm hiện câu riêng trước rồi câu chung, tối đa FAQ_LIMIT câu. questionId = câu hỏi của khách được đưa lên.
+ */
+export const faqs = pgTable('faqs', {
+  id: serial('id').primaryKey(),
+  productSlug: text('product_slug').references(() => products.slug, { onDelete: 'cascade' }),
+  ship: text('ship', { enum: ['plant', 'supply'] }),
+  question: text('question').notNull(),
+  answer: text('answer').notNull(),
+  sort: integer('sort').notNull().default(0),
+  active: boolean('active').notNull().default(true),
+  questionId: integer('question_id').references(() => questions.id, { onDelete: 'set null' }),
+  createdBy: text('created_by'),
+  createdAt: createdAt(),
+  updatedAt: ts('updated_at').notNull().defaultNow(),
+}, (t) => [index('faqs_product_idx').on(t.productSlug, t.sort), index('faqs_question_idx').on(t.questionId)]);
+
 // ---- Kho -------------------------------------------------------------------------------------
 
 export const STOCK_REASONS = ['import', 'adjust', 'order', 'cancel', 'transfer', 'warranty'] as const;

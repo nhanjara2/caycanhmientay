@@ -2,6 +2,7 @@ import 'server-only';
 import { and, count, desc, eq, gte, inArray, or, sql } from 'drizzle-orm';
 import * as z from 'zod';
 import { normalize } from '@/lib/catalog';
+import { suggestReviewReply } from '@/lib/reply-suggest';
 import {
   MAX_REVIEW_PHOTOS, REVIEW_HOLD_STARS, REVIEW_MAX_CHARS, REVIEW_MIN_CHARS, REVIEW_REPLY_MAX_CHARS,
   reviewPhotoUrl, type ReviewView, type VoteKind,
@@ -20,7 +21,7 @@ type Owner = Pick<SessionUser, 'id' | 'phone'>;
 /** Giống ownedBy trong server/orders.ts — đơn đặt vãng lai cùng SĐT đã xác thực cũng tính là đã mua. */
 const ownedBy = (u: Owner) => (u.phone ? or(eq(orders.userId, u.id), eq(orders.phone, u.phone)) : eq(orders.userId, u.id));
 
-async function hasPurchased(u: Owner, slug: string) {
+export async function hasPurchased(u: Owner, slug: string) {
   const [row] = await db.select({ id: orders.id }).from(orders)
     .innerJoin(orderItems, eq(orderItems.orderId, orders.id))
     .where(and(ownedBy(u), eq(orders.status, 'delivered'), eq(orderItems.productSlug, slug)))
@@ -63,8 +64,12 @@ export async function toggleVote(kind: VoteKind, id: number, userId: number): Pr
     const [{ n }] = await db.select({ n: count() }).from(RV).where(eq(RV.reviewId, id));
     return { ok: true, helpful: n, voted: ins.length > 0 };
   }
-  const [q] = await db.select({ userId: Q.userId, status: Q.status, answer: Q.answer }).from(Q).where(eq(Q.id, id));
-  if (!q || q.status !== 'visible' || !q.answer) return { ok: false, error: 'Không tìm thấy câu hỏi' };
+  const [q] = await db.select({
+    userId: Q.userId, status: Q.status, answer: Q.answer,
+    // Câu hỏi hiện công khai: shop đã trả lời hoặc có khách khác trả lời
+    replied: sql<boolean>`exists (select 1 from "question_answers" a where a.question_id = "questions"."id" and a.status = 'published')`,
+  }).from(Q).where(eq(Q.id, id));
+  if (!q || q.status !== 'visible' || !(q.answer || q.replied)) return { ok: false, error: 'Không tìm thấy câu hỏi' };
   if (q.userId === userId) return { ok: false, error: 'Không bình chọn cho câu hỏi của chính bạn' };
   const ins = await db.insert(QV).values({ questionId: id, userId }).onConflictDoNothing().returning({ id: QV.questionId });
   if (!ins.length) await db.delete(QV).where(and(eq(QV.questionId, id), eq(QV.userId, userId)));
@@ -234,6 +239,11 @@ export async function listReviewsAdmin({ tab, stars, photo, q }: { tab: ReviewTa
     photos: (photos.get(x.r.id) ?? []).map((ph) => ph.url),
     flags: flagsOf({ ...x.r, ship: x.ship }),
     helpful: votes.counts.get(x.r.id) ?? 0,
+    // Nháp cho nhân viên sửa (chỉ khi chưa trả lời)
+    suggestion: x.r.reply || x.r.status === 'hidden' ? null : suggestReviewReply({
+      stars: x.r.stars, customer: displayName(x.customer), verified: x.r.verified, isPlant: x.ship === 'plant',
+      shipping: SHIP_RE.test(normalize(x.r.content)), ad: looksLikeAd(x.r.content),
+    }),
   }));
 }
 

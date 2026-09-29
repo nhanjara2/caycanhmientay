@@ -6,7 +6,7 @@ import { isPhone, normalizePhone } from './auth';
 import { db, schema } from './db';
 import { saveImage, type SavedImage } from './uploads';
 import {
-  BUDGETS, CALLBACK_HOURS, QUOTE_STALE_DAYS, SERVICE_INFO, SERVICE_STAGES, SERVICE_TYPES, SLOT_CAPACITY, SLOT_TIMES, SOURCES, SPACES,
+  BUDGETS, BUDGET_SHORT, CALLBACK_HOURS, QUOTE_STALE_DAYS, SERVICE_INFO, SERVICE_STAGES, SERVICE_TYPES, SLOT_CAPACITY, SLOT_TIMES, SOURCES, SPACES,
   STAGE_LABEL, STYLES, SUNS, fmtSlot, serviceCode, shortMoney, slotDates, todayVN, type SlotTime,
 } from '@/lib/service-labels';
 import { fmtDate, fmtDateTime } from '@/lib/order-labels';
@@ -164,10 +164,11 @@ function cardMeta(r: typeof S.$inferSelect, now: number): { when: string; late: 
   };
   switch (r.stage) {
     case 'new': {
-      if (r.contactedAt) return { when: `Đã gọi · ${ago(r.contactedAt)} trước`, late: false };
+      if (r.contactedAt) return { when: now - r.contactedAt.getTime() < 60_000 ? 'Đã gọi · vừa xong' : `Đã gọi · ${ago(r.contactedAt)} trước`, late: false };
       const left = r.createdAt.getTime() + CALLBACK_HOURS * HOUR - now;
+      const mins = Math.max(1, Math.ceil(left / 60_000));
       return left > 0
-        ? { when: `Gọi trong ${Math.max(1, Math.ceil(left / 60_000))} phút`, late: false }
+        ? { when: `Gọi trong ${mins >= 60 ? `${Math.floor(mins / 60)} giờ${mins % 60 ? ` ${mins % 60} phút` : ''}` : `${mins} phút`}`, late: false }
         : { when: `Chưa gọi · quá ${ago(new Date(r.createdAt.getTime() + CALLBACK_HOURS * HOUR))}`, late: true };
     }
     case 'scheduled':
@@ -208,7 +209,7 @@ export async function serviceBoard(f: BoardFilter) {
     ].filter(Boolean).join(' · ');
     return {
       id: r.id, code: serviceCode(r.id), stage: r.stage, name: r.name, service: SERVICE_INFO[r.service].label, need,
-      value: r.value != null ? shortMoney(r.value) : r.budget ?? '', assignee, photos, ...cardMeta(r, now),
+      value: r.value != null ? shortMoney(r.value) : r.budget ? BUDGET_SHORT[r.budget as keyof typeof BUDGET_SHORT] ?? r.budget : '', assignee, photos, ...cardMeta(r, now),
     };
   });
 }
@@ -287,8 +288,9 @@ export async function updateServiceRequest(input: ServiceUpdate, actor: string):
       if (input.stage !== 'new' && !cur.contactedAt) set.contactedAt = now;
       if (input.stage === 'quoted' && !cur.quotedAt) set.quotedAt = now;
       // Hẹn khảo sát: mặc định theo khung khách đã chọn nếu chưa chốt giờ
-      if (input.stage === 'scheduled' && !cur.surveyAt && input.surveyAt === undefined && cur.slotDate) {
+      if (input.stage === 'scheduled' && !cur.surveyAt && !input.surveyAt && cur.slotDate) {
         set.surveyAt = new Date(`${cur.slotDate}T${cur.slotTime === 'pm' ? '14' : '09'}:00:00+07:00`);
+        log.push({ kind: 'update', text: `Hẹn khảo sát ${fmtDateTime(set.surveyAt)} (theo lịch khách chọn)` });
       }
     }
     if (input.assigneeId !== undefined && input.assigneeId !== cur.assigneeId) {

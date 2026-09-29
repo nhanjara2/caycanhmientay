@@ -49,6 +49,22 @@ export const QUESTION_MAX_CHARS = 500;
 /** Chống spam: tối đa số câu hỏi một tài khoản gửi trong 24 giờ (mọi sản phẩm). */
 export const QUESTION_DAILY_LIMIT = 10;
 
+/** Chống spam: tối đa số câu trả lời (khách trả lời nhau) một tài khoản gửi trong 24 giờ. */
+export const ANSWER_DAILY_LIMIT = 20;
+
+/** Câu trả lời của khách khác dưới câu hỏi. Không có trạng thái duyệt — người viết thấy như đã đăng. */
+export type AnswerView = {
+  id: number;
+  name: string;
+  content: string;
+  createdAt: number;
+  /** Người trả lời đã mua sản phẩm. */
+  verified: boolean;
+  /** Nhân viên shop trả lời bằng tài khoản trên web. */
+  staff: boolean;
+  mine: boolean;
+};
+
 /** Một câu hỏi gửi về trình duyệt. */
 export type QuestionView = {
   id: number;
@@ -60,7 +76,24 @@ export type QuestionView = {
   mine: boolean;
   helpful: number;
   voted: boolean;
+  /** Khách khác trả lời (sau câu trả lời của shop). */
+  answers: AnswerView[];
+  /** Được viết câu trả lời (câu hỏi không bị ẩn). */
+  open: boolean;
+  /** Câu hỏi chưa ai trả lời, chỉ hiện vì người xem đã mua sản phẩm → mời chia sẻ kinh nghiệm. */
+  askBuyer: boolean;
 };
+
+// ---- Câu hỏi thường gặp ---------------------------------------------------------------------
+
+/** Số câu tối đa ở mục Câu hỏi thường gặp mỗi trang sản phẩm (thiết kế FAQ: 4–6 câu). */
+export const FAQ_LIMIT = 6;
+export const FAQ_QUESTION_MAX_CHARS = 200;
+export const FAQ_ANSWER_MAX_CHARS = 1000;
+
+/** Phạm vi một câu FAQ: riêng sản phẩm, hoặc chung cho mọi cây sống / mọi vật tư / mọi sản phẩm. */
+export const FAQ_SCOPES = { product: 'Chỉ sản phẩm này', plant: 'Mọi cây sống', supply: 'Mọi vật tư', all: 'Mọi sản phẩm' } as const;
+export type FaqScope = keyof typeof FAQ_SCOPES;
 
 export type VoteKind = 'review' | 'question';
 
