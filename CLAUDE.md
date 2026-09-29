@@ -24,7 +24,7 @@ npx tsc --noEmit                          # typecheck
 - Tạo bảng + nạp 18 sản phẩm mẫu + 3 cửa hàng: `npm run db:setup` (`scripts/db-setup.mts`, tự chạy trong `prebuild` nên Vercel tự migrate mỗi lần deploy).
 - Đổi schema (`web/src/server/db/schema.ts`) → `npm run db:generate` (tạo file trong `web/drizzle/`) → `npm run db:setup`. Bảng mới phải thêm `ALTER TABLE … ENABLE ROW LEVEL SECURITY` vào migration (khóa API công khai của Supabase).
 - Driver: `pg` (node-postgres). **Không dùng thư viện `postgres`** — nó pipelining và treo qua Supabase pooler. Mọi truy vấn là async (`await`); ghi nhiều bước dùng `db.transaction(async (tx) => …)`, khóa dòng bằng `.for('update')` (tồn kho, đơn, bảo hành, sổ địa chỉ).
-- Deploy: Vercel (tài khoản nhanjara3), repo GitHub `nhanjara-flora-global/caycanhmientay`, Root Directory `web`, vùng chạy `bom1` (`web/vercel.json`, cùng vùng database). Biến môi trường trên Vercel: `DATABASE_URL`, `AUTH_SECRET`, `ADMIN_PHONES`, `OTP_DEMO=1` (chạy thử: hiện mã OTP trên màn hình — tắt khi bán thật), `SITE_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `ADMIN_EMAILS`.
+- Deploy: Vercel (tài khoản nhanjara3), repo GitHub `nhanjara-flora-global/caycanhmientay` (push bằng tài khoản GitHub `nhanjara-flora-global` = nhanjara3@gmail.com — đã cài trong git config riêng của thư mục, commit ký tên nhanjara3 <nhanjara3@gmail.com>), Root Directory `web`, vùng chạy `bom1` (`web/vercel.json`, cùng vùng database). Biến môi trường trên Vercel: `DATABASE_URL`, `AUTH_SECRET`, `ADMIN_PHONES`, `OTP_DEMO=1` (chạy thử: hiện mã OTP trên màn hình — tắt khi bán thật), `SITE_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `ADMIN_EMAILS`.
 
 ## Kiến trúc `web/src`
 

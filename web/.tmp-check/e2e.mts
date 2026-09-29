@@ -121,7 +121,7 @@ try {
   check(await ansLine.locator('text=Chờ duyệt').isVisible(), 'Nhãn Chờ duyệt');
   check(await ansLine.locator('text=Nghi quảng cáo').isVisible(), 'Nhãn Nghi quảng cáo');
   await ansLine.locator('button:has-text("Ẩn")').click();
-  await s.page.waitForTimeout(1500);
+  await ansLine.locator('.vx-badge:has-text("Đã ẩn")').waitFor({ timeout: 15000 }).catch(async () => console.log('    lỗi:', await ansLine.textContent()));
   check((await q1('select status from question_answers where id = $1', [ca.id])).status === 'hidden', 'Đã ẩn câu trả lời quảng cáo');
 
   console.log('7. Admin: đưa lên FAQ');
@@ -129,10 +129,10 @@ try {
   const row2 = s.page.locator('.rv-item', { hasText: QTEXT });
   await row2.locator('button:has-text("Đưa lên FAQ")').click();
   const form = row2.locator('.rv-faq');
-  check((await form.locator('input').inputValue()) === QTEXT, 'Form FAQ điền sẵn câu hỏi');
+  check((await form.locator('input.vx-input').inputValue()) === QTEXT, 'Form FAQ điền sẵn câu hỏi');
   const ansPrefill = await form.locator('textarea').inputValue();
   check(!/^Chào/.test(ansPrefill), `Câu trả lời điền sẵn đã bỏ lời chào: "${ansPrefill.slice(0, 50)}…"`);
-  await form.locator('input').fill('Monstera để phòng máy lạnh được không?');
+  await form.locator('input.vx-input').fill('Monstera để phòng máy lạnh được không?');
   await s.page.screenshot({ path: `${SHOTS}/admin-dua-len-faq.png`, fullPage: true });
   await form.locator('button:has-text("Đưa lên Câu hỏi thường gặp")').click();
   await row2.locator('text=Đã ở Câu hỏi thường gặp').waitFor();
@@ -156,11 +156,12 @@ try {
   const order = async () => (await db.query("select id from faqs where product_slug is null and ship = 'plant' order by sort, id")).rows.map((r: any) => r.id).join(',');
   const before = await order();
   await s.page.locator('.faq-item', { hasText: 'Cây bị vàng lá' }).locator('button[aria-label="Lên trên"]').click();
-  await s.page.waitForTimeout(1500);
+  for (let i = 0; i < 30 && (await order()) === before; i++) await s.page.waitForTimeout(500);
   const moved = await order();
+  await s.page.waitForTimeout(1000);
   check(moved !== before, `Đổi thứ tự: ${before} → ${moved}`);
   await s.page.locator('.faq-item', { hasText: 'Cây bị vàng lá' }).locator('button[aria-label="Xuống dưới"]').click();
-  await s.page.waitForTimeout(1500);
+  for (let i = 0; i < 30 && (await order()) !== before; i++) await s.page.waitForTimeout(500);
   check((await order()) === before, 'Trả lại thứ tự cũ');
   const mine = s.page.locator('.faq-item', { hasText: 'Monstera để phòng máy lạnh' });
   check(await mine.locator('button[aria-label="Lên trên"]').isDisabled(), 'Câu duy nhất trong nhóm: khóa nút ↑');
