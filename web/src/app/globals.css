@@ -107,8 +107,9 @@ button.vx-pay__opt:first-child { border-top: 0; }
   .app-menubtn { display: grid; }
   .vx-keywords, .vx-loc { display: none; }
   .app-shop { grid-template-columns: minmax(0, 1fr); }
-  .app-side { position: fixed; top: 0; left: 0; bottom: 0; height: 100vh; z-index: 70; transform: translateX(-100%); transition: transform .2s; box-shadow: var(--shadow-pop); }
-  body[data-sidebar-open] .app-side { transform: none; }
+  /* Bóng chỉ hiện khi bảng đang mở — để sẵn thì bóng lọt vào mép trái màn hình lúc bảng đã trượt ra ngoài */
+  .app-side { position: fixed; top: 0; left: 0; bottom: 0; height: 100vh; z-index: 70; transform: translateX(-100%); transition: transform .2s, box-shadow .2s; }
+  body[data-sidebar-open] .app-side { transform: none; box-shadow: var(--shadow-pop); }
   body[data-sidebar-open] .app-scrim { display: block; position: fixed; inset: 0; background: rgba(28, 42, 34, .4); z-index: 65; }
   .app-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .vx-checkout { grid-template-columns: minmax(0, 1fr); }
@@ -541,4 +542,44 @@ a.app-kb-card[data-dragging="true"] { opacity: .45; }
   .vx-slots2.app-qf-slots { grid-auto-flow: row; grid-template-rows: none; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .app-qf-actions .vx-btn { width: 100%; }
   .ad-title .acts select.ad-sel, .ad-title .acts label.ad-sel { flex: 1 1 140px; }
+}
+
+/* ---- Truyền thông (/tin-tuc): chuyên mục, bài nổi bật, danh sách bài ---- */
+/* Ảnh bài viết trong thẻ: `.nw-card > span` (cột chữ) cũng khớp khung ảnh nên biến nó thành flex cột, biểu tượng bị đẩy lên mép trên */
+.nw-card > .nw-img { display: grid; }
+/* Tablet 768–1023: 4 chuyên mục cùng 1 hàng thay vì 3 + 1 lẻ */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .nw-top { padding-inline: var(--space-4); }
+  .nw-subs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .nw-sub { width: auto; padding-inline: var(--space-2); }
+  .nw-sub b { font-size: 14px; line-height: 20px; }
+  .nw-body { padding: var(--space-4); }
+}
+/* Điện thoại < 768: chuyên mục thành hàng chip cuộn ngang, bài viết thành thẻ ngang gọn (theo MobileNews) */
+@media (max-width: 767px) {
+  .nw-top { padding: var(--space-2) var(--space-4) var(--space-4); gap: var(--space-4); }
+  .nw-top h1 { text-align: left; font-size: 24px; line-height: 32px; }
+  .nw-subs { flex-wrap: nowrap; overflow-x: auto; gap: var(--space-2); margin-inline: calc(var(--space-4) * -1); padding: 2px var(--space-4); scroll-snap-type: x proximity; scroll-padding-inline: var(--space-4); scrollbar-width: none; }
+  .nw-subs::-webkit-scrollbar { display: none; }
+  .nw-sub { flex: none; width: auto; flex-direction: row; align-items: center; gap: var(--space-2); padding: 6px var(--space-4) 6px 6px; border-radius: var(--radius-pill); text-align: left; scroll-snap-align: start; }
+  .nw-sub span { width: 32px; height: 32px; box-shadow: none; }
+  .nw-sub span .vx-ico { width: 18px; height: 18px; }
+  .nw-sub b { font-size: 14px; line-height: 20px; white-space: nowrap; }
+  .nw-sub small { font-size: 12px; white-space: nowrap; }
+  .nw-hero { gap: var(--space-3); }
+  .nw-hero__main h2 { font-size: 20px; line-height: 28px; }
+  .nw-side { gap: 0; }
+  .nw-sitem { grid-template-columns: 104px minmax(0, 1fr); padding-block: var(--space-3); }
+  .nw-sitem + .nw-sitem { border-top: 1px solid var(--border); }
+  .nw-sitem .nw-img, .nw-card .nw-img { aspect-ratio: 4 / 3; }
+  .nw-sitem b { font-size: 14px; line-height: 20px; -webkit-line-clamp: 3; }
+  .nw-body { padding: var(--space-3) var(--space-4) var(--space-4); gap: var(--space-3); }
+  .nw-list { gap: var(--space-2); }
+  .nw-card { grid-template-columns: 104px minmax(0, 1fr); gap: var(--space-3); padding: var(--space-2); border-radius: var(--radius-md); }
+  .nw-card > span:last-child { gap: 4px; }
+  .nw-sitem .nw-img svg, .nw-card .nw-img svg { width: 32px; height: 32px; }
+  .nw-card b { font-size: 15px; line-height: 21px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .nw-card p { display: none; }
+  .nw-more { width: 100%; justify-content: center; }
+  .nw-aside { position: static; }
 }
