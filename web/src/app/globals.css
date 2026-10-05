@@ -44,6 +44,8 @@ a.vx-btn, a.vx-link { text-decoration: none; }
 .app-side { position: sticky; top: var(--header-h); height: calc(100vh - var(--header-h)); max-height: none; }
 .app-main { padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
 .app-scrim { display: none; }
+/* Trang không có sidebar cố định: chỉ dùng bảng trượt (tablet/mobile), desktop ẩn hẳn */
+@media (min-width: 1024px) { .app-drawer-only { display: none; } }
 .app-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 /* Màn rộng: nội dung giãn full, thêm cột để thẻ sản phẩm giữ kích thước vừa phải */
 @media (min-width: 1440px) { .app-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
@@ -115,6 +117,60 @@ button.vx-pay__opt:first-child { border-top: 0; }
   .vx-content { grid-template-columns: minmax(0, 1fr); }
   .vx-toc { display: none; }
   .vx-fcols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* Tablet 768–1023 (iPad dọc/ngang, Android tablet): design system chỉ vẽ desktop ≥1024 và mobile,
+   nên các khung có cột phụ cố định (admin, POS, cửa hàng…) bị chật. Thu gọn ở đây. */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .vx-header__main { gap: var(--space-4); padding-inline: var(--space-4); }
+  .vx-nav { padding-inline: var(--space-4); overflow-x: auto; scrollbar-width: none; }
+  .vx-nav a { white-space: nowrap; }
+  .app-main { padding: var(--space-3) var(--space-4); }
+  .vx-blog { grid-template-columns: minmax(0, 1fr) 220px; padding-inline: var(--space-4); }
+  .vx-policypage { padding-inline: var(--space-4); }
+  .vx-stores { grid-template-columns: 300px minmax(0, 1fr); }
+  .vx-pd { gap: var(--space-4); padding: var(--space-4); }
+  .vx-fcols { gap: var(--space-4); padding: var(--space-4); }
+
+  /* Admin: menu trái hẹp lại, cột phụ rơi xuống dưới, KPI ít cột hơn */
+  .app-admin { grid-template-columns: 196px minmax(0, 1fr); }
+  .ad-side a { padding-inline: var(--space-3); }
+  .ad-main { overflow-x: hidden; }
+  .ad-form, .ad-editor, .ad-split, .ad-grid2 { grid-template-columns: minmax(0, 1fr); }
+  .ad-kpis, .ad-kpis.k3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ad-kpis.k5 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .ad-grid3, .ad-board { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ad-card { overflow-x: auto; }
+
+  /* POS: giỏ hàng 320px, lưới món 3 cột để ô bấm đủ to */
+  .pos { grid-template-columns: minmax(0, 1fr) 320px; }
+  .pos-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+/* Tablet ngang 1024–1279: admin/POS vẫn rộng nhưng bớt cột phụ */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .ad-kpis.k5 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .ad-split, .ad-form, .ad-editor { grid-template-columns: minmax(0, 1fr) 260px; }
+  .pos { grid-template-columns: minmax(0, 1fr) 340px; }
+  .pos-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* Màn cảm ứng cỡ tablet (kể cả laptop cảm ứng nhỏ): vùng bấm ≥ 44px theo BRANDBOOK, bỏ hover dính */
+@media (pointer: coarse) and (min-width: 768px) and (max-width: 1366px) {
+  .vx-btn, .vx-chip, .vx-slot, .vx-tslot, .fb-sort a { min-height: 44px; }
+  .vx-btn--sm { min-height: 40px; }
+  .vx-nav a, .vx-dd a, .vx-acc__list a, .vx-acct__nav a, .vx-pnav a { min-height: 44px; display: flex; align-items: center; }
+  .ad-side a { min-height: 44px; }
+  .ad-table td { padding-block: 14px; }
+  .ad-table th { padding-block: 10px; }
+  .app-menubtn { min-width: 44px; min-height: 44px; place-items: center; margin: -8px 0 -8px -12px; }
+  .app-hbtn, .vx-cartbtn, .app-bell { min-height: 44px; }
+  .vx-check input { width: 22px; height: 22px; }
+  .app-fab a { min-height: 44px; }
+}
+@media (hover: none) {
+  .ad-table tr:hover td { background: none; }
+  .ad-side a:hover:not([aria-current="true"]) { background: none; }
 }
 
 /* Mobile < 768: lưới 2 cột, header gọn */
