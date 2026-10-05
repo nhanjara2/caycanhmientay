@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ProductActiveToggle } from '@/components/admin/ProductActiveToggle';
+import { ProductDeleteButton } from '@/components/admin/ProductDeleteButton';
 import { Icon, Thumb } from '@/components/Icon';
 import { categories, getCategory } from '@/lib/catalog';
 import { money } from '@/lib/format';
@@ -44,7 +45,7 @@ export default async function AdminProductsPage({ searchParams }: Props) {
         <div className="ad-tablewrap">
           <table className="ad-table app-mtable">
             <thead>
-              <tr><th>Sản phẩm</th><th>Danh mục</th><th className="num">Giá từ</th><th className="num">Tồn</th><th className="num">Đã bán</th><th>Trạng thái</th></tr>
+              <tr><th>Sản phẩm</th><th>Danh mục</th><th className="num">Giá từ</th><th className="num">Tồn</th><th className="num">Đã bán</th><th>Trạng thái</th>{isAdmin && <th />}</tr>
             </thead>
             <tbody>
               {rows.map((r) => {
@@ -62,10 +63,11 @@ export default async function AdminProductsPage({ searchParams }: Props) {
                     <td className="num" data-label="Tồn">{(r.stock ?? 0) < MIN_STOCK ? <b style={{ color: 'var(--sale)' }}>{r.stock ?? 0}</b> : r.stock}</td>
                     <td className="num" data-label="Đã bán">{r.sold}</td>
                     <td data-label="Trạng thái">{isAdmin ? <ProductActiveToggle slug={r.slug} active={r.active} /> : <span className={`ad-pill ${r.active ? 'done' : 'wait'}`}>{r.active ? 'Đang bán' : 'Ẩn'}</span>}</td>
+                    {isAdmin && <td data-label="Thao tác"><ProductDeleteButton slug={r.slug} name={r.name} /></td>}
                   </tr>
                 );
               })}
-              {!rows.length && <tr><td colSpan={6} style={{ textAlign: 'center', padding: 32, color: 'var(--ink-muted)' }}>Không có sản phẩm.</td></tr>}
+              {!rows.length && <tr><td colSpan={isAdmin ? 7 : 6} style={{ textAlign: 'center', padding: 32, color: 'var(--ink-muted)' }}>Không có sản phẩm.</td></tr>}
             </tbody>
           </table>
         </div>

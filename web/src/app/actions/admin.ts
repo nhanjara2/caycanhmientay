@@ -6,7 +6,8 @@ import * as z from 'zod';
 import { requireStaff, staffName } from '@/server/auth';
 import { applyStock, countLot, recentMoves, transferStock } from '@/server/inventory';
 import { todayVN, tracksLots } from '@/lib/stock';
-import { addProductImage, deleteProductImage, listProductImages, moveProductImage, ProductInputSchema, saveProduct, setProductActive } from '@/server/products-admin';
+import { addProductImage, deleteProduct, deleteProductImage, listProductImages, moveProductImage, ProductInputSchema, saveProduct, setProductActive } from '@/server/products-admin';
+import { applyStockImport, MAX_IMPORT_BYTES, parseStockImport } from '@/server/stock-import';
 import { saveImage } from '@/server/uploads';
 import { db, schema } from '@/server/db';
 
@@ -36,6 +37,15 @@ export async function setProductActiveAction(slug: unknown, active: unknown) {
   const ok = await setProductActive(p.data.slug, p.data.active);
   if (ok) refreshCatalog(p.data.slug);
   return { ok };
+}
+
+export async function deleteProductAction(slug: unknown) {
+  await requireStaff('admin');
+  const p = z.string().min(1).max(120).safeParse(slug);
+  if (!p.success) return { ok: false as const, error: 'Yêu cầu không hợp lệ' };
+  const r = await deleteProduct(p.data);
+  if (r.ok) refreshCatalog();
+  return r;
 }
 
 const slugSchema = z.string().min(1).max(120);
@@ -122,4 +132,34 @@ export async function stockHistoryAction(slug: unknown, idx: unknown) {
     id: m.id, reason: m.reason, delta: m.delta, after: m.after, actor: m.actor, note: m.note,
     store, lotCode, expiry, createdAt: m.createdAt.getTime(),
   }));
+}
+
+/**
+ * Nhập hàng bằng Excel. FormData: file (.xlsx), mode = 'preview' (chỉ kiểm tra) | 'commit' (kiểm tra lại rồi ghi kho).
+ * Có dòng lỗi thì không ghi dòng nào; client luôn gửi lại đúng file vừa xem trước nên server tự kiểm tra lại từ đầu.
+ */
+export async function importStockAction(fd: FormData) {
+  const staff = await requireStaff();
+  const f = fd.get('file');
+  if (!(f instanceof File) || !f.size) return { ok: false as const, error: 'Chưa chọn file' };
+  if (!/\.xlsx$/i.test(f.name)) return { ok: false as const, error: 'Chỉ nhận file Excel .xlsx (tải file mẫu ở bước 1)' };
+  if (f.size > MAX_IMPORT_BYTES) return { ok: false as const, error: 'File quá lớn (tối đa 2MB)' };
+
+  const parsed = await parseStockImport(Buffer.from(await f.arrayBuffer()));
+  if (!parsed.ok) return { ok: false as const, error: parsed.error };
+  const { rows, skipped } = parsed;
+  const view = rows.map(({ slug: _slug, idx: _idx, storeId: _storeId, ...r }) => r);
+  const preview = { ok: true as const, committed: false as const, rows: view, skipped };
+
+  if (fd.get('mode') !== 'commit') return preview;
+  if (!rows.length) return { ok: false as const, error: 'Không có dòng nào có Số lượng nhập. Điền số lượng rồi tải lại.' };
+  if (rows.some((r) => r.errors.length)) return preview;
+
+  try {
+    const done = await applyStockImport(rows, actorName(staff));
+    refreshCatalog();
+    return { ok: true as const, committed: true as const, rows: view, skipped, ...done };
+  } catch (e) {
+    return { ok: false as const, error: e instanceof Error ? e.message : 'Có lỗi, chưa nhập dòng nào. Vui lòng thử lại.' };
+  }
 }

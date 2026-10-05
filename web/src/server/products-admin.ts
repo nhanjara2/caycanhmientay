@@ -8,7 +8,7 @@ import { db, schema } from './db';
 import { applyStock } from './inventory';
 import type { SavedImage } from './uploads';
 
-const { products, productOptions, productImages } = schema;
+const { products, productOptions, productImages, orderItems, stockLots, stockMoves } = schema;
 
 /** Thông số bắt buộc với thuốc BVTV (BRANDBOOK + AdminProductForm). */
 export const PESTICIDE_REQUIRED = ['Số đăng ký', 'Hoạt chất', 'Liều pha', 'Thời gian cách ly'] as const;
@@ -192,4 +192,23 @@ export async function saveProduct(input: ProductInput, actor: string): Promise<S
 export async function setProductActive(slug: string, active: boolean) {
   const r = await db.update(products).set({ active }).where(eq(products.slug, slug)).returning({ slug: products.slug });
   return r.length > 0;
+}
+
+export type DeleteResult = { ok: true } | { ok: false; error: string };
+
+/**
+ * Xóa hẳn sản phẩm (kèm quy cách, ảnh, đánh giá, hỏi đáp, yêu thích… theo khóa ngoại) và lô/lịch sử tồn kho.
+ * Sản phẩm đã có trong đơn hàng thì không xóa: bảo hành, vườn của tôi và báo cáo còn tham chiếu — chỉ ẩn.
+ */
+export async function deleteProduct(slug: string): Promise<DeleteResult> {
+  return db.transaction(async (tx) => {
+    const [p] = await tx.select({ slug: products.slug }).from(products).where(eq(products.slug, slug)).for('update');
+    if (!p) return { ok: false as const, error: 'Không tìm thấy sản phẩm' };
+    const [{ n }] = await tx.select({ n: count() }).from(orderItems).where(eq(orderItems.productSlug, slug));
+    if (n > 0) return { ok: false as const, error: `Sản phẩm đã có trong ${n} dòng đơn hàng nên không thể xóa. Hãy chuyển sang “Ẩn” để ngừng bán.` };
+    await tx.delete(stockMoves).where(eq(stockMoves.productSlug, slug));
+    await tx.delete(stockLots).where(eq(stockLots.productSlug, slug));
+    await tx.delete(products).where(eq(products.slug, slug));
+    return { ok: true as const };
+  });
 }

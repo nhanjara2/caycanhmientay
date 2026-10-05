@@ -7,6 +7,7 @@ import { saveProductAction } from '@/app/actions/admin';
 import { Art, type IconName } from '@/components/Icon';
 import { categories, ELEMENTS, parseYoutubeId, type FengShui } from '@/lib/catalog';
 import { KICH_THUOC, MAU_SAC, VI_TRI } from '@/lib/product-filters';
+import { ProductDeleteButton } from './ProductDeleteButton';
 import { ProductImages, type AdminImage } from './ProductImages';
 
 type Option = { label: string; price: string; oldPrice: string; stock: string; existingStock?: number };
@@ -361,6 +362,7 @@ export function ProductForm({ initial, canEdit }: { initial: ProductFormValue; c
           {error ? <span className="vx-err" role="alert">{error}</span> : saved ? 'Đã lưu' : canEdit ? 'Thay đổi giá có hiệu lực ngay trên website' : 'Chỉ quản trị viên được sửa sản phẩm'}
         </span>
         <Link href="/admin/san-pham" className="vx-btn vx-btn--outline">{canEdit ? 'Hủy' : 'Quay lại'}</Link>
+        {canEdit && v.slug && <ProductDeleteButton slug={v.slug} name={v.name} after="/admin/san-pham" />}
         {canEdit && <button className="vx-btn vx-btn--primary" disabled={pending}>{pending ? 'Đang lưu…' : 'Lưu sản phẩm'}</button>}
       </div>
     </form>
