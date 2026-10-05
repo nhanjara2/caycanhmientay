@@ -1,9 +1,8 @@
-import type { Metadata } from 'next';
-import { ArticleView } from '@/views/ArticleView';
+import { PostDetail, postMetadata, type PostPageProps } from '@/components/PostDetail';
 
-export const metadata: Metadata = { title: '5 dấu hiệu cây kiểng lá bị thối rễ mùa mưa và cách cứu kịp' };
+export const generateMetadata = postMetadata;
 
-// TODO: nạp bài viết theo slug từ CMS (AdminContent); hiện hiển thị bài mẫu.
-export default function Page() {
-  return <ArticleView />;
+/** Bài viết / video Góc chăm cây (soạn ở /admin/noi-dung). */
+export default function Page(props: PostPageProps) {
+  return <PostDetail section="blog" {...props} />;
 }

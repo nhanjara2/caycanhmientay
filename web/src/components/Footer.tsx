@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import { categories } from '@/lib/catalog';
 import { FACEBOOK_URL, SALES_PHONE, YOUTUBE_URL, ZALO_QR, ZALO_URL } from '@/lib/contact';
+import { menuCategories } from '@/server/categories';
 import { FooterGroup } from './FooterGroup';
 import { Icon } from './Icon';
 
@@ -33,7 +33,8 @@ const PAY: [string, string][] = [
 /** 0703005001 → 0703 005 001 */
 const formatPhone = (p: string) => p.replace(/^(\d{4})(\d{3})(\d{3})$/, '$1 $2 $3');
 
-export function Footer() {
+export async function Footer() {
+  const categories = await menuCategories();
   return (
     <footer className="vx-footer">
       <div className="vx-fband">

@@ -1,13 +1,17 @@
-// Kiểu dữ liệu, danh mục và hàm thuần dùng chung cho server và client.
-// Sản phẩm nằm trong database — truy vấn qua src/server/catalog.ts (chỉ chạy trên server).
+// Kiểu dữ liệu và hàm thuần dùng chung cho server và client.
+// Sản phẩm, danh mục nằm trong database — truy vấn qua src/server/catalog.ts, src/server/categories.ts (chỉ chạy trên server).
 import type { IconName } from '@/components/Icon';
 import type { ProductAttrs } from './product-filters';
 
 /** Cách giao khác nhau: cây sống giao riêng bằng xe, vật tư giao nhanh. */
 export type ShipGroup = 'plant' | 'supply';
 
-export type SubCategory = { slug: string; name: string };
-export type Category = { slug: string; name: string; icon: IconName; subs: SubCategory[] };
+/** Một dòng trong bộ thông số điền sẵn của danh mục / nhóm con. `required` = bắt buộc nhập khi lưu sản phẩm. */
+export type SpecField = { name: string; required?: boolean };
+
+/** Danh mục + nhóm con nằm trong database (bảng categories, subcategories) — đọc qua src/server/categories.ts. */
+export type SubCategory = { slug: string; name: string; active: boolean; specs: SpecField[] };
+export type Category = { slug: string; name: string; icon: IconName; active: boolean; specs: SpecField[]; subs: SubCategory[] };
 
 /** Ngũ hành — mệnh hợp với cây. */
 export const ELEMENTS = [
@@ -63,70 +67,64 @@ export type Product = {
   isNew?: boolean;
 };
 
-export const categories: Category[] = [
-  {
-    slug: 'cay-canh', name: 'Cây cảnh', icon: 'plant',
-    subs: [
-      { slug: 'cay-noi-that', name: 'Cây nội thất' },
-      { slug: 'kieng-la', name: 'Kiểng lá' },
-      { slug: 'sen-da-xuong-rong', name: 'Sen đá – Xương rồng' },
-      { slug: 'lan', name: 'Lan' },
-      { slug: 'bonsai', name: 'Bonsai' },
-      { slug: 'cay-san-vuon', name: 'Cây sân vườn' },
-    ],
-  },
-  {
-    slug: 'hat-giong', name: 'Hạt giống – Cây giống', icon: 'sprout',
-    subs: [
-      { slug: 'hat-rau', name: 'Hạt giống rau' },
-      { slug: 'hat-hoa', name: 'Hạt giống hoa' },
-      { slug: 'cay-giong', name: 'Cây giống ăn trái' },
-    ],
-  },
-  {
-    slug: 'thuoc-bvtv', name: 'Thuốc BVTV', icon: 'flask',
-    subs: [
-      { slug: 'tru-sau', name: 'Thuốc trừ sâu' },
-      { slug: 'tru-nam', name: 'Thuốc trừ nấm bệnh' },
-      { slug: 'tru-nhen-rep', name: 'Thuốc trừ nhện – rệp – bọ trĩ' },
-      { slug: 'tru-oc-sen', name: 'Thuốc trừ ốc sên' },
-      { slug: 'sinh-hoc', name: 'Chế phẩm sinh học' },
-    ],
-  },
-  {
-    slug: 'phan-bon', name: 'Phân bón – Dinh dưỡng', icon: 'drop',
-    subs: [
-      { slug: 'phan-tan-cham', name: 'Phân tan chậm' },
-      { slug: 'phan-bon-la', name: 'Phân bón lá' },
-      { slug: 'huu-co', name: 'Phân hữu cơ' },
-      { slug: 'kich-re', name: 'Kích rễ – Kích chồi' },
-    ],
-  },
-  {
-    slug: 'chau', name: 'Chậu – Phụ kiện chậu', icon: 'pot',
-    subs: [
-      { slug: 'chau-su', name: 'Chậu sứ' },
-      { slug: 'chau-nhua', name: 'Chậu nhựa' },
-      { slug: 'chau-tu-tuoi', name: 'Chậu tự tưới' },
-    ],
-  },
-  {
-    slug: 'dat-gia-the', name: 'Đất – Giá thể', icon: 'box',
-    subs: [
-      { slug: 'dat-tron-san', name: 'Đất trộn sẵn' },
-      { slug: 'gia-the', name: 'Giá thể – Xơ dừa' },
-    ],
-  },
-  { slug: 'trang-tri', name: 'Trang trí – Tiểu cảnh', icon: 'leaf', subs: [{ slug: 'tieu-canh', name: 'Tiểu cảnh' }] },
-  { slug: 'dung-cu', name: 'Dụng cụ làm vườn', icon: 'tool', subs: [{ slug: 'keo-cat-tia', name: 'Kéo cắt tỉa' }, { slug: 'binh-tuoi', name: 'Bình tưới' }] },
-  { slug: 'thiet-bi', name: 'Thiết bị – Công nghệ', icon: 'gauge', subs: [{ slug: 'tuoi-tu-dong', name: 'Tưới tự động' }] },
-];
+/** Biểu tượng chọn được cho danh mục / sản phẩm (có trong cả Icon và Art). */
+export const CATEGORY_ICONS = ['plant', 'leaf', 'flower', 'sprout', 'bottle', 'flask', 'drop', 'pot', 'box', 'tool', 'gauge', 'home', 'gift', 'spark'] as const satisfies readonly IconName[];
 
-export const getCategory = (slug: string) => categories.find((c) => c.slug === slug);
+/**
+ * Danh mục mà code dựa vào slug — đổi tên, biểu tượng, thứ tự, ẩn được nhưng không xóa được.
+ * Giá trị = lý do, hiện ở trang admin Danh mục.
+ */
+export const SYSTEM_CATEGORIES: Record<string, string> = {
+  'cay-canh': 'Có bộ lọc đặc điểm cây (vị trí đặt, kích thước, màu); danh mục mặc định của loại “Cây sống”.',
+  'thuoc-bvtv': 'Danh mục mặc định của loại “Thuốc BVTV”.',
+  'phan-bon': 'Nhập kho theo số lô + hạn dùng; danh mục mặc định của loại “Phân bón”.',
+  'hat-giong': 'Nhập kho theo số lô + hạn dùng.',
+  'chau': 'Danh mục mặc định của loại “Chậu – Vật tư”.',
+};
+
+export const findCategory = (list: Category[], slug: string) => list.find((c) => c.slug === slug);
+
+/** Tên danh mục + nhóm con của sản phẩm (danh mục đã xóa thì trả về slug). */
+export function categoryLabel(list: Category[], category: string, sub?: string) {
+  const c = findCategory(list, category);
+  return { cat: c?.name ?? category, sub: sub ? c?.subs.find((s) => s.slug === sub)?.name : undefined };
+}
+
+/**
+ * Bộ thông số của sản phẩm trong danh mục + nhóm con: của danh mục trước, rồi thêm của nhóm con.
+ * Trùng tên thì gộp làm một, bắt buộc nếu một trong hai bắt buộc.
+ */
+export function specTemplate(cat: Category | undefined, sub: string): SpecField[] {
+  const out: SpecField[] = [];
+  for (const f of [...(cat?.specs ?? []), ...(cat?.subs.find((s) => s.slug === sub)?.specs ?? [])]) {
+    const same = out.find((x) => x.name.toLowerCase() === f.name.toLowerCase());
+    if (same) same.required = same.required || f.required;
+    else out.push({ ...f });
+  }
+  return out;
+}
+
+/**
+ * Áp bộ thông số mới vào bảng thông số của sản phẩm: các dòng theo thứ tự bộ thông số trước (giữ giá trị đã nhập),
+ * sau đó các dòng tự thêm có giá trị. Dòng trống không thuộc bộ mới bị bỏ.
+ */
+export function applySpecTemplate(rows: [string, string][], fields: SpecField[]): [string, string][] {
+  const key = (s: string) => s.trim().toLowerCase();
+  const names = new Set(fields.map((f) => key(f.name)));
+  const value = (name: string) => rows.find(([k, v]) => key(k) === key(name) && v.trim())?.[1] ?? rows.find(([k]) => key(k) === key(name))?.[1] ?? '';
+  return [
+    ...fields.map((f): [string, string] => [f.name, value(f.name)]),
+    ...rows.filter(([k, v]) => !names.has(key(k)) && (v.trim() || !k.trim())),
+  ];
+}
 
 /** Tìm không phân biệt dấu: "tri nam" khớp "trị nấm". */
 export const normalize = (s: string) =>
   s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase().trim();
+
+/** "Cây nội thất" → "cay-noi-that" (đường dẫn danh mục / nhóm con). */
+export const toSlug = (s: string, max = 60) => normalize(s).replace(/[^a-z0-9]+/g, '-').slice(0, max).replace(/^-+|-+$/g, '');
+export const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 /** Tối đa ảnh mỗi sản phẩm (mỗi ảnh ~200–500KB sau khi nén). */
 export const MAX_PRODUCT_IMAGES = 10;

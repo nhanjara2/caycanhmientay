@@ -1,12 +1,13 @@
 import { SidebarMenu } from '@/components/SidebarMenu';
 import { categoryCounts } from '@/server/catalog';
+import { menuCategories } from '@/server/categories';
 
 /** ShopLayout: trang chủ, danh mục, tìm kiếm — có SidebarMenu bên trái. */
 export default async function ShopLayout({ children }: { children: React.ReactNode }) {
-  const counts = await categoryCounts();
+  const [categories, counts] = await Promise.all([menuCategories(), categoryCounts()]);
   return (
     <div className="app-shop">
-      <SidebarMenu counts={counts} />
+      <SidebarMenu categories={categories} counts={counts} />
       <main className="app-main">{children}</main>
     </div>
   );

@@ -2,9 +2,9 @@ import Link from 'next/link';
 import { CategoryBlock } from '@/components/CategoryBlock';
 import { FlashSale } from '@/components/FlashSale';
 import { Icon, type IconName } from '@/components/Icon';
-import { categories } from '@/lib/catalog';
 import { ZALO_URL } from '@/lib/contact';
 import { flashProducts, productsIn } from '@/server/catalog';
+import { menuCategories } from '@/server/categories';
 
 const COLLECTIONS: { label: string; icon: IconName; q: string; hot?: boolean; href?: string }[] = [
   { label: 'Giảm sốc', icon: 'tag', q: 'giảm', hot: true },
@@ -30,7 +30,7 @@ const QUICK: { label: string; icon: IconName; href: string }[] = [
 export default async function HomePage() {
   const [flash, blocks] = await Promise.all([
     flashProducts(),
-    Promise.all(categories.map(async (c) => ({ category: c, products: await productsIn(c.slug) }))),
+    menuCategories().then((list) => Promise.all(list.map(async (c) => ({ category: c, products: await productsIn(c.slug) })))),
   ]);
   return (
     <>

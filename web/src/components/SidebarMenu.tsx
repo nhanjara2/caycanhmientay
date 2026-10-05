@@ -3,11 +3,11 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { categories } from '@/lib/catalog';
+import type { Category } from '@/lib/catalog';
 import { Icon } from './Icon';
 
 /** Menu danh mục cố định bên trái (desktop), bảng trượt trái trên tablet/mobile. */
-export function SidebarMenu({ counts }: { counts: Record<string, number> }) {
+export function SidebarMenu({ categories, counts }: { categories: Category[]; counts: Record<string, number> }) {
   const pathname = usePathname();
   const [, , catSlug, subSlug] = pathname.split('/');
   const current = pathname.startsWith('/danh-muc/') ? catSlug : undefined;

@@ -5,7 +5,7 @@ export const ROUTES = {
   account: '/tai-khoan',
   orders: '/tai-khoan/don-hang',
   order: '/tai-khoan/don-hang/MT0095402',
-  article: '/goc-cham-cay/5-dau-hieu-thoi-re-mua-mua',
+  article: '/goc-cham-cay',
   service: '/dich-vu/cho-thue-cay-van-phong',
   quote: '/dich-vu/dat-lich-khao-sat',
   adminOrder: '/admin/don-hang',
@@ -62,9 +62,9 @@ const account = (name, from, extra = {}) => ({
 
 const site = (name, from, extra = {}) => ({
   name, from,
+  ...extra,
   replace: { 'article.vx-pcard': pcard, ...(extra.replace ?? {}) },
   imports: { '@/components/CatalogCard': ['CatalogCard'], ...(extra.imports ?? {}) },
-  ...extra,
 });
 
 const ADMIN_ORDER_CODE = (n, { text }) =>
@@ -81,12 +81,7 @@ const admin = (name, from, extra = {}) => ({
 export const views = [
   // Tài khoản — khung AccountSidebar dùng chung. Hồ sơ, đơn hàng, yêu thích, vườn, lịch chăm cây đã viết tay với dữ liệu thật.
 
-  // Góc chăm cây
-  site('BlogView', 'BlogLayout', {
-    linkByClass: { 'vx-hero__main': ROUTES.article, 'vx-hitem': ROUTES.article, 'vx-feat': ROUTES.article, 'vx-bfeat__main': ROUTES.article, 'vx-promo-card': '/khuyen-mai' },
-    linkInside: { '.vx-blog__main': ROUTES.article },
-  }),
-  site('ArticleView', 'ArticleDetailLayout', { linkInside: { '.ar-side': ROUTES.article } }),
+  // Góc chăm cây (/goc-cham-cay + bài chi tiết), Truyền thông (/tin-tuc) đã viết tay: đọc bài soạn ở /admin/noi-dung.
   // Bệnh cây (/benh-cay) đã viết tay với dữ liệu thật.
 
   // Cửa hàng, chính sách, tin tức
@@ -95,7 +90,6 @@ export const views = [
     replace: { 'nav.vx-pnav': '<PolicyNav />' },
     imports: { '@/components/PolicyNav': ['PolicyNav'] },
   }),
-  site('NewsView', 'NewsCategoryLayout', { linkByClass: { 'nw-hero__main': ROUTES.article, 'nw-sitem': ROUTES.article, 'nw-card': ROUTES.article } }),
   // Khuyến mãi (/khuyen-mai) đã viết tay với dữ liệu thật.
 
   // Flash sale (trang phụ), dịch vụ
@@ -103,7 +97,11 @@ export const views = [
     replace: { 'div.vx-grid': '<FlashSaleGrid />' },
     imports: { '@/components/FlashSaleGrid': ['FlashSaleGrid'] },
   }),
-  site('CampaignView', 'CampaignLayout'),
+  // Cây Tết: khung đầu trang có nền video mai vàng (TetHeroMedia thay vòng tròn minh họa).
+  site('CampaignView', 'CampaignLayout', {
+    replace: { 'div.cp-art': '<TetHeroMedia />' },
+    imports: { '@/components/TetHeroMedia': ['TetHeroMedia'] },
+  }),
   site('ServicesHubView', 'ServicesHubLayout', { links: { 'Xem chi tiết': ROUTES.service } }),
   // Trang cho thuê cây văn phòng: nút báo giá mở form Đặt lịch khảo sát chọn sẵn "Cây văn phòng".
   site('ServiceDetailView', 'ServiceDetailLayout', {
@@ -116,9 +114,8 @@ export const views = [
   // Đặt lịch khảo sát (/dich-vu/dat-lich-khao-sat) đã viết tay: lưu thật, admin xem ở /admin/dich-vu.
   site('BusinessView', 'BusinessLayout'),
 
-  // Admin — khung AdminShell ở src/app/admin/(shell)/layout.tsx. Tổng quan, đơn hàng, khách hàng, khuyến mãi, đánh giá, yêu cầu dịch vụ đã viết tay với dữ liệu thật.
+  // Admin — khung AdminShell ở src/app/admin/(shell)/layout.tsx. Tổng quan, đơn hàng, khách hàng, khuyến mãi, đánh giá, yêu cầu dịch vụ, bài viết & video đã viết tay với dữ liệu thật.
   admin('AdminDeliveryView', 'AdminDelivery'),
-  admin('AdminContentView', 'AdminContent'),
   admin('AdminRolesView', 'AdminRoles'),
   admin('AdminShippingView', 'AdminShippingSettings'),
   admin('AdminMessagesView', 'MessageTemplates'),

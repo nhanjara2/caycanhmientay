@@ -72,6 +72,7 @@ export const policies: Policy[] = [
     'Viên nén xơ dừa ươm hạt (100 viên): ảnh của MatiasMiika, CC BY 3.0, nguồn https://commons.wikimedia.org/wiki/File:Brick_of_coco_coir.JPG',
     'Kéo cắt tỉa cành lưỡi thép SK5: ảnh của KoS, phạm vi công cộng, nguồn https://commons.wikimedia.org/wiki/File:Secateur_ouvert.jpg',
     'Hạt giống rau muống lá tre: ảnh của Wee Hong, CC BY-SA 4.0, nguồn https://commons.wikimedia.org/wiki/File:Ipomoea_aquatica_at_Organic_Unit,_FP,_UPM.jpg',
+    'Video nền mai vàng ở trang Cây Tết: video của Lê Hoàng Khanh Lê, giấy phép Pexels (dùng miễn phí), nguồn https://www.pexels.com/video/close-up-on-yellow-flowers-11142501/',
     ] },
   ] },
 ];

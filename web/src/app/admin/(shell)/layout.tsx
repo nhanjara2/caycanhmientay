@@ -3,6 +3,7 @@ import { AdminShell } from '@/components/AdminShell';
 import { publicUser, requireStaff } from '@/server/auth';
 import { inventorySummary } from '@/server/inventory';
 import { countOrdersByStatus } from '@/server/orders';
+import { countPostsInReview } from '@/server/posts';
 import { countQuestions } from '@/server/questions';
 import { countReviewsByStatus } from '@/server/reviews';
 import { countNewServiceRequests } from '@/server/service-requests';
@@ -23,6 +24,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     // Yêu cầu dịch vụ mới chưa gọi lại
     '/admin/dich-vu': await countNewServiceRequests(),
     '/admin/kho': (await inventorySummary()).low,
+    // Bài viết nhân viên gửi duyệt
+    '/admin/noi-dung': await countPostsInReview(),
     // Đánh giá 1–2★ chờ duyệt + câu hỏi chưa trả lời + câu trả lời của khách chờ duyệt
     '/admin/danh-gia': await (async () => {
       const qc = await countQuestions();

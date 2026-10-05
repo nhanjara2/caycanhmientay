@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Icon, Thumb } from '@/components/Icon';
-import { getCategory } from '@/lib/catalog';
+import { findCategory } from '@/lib/catalog';
 import { money } from '@/lib/format';
 import { requireStaff } from '@/server/auth';
+import { getCategories } from '@/server/categories';
 import { dashboardStats } from '@/server/stats';
 
 export const metadata: Metadata = { title: 'Tổng quan' };
@@ -19,7 +20,7 @@ function Delta({ now, before, unit = '%' }: { now: number; before: number; unit?
 /** AdminDashboard với số liệu thật: KPI, doanh thu 14 ngày, việc cần xử lý, nhóm hàng, tồn kho thấp. */
 export default async function AdminDashboardPage() {
   await requireStaff();
-  const s = await dashboardStats();
+  const [s, cats] = await Promise.all([dashboardStats(), getCategories()]);
   const maxDay = Math.max(1, ...s.days.map((d) => d.revenue));
   const catTotal = s.byCategory.reduce((a, c) => a + c.sum, 0) || 1;
 
@@ -82,7 +83,7 @@ export default async function AdminDashboardPage() {
               <div className="ad-bars">
                 {s.byCategory.sort((a, b) => b.sum - a.sum).map((c) => (
                   <div key={c.category}>
-                    <span>{getCategory(c.category)?.name ?? c.category}</span>
+                    <span>{findCategory(cats, c.category)?.name ?? c.category}</span>
                     <i><em style={{ width: `${(c.sum / catTotal) * 100}%` }} /></i>
                     <b>{short(c.sum)}</b>
                   </div>

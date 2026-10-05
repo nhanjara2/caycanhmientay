@@ -1,7 +1,8 @@
 import 'server-only';
 import { and, desc, eq, ilike, or, sql } from 'drizzle-orm';
 import { db, schema } from './db';
-import { categories } from '@/lib/catalog';
+import { findCategory } from '@/lib/catalog';
+import { getCategories } from './categories';
 import { getProducts } from './catalog';
 import { listOrdersForCustomer } from './orders';
 import { listAddresses } from './addresses';
@@ -61,7 +62,8 @@ export async function getCustomerDetail(id: number) {
   const products = await getProducts([...qtyBySlug.keys()]);
   const qtyByCategory = new Map<string, number>();
   for (const p of products) qtyByCategory.set(p.category, (qtyByCategory.get(p.category) ?? 0) + (qtyBySlug.get(p.slug) ?? 0));
-  const categoryName = (slug: string) => categories.find((c) => c.slug === slug)?.name ?? slug;
+  const cats = await getCategories();
+  const categoryName = (slug: string) => findCategory(cats, slug)?.name ?? slug;
   const interests = [...qtyByCategory.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([category]) => categoryName(category));
 
   return { user, orders: orderList, spend, addresses, warranty, interests };

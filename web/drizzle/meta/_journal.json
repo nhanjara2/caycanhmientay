@@ -127,6 +127,20 @@
       "when": 1791192604043,
       "tag": "0017_user_avatar",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1791207059602,
+      "tag": "0018_categories",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1791208123872,
+      "tag": "0019_posts",
+      "breakpoints": true
     }
   ]
 }

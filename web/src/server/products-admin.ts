@@ -1,9 +1,10 @@
 import 'server-only';
 import { and, asc, count, desc, eq, ilike, or, sql } from 'drizzle-orm';
 import * as z from 'zod';
-import { categories, ELEMENTS, getCategory, MAX_PRODUCT_IMAGES, normalize, parseYoutubeId, productImageUrl, type FengShui } from '@/lib/catalog';
+import { ELEMENTS, findCategory, MAX_PRODUCT_IMAGES, normalize, parseYoutubeId, productImageUrl, specTemplate, type FengShui } from '@/lib/catalog';
 import { attrKeys, type ProductAttrs } from '@/lib/product-filters';
 import { mainImageOf } from './catalog';
+import { getCategories } from './categories';
 import { db, schema } from './db';
 import { applyStock } from './inventory';
 import type { SavedImage } from './uploads';
@@ -20,8 +21,9 @@ const money = z.number().int().min(0).max(1_000_000_000);
 export const ProductInputSchema = z.object({
   slug: z.string().max(120).optional(), // có = sửa, không có = tạo mới
   name: z.string().trim().min(5, 'Tên sản phẩm cần ít nhất 5 ký tự').max(120, 'Tên tối đa 120 ký tự'),
-  category: z.string().refine((c) => categories.some((x) => x.slug === c), 'Chọn danh mục'),
-  sub: z.string().min(1, 'Chọn nhóm con'),
+  // danh mục / nhóm con có thật + thông số bắt buộc: kiểm tra trong saveProduct (danh mục nằm trong database)
+  category: z.string().min(1, 'Chọn danh mục').max(60),
+  sub: z.string().min(1, 'Chọn nhóm con').max(60),
   icon: z.enum(PRODUCT_ICONS),
   origin: z.string().trim().min(1, 'Nhập xuất xứ').max(60),
   ship: z.enum(['plant', 'supply']),
@@ -62,8 +64,6 @@ export const ProductInputSchema = z.object({
     stock: z.number().int().min(0).max(100_000).optional(), // chỉ dùng khi tạo quy cách mới
   })).min(1, 'Cần ít nhất 1 quy cách').max(10),
 }).superRefine((v, ctx) => {
-  const cat = getCategory(v.category);
-  if (cat && !cat.subs.some((s) => s.slug === v.sub)) ctx.addIssue({ code: 'custom', path: ['sub'], message: 'Nhóm con không thuộc danh mục' });
   v.options.forEach((o, i) => {
     if (o.oldPrice !== null && o.oldPrice <= o.price) ctx.addIssue({ code: 'custom', path: ['options', i, 'oldPrice'], message: `Quy cách “${o.label}”: giá gốc phải lớn hơn giá bán` });
   });
@@ -139,7 +139,19 @@ export async function moveProductImage(slug: string, id: number, to: 'first' | '
 
 export type SaveResult = { ok: true; slug: string } | { ok: false; error: string };
 
+/** Danh mục + nhóm con phải có thật; thông số đánh dấu bắt buộc trong danh mục / nhóm con phải có giá trị. */
+async function checkCategory(input: ProductInput): Promise<string | null> {
+  const cat = findCategory(await getCategories(), input.category);
+  if (!cat) return 'Chọn danh mục';
+  if (!cat.subs.some((s) => s.slug === input.sub)) return 'Chọn nhóm con thuộc danh mục';
+  const has = new Set(input.specs.map(([k]) => k.toLowerCase()));
+  const miss = specTemplate(cat, input.sub).filter((f) => f.required && !has.has(f.name.toLowerCase()));
+  return miss.length ? `Danh mục “${cat.name}” bắt buộc nhập thông số: ${miss.map((f) => f.name).join(', ')}` : null;
+}
+
 export async function saveProduct(input: ProductInput, actor: string): Promise<SaveResult> {
+  const bad = await checkCategory(input);
+  if (bad) return { ok: false, error: bad };
   const values = {
     name: input.name, category: input.category, sub: input.sub, icon: input.icon, origin: input.origin, ship: input.ship,
     pesticide: input.pesticide, unit: input.unit, spec: input.spec, lead: input.lead, specs: input.specs, active: input.active,

@@ -1,7 +1,8 @@
 // Schema database (PostgreSQL / Supabase qua Drizzle). Đổi schema xong chạy `npm run db:generate` để tạo migration.
 import { sql } from 'drizzle-orm';
-import type { FengShui } from '../../lib/catalog';
+import type { FengShui, SpecField } from '../../lib/catalog';
 import type { Disease } from '../../lib/diseases';
+import type { PostBlock } from '../../lib/posts';
 import type { ProductAttrs } from '../../lib/product-filters';
 import { SERVICE_STAGES, SERVICE_TYPES, SOURCES } from '../../lib/service-labels';
 import { boolean, customType, doublePrecision, index, integer, jsonb, pgTable, primaryKey, serial, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
@@ -56,6 +57,32 @@ export const sessions = pgTable('sessions', {
 }, (t) => [index('sessions_user_idx').on(t.userId)]);
 
 // ---- Sản phẩm -------------------------------------------------------------------------------
+
+/**
+ * Danh mục sản phẩm (menu trái, trang /danh-muc/<slug>), admin sửa ở /admin/danh-muc.
+ * Slug không đổi sau khi tạo: sản phẩm và đường dẫn tham chiếu theo slug. `specs` = bộ thông số điền sẵn khi thêm sản phẩm.
+ */
+export const categories = pgTable('categories', {
+  slug: text('slug').primaryKey(),
+  name: text('name').notNull(),
+  icon: text('icon').notNull(),
+  sort: integer('sort').notNull().default(0),
+  /** false = ẩn khỏi menu, trang chủ, chân trang (trang danh mục và sản phẩm vẫn mở được). */
+  active: boolean('active').notNull().default(true),
+  specs: jsonb('specs').$type<SpecField[]>().notNull().default(sql`'[]'::jsonb`),
+  createdAt: createdAt(),
+});
+
+/** Nhóm con trong danh mục (/danh-muc/<danh mục>/<nhóm con>). `specs` = thông số thêm, nối sau bộ của danh mục. */
+export const subcategories = pgTable('subcategories', {
+  categorySlug: text('category_slug').notNull().references(() => categories.slug, { onDelete: 'cascade' }),
+  slug: text('slug').notNull(),
+  name: text('name').notNull(),
+  sort: integer('sort').notNull().default(0),
+  active: boolean('active').notNull().default(true),
+  specs: jsonb('specs').$type<SpecField[]>().notNull().default(sql`'[]'::jsonb`),
+  createdAt: createdAt(),
+}, (t) => [primaryKey({ columns: [t.categorySlug, t.slug] })]);
 
 export const products = pgTable('products', {
   slug: text('slug').primaryKey(),
@@ -133,6 +160,60 @@ export const diseases = pgTable('diseases', {
   updatedAt: ts('updated_at').notNull().defaultNow(),
   createdAt: createdAt(),
 });
+
+// ---- Bài viết & video (Góc chăm cây, Truyền thông) --------------------------------------------
+
+/**
+ * Bài viết / video ngắn. Nội dung là danh sách khối (`body`, lib/posts.ts). Khách chỉ thấy bài
+ * `status = 'published'` có `published_at` <= bây giờ (published_at ở tương lai = lên lịch).
+ */
+export const posts = pgTable('posts', {
+  id: serial('id').primaryKey(),
+  /** Sinh từ tiêu đề; sửa được tới khi bài đăng lần đầu, sau đó giữ nguyên để link cũ không chết. */
+  slug: text('slug').notNull().unique(),
+  kind: text('kind', { enum: ['article', 'video'] }).notNull().default('article'),
+  /** Chuyên mục (CATEGORIES trong lib/posts.ts) — quyết định bài thuộc Góc chăm cây hay Truyền thông. */
+  category: text('category').notNull(),
+  title: text('title').notNull(),
+  /** Đoạn dẫn: hiện dưới tiêu đề và trên thẻ bài. */
+  excerpt: text('excerpt').notNull().default(''),
+  body: jsonb('body').$type<PostBlock[]>().notNull().default(sql`'[]'::jsonb`),
+  /** Tên file ảnh bìa trong post_images. */
+  coverFile: text('cover_file'),
+  youtubeId: text('youtube_id'),
+  /** Video dọc (YouTube Shorts) → khung 9:16. */
+  videoVertical: boolean('video_vertical').notNull().default(false),
+  videoSeconds: integer('video_seconds'),
+  readMinutes: integer('read_minutes').notNull().default(1),
+  authorName: text('author_name').notNull().default(''),
+  reviewerName: text('reviewer_name').notNull().default(''),
+  reviewerTitle: text('reviewer_title').notNull().default(''),
+  /** Slug bài bệnh trong thư viện /benh-cay (không ràng buộc khóa ngoại). */
+  diseases: jsonb('diseases').$type<string[]>().notNull().default(sql`'[]'::jsonb`),
+  tags: jsonb('tags').$type<string[]>().notNull().default(sql`'[]'::jsonb`),
+  seoDescription: text('seo_description').notNull().default(''),
+  /** Ghim lên khối nổi bật đầu trang. */
+  featured: boolean('featured').notNull().default(false),
+  status: text('status', { enum: ['draft', 'review', 'published'] }).notNull().default('draft'),
+  publishedAt: ts('published_at'),
+  views: integer('views').notNull().default(0),
+  helpfulYes: integer('helpful_yes').notNull().default(0),
+  helpfulNo: integer('helpful_no').notNull().default(0),
+  createdBy: integer('created_by').references(() => users.id, { onDelete: 'set null' }),
+  updatedBy: text('updated_by'),
+  updatedAt: ts('updated_at').notNull().defaultNow(),
+  createdAt: createdAt(),
+}, (t) => [index('posts_status_idx').on(t.status, t.publishedAt), index('posts_category_idx').on(t.category)]);
+
+/** Ảnh bìa + ảnh trong bài (công khai, phục vụ qua /api/post-images/[file]). Xóa bài → xóa ảnh. */
+export const postImages = pgTable('post_images', {
+  id: serial('id').primaryKey(),
+  postId: integer('post_id').notNull().references(() => posts.id, { onDelete: 'cascade' }),
+  file: text('file').notNull().unique(),
+  mime: text('mime').notNull(),
+  data: bytea('data').notNull(),
+  createdAt: createdAt(),
+}, (t) => [index('post_images_post_idx').on(t.postId)]);
 
 // ---- Khuyến mãi ------------------------------------------------------------------------------
 

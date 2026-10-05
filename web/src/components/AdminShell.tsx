@@ -21,6 +21,7 @@ const I = {
   users: <><circle cx="9" cy="8" r="3.5" /><path d="M3 20c.8-3.5 3-5 6-5s5.2 1.5 6 5" /><circle cx="17" cy="9" r="2.5" /><path d="M16 14c2.5 0 4.2 1.4 5 4" /></>,
   tag: <><path d="M3 12V4h8l10 10-8 8z" /><circle cx="7.5" cy="8.5" r="1.5" /></>,
   plant: <><path d="M6 12h12l-1.5 8h-9z" /><path d="M12 12V7" /><path d="M12 9c-2-3-5-3-6-2 1 2 4 3 6 2z" /><path d="M12 8c1.5-3 4.5-3.5 6-2.5-1 2-4 3.5-6 2.5z" /></>,
+  list: <><path d="M9 6h11M9 12h11M9 18h11" /><rect x="3.5" y="4.5" width="3" height="3" rx=".5" /><rect x="3.5" y="10.5" width="3" height="3" rx=".5" /><rect x="3.5" y="16.5" width="3" height="3" rx=".5" /></>,
   stock: <><path d="M6 7h12l1 13H5z" /><path d="M9 7V5a3 3 0 0 1 6 0v2" /></>,
   inbound: <path d="M4 9h16l-1-4H5zM5 9v11h14V9M10 20v-5h4v5" />,
   doc: <><path d="M6 3h9l4 4v14H6z" /><path d="M9 12h7M9 16h7" /></>,
@@ -50,6 +51,7 @@ export const ADMIN_NAV: { group: string; items: { href: string; label: string; i
   ] },
   { group: 'HÀNG HÓA', items: [
     { href: '/admin/san-pham', label: 'Sản phẩm', icon: 'plant' },
+    { href: '/admin/danh-muc', label: 'Danh mục & thông số', icon: 'list' },
     { href: '/admin/kho', label: 'Kho & tồn kho', icon: 'stock' },
     { href: '/admin/nhap-hang', label: 'Nhập hàng', icon: 'inbound' },
   ] },

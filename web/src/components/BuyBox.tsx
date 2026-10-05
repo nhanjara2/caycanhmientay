@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { getCategory, type Product } from '@/lib/catalog';
+import type { Product } from '@/lib/catalog';
 import { useCart } from '@/lib/cart';
 import { ZALO_URL } from '@/lib/contact';
 import { compact, money } from '@/lib/format';
@@ -12,14 +12,17 @@ import { Icon } from './Icon';
 import { WishlistHeart } from './WishlistHeart';
 
 /** Khối mua bên phải trang chi tiết: tên → meta → giá → chọn đơn vị/số lượng → CTA → khuyến mãi → mô tả ngắn → SpecTable. */
-export function BuyBox({ product: p, wishlisted = false }: { product: Product; wishlisted?: boolean }) {
+export function BuyBox({ product: p, category, wishlisted = false }: {
+  product: Product;
+  /** Tên danh mục / nhóm con (đọc từ database ở trang). */
+  category: { cat: string; sub?: string };
+  wishlisted?: boolean;
+}) {
   const { add } = useCart();
   const router = useRouter();
   const [opt, setOpt] = useState(0);
   const [qty, setQty] = useState(1);
   const u = p.options[opt];
-  const cat = getCategory(p.category);
-  const sub = cat?.subs.find((s) => s.slug === p.sub);
 
   return (
     <div className="vx-buy">
@@ -99,7 +102,7 @@ export function BuyBox({ product: p, wishlisted = false }: { product: Product; w
         ))}
         <dt>Danh mục</dt>
         <dd>
-          <Link href={`/danh-muc/${p.category}/${p.sub}`} style={{ display: 'inline' }}>{sub?.name ?? cat?.name}</Link>
+          <Link href={`/danh-muc/${p.category}/${p.sub}`} style={{ display: 'inline' }}>{category.sub ?? category.cat}</Link>
         </dd>
       </dl>
     </div>

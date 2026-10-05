@@ -7,11 +7,12 @@ import { ProductGallery } from '@/components/ProductGallery';
 import { ProductGrid } from '@/components/ProductCard';
 import { ProductQnA } from '@/components/ProductQnA';
 import { ProductReviews } from '@/components/ProductReviews';
-import { elementName, getCategory, type Product } from '@/lib/catalog';
+import { categoryLabel, elementName, type Product } from '@/lib/catalog';
 import { YOUTUBE_URL } from '@/lib/contact';
 import { reviewStats } from '@/lib/reviews';
 import { boughtTogether, getProduct } from '@/server/catalog';
 import { getCurrentUser } from '@/server/auth';
+import { getCategories } from '@/server/categories';
 import { productFaqs } from '@/server/faqs';
 import { productQuestions } from '@/server/questions';
 import { productReviews } from '@/server/reviews';
@@ -117,16 +118,15 @@ export default async function ProductPage({ params }: Props) {
   ]);
   // Số sao ở BuyBox tính từ đánh giá thật (products.rating/reviews là số mẫu, không dùng để hiển thị)
   const rs = reviewStats(reviews);
-  const cat = getCategory(p.category);
-  const sub = cat?.subs.find((s) => s.slug === p.sub);
+  const label = categoryLabel(await getCategories(), p.category, p.sub);
 
   return (
     <div className="vx-pdpage app-page">
       <Breadcrumb
         items={[
           { label: 'Trang chủ', href: '/' },
-          { label: cat?.name ?? '', href: `/danh-muc/${p.category}` },
-          ...(sub ? [{ label: sub.name, href: `/danh-muc/${p.category}/${p.sub}` }] : []),
+          { label: label.cat, href: `/danh-muc/${p.category}` },
+          ...(label.sub ? [{ label: label.sub, href: `/danh-muc/${p.category}/${p.sub}` }] : []),
           { label: p.name },
         ]}
       />
@@ -142,7 +142,7 @@ export default async function ProductPage({ params }: Props) {
             <div><Icon name="chat" /><span><b>Kỹ sư tư vấn</b><small>miễn phí qua Zalo</small></span></div>
           </div>
         </div>
-        <BuyBox product={{ ...p, rating: rs.avg, reviews: rs.count }} wishlisted={wishlisted} />
+        <BuyBox product={{ ...p, rating: rs.avg, reviews: rs.count }} category={label} wishlisted={wishlisted} />
       </section>
 
       <Content p={p} faq={faq.length > 0} />

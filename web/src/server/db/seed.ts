@@ -1,8 +1,10 @@
 // Nạp dữ liệu mẫu khi database còn trống: 3 cửa hàng + sản phẩm mẫu (src/lib/seed-products.ts)
-// + bài bệnh cây (src/lib/seed-diseases.ts).
+// + bài bệnh cây (src/lib/seed-diseases.ts) + bài Góc chăm cây (src/lib/seed-posts.ts).
 import { and, asc, count, eq, isNull } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { seedDiseases } from '@/lib/seed-diseases';
+import { readMinutes } from '@/lib/posts';
+import { seedPosts } from '@/lib/seed-posts';
 import { seedProducts } from '@/lib/seed-products';
 import { tracksLots } from '@/lib/stock';
 import { WELCOME_CODE, WELCOME_DEFAULT } from '@/lib/voucher-labels';
@@ -64,6 +66,21 @@ export async function seedDiseasesIfEmpty(db: NodePgDatabase<typeof schema>) {
   await db.insert(schema.diseases).values(seedDiseases.map((d) => ({
     ...d, aliases: d.aliases ?? [], confusions: d.confusions ?? [], prevention: d.prevention ?? [], safety: d.safety ?? '', products: d.products ?? [],
   })));
+  return true;
+}
+
+/** Nạp bài Góc chăm cây mẫu (đã đăng, cách nhau 1 ngày) khi bảng `posts` còn trống. */
+export async function seedPostsIfEmpty(db: NodePgDatabase<typeof schema>) {
+  const [{ n }] = await db.select({ n: count() }).from(schema.posts);
+  if (n > 0) return false;
+  const now = Date.now();
+  await db.insert(schema.posts).values(seedPosts.map((p, i) => {
+    const at = new Date(now - i * 86_400_000);
+    return {
+      ...p, kind: 'article' as const, authorName: 'Cây Cảnh Miền Tây', status: 'published' as const,
+      readMinutes: readMinutes(p.title, p.excerpt, p.body), publishedAt: at, updatedAt: at, updatedBy: 'Dữ liệu mẫu',
+    };
+  }));
   return true;
 }
 

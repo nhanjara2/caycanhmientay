@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition, type FormEvent } from 'react';
 import { saveProductAction } from '@/app/actions/admin';
 import { Art, type IconName } from '@/components/Icon';
-import { categories, ELEMENTS, parseYoutubeId, type FengShui } from '@/lib/catalog';
+import { applySpecTemplate, ELEMENTS, parseYoutubeId, specTemplate, type Category, type FengShui } from '@/lib/catalog';
 import { KICH_THUOC, MAU_SAC, VI_TRI } from '@/lib/product-filters';
 import { ProductDeleteButton } from './ProductDeleteButton';
 import { ProductImages, type AdminImage } from './ProductImages';
@@ -36,13 +36,17 @@ export type ProductFormValue = {
   options: { label: string; price: number; oldPrice: number | null; stock: number }[];
 };
 
-/** Loại sản phẩm quyết định bộ thông số mặc định (AdminProductForm). */
+/**
+ * Loại sản phẩm quyết định cách giao, thuốc BVTV hay không và danh mục gợi ý (AdminProductForm).
+ * Bộ thông số điền sẵn lấy theo danh mục + nhóm con (admin sửa ở /admin/danh-muc).
+ */
 const KINDS = {
-  plant: { label: 'Cây sống', ship: 'plant', pesticide: false, category: 'cay-canh', icon: 'plant', specs: ['Chiều cao', 'Chậu', 'Ánh sáng', 'Tưới nước', 'Nguồn gốc', 'An toàn thú cưng'] },
-  pesticide: { label: 'Thuốc BVTV', ship: 'supply', pesticide: true, category: 'thuoc-bvtv', icon: 'bottle', specs: ['Số đăng ký', 'Hoạt chất', 'Liều pha', 'Thời gian cách ly', 'Quy cách'] },
-  fertilizer: { label: 'Phân bón', ship: 'supply', pesticide: false, category: 'phan-bon', icon: 'drop', specs: ['Thành phần', 'Liều dùng', 'Quy cách'] },
-  supply: { label: 'Chậu – Vật tư', ship: 'supply', pesticide: false, category: 'chau', icon: 'pot', specs: ['Kích thước', 'Chất liệu', 'Quy cách'] },
+  plant: { label: 'Cây sống', ship: 'plant', pesticide: false, category: 'cay-canh', icon: 'plant' },
+  pesticide: { label: 'Thuốc BVTV', ship: 'supply', pesticide: true, category: 'thuoc-bvtv', icon: 'bottle' },
+  fertilizer: { label: 'Phân bón', ship: 'supply', pesticide: false, category: 'phan-bon', icon: 'drop' },
+  supply: { label: 'Chậu – Vật tư', ship: 'supply', pesticide: false, category: 'chau', icon: 'pot' },
 } as const;
+const PESTICIDE_SPECS = ['Số đăng ký', 'Hoạt chất', 'Liều pha', 'Thời gian cách ly'];
 type Kind = keyof typeof KINDS;
 const kindOf = (v: ProductFormValue): Kind => (v.pesticide ? 'pesticide' : v.ship === 'plant' ? 'plant' : v.category === 'phan-bon' ? 'fertilizer' : 'supply');
 
@@ -50,9 +54,20 @@ const ICONS: IconName[] = ['plant', 'leaf', 'flower', 'sprout', 'bottle', 'flask
 const digits = (s: string) => s.replace(/\D/g, '');
 const fmt = (s: string) => (digits(s) ? Number(digits(s)).toLocaleString('vi-VN') : '');
 
-export function ProductForm({ initial, canEdit }: { initial: ProductFormValue; canEdit: boolean }) {
+/** Nhóm con mặc định khi đổi danh mục: giữ nhóm cũ nếu có, không thì nhóm đang hiện đầu tiên. */
+const pickSub = (c: Category | undefined, current: string) =>
+  c?.subs.some((s) => s.slug === current) ? current : (c?.subs.find((s) => s.active) ?? c?.subs[0])?.slug ?? '';
+
+export function ProductForm({ initial, categories, canEdit }: { initial: ProductFormValue; categories: Category[]; canEdit: boolean }) {
   const router = useRouter();
-  const [v, setV] = useState(initial);
+  const findCat = (slug: string) => categories.find((c) => c.slug === slug);
+  const [v, setV] = useState(() => {
+    // sản phẩm mới: danh mục mặc định có thể đã bị đổi → lấy danh mục đầu tiên có nhóm con
+    const c = findCat(initial.category) ?? categories.find((x) => x.subs.length);
+    const category = c?.slug ?? initial.category;
+    const sub = pickSub(c, initial.sub);
+    return { ...initial, category, sub, specs: applySpecTemplate(initial.specs, specTemplate(c, sub)) };
+  });
   const [opts, setOpts] = useState<Option[]>(
     initial.options.map((o) => ({ label: o.label, price: fmt(String(o.price)), oldPrice: o.oldPrice ? fmt(String(o.oldPrice)) : '', stock: '', existingStock: initial.slug ? o.stock : undefined })),
   );
@@ -65,18 +80,24 @@ export function ProductForm({ initial, canEdit }: { initial: ProductFormValue; c
   const setFs = (patch: Partial<FengShui>) => set('fengshui', { ...v.fengshui, ...patch });
   const setAttrs = (patch: Partial<ProductFormValue['attrs']>) => set('attrs', { ...v.attrs, ...patch });
   const toggle = (list: string[], key: string, all: { key: string }[]) => all.map((o) => o.key).filter((k) => (k === key ? !list.includes(k) : list.includes(k)));
-  const cat = categories.find((c) => c.slug === v.category) ?? categories[0];
+  const cat = findCat(v.category);
+  const template = specTemplate(cat, v.sub);
+  // gợi ý tên thông số khi gõ: mọi thông số trong các danh mục / nhóm con
+  const specNames = [...new Set(categories.flatMap((c) => [...c.specs, ...c.subs.flatMap((s) => s.specs)].map((f) => f.name)))];
+
+  /** Đổi danh mục / nhóm con: giữ thông số đã nhập, thêm dòng trống cho thông số của bộ mới, bỏ dòng trống của bộ cũ. */
+  const moveTo = (category: string, sub: string, patch: Partial<ProductFormValue> = {}) => {
+    const c = findCat(category);
+    const s = pickSub(c, sub);
+    setV((x) => ({ ...x, ...patch, category: c ? category : x.category, sub: c ? s : x.sub, specs: applySpecTemplate(x.specs, specTemplate(c ?? findCat(x.category), c ? s : x.sub)) }));
+    setSaved(false);
+  };
 
   const pickKind = (k: Kind) => {
     const d = KINDS[k];
-    const have = new Map(v.specs);
-    const cat = categories.find((c) => c.slug === d.category)!;
-    setV((x) => ({
-      ...x, ship: d.ship, pesticide: d.pesticide, icon: x.slug ? x.icon : d.icon,
-      category: d.category, sub: cat.subs.some((s) => s.slug === x.sub) ? x.sub : cat.subs[0].slug,
-      // giữ thông số đã nhập, thêm dòng trống cho thông số của loại mới
-      specs: [...x.specs, ...d.specs.filter((s) => !have.has(s)).map((s) => [s, ''] as [string, string])],
-    }));
+    // danh mục gợi ý của loại (nếu còn và có nhóm con), không thì giữ danh mục đang chọn
+    const target = findCat(d.category)?.subs.length ? d.category : v.category;
+    moveTo(target, v.sub, { ship: d.ship, pesticide: d.pesticide, icon: v.slug ? v.icon : d.icon });
   };
 
   const submit = (e: FormEvent) => {
@@ -295,21 +316,27 @@ export function ProductForm({ initial, canEdit }: { initial: ProductFormValue; c
 
             <div className="ad-card">
               <div className="ad-card__h">
-                Thông số {KINDS[kind].label.toLowerCase()}
+                Thông số
                 <a style={{ cursor: 'pointer' }} onClick={() => set('specs', [...v.specs, ['', '']])}>+ Thêm dòng</a>
               </div>
               <div className="ad-card__b">
+                <datalist id="pf-spec-names">{specNames.map((n) => <option key={n} value={n} />)}</datalist>
                 {v.specs.map(([k, val], i) => {
                   const upd = (pos: 0 | 1, s: string) => set('specs', v.specs.map((row, j) => (j === i ? (pos === 0 ? [s, row[1]] : [row[0], s]) : row)) as [string, string][]);
-                  const required = v.pesticide && ['Số đăng ký', 'Hoạt chất', 'Liều pha', 'Thời gian cách ly'].includes(k);
+                  const pesticideReq = v.pesticide && PESTICIDE_SPECS.includes(k);
+                  const required = pesticideReq || template.some((f) => f.required && f.name.toLowerCase() === k.trim().toLowerCase());
                   return (
                     <div key={i} className="ad-frow app-specrow">
-                      <input className="vx-input" value={k} onChange={(e) => upd(0, e.target.value)} placeholder="Tên thông số" aria-label="Tên thông số" />
-                      <input className="vx-input" value={val} onChange={(e) => upd(1, e.target.value)} placeholder={required ? 'Bắt buộc với thuốc BVTV' : 'Giá trị'} aria-label={k || 'Giá trị'} style={required && !val ? { borderColor: 'var(--danger)' } : undefined} />
+                      <input className="vx-input" value={k} onChange={(e) => upd(0, e.target.value)} placeholder="Tên thông số" aria-label="Tên thông số" list="pf-spec-names" />
+                      <input className="vx-input" value={val} onChange={(e) => upd(1, e.target.value)} placeholder={pesticideReq ? 'Bắt buộc với thuốc BVTV' : required ? 'Bắt buộc' : 'Giá trị'} aria-label={k || 'Giá trị'} style={required && !val.trim() ? { borderColor: 'var(--danger)' } : undefined} />
                       <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" onClick={() => set('specs', v.specs.filter((_, j) => j !== i))} aria-label="Xóa dòng">✕</button>
                     </div>
                   );
                 })}
+                <span className="hint" style={{ fontSize: 11, color: 'var(--ink-muted)' }}>
+                  Các dòng điền sẵn theo danh mục “{cat?.name ?? v.category}”{cat?.subs.find((s) => s.slug === v.sub) ? ` › ${cat.subs.find((s) => s.slug === v.sub)!.name}` : ''}; dòng để trống sẽ không hiện trên web.
+                  {template.some((f) => f.required) && <> Ô viền đỏ là bắt buộc.</>}
+                </span>
                 {v.pesticide && (
                   <span className="hint" style={{ fontSize: 11, color: 'var(--ink-muted)' }}>
                     Thuốc BVTV bắt buộc: <b>Số đăng ký, Hoạt chất, Liều pha, Thời gian cách ly</b>. Giỏ có thuốc sẽ yêu cầu khách xác nhận đã đọc hướng dẫn an toàn.
@@ -338,15 +365,20 @@ export function ProductForm({ initial, canEdit }: { initial: ProductFormValue; c
               <div className="ad-card__b">
                 <div className="ad-f">
                   <label htmlFor="pf-cat">Danh mục <i>*</i></label>
-                  <select id="pf-cat" className="vx-input" value={v.category} onChange={(e) => { const c = categories.find((x) => x.slug === e.target.value)!; setV((x) => ({ ...x, category: c.slug, sub: c.subs[0].slug })); }}>
-                    {categories.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
+                  <select id="pf-cat" className="vx-input" value={v.category} onChange={(e) => moveTo(e.target.value, v.sub)}>
+                    {categories.map((c) => (
+                      <option key={c.slug} value={c.slug} disabled={!c.subs.length}>
+                        {c.name}{!c.subs.length ? ' (chưa có nhóm con)' : !c.active ? ' (đang ẩn)' : ''}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div className="ad-f">
                   <label htmlFor="pf-sub">Nhóm con <i>*</i></label>
-                  <select id="pf-sub" className="vx-input" value={v.sub} onChange={(e) => set('sub', e.target.value)}>
-                    {cat.subs.map((s) => <option key={s.slug} value={s.slug}>{s.name}</option>)}
+                  <select id="pf-sub" className="vx-input" value={v.sub} onChange={(e) => moveTo(v.category, e.target.value)}>
+                    {cat?.subs.map((s) => <option key={s.slug} value={s.slug}>{s.name}{!s.active ? ' (đang ẩn)' : ''}</option>)}
                   </select>
+                  {canEdit && <span className="hint"><Link href={`/admin/danh-muc/${v.category}`}>Sửa danh mục, nhóm con, bộ thông số</Link></span>}
                 </div>
                 <div className="ad-f">
                   <label>Cách giao</label>

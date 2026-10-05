@@ -7,6 +7,8 @@ import { ProductGrid } from '@/components/ProductCard';
 import { SEVERITY, causeOf, partName, plantName } from '@/lib/diseases';
 import { getProducts } from '@/server/catalog';
 import { allDiseases, getDisease } from '@/server/diseases';
+import { categoryOf, postPath } from '@/lib/posts';
+import { postsForDisease } from '@/server/posts';
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -25,7 +27,7 @@ export default async function DiseaseDetailPage({ params }: Props) {
   const live = new Set(all.map((x) => x.slug));
   const cause = causeOf(d.cause);
   // Giữ đúng thứ tự admin đã chọn; sản phẩm ẩn/ngừng bán tự bị bỏ qua.
-  const found = await getProducts(d.products);
+  const [found, posts] = await Promise.all([getProducts(d.products), postsForDisease(d.slug)]);
   const products = d.products.map((s) => found.find((p) => p.slug === s)).filter((p) => p !== undefined);
   const related = all
     .filter((x) => x.slug !== d.slug && (x.cause === d.cause || x.parts.some((p) => d.parts.includes(p))))
@@ -119,6 +121,17 @@ export default async function DiseaseDetailPage({ params }: Props) {
         <section>
           <SectionHeader icon="flask" title={`Sản phẩm xử lý ${shortName(d.name)}`} />
           <ProductGrid products={products} />
+        </section>
+      )}
+
+      {posts.length > 0 && (
+        <section className="vx-dpanel">
+          <div className="vx-dpanel__head"><b>Bài viết Góc chăm cây về bệnh này</b></div>
+          <div className="vx-dlist">
+            {posts.slice(0, 8).map((p) => (
+              <Link key={p.id} href={postPath(p)}>{p.title}<small>{p.kind === 'video' ? 'Video' : categoryOf(p.category)?.name}</small></Link>
+            ))}
+          </div>
         </section>
       )}
 

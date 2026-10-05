@@ -5,11 +5,11 @@ import { Breadcrumb, EmptyState } from '@/components/Blocks';
 import { Icon } from '@/components/Icon';
 import { ProductFilters } from '@/components/ProductFilters';
 import { ProductGrid } from '@/components/ProductCard';
-import { getCategory } from '@/lib/catalog';
 import {
   filterProducts, groupsFor, groupTitle, originOptions, parseSel, selectedCount, staticOptions, toFacet, withQuery, without,
 } from '@/lib/product-filters';
 import { productsIn } from '@/server/catalog';
+import { getCategory } from '@/server/categories';
 import { SORTS, sortProducts } from '@/lib/sort';
 
 type Props = {
@@ -17,22 +17,23 @@ type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
-function resolve(slug: string[]) {
+/** Danh mục / nhóm con đang ẩn khỏi menu vẫn mở được (đường dẫn cũ, breadcrumb của sản phẩm không bị lỗi). */
+async function resolve(slug: string[]) {
   const [catSlug, subSlug, ...rest] = slug;
-  const cat = getCategory(catSlug);
+  const cat = await getCategory(catSlug);
   const sub = subSlug ? cat?.subs.find((s) => s.slug === subSlug) : undefined;
   if (!cat || rest.length || (subSlug && !sub)) return null;
   return { cat, sub };
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const r = resolve((await params).slug);
+  const r = await resolve((await params).slug);
   return { title: r ? (r.sub?.name ?? r.cat.name) : 'Không tìm thấy' };
 }
 
 /** ProductListingLayout: tiêu đề + danh mục con + bộ lọc đa chọn + sắp xếp + lưới 4 cột. Bộ lọc nằm trên đường dẫn (?vi-tri=…&mau=…). */
 export default async function CategoryPage({ params, searchParams }: Props) {
-  const r = resolve((await params).slug);
+  const r = await resolve((await params).slug);
   if (!r) notFound();
   const { cat, sub } = r;
   const sp = await searchParams;
@@ -63,7 +64,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
           {sub?.name ?? cat.name} <small>{items.length} sản phẩm</small>
         </h1>
         <div className="pl-subs">
-          {cat.subs.map((s) => (
+          {cat.subs.filter((s) => s.active || s.slug === sub?.slug).map((s) => (
             <Link
               key={s.slug}
               className="pl-sub"

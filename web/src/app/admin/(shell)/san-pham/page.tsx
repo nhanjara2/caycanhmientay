@@ -3,9 +3,10 @@ import Link from 'next/link';
 import { ProductActiveToggle } from '@/components/admin/ProductActiveToggle';
 import { ProductDeleteButton } from '@/components/admin/ProductDeleteButton';
 import { Icon, Thumb } from '@/components/Icon';
-import { categories, getCategory } from '@/lib/catalog';
+import { categoryLabel, findCategory } from '@/lib/catalog';
 import { money } from '@/lib/format';
 import { requireStaff } from '@/server/auth';
+import { getCategories } from '@/server/categories';
 import { MIN_STOCK } from '@/server/inventory';
 import { listProductsAdmin } from '@/server/products-admin';
 
@@ -16,7 +17,8 @@ type Props = { searchParams: Promise<{ danh_muc?: string; q?: string }> };
 export default async function AdminProductsPage({ searchParams }: Props) {
   const me = await requireStaff();
   const sp = await searchParams;
-  const category = getCategory(sp.danh_muc ?? '')?.slug;
+  const categories = await getCategories();
+  const category = findCategory(categories, sp.danh_muc ?? '')?.slug;
   const q = sp.q?.slice(0, 60);
   const rows = await listProductsAdmin({ category, q });
   const isAdmin = me.role === 'admin';
@@ -25,7 +27,10 @@ export default async function AdminProductsPage({ searchParams }: Props) {
     <div className="ad-body">
       <div className="ad-title">
         <h1>Sản phẩm</h1>
-        {isAdmin && <span className="acts"><Link href="/admin/san-pham/moi" className="vx-btn vx-btn--primary">+ Thêm sản phẩm</Link></span>}
+        <span className="acts">
+          <Link href="/admin/danh-muc" className="vx-btn vx-btn--outline">Danh mục & thông số</Link>
+          {isAdmin && <Link href="/admin/san-pham/moi" className="vx-btn vx-btn--primary">+ Thêm sản phẩm</Link>}
+        </span>
       </div>
       <div className="ad-card">
         <div className="ad-stabs">
@@ -49,7 +54,7 @@ export default async function AdminProductsPage({ searchParams }: Props) {
             </thead>
             <tbody>
               {rows.map((r) => {
-                const cat = getCategory(r.category);
+                const label = categoryLabel(categories, r.category, r.sub);
                 return (
                   <tr key={r.slug}>
                     <td>
@@ -58,7 +63,7 @@ export default async function AdminProductsPage({ searchParams }: Props) {
                         <span><b>{r.name}</b><small>{r.sku} · {r.variants} quy cách{r.pesticide ? ' · Thuốc BVTV' : ''}</small></span>
                       </Link>
                     </td>
-                    <td data-label="Danh mục">{cat?.name}<small>{cat?.subs.find((s) => s.slug === r.sub)?.name}</small></td>
+                    <td data-label="Danh mục">{label.cat}<small>{label.sub}</small></td>
                     <td className="num" data-label="Giá từ">{money(r.minPrice ?? 0)}<small>/ {r.unit}</small></td>
                     <td className="num" data-label="Tồn">{(r.stock ?? 0) < MIN_STOCK ? <b style={{ color: 'var(--sale)' }}>{r.stock ?? 0}</b> : r.stock}</td>
                     <td className="num" data-label="Đã bán">{r.sold}</td>

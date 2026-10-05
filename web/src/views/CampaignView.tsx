@@ -2,6 +2,7 @@
 // Chạy `npm run gen-views` sau khi đổi preview.html hoặc scripts/views.config.mjs.
 import Link from 'next/link';
 import { CatalogCard } from '@/components/CatalogCard';
+import { TetHeroMedia } from '@/components/TetHeroMedia';
 
 export function CampaignView() {
   return (
@@ -41,21 +42,7 @@ export function CampaignView() {
               Chọn cây Tết ngay
             </Link>
           </div>
-          <div className="cp-art">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="12" cy="9" r="2" />
-              <path d="M12 5a2 2 0 1 1 0-.1M16 9a2 2 0 1 1 .1 0M12 13a2 2 0 1 1 0 .1M8 9a2 2 0 1 1-.1 0" />
-              <path d="M12 13v8M12 17c-2 0-3-1-4-2" />
-            </svg>
-            <em>Giảm 15% đặt sớm</em>
-          </div>
+          <TetHeroMedia />
         </section>{' '}
         <section className="sv-sec">
           <div className="cp-steps">
