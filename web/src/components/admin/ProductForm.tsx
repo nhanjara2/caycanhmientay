@@ -6,6 +6,7 @@ import { useState, useTransition, type FormEvent } from 'react';
 import { saveProductAction } from '@/app/actions/admin';
 import { Art, type IconName } from '@/components/Icon';
 import { categories, ELEMENTS, parseYoutubeId, type FengShui } from '@/lib/catalog';
+import { KICH_THUOC, MAU_SAC, VI_TRI } from '@/lib/product-filters';
 import { ProductImages, type AdminImage } from './ProductImages';
 
 type Option = { label: string; price: string; oldPrice: string; stock: string; existingStock?: number };
@@ -29,6 +30,8 @@ export type ProductFormValue = {
   video: string;
   images: AdminImage[];
   fengshui: FengShui;
+  /** Đặc điểm cây cho bộ lọc (chỉ cây sống). */
+  attrs: { viTri: string[]; kichThuoc: string | null; mau: string[] };
   options: { label: string; price: number; oldPrice: number | null; stock: number }[];
 };
 
@@ -59,6 +62,8 @@ export function ProductForm({ initial, canEdit }: { initial: ProductFormValue; c
   const kind = kindOf(v);
   const videoId = parseYoutubeId(v.video);
   const setFs = (patch: Partial<FengShui>) => set('fengshui', { ...v.fengshui, ...patch });
+  const setAttrs = (patch: Partial<ProductFormValue['attrs']>) => set('attrs', { ...v.attrs, ...patch });
+  const toggle = (list: string[], key: string, all: { key: string }[]) => all.map((o) => o.key).filter((k) => (k === key ? !list.includes(k) : list.includes(k)));
   const cat = categories.find((c) => c.slug === v.category) ?? categories[0];
 
   const pickKind = (k: Kind) => {
@@ -156,6 +161,45 @@ export function ProductForm({ initial, canEdit }: { initial: ProductFormValue; c
                 </div>
               </div>
             </div>
+
+            {kind === 'plant' && (
+              <div className="ad-card">
+                <div className="ad-card__h">Đặc điểm cây (bộ lọc trên web)</div>
+                <div className="ad-card__b">
+                  <div className="ad-f">
+                    <label>Vị trí đặt</label>
+                    <span className="vx-seg" style={{ flexWrap: 'wrap' }}>
+                      {VI_TRI.map((o) => (
+                        <button key={o.key} type="button" className="vx-chip" aria-pressed={v.attrs.viTri.includes(o.key)}
+                          onClick={() => setAttrs({ viTri: toggle(v.attrs.viTri, o.key, VI_TRI) })}>{o.name}</button>
+                      ))}
+                    </span>
+                    <span className="hint">Chọn được nhiều.</span>
+                  </div>
+                  <div className="ad-f">
+                    <label>Kích thước</label>
+                    <span className="vx-seg" style={{ flexWrap: 'wrap' }}>
+                      {KICH_THUOC.map((o) => (
+                        <button key={o.key} type="button" className="vx-chip" aria-pressed={v.attrs.kichThuoc === o.key}
+                          onClick={() => setAttrs({ kichThuoc: v.attrs.kichThuoc === o.key ? null : o.key })}>{o.name}</button>
+                      ))}
+                    </span>
+                    <span className="hint">Chọn 1 mức theo chiều cao cả chậu; bấm lại để bỏ chọn.</span>
+                  </div>
+                  <div className="ad-f">
+                    <label>Màu sắc</label>
+                    <span className="vx-seg" style={{ flexWrap: 'wrap' }}>
+                      {MAU_SAC.map((o) => (
+                        <button key={o.key} type="button" className="vx-chip" aria-pressed={v.attrs.mau.includes(o.key)}
+                          onClick={() => setAttrs({ mau: toggle(v.attrs.mau, o.key, MAU_SAC) })}>{o.name}</button>
+                      ))}
+                    </span>
+                    <span className="hint">Màu lá và màu hoa nổi bật; chọn được nhiều.</span>
+                  </div>
+                  <span className="hint">Khách lọc theo các mục này ở trang danh mục. Mục nào để trống thì cây không hiện khi khách lọc theo mục đó. “Hợp mệnh” lấy từ khung Phong thủy bên dưới.</span>
+                </div>
+              </div>
+            )}
 
             <div className="ad-card">
               <div className="ad-card__h">Phong thủy</div>

@@ -24,32 +24,43 @@ export function AccountSidebar() {
   const current = (href: string) =>
     href === '/tai-khoan' ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
 
+  // Mobile: thẻ hồ sơ + danh sách mục chỉ hiện ở trang "Tài khoản"; trang con chỉ có nút quay lại (CSS .app-acct-back / data-hub).
+  const isHub = pathname === '/tai-khoan';
+
   return (
-    <aside className="vx-acct">
-      <div className="vx-acct__card">
-        <span className="vx-avatar vx-avatar--lg">{user?.initials ?? 'KH'}</span>
-        <b style={{ fontSize: 16 }}>{user?.name ?? 'Khách'}</b>
-        <small>{user?.phoneMasked ?? 'Chưa đăng nhập'}</small>
-        <span className="vx-tier">{user?.role === 'admin' ? 'Quản trị viên' : 'Thành viên'}</span>
-        <div className="vx-acct__points">
-          <div><b>{(user?.points ?? 0).toLocaleString('vi-VN')}</b>Điểm thưởng</div>
-          <div><b>0</b>Voucher</div>
-        </div>
-      </div>
-      <nav className="vx-acct__nav">
-        {NAV.map((n) => (
-          <Link key={n.href + n.label} href={n.href} aria-current={current(n.href) ? 'true' : undefined}>
-            <Icon name={n.icon} />
-            {n.label}
-            {n.badge ? <em>{n.badge}</em> : null}
-            <Icon name="chevron" className="chev" />
-          </Link>
-        ))}
-        <Link href="/" className="out" onClick={() => void logout()}>
-          <Icon name="close" />
-          Đăng xuất
+    <>
+      {!isHub && (
+        <Link href="/tai-khoan" className="app-acct-back">
+          <Icon name="chevron" />
+          Tài khoản
         </Link>
-      </nav>
-    </aside>
+      )}
+      <aside className="vx-acct" data-hub={isHub ? '' : undefined}>
+        <div className="vx-acct__card">
+          <span className="vx-avatar vx-avatar--lg">{user?.initials ?? 'KH'}</span>
+          <b style={{ fontSize: 16 }}>{user?.name ?? 'Khách'}</b>
+          <small>{user?.phoneMasked ?? 'Chưa đăng nhập'}</small>
+          <span className="vx-tier">{user?.role === 'admin' ? 'Quản trị viên' : 'Thành viên'}</span>
+          <div className="vx-acct__points">
+            <div><b>{(user?.points ?? 0).toLocaleString('vi-VN')}</b>Điểm thưởng</div>
+            <div><b>0</b>Voucher</div>
+          </div>
+        </div>
+        <nav className="vx-acct__nav">
+          {NAV.map((n) => (
+            <Link key={n.href + n.label} href={n.href} aria-current={current(n.href) ? 'true' : undefined}>
+              <Icon name={n.icon} />
+              {n.label}
+              {n.badge ? <em>{n.badge}</em> : null}
+              <Icon name="chevron" className="chev" />
+            </Link>
+          ))}
+          <Link href="/" className="out" onClick={() => void logout()}>
+            <Icon name="close" />
+            Đăng xuất
+          </Link>
+        </nav>
+      </aside>
+    </>
   );
 }

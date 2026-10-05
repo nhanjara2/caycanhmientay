@@ -1,6 +1,6 @@
 // Nạp dữ liệu mẫu khi database còn trống: 3 cửa hàng + sản phẩm mẫu (src/lib/seed-products.ts)
 // + bài bệnh cây (src/lib/seed-diseases.ts).
-import { asc, count } from 'drizzle-orm';
+import { and, asc, count, eq, isNull } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { seedDiseases } from '@/lib/seed-diseases';
 import { seedProducts } from '@/lib/seed-products';
@@ -33,6 +33,7 @@ export async function seedIfEmpty(db: NodePgDatabase<typeof schema>) {
         origin: p.origin, ship: p.ship, pesticide: Boolean(p.pesticide), unit: p.unit, spec: p.spec,
         lead: p.lead, specs: p.specs, keywords: p.keywords ?? [], rating: Math.round(p.rating * 10),
         reviews: p.reviews, sold: p.sold, flashSold: p.flash?.sold ?? null, flashTotal: p.flash?.total ?? null,
+        attrs: p.attrs ?? null,
       });
       for (const [idx, o] of p.options.entries()) {
         await tx.insert(schema.productOptions).values({ productSlug: p.slug, idx, label: o.label, price: o.price, oldPrice: o.oldPrice ?? null, stock: 100 });
@@ -41,6 +42,19 @@ export async function seedIfEmpty(db: NodePgDatabase<typeof schema>) {
     }
   });
   return true;
+}
+
+/** Gắn đặc điểm cây (vị trí đặt, kích thước, màu) cho các cây mẫu đã có trong database từ trước khi có bộ lọc.
+ *  Chỉ điền khi còn trống (attrs is null) — cây admin đã tự gắn thì giữ nguyên. Trả về số cây vừa gắn. */
+export async function seedPlantAttrs(db: NodePgDatabase<typeof schema>) {
+  let n = 0;
+  for (const p of seedProducts) {
+    if (!p.attrs) continue;
+    const r = await db.update(schema.products).set({ attrs: p.attrs })
+      .where(and(eq(schema.products.slug, p.slug), isNull(schema.products.attrs))).returning({ slug: schema.products.slug });
+    n += r.length;
+  }
+  return n;
 }
 
 /** Nạp bài bệnh cây mẫu khi bảng `diseases` còn trống (chạy riêng: database đã có sản phẩm vẫn nạp). */

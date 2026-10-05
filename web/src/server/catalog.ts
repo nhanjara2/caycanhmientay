@@ -27,6 +27,8 @@ async function hydrate(rows: Row[]): Promise<Product[]> {
     images: imgs.filter((i) => i.slug === r.slug).map((i) => productImageUrl(i.file)),
     youtubeId: r.youtubeId ?? undefined,
     fengshui: r.fengshui ?? undefined,
+    attrs: r.attrs ?? undefined,
+    inStock: opts.some((o) => o.productSlug === r.slug && o.stock > 0),
     isNew: isNewProduct(r.createdAt) || undefined,
   }));
 }

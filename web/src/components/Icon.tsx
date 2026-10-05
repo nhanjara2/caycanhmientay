@@ -44,6 +44,7 @@ const PATHS = {
   bell: <><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z" /><path d="M10 20a2 2 0 0 0 4 0" /></>,
   copy: <><rect x="8" y="8" width="12" height="12" rx="2" /><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3" /></>,
   menu: <path d="M4 6h16M4 12h16M4 18h16" />,
+  filter: <path d="M4 6h16M7 12h10M10 18h4" />,
   trash: <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />,
   heart: <path d="M12 20s-6.5-4.1-9-8.2C1.1 8.8 2.4 5 6 5c2 0 3.6 1.2 4.5 2.8C11.4 6.2 13 5 15 5c3.6 0 4.9 3.8 3 6.8C18.5 15.9 12 20 12 20z" />,
   camera: <><path d="M4 8h3l2-3h6l2 3h3v11H4z" /><circle cx="12" cy="13" r="3.5" /></>,

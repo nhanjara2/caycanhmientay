@@ -12,10 +12,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 const NO_FENGSHUI = { elements: [], ages: '', meaning: '', placement: '' };
+const NO_ATTRS = { viTri: [], kichThuoc: null, mau: [] };
 
 const EMPTY: ProductFormValue = {
   name: '', category: 'cay-canh', sub: 'kieng-la', icon: 'plant', origin: 'Việt Nam', ship: 'plant', pesticide: false,
-  unit: 'Chậu', spec: '', lead: '', active: true, flash: false, video: '', images: [], fengshui: NO_FENGSHUI,
+  unit: 'Chậu', spec: '', lead: '', active: true, flash: false, video: '', images: [], fengshui: NO_FENGSHUI, attrs: NO_ATTRS,
   specs: [['Chiều cao', ''], ['Chậu', ''], ['Ánh sáng', ''], ['Tưới nước', ''], ['Nguồn gốc', ''], ['An toàn thú cưng', '']],
   options: [{ label: '', price: 0, oldPrice: null, stock: 0 }],
 };
@@ -34,6 +35,7 @@ export default async function AdminProductPage({ params }: Props) {
       flash: p.flashTotal !== null,
       video: p.youtubeId ? `https://youtu.be/${p.youtubeId}` : '', images: p.images,
       fengshui: p.fengshui ?? NO_FENGSHUI,
+      attrs: p.attrs ? { viTri: p.attrs.viTri ?? [], kichThuoc: p.attrs.kichThuoc ?? null, mau: p.attrs.mau ?? [] } : NO_ATTRS,
       options: p.options.map((o) => ({ label: o.label, price: o.price, oldPrice: o.oldPrice, stock: o.stock })),
     };
   }

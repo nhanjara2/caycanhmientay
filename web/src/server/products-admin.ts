@@ -2,6 +2,7 @@ import 'server-only';
 import { and, asc, count, desc, eq, ilike, or, sql } from 'drizzle-orm';
 import * as z from 'zod';
 import { categories, ELEMENTS, getCategory, MAX_PRODUCT_IMAGES, normalize, parseYoutubeId, productImageUrl, type FengShui } from '@/lib/catalog';
+import { attrKeys, type ProductAttrs } from '@/lib/product-filters';
 import { mainImageOf } from './catalog';
 import { db, schema } from './db';
 import { applyStock } from './inventory';
@@ -45,6 +46,15 @@ export const ProductInputSchema = z.object({
     meaning: z.string().trim().max(1000),
     placement: z.string().trim().max(300),
   }).optional().transform((f) => (f && (f.elements.length || f.ages || f.meaning || f.placement) ? (f as FengShui) : null)),
+  // Đặc điểm cây cho bộ lọc: chỉ nhận giá trị trong danh sách (lib/product-filters.ts); không chọn gì = null
+  attrs: z.object({
+    viTri: z.array(z.enum(attrKeys.viTri as [string, ...string[]])).max(5),
+    kichThuoc: z.enum(attrKeys.kichThuoc as [string, ...string[]]).nullable(),
+    mau: z.array(z.enum(attrKeys.mau as [string, ...string[]])).max(8),
+  }).optional().transform((a): ProductAttrs | null => {
+    if (!a || !(a.viTri.length || a.kichThuoc || a.mau.length)) return null;
+    return { viTri: a.viTri, ...(a.kichThuoc ? { kichThuoc: a.kichThuoc } : {}), mau: a.mau };
+  }),
   options: z.array(z.object({
     label: z.string().trim().min(1, 'Nhập tên quy cách').max(40),
     price: money.min(1000, 'Giá bán tối thiểu 1.000đ'),
@@ -135,6 +145,7 @@ export async function saveProduct(input: ProductInput, actor: string): Promise<S
     pesticide: input.pesticide, unit: input.unit, spec: input.spec, lead: input.lead, specs: input.specs, active: input.active,
     youtubeId: input.video,
     fengshui: input.fengshui,
+    attrs: input.attrs,
   };
 
   if (input.slug) {

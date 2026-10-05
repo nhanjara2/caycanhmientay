@@ -2,6 +2,7 @@
 import { sql } from 'drizzle-orm';
 import type { FengShui } from '../../lib/catalog';
 import type { Disease } from '../../lib/diseases';
+import type { ProductAttrs } from '../../lib/product-filters';
 import { SERVICE_STAGES, SERVICE_TYPES, SOURCES } from '../../lib/service-labels';
 import { boolean, customType, doublePrecision, index, integer, jsonb, pgTable, primaryKey, serial, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 
@@ -79,6 +80,8 @@ export const products = pgTable('products', {
   youtubeId: text('youtube_id'),
   /** Phong thủy: mệnh hợp, hợp tuổi, ý nghĩa, vị trí đặt. */
   fengshui: jsonb('fengshui').$type<FengShui>(),
+  /** Đặc điểm cây cho bộ lọc: vị trí đặt, kích thước, màu (lib/product-filters.ts). null = chưa gắn. */
+  attrs: jsonb('attrs').$type<ProductAttrs>(),
   createdAt: createdAt(),
 }, (t) => [index('products_cat_idx').on(t.category, t.sub)]);
 

@@ -120,6 +120,20 @@ button.vx-pay__opt:first-child { border-top: 0; }
   .vx-fcols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
+/* PolicyNav (trang giới thiệu/chính sách): đầu menu là nút. Desktop luôn mở danh sách; tablet/mobile thu thành ô chọn
+   "Bài viết trong danh mục ▾" (design-system/components/PolicyNav/README.md), bấm để xổ, chọn bài thì tự đóng. */
+.vx-pnav__head { width: 100%; border: 0; font: inherit; font-size: 14px; font-weight: 600; text-align: left; cursor: pointer; }
+.vx-pnav__head .chev { margin-left: auto; width: 18px; height: 18px; transform: rotate(90deg); transition: transform .15s; }
+.vx-pnav[data-open] .vx-pnav__head .chev { transform: rotate(-90deg); }
+@media (min-width: 1024px) {
+  .vx-pnav__head { pointer-events: none; cursor: default; }
+  .vx-pnav__head .chev { display: none; }
+}
+@media (max-width: 1023px) {
+  .vx-pnav { position: static; }
+  .vx-pnav:not([data-open]) .vx-pnav__list { display: none; }
+}
+
 /* Tablet 768–1023 (iPad dọc/ngang, Android tablet): design system chỉ vẽ desktop ≥1024 và mobile,
    nên các khung có cột phụ cố định (admin, POS, cửa hàng…) bị chật. Thu gọn ở đây. */
 @media (min-width: 768px) and (max-width: 1023px) {
@@ -582,4 +596,88 @@ a.app-kb-card[data-dragging="true"] { opacity: .45; }
   .nw-card p { display: none; }
   .nw-more { width: 100%; justify-content: center; }
   .nw-aside { position: static; }
+}
+
+/* ---- Khu tài khoản (.vx-acctpage: các trang /tai-khoan/*, chi tiết đơn, AccountGate) ---- */
+/* Nút "‹ Tài khoản" của AccountSidebar chỉ dùng trên mobile */
+.app-acct-back { display: none; }
+/* Tablet 768–1023: menu trái 260px + nội dung bên phải (trước đây xếp dọc: thẻ hồ sơ + menu chiếm ~750px rồi mới tới nội dung) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .vx-acctpage { padding: var(--space-4); }
+  .vx-acctgrid { grid-template-columns: 260px minmax(0, 1fr); gap: var(--space-3); }
+  .vx-acct__card { padding: var(--space-4) var(--space-3); }
+  .vx-acct__nav a { padding-inline: var(--space-3); gap: var(--space-2); font-size: 14px; }
+}
+/* Mobile < 768: thẻ hồ sơ + danh sách mục chỉ hiện ở trang "Tài khoản"; trang con chỉ có nút quay lại (theo MobileAccount) */
+@media (max-width: 767px) {
+  .vx-acctpage { padding: var(--space-3) var(--space-3) var(--space-6); }
+  .vx-acct:not([data-hub]) { display: none; }
+  .app-acct-back { display: inline-flex; align-items: center; align-self: flex-start; gap: var(--space-1); min-height: 44px; margin: calc(var(--space-1) * -1) 0 calc(var(--space-1) * -1) calc(var(--space-2) * -1); padding: 0 var(--space-3) 0 var(--space-1); font-weight: 600; color: var(--primary); }
+  .app-acct-back .vx-ico { width: 18px; height: 18px; transform: rotate(180deg); }
+  /* Thẻ hồ sơ gọn hơn; 2 ô Điểm thưởng / Voucher cạnh nhau (responsive.css đang xếp dọc) */
+  .vx-acct__card { padding: var(--space-4); }
+  .vx-acct__card .vx-avatar--lg { width: 56px; height: 56px; font-size: 20px; }
+  .vx-acct__points { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* ---- Footer: nhóm liên kết thu gọn trên mobile (components/FooterGroup.tsx, theo design-system/components/Footer/README.md) ---- */
+/* Desktop/tablet: nút tiêu đề trông như h4 thường, danh sách luôn hiện và vẫn là con trực tiếp của .vx-fcol (display: contents) */
+.vx-fcol__head { display: block; width: 100%; margin: 0; padding: 0; border: 0; background: none; font: inherit; letter-spacing: inherit; text-align: left; color: inherit; cursor: default; }
+.vx-fcol__head .chev { display: none; }
+.vx-fcol__body { display: contents; }
+/* Mobile < 768: Về Cây Cảnh Miền Tây / Danh mục / Tìm hiểu thêm đóng sẵn, bấm tiêu đề để mở; Hotline và Kết nối luôn mở */
+@media (max-width: 767px) {
+  .vx-fcols { gap: 0; padding: var(--space-2) var(--space-4) var(--space-4); }
+  .vx-fcol:not(.vx-fcol--fold) { padding-top: var(--space-4); }
+  .vx-fcol--fold { gap: 0; border-bottom: 1px solid var(--border); }
+  .vx-fcols > .vx-fcol--fold:first-child { border-top: 1px solid var(--border); }
+  .vx-fcol--fold h4 { margin: 0; }
+  .vx-fcol__head { display: flex; align-items: center; justify-content: space-between; min-height: 48px; cursor: pointer; }
+  .vx-fcol__head .chev { display: block; flex: none; width: 18px; height: 18px; color: var(--ink-muted); transition: transform .15s; }
+  .vx-fcol--fold[data-open] .vx-fcol__head, .vx-fcol--fold[data-open] .vx-fcol__head .chev { color: var(--primary); }
+  .vx-fcol--fold[data-open] .vx-fcol__head .chev { transform: rotate(90deg); }
+  .vx-fcol__body { display: none; flex-direction: column; padding-bottom: var(--space-3); }
+  .vx-fcol--fold[data-open] .vx-fcol__body { display: flex; }
+  .vx-fcol__body a { display: flex; align-items: center; min-height: 40px; }
+}
+@media (prefers-reduced-motion: reduce) { .vx-fcol__head .chev { transition: none; } }
+
+/* ---- Bộ lọc sản phẩm trang danh mục (components/ProductFilters.tsx + nhãn đang lọc trong danh-muc/[...slug]/page.tsx) ---- */
+.app-fbar { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+.app-fbar__all { flex: none; display: inline-flex; align-items: center; gap: 6px; background: var(--ink); border-color: var(--ink); color: var(--surface); }
+.app-fbar__all .vx-ico { width: 18px; height: 18px; }
+.app-fbar__all em { font-style: normal; font-size: 11px; font-weight: 700; line-height: 18px; padding: 0 7px; border-radius: var(--radius-pill); background: var(--sun); color: var(--ink-on-sun); }
+.app-fbar__chips { display: flex; gap: var(--space-2); min-width: 0; padding: 2px; overflow-x: auto; scrollbar-width: none; }
+.app-fbar__chips::-webkit-scrollbar { display: none; }
+.app-fbar__chips .vx-chip { flex: none; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.app-fbar__chips .vx-chip .chev { width: 14px; height: 14px; color: var(--ink-muted); transform: rotate(90deg); }
+.app-ftags { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.app-ftag { display: inline-flex; align-items: center; gap: 4px; min-height: 32px; padding: 0 8px 0 12px; border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary); font-size: 13px; font-weight: 600; text-decoration: none; }
+.app-ftag .vx-ico { width: 16px; height: 16px; }
+.app-ftags__clear { padding: 6px; font-size: 13px; font-weight: 600; color: var(--danger); text-decoration: none; }
+/* Bảng lọc: mobile trượt từ dưới lên, tablet/desktop trượt từ phải */
+.app-fp { position: fixed; inset: 0; z-index: 80; }
+.app-fp__scrim { position: absolute; inset: 0; background: rgba(12, 24, 16, .5); }
+.app-fp__panel { position: absolute; display: flex; flex-direction: column; background: var(--surface); box-shadow: var(--shadow-pop); outline: 0; }
+.app-fp__head { display: flex; align-items: center; justify-content: space-between; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border); font-size: 16px; }
+.app-fp__x { display: grid; place-items: center; width: 40px; height: 40px; margin: -6px -8px -6px 0; padding: 0; border: 0; border-radius: var(--radius-md); background: none; color: var(--ink); cursor: pointer; }
+.app-fp__body { flex: 1; min-height: 0; padding: var(--space-2) var(--space-4) var(--space-4); overflow-y: auto; overscroll-behavior: contain; }
+.app-fp__group { padding: var(--space-3) 0; border-bottom: 1px solid var(--border); }
+.app-fp__group:last-child { border-bottom: 0; }
+.app-fp__group h3 { display: flex; align-items: baseline; gap: var(--space-2); margin: 0 0 var(--space-2); font-size: 14px; }
+.app-fp__group h3 small { font-size: 12px; font-weight: 400; color: var(--ink-muted); }
+.app-fp__opts { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.app-fp__opt { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; }
+.app-fp__opt small { font-size: 12px; color: var(--ink-muted); }
+.app-fp__opt[aria-pressed="true"] small { color: inherit; opacity: .75; }
+.app-fp__opt:disabled { opacity: .4; cursor: not-allowed; }
+.app-fp__sw { flex: none; width: 12px; height: 12px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .18); }
+.app-fp__foot { display: flex; gap: var(--space-2); padding: var(--space-3) var(--space-4) calc(var(--space-3) + env(safe-area-inset-bottom)); border-top: 1px solid var(--border); background: var(--surface); }
+.app-fp__foot .vx-btn { min-height: 44px; }
+.app-fp__foot .vx-btn--primary { flex: 1; }
+@media (max-width: 767px) {
+  .app-fp__panel { left: 0; right: 0; bottom: 0; max-height: 85vh; max-height: 85dvh; border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+}
+@media (min-width: 768px) {
+  .app-fp__panel { top: 0; right: 0; bottom: 0; width: min(420px, 100%); }
 }

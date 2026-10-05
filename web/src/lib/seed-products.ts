@@ -7,6 +7,7 @@ const plantSpecs = (h: string, pot: string, light: string, water: string, origin
 
 export const seedProducts: Product[] = [
   {
+    attrs: { viTri: ['trong-nha', 'van-phong'], kichThuoc: 'vua', mau: ['xanh'] },
     slug: 'monstera-deliciosa-chau-su-trang', sku: 'MT-10482', name: 'Cây Monstera Deliciosa chậu sứ trắng',
     category: 'cay-canh', sub: 'kieng-la', icon: 'plant', origin: 'Đà Lạt', ship: 'plant', unit: 'Chậu',
     options: [{ label: 'Cây + chậu sứ', price: 289000, oldPrice: 360000 }, { label: 'Chỉ cây (bầu)', price: 199000 }],
@@ -16,6 +17,7 @@ export const seedProducts: Product[] = [
     rating: 4.8, reviews: 36, sold: 1200, keywords: ['trau ba la xe', 'monstera'],
   },
   {
+    attrs: { viTri: ['van-phong', 'trong-nha'], kichThuoc: 'nho', mau: ['xanh-dam', 'loang'] },
     slug: 'philodendron-birkin-chau-su', sku: 'MT-10511', name: 'Philodendron Birkin chậu sứ Ø15',
     category: 'cay-canh', sub: 'kieng-la', icon: 'plant', origin: 'Đà Lạt', ship: 'plant', unit: 'Chậu',
     options: [{ label: 'Chậu sứ Ø15', price: 159000 }], spec: 'Cao 30–35cm',
@@ -24,6 +26,7 @@ export const seedProducts: Product[] = [
     rating: 4.7, reviews: 18, sold: 540,
   },
   {
+    attrs: { viTri: ['trong-nha', 'treo'], kichThuoc: 'nho', mau: ['xanh'] },
     slug: 'trau-ba-nam-my-chau-treo', sku: 'MT-10533', name: 'Trầu bà Nam Mỹ chậu treo',
     category: 'cay-canh', sub: 'kieng-la', icon: 'leaf', origin: 'Việt Nam', ship: 'plant', unit: 'Chậu',
     options: [{ label: 'Chậu treo', price: 127500, oldPrice: 150000 }], spec: 'Dài 50–60cm',
@@ -32,6 +35,7 @@ export const seedProducts: Product[] = [
     rating: 4.6, reviews: 22, sold: 860,
   },
   {
+    attrs: { viTri: ['trong-nha', 'van-phong', 'ban-cong'], kichThuoc: 'nho', mau: ['xanh', 'vang'] },
     slug: 'luoi-ho-thai-vien-vang', sku: 'MT-10560', name: 'Lưỡi hổ Thái viền vàng',
     category: 'cay-canh', sub: 'cay-noi-that', icon: 'sprout', origin: 'Việt Nam', ship: 'plant', unit: 'Chậu',
     options: [{ label: 'Chậu sứ', price: 162000, oldPrice: 180000 }], spec: 'Cao 50–60cm',
@@ -40,6 +44,7 @@ export const seedProducts: Product[] = [
     rating: 4.9, reviews: 41, sold: 2100,
   },
   {
+    attrs: { viTri: ['trong-nha', 'van-phong'], kichThuoc: 'vua', mau: ['xanh-dam'] },
     slug: 'kim-tien-chau-men-xanh', sku: 'MT-10577', name: 'Kim tiền chậu men xanh',
     category: 'cay-canh', sub: 'cay-noi-that', icon: 'plant', origin: 'Đà Lạt', ship: 'plant', unit: 'Chậu',
     options: [{ label: 'Chậu men', price: 235000 }], spec: 'Cao 55–65cm',
@@ -48,6 +53,7 @@ export const seedProducts: Product[] = [
     rating: 4.8, reviews: 27, sold: 980,
   },
   {
+    attrs: { viTri: ['trong-nha', 'van-phong'], kichThuoc: 'nho', mau: ['bac-trang', 'co-hoa'] },
     slug: 'lan-ho-diep-2-canh-trang', sku: 'MT-20110', name: 'Lan hồ điệp 2 cành màu trắng',
     category: 'cay-canh', sub: 'lan', icon: 'flower', origin: 'Thái Lan', ship: 'plant', unit: 'Chậu',
     options: [{ label: '2 cành', price: 420000, oldPrice: 600000 }, { label: '3 cành', price: 590000 }], spec: 'Hoa bền 45–60 ngày',
@@ -56,6 +62,7 @@ export const seedProducts: Product[] = [
     rating: 4.9, reviews: 64, sold: 1500, flash: { sold: 32, total: 50 },
   },
   {
+    attrs: { viTri: ['van-phong', 'ban-cong'], kichThuoc: 'mini', mau: ['loang', 'tim', 'xanh'] },
     slug: 'sen-da-mix-6-chau', sku: 'MT-30020', name: 'Combo sen đá mix 6 chậu mini',
     category: 'cay-canh', sub: 'sen-da-xuong-rong', icon: 'flower', origin: 'Đà Lạt', ship: 'plant', unit: 'Combo',
     options: [{ label: '6 chậu', price: 135000, oldPrice: 160000 }], spec: 'Chậu nhựa Ø7',

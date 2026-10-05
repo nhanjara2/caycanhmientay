@@ -3,14 +3,18 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Breadcrumb, EmptyState } from '@/components/Blocks';
 import { Icon } from '@/components/Icon';
+import { ProductFilters } from '@/components/ProductFilters';
 import { ProductGrid } from '@/components/ProductCard';
 import { getCategory } from '@/lib/catalog';
+import {
+  filterProducts, groupsFor, groupTitle, originOptions, parseSel, selectedCount, staticOptions, toFacet, withQuery, without,
+} from '@/lib/product-filters';
 import { productsIn } from '@/server/catalog';
 import { SORTS, sortProducts } from '@/lib/sort';
 
 type Props = {
   params: Promise<{ slug: string[] }>;
-  searchParams: Promise<{ sap_xep?: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
 function resolve(slug: string[]) {
@@ -26,15 +30,24 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: r ? (r.sub?.name ?? r.cat.name) : 'Không tìm thấy' };
 }
 
-/** ProductListingLayout: tiêu đề + danh mục con + sắp xếp + lưới 4 cột. */
+/** ProductListingLayout: tiêu đề + danh mục con + bộ lọc đa chọn + sắp xếp + lưới 4 cột. Bộ lọc nằm trên đường dẫn (?vi-tri=…&mau=…). */
 export default async function CategoryPage({ params, searchParams }: Props) {
   const r = resolve((await params).slug);
   if (!r) notFound();
   const { cat, sub } = r;
-  const { sap_xep } = await searchParams;
-  const items = sortProducts(await productsIn(cat.slug, sub?.slug), sap_xep);
+  const sp = await searchParams;
+  const sap_xep = typeof sp.sap_xep === 'string' ? sp.sap_xep : undefined;
+  const groups = groupsFor(cat.slug);
+  const sel = parseSel(sp, groups);
+  const all = await productsIn(cat.slug, sub?.slug);
+  const items = sortProducts(filterProducts(all, sel), sap_xep);
+  const origins = originOptions(all);
   const base = sub ? `/danh-muc/${cat.slug}/${sub.slug}` : `/danh-muc/${cat.slug}`;
   const activeSort = SORTS.some((s) => s.key === sap_xep) ? sap_xep : 'pho-bien';
+  const sortParam = activeSort === 'pho-bien' ? undefined : activeSort;
+  const filtering = selectedCount(sel) > 0;
+  const optionName = (g: (typeof groups)[number], key: string) =>
+    (g === 'nha-vuon' ? origins : staticOptions(g, cat.slug)).find((o) => o.key === key)?.name ?? key;
 
   return (
     <>
@@ -54,7 +67,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
             <Link
               key={s.slug}
               className="pl-sub"
-              href={`/danh-muc/${cat.slug}/${s.slug}`}
+              href={withQuery(`/danh-muc/${cat.slug}/${s.slug}`, sel, sortParam)}
               aria-current={sub?.slug === s.slug ? 'true' : undefined}
             >
               <span><Icon name={cat.icon} /></span>
@@ -62,12 +75,24 @@ export default async function CategoryPage({ params, searchParams }: Props) {
             </Link>
           ))}
         </div>
+        <ProductFilters base={base} category={cat.slug} groups={groups} items={all.map(toFacet)} origins={origins} selected={sel} sort={sortParam} />
+        {filtering && (
+          <div className="app-ftags">
+            {groups.flatMap((g) => (sel[g] ?? []).map((k) => (
+              <Link key={`${g}:${k}`} className="app-ftag" href={withQuery(base, without(sel, g, k), sortParam)} scroll={false} aria-label={`Bỏ lọc ${optionName(g, k)}`}>
+                {g === 'khac' ? optionName(g, k) : `${groupTitle(g, cat.slug)}: ${optionName(g, k)}`}
+                <Icon name="close" />
+              </Link>
+            )))}
+            <Link className="app-ftags__clear" href={withQuery(base, {}, sortParam)} scroll={false}>Xóa tất cả</Link>
+          </div>
+        )}
         <div className="fb-sort">
           <span>Sắp xếp:</span>
           {SORTS.map((s) => (
             <Link
               key={s.key}
-              href={s.key === 'pho-bien' ? base : `${base}?sap_xep=${s.key}`}
+              href={withQuery(base, sel, s.key === 'pho-bien' ? undefined : s.key)}
               aria-current={activeSort === s.key ? 'true' : undefined}
               scroll={false}
             >
@@ -78,6 +103,13 @@ export default async function CategoryPage({ params, searchParams }: Props) {
       </div>
       {items.length ? (
         <ProductGrid products={items} />
+      ) : filtering ? (
+        <EmptyState
+          icon="leaf"
+          title="Không có sản phẩm phù hợp"
+          text="Chưa có sản phẩm nào khớp tất cả bộ lọc bạn chọn. Thử bỏ bớt một vài bộ lọc nhé."
+          action={<Link className="vx-btn vx-btn--outline" href={withQuery(base, {}, sortParam)} scroll={false}>Xóa bộ lọc</Link>}
+        />
       ) : (
         <EmptyState
           icon="leaf"

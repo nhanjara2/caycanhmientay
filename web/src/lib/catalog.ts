@@ -1,6 +1,7 @@
 // Kiểu dữ liệu, danh mục và hàm thuần dùng chung cho server và client.
 // Sản phẩm nằm trong database — truy vấn qua src/server/catalog.ts (chỉ chạy trên server).
 import type { IconName } from '@/components/Icon';
+import type { ProductAttrs } from './product-filters';
 
 /** Cách giao khác nhau: cây sống giao riêng bằng xe, vật tư giao nhanh. */
 export type ShipGroup = 'plant' | 'supply';
@@ -54,6 +55,10 @@ export type Product = {
   /** Video hướng dẫn trên YouTube (mã 11 ký tự). */
   youtubeId?: string;
   fengshui?: FengShui;
+  /** Đặc điểm cây (vị trí đặt, kích thước, màu) cho bộ lọc trang danh mục; chưa gắn thì không lọc theo được. */
+  attrs?: ProductAttrs;
+  /** Còn hàng = ít nhất một quy cách còn tồn. Tính trên server. */
+  inStock?: boolean;
   /** Đăng trong NEW_DAYS ngày gần đây → thẻ có nhãn "Mới" + viền xanh. Tính trên server. */
   isNew?: boolean;
 };

@@ -113,6 +113,13 @@
       "when": 1790650006063,
       "tag": "0015_answer_votes_warranty_review",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1791192122910,
+      "tag": "0016_product_attrs",
+      "breakpoints": true
     }
   ]
 }

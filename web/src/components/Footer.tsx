@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { categories } from '@/lib/catalog';
 import { FACEBOOK_URL, SALES_PHONE, YOUTUBE_URL, ZALO_QR, ZALO_URL } from '@/lib/contact';
+import { FooterGroup } from './FooterGroup';
 import { Icon } from './Icon';
 
 const ABOUT: [string, string][] = [
@@ -58,20 +59,17 @@ export function Footer() {
         </form>
       </div>
       <div className="vx-fcols">
-        <div className="vx-fcol">
-          <h4>VỀ CÂY CẢNH MIỀN TÂY</h4>
+        <FooterGroup title="VỀ CÂY CẢNH MIỀN TÂY">
           {ABOUT.map(([t, h]) => <Link key={t} href={h}>{t}</Link>)}
-        </div>
-        <div className="vx-fcol">
-          <h4>DANH MỤC</h4>
+        </FooterGroup>
+        <FooterGroup title="DANH MỤC">
           {categories.slice(0, 8).map((c) => (
             <Link key={c.slug} href={`/danh-muc/${c.slug}`}>{c.name}</Link>
           ))}
-        </div>
-        <div className="vx-fcol">
-          <h4>TÌM HIỂU THÊM</h4>
+        </FooterGroup>
+        <FooterGroup title="TÌM HIỂU THÊM">
           {LEARN.map(([t, h]) => <Link key={t} href={h}>{t}</Link>)}
-        </div>
+        </FooterGroup>
         <div className="vx-fcol">
           <h4>HOTLINE (8:00 – 21:00)</h4>
           {HOTLINES.map(([label, phone, name]) => (
@@ -106,8 +104,8 @@ export function Footer() {
         </div>
       </div>
       <div className="vx-flegal">
-        <span>© 2026 Công ty [Tên pháp nhân] · Mã số doanh nghiệp: [MST] cấp ngày [ngày] tại [nơi cấp]</span>
-        <span>Địa chỉ: [địa chỉ trụ sở] · Điện thoại: [số điện thoại] · Email: [email] · Người chịu trách nhiệm nội dung: [họ tên]</span>
+        <span>© 2007 - 2026 Cây Cảnh Miền Tây · Số ĐKKD 087096010726 cấp 04/2026 · được quản lý bởi Thuế cơ sở 6 tỉnh Đồng Tháp</span>
+        <span>Địa chỉ: Làng Hoa Sa Đéc, Đồng Tháp · Điện thoại: 0703005001 · Email: nhanjara@gmail.com · Người chịu trách nhiệm nội dung: Lê Hoài Nhân</span>
       </div>
     </footer>
   );
