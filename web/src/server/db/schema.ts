@@ -27,6 +27,8 @@ export const users = pgTable('users', {
   email: text('email'),
   /** Tài khoản Google (claim `sub`). */
   googleSub: text('google_sub').unique(),
+  /** Ảnh đại diện Google (https://*.googleusercontent.com), cập nhật mỗi lần đăng nhập Google; null = không có. */
+  avatarUrl: text('avatar_url'),
   role: text('role', { enum: ROLES }).notNull().default('customer'),
   points: integer('points').notNull().default(0),
   /** Ghi chú nội bộ của shop về khách (admin Khách hàng) — khách không thấy. */

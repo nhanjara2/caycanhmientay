@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
+import { Avatar } from './Avatar';
 import { Icon, type IconName } from './Icon';
 
 const NAV: { href: string; label: string; icon: IconName; badge?: number }[] = [
@@ -37,7 +38,7 @@ export function AccountSidebar() {
       )}
       <aside className="vx-acct" data-hub={isHub ? '' : undefined}>
         <div className="vx-acct__card">
-          <span className="vx-avatar vx-avatar--lg">{user?.initials ?? 'KH'}</span>
+          <Avatar size="lg" initials={user?.initials ?? 'KH'} url={user?.avatarUrl} />
           <b style={{ fontSize: 16 }}>{user?.name ?? 'Khách'}</b>
           <small>{user?.phoneMasked ?? 'Chưa đăng nhập'}</small>
           <span className="vx-tier">{user?.role === 'admin' ? 'Quản trị viên' : 'Thành viên'}</span>

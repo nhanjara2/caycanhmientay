@@ -3,10 +3,11 @@
 import { useRouter } from 'next/navigation';
 import { useState, useTransition, type FormEvent } from 'react';
 import { updateProfileAction } from '@/app/actions/auth';
+import { Avatar } from './Avatar';
 import { useAuth } from '@/lib/auth';
 
 /** ProfileForm: họ tên, email, SĐT. SĐT đã xác thực OTP là định danh tài khoản nên khóa; tài khoản Google tự khai SĐT (bắt buộc, không xác thực). */
-export function ProfileForm({ initial }: { initial: { name: string; email: string; phone: string; phoneVerified: boolean; initials: string } }) {
+export function ProfileForm({ initial }: { initial: { name: string; email: string; phone: string; phoneVerified: boolean; initials: string; avatarUrl: string | null } }) {
   const { setUser } = useAuth();
   const router = useRouter();
   const [name, setName] = useState(initial.name);
@@ -28,7 +29,7 @@ export function ProfileForm({ initial }: { initial: { name: string; email: strin
     <section className="vx-profile">
       <div className="vx-profile__head">Thông tin cá nhân</div>
       <form className="vx-profile__body" onSubmit={submit}>
-        <div className="vx-profile__av"><span className="vx-avatar">{initial.initials}</span></div>
+        <div className="vx-profile__av"><Avatar initials={initial.initials} url={initial.avatarUrl} /></div>
         <div className="vx-fl">
           <label htmlFor="pf-name">Họ và tên</label>
           <input id="pf-name" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" placeholder="Nhập họ và tên" />

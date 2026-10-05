@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/lib/auth';
+import { Avatar } from './Avatar';
 import { Icon, type IconName } from './Icon';
 
 const ITEMS: { href: string; label: string; icon: IconName; badge?: number }[] = [
@@ -43,13 +44,13 @@ export function AccountMenu() {
   return (
     <div className="vx-user" ref={ref}>
       <button type="button" className="app-hbtn" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
-        <span className="vx-avatar vx-avatar--sm">{user.initials}</span>
+        <Avatar size="sm" initials={user.initials} url={user.avatarUrl} />
         <span className="app-hide-sm">{user.name}</span>
       </button>
       {open && (
         <div className="vx-dd app-dd">
           <div className="vx-dd__head">
-            <span className="vx-avatar vx-avatar--sm">{user.initials}</span>
+            <Avatar size="sm" initials={user.initials} url={user.avatarUrl} />
             <span><b>{user.name}</b><small>{user.phoneMasked}</small></span>
             <span className="vx-tier" style={{ marginLeft: 'auto' }}>{user.points.toLocaleString('vi-VN')} điểm</span>
           </div>

@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
+import { Avatar } from '@/components/Avatar';
 import { Icon } from '@/components/Icon';
 import { useAuth } from '@/lib/auth';
 import type { PublicUser } from '@/server/auth';
@@ -132,7 +133,7 @@ export function AdminShell({ children, me, badges = {} }: { children: ReactNode;
           </div>
           <div className="sp">
             <span className="ad-me" title={me.name}>
-              <span className="vx-avatar vx-avatar--sm">{me.initials}</span>
+              <Avatar size="sm" initials={me.initials} url={me.avatarUrl} />
               <span className="app-admin-who">{me.name}<small>{me.role === 'admin' ? 'Quản trị viên' : 'Nhân viên'}</small></span>
             </span>
             <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm app-admin-logout" aria-label="Đăng xuất" onClick={async () => { await logout(); router.push('/admin/dang-nhap'); }}>

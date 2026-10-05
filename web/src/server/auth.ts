@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createHash, createHmac, randomBytes, randomInt, timingSafeEqual } from 'node:crypto';
 import { cache } from 'react';
+import { cleanGoogleAvatar } from '@/lib/avatar';
 import type { WelcomeOffer } from '@/lib/voucher-labels';
 import { db, schema } from './db';
 import type { Role } from './db/schema';
@@ -128,7 +129,7 @@ export async function verifyOtp(rawPhone: string, code: string): Promise<VerifyR
 const GOOGLE_FLOW_COOKIE = 'ccmt_google_flow';
 const GOOGLE_TTL_MS = 10 * 60 * 1000;
 
-type GoogleProfile = { sub: string; email: string; name: string | null };
+type GoogleProfile = { sub: string; email: string; name: string | null; picture: string | null };
 
 export const googleEnabled = () => Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
 const googleRedirectUri = (origin: string) => `${origin}/api/auth/google/callback`;
@@ -202,28 +203,32 @@ export async function finishGoogleLogin(origin: string, params: URLSearchParams)
   }
   // id_token nhận trực tiếp từ Google qua HTTPS nên không cần kiểm chữ ký; vẫn kiểm tra người nhận + hạn.
   const claims = JSON.parse(Buffer.from(tok.id_token.split('.')[1], 'base64url').toString()) as {
-    iss: string; aud: string; exp: number; sub: string; email?: string; email_verified?: boolean; name?: string;
+    iss: string; aud: string; exp: number; sub: string; email?: string; email_verified?: boolean; name?: string; picture?: string;
   };
   if (!['accounts.google.com', 'https://accounts.google.com'].includes(claims.iss) || claims.aud !== process.env.GOOGLE_CLIENT_ID
     || claims.exp * 1000 < Date.now() || !claims.email || !claims.email_verified) {
     return { ok: false, next, error: 'google' };
   }
-  const g: GoogleProfile = { sub: claims.sub, email: claims.email.toLowerCase(), name: claims.name?.trim() || null };
+  const g: GoogleProfile = { sub: claims.sub, email: claims.email.toLowerCase(), name: claims.name?.trim() || null, picture: cleanGoogleAvatar(claims.picture) };
 
   let [user] = await db.select().from(users).where(eq(users.googleSub, g.sub));
   const current = user ? null : await getCurrentUser();
   if (!user && current && !current.googleSub) {
     // Đang đăng nhập bằng SĐT: gắn Google vào tài khoản hiện tại.
     [user] = await db.update(users)
-      .set({ googleSub: g.sub, name: current.name ?? g.name, email: current.email ?? g.email })
+      .set({ googleSub: g.sub, name: current.name ?? g.name, email: current.email ?? g.email, avatarUrl: g.picture })
       .where(and(eq(users.id, current.id), isNull(users.googleSub)))
       .returning();
   }
   let isNew = false;
   if (!user) {
-    const created = await db.insert(users).values({ googleSub: g.sub, email: g.email, name: g.name }).onConflictDoNothing({ target: users.googleSub }).returning({ id: users.id });
+    const created = await db.insert(users).values({ googleSub: g.sub, email: g.email, name: g.name, avatarUrl: g.picture }).onConflictDoNothing({ target: users.googleSub }).returning({ id: users.id });
     isNew = created.length > 0;
     [user] = await db.select().from(users).where(eq(users.googleSub, g.sub));
+  }
+  // Ảnh Google đổi được: cập nhật mỗi lần đăng nhập (Google không gửi ảnh thì giữ ảnh cũ).
+  if (g.picture && user.avatarUrl !== g.picture) {
+    [user] = await db.update(users).set({ avatarUrl: g.picture }).where(eq(users.id, user.id)).returning();
   }
   if (adminEmails().includes(g.email) && user.role !== 'admin') {
     [user] = await db.update(users).set({ role: 'admin' }).where(eq(users.id, user.id)).returning();
@@ -256,9 +261,9 @@ export async function destroySession() {
   store.delete(SESSION_COOKIE);
 }
 
-export type SessionUser = Pick<typeof users.$inferSelect, 'id' | 'phone' | 'contactPhone' | 'email' | 'googleSub' | 'name' | 'role' | 'points'>;
-const toSessionUser = ({ id, phone, contactPhone, email, googleSub, name, role, points }: typeof users.$inferSelect): SessionUser =>
-  ({ id, phone, contactPhone, email, googleSub, name, role, points });
+export type SessionUser = Pick<typeof users.$inferSelect, 'id' | 'phone' | 'contactPhone' | 'email' | 'googleSub' | 'avatarUrl' | 'name' | 'role' | 'points'>;
+const toSessionUser = ({ id, phone, contactPhone, email, googleSub, avatarUrl, name, role, points }: typeof users.$inferSelect): SessionUser =>
+  ({ id, phone, contactPhone, email, googleSub, avatarUrl, name, role, points });
 
 /** SĐT để liên lạc: SĐT đã xác thực OTP, không có thì SĐT khách tự khai. */
 export const accountPhone = (u: Pick<SessionUser, 'phone' | 'contactPhone'>) => u.phone ?? u.contactPhone ?? null;
@@ -305,6 +310,8 @@ export const publicUser = (u: SessionUser) => ({
   /** SĐT đã xác thực OTP thì khóa, không cho sửa. */
   phoneVerified: Boolean(u.phone),
   initials: (u.name ?? 'Khách hàng').split(/\s+/).map((w) => w[0]).slice(-2).join('').toUpperCase(),
+  /** Ảnh Google của chính người đó; null = hiện chữ cái đầu (initials). */
+  avatarUrl: u.avatarUrl ?? null,
   role: u.role,
   points: u.points,
 });
