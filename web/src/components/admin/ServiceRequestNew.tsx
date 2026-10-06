@@ -75,7 +75,7 @@ export function ServiceRequestNew() {
         </div>
         <div className="ad-f">
           <label htmlFor="nr-note">Nhu cầu / ghi chú</label>
-          <textarea id="nr-note" className="vx-input" style={{ minHeight: 80, fontSize: 13 }} maxLength={1000} value={v.note} onChange={(e) => set('note', e.target.value)}
+          <textarea id="nr-note" className="vx-input" style={{ minHeight: 80, fontSize: '0.8125rem' }} maxLength={1000} value={v.note} onChange={(e) => set('note', e.target.value)}
             placeholder="Ví dụ: thuê 30 cây văn phòng 2 tầng, muốn khảo sát sáng thứ 7" />
         </div>
         {error && <span className="vx-err" role="alert">{error}</span>}

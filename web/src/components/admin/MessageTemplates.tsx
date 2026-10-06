@@ -63,10 +63,10 @@ export function MessageTemplates({ templates, zaloReady, emailReady }: { templat
 
       <div className="mt-edit">
         <div className="vx-label-row">
-          <b style={{ fontSize: 15 }}>{cur.def.title}</b>
+          <b style={{ fontSize: '0.9375rem' }}>{cur.def.title}</b>
           <span className={`vx-badge ${cur.custom ? 'vx-badge--success' : 'vx-badge--outline'}`}>{cur.custom ? 'Đã chỉnh sửa' : 'Mặc định'}</span>
         </div>
-        <span style={{ fontSize: 12, color: 'var(--ink-muted)' }}>Gửi tự động khi: {cur.def.trigger}.</span>
+        <span style={{ fontSize: '0.75rem', color: 'var(--ink-muted)' }}>Gửi tự động khi: {cur.def.trigger}.</span>
         <div className="ad-f">
           <label>Biến có thể chèn (bấm để chèn vào chỗ con trỏ)</label>
           <div className="mt-vars">
@@ -102,7 +102,7 @@ export function MessageTemplates({ templates, zaloReady, emailReady }: { templat
             {v.external ? <>Chào Chị Ngọc,<br />{rendered.replace(/\*\*/g, '')}</> : <i style={{ color: 'var(--ink-muted)' }}>Không gửi ra ngoài (đang tắt)</i>}
           </div>
         </div>
-        <span style={{ fontSize: 11, color: 'var(--ink-muted)', textAlign: 'center' }}>Mẫu Zalo ZNS phải được Zalo duyệt; shop dùng một mẫu ZNS chung nhận {'{tên khách}'}, {'{nội dung}'}, {'{link}'}.</span>
+        <span style={{ fontSize: '0.6875rem', color: 'var(--ink-muted)', textAlign: 'center' }}>Mẫu Zalo ZNS phải được Zalo duyệt; shop dùng một mẫu ZNS chung nhận {'{tên khách}'}, {'{nội dung}'}, {'{link}'}.</span>
       </div>
     </div>
   );

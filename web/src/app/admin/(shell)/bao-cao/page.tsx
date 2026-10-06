@@ -71,7 +71,7 @@ export default async function AdminReportsPage({ searchParams }: Props) {
           ))}
         </span>
       </div>
-      <p style={{ margin: 0, fontSize: 12, color: 'var(--ink-muted)' }}>
+      <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--ink-muted)' }}>
         Tính từ đơn bán chưa hủy (không tính đơn 0đ do bảo hành tạo). Kỳ trước = khoảng thời gian liền trước, dài bằng kỳ đang xem.
       </p>
 
@@ -128,7 +128,7 @@ export default async function AdminReportsPage({ searchParams }: Props) {
               <small>{r.revenue ? `Biên ${fmtPct(margin)} doanh thu · ` : ''}kỳ trước: {shortMoney(f.prev.profit)}</small>
             </div>
           </div>
-          <span style={{ fontSize: 12, color: 'var(--ink-muted)' }}>
+          <span style={{ fontSize: '0.75rem', color: 'var(--ink-muted)' }}>
             Lãi ước tính = doanh thu − tiền hàng nhập − chi phí khác, cùng kỳ. Doanh thu là đơn chưa hủy (kể cả chưa giao / chưa thu tiền); tiền hàng nhập là số lượng × giá nhập trên phiếu nhập trong kỳ — không phải giá vốn đúng số hàng đã bán.
           </span>
         </div>
@@ -183,7 +183,7 @@ export default async function AdminReportsPage({ searchParams }: Props) {
                 })()}
               </div>
             ) : <span style={{ color: 'var(--ink-muted)' }}>Chưa giao cây sống nào trong kỳ.</span>}
-            <span style={{ fontSize: 12, color: 'var(--ink-muted)' }}>
+            <span style={{ fontSize: '0.75rem', color: 'var(--ink-muted)' }}>
               {r.warranty.causes.length
                 ? <>Nguyên nhân kỹ sư ghi nhiều nhất: {r.warranty.causes.map((c) => `${c.cause} (${c.n})`).join(', ')}.</>
                 : r.warranty.claims ? 'Các yêu cầu bảo hành trong kỳ chưa được ghi nguyên nhân.' : 'Chưa có yêu cầu bảo hành trong kỳ.'}
@@ -230,7 +230,7 @@ export default async function AdminReportsPage({ searchParams }: Props) {
           </div>
         </div>
         <div className="ad-card">
-          <div className="ad-card__h">Bán kèm với cây<span style={{ fontWeight: 400, color: 'var(--ink-muted)', fontSize: 12 }}>vật tư mua cùng đơn</span></div>
+          <div className="ad-card__h">Bán kèm với cây<span style={{ fontWeight: 400, color: 'var(--ink-muted)', fontSize: '0.75rem' }}>vật tư mua cùng đơn</span></div>
           <div className="ad-card__b">
             {r.crossSell.plantOrders ? (
               <>
@@ -243,7 +243,7 @@ export default async function AdminReportsPage({ searchParams }: Props) {
                     </div>
                   )) : <span style={{ color: 'var(--ink-muted)' }}>Chưa đơn có cây nào mua kèm vật tư.</span>}
                 </div>
-                <span style={{ fontSize: 12, color: 'var(--ink-muted)' }}>Tính trên {r.crossSell.plantOrders} đơn có cây sống.</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--ink-muted)' }}>Tính trên {r.crossSell.plantOrders} đơn có cây sống.</span>
               </>
             ) : <span style={{ color: 'var(--ink-muted)' }}>Chưa có đơn cây sống trong kỳ.</span>}
           </div>
@@ -264,7 +264,7 @@ export default async function AdminReportsPage({ searchParams }: Props) {
       </div>
 
       <div className="ad-card">
-        <div className="ad-card__h">Sản phẩm bán chạy<span style={{ fontWeight: 400, color: 'var(--ink-muted)', fontSize: 12 }}>theo doanh thu hàng hóa</span></div>
+        <div className="ad-card__h">Sản phẩm bán chạy<span style={{ fontWeight: 400, color: 'var(--ink-muted)', fontSize: '0.75rem' }}>theo doanh thu hàng hóa</span></div>
         <table className="ad-table app-mtable">
           <thead><tr><th>Sản phẩm</th><th className="num">Đã bán</th><th className="num">Doanh thu</th></tr></thead>
           <tbody>

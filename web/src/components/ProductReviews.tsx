@@ -66,8 +66,8 @@ export function ProductReviews({ slug, items, isPlant }: { slug: string; items: 
   return (
     <section className="vx-card" id="danh-gia">
       <div className="vx-sect">
-        <h2 style={{ fontSize: 18 }}>
-          Đánh giá sản phẩm <small style={{ fontWeight: 400, color: 'var(--ink-muted)', fontSize: 14 }}>({stats.count} đánh giá)</small>
+        <h2 style={{ fontSize: '1.125rem' }}>
+          Đánh giá sản phẩm <small style={{ fontWeight: 400, color: 'var(--ink-muted)', fontSize: '0.875rem' }}>({stats.count} đánh giá)</small>
         </h2>
       </div>
 
@@ -75,12 +75,12 @@ export function ProductReviews({ slug, items, isPlant }: { slug: string; items: 
         <div className="vx-rating__big">
           {stats.count ? (
             <>
-              <span style={{ color: 'var(--ink-muted)', fontSize: 13 }}>Trung bình</span>
+              <span style={{ color: 'var(--ink-muted)', fontSize: '0.8125rem' }}>Trung bình</span>
               <b>{stats.avg.toFixed(1).replace('.', ',')}</b>
               <span className="vx-stars">{starsText(stats.avg)}</span>
             </>
           ) : (
-            <span style={{ color: 'var(--ink-muted)', fontSize: 14 }}>Chưa có đánh giá nào.<br />Hãy là người đầu tiên chia sẻ trải nghiệm!</span>
+            <span style={{ color: 'var(--ink-muted)', fontSize: '0.875rem' }}>Chưa có đánh giá nào.<br />Hãy là người đầu tiên chia sẻ trải nghiệm!</span>
           )}
           {!editing && (
             <button type="button" className="vx-btn vx-btn--primary vx-btn--sm" style={{ alignSelf: 'flex-start' }} onClick={write}>
@@ -131,7 +131,7 @@ export function ProductReviews({ slug, items, isPlant }: { slug: string; items: 
       {list.slice(0, shown).map((r) => (
         <ReviewItem key={r.id} r={r} slug={slug} onZoom={setZoom} onEdit={write} onDeleted={() => setNotice('Đã xóa đánh giá của bạn.')} />
       ))}
-      {stats.count > 0 && !list.length && <p style={{ color: 'var(--ink-muted)', fontSize: 14, margin: 0 }}>Chưa có đánh giá phù hợp bộ lọc.</p>}
+      {stats.count > 0 && !list.length && <p style={{ color: 'var(--ink-muted)', fontSize: '0.875rem', margin: 0 }}>Chưa có đánh giá phù hợp bộ lọc.</p>}
       {list.length > shown && (
         <button type="button" className="vx-btn vx-btn--ghost" style={{ alignSelf: 'center' }} onClick={() => setShown((n) => n + 10)}>
           Xem thêm {list.length - shown} đánh giá
@@ -270,7 +270,7 @@ function ReviewForm({ slug, mine, isPlant, onCancel, onDone }: {
   const shown = hover || stars;
   return (
     <div className="rvw-form">
-      <b style={{ fontSize: 15 }}>{mine ? 'Sửa đánh giá của bạn' : 'Viết đánh giá'}</b>
+      <b style={{ fontSize: '0.9375rem' }}>{mine ? 'Sửa đánh giá của bạn' : 'Viết đánh giá'}</b>
       <div className="rvw-stars" onMouseLeave={() => setHover(0)}>
         {[1, 2, 3, 4, 5].map((s) => (
           <button
@@ -298,12 +298,12 @@ function ReviewForm({ slug, mine, isPlant, onCancel, onDone }: {
             ? 'Cây giao về thế nào? Lá, rễ, chậu, đóng gói… Sau vài tuần cây phát triển ra sao?'
             : 'Sản phẩm dùng có hiệu quả không? Đóng gói, hạn dùng, giao hàng thế nào?'}
         />
-        <small style={{ color: len && len < REVIEW_MIN_CHARS ? 'var(--danger)' : 'var(--ink-muted)', fontSize: 12 }}>
+        <small style={{ color: len && len < REVIEW_MIN_CHARS ? 'var(--danger)' : 'var(--ink-muted)', fontSize: '0.75rem' }}>
           {len}/{REVIEW_MAX_CHARS} ký tự{len < REVIEW_MIN_CHARS ? ` · tối thiểu ${REVIEW_MIN_CHARS}` : ''}
         </small>
       </div>
       <div className="ad-f">
-        <span style={{ fontSize: 13, fontWeight: 600 }}>Ảnh thực tế <small style={{ fontWeight: 400, color: 'var(--ink-muted)' }}>(không bắt buộc, tối đa {MAX_REVIEW_PHOTOS} ảnh)</small></span>
+        <span style={{ fontSize: '0.8125rem', fontWeight: 600 }}>Ảnh thực tế <small style={{ fontWeight: 400, color: 'var(--ink-muted)' }}>(không bắt buộc, tối đa {MAX_REVIEW_PHOTOS} ảnh)</small></span>
         <div className="rvw-pics">
           {keep.map((k) => (
             <span key={k.file} style={{ backgroundImage: `url(${k.url})` }}>
@@ -323,7 +323,7 @@ function ReviewForm({ slug, mine, isPlant, onCancel, onDone }: {
           <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => pick(e.target.files)} />
         </div>
       </div>
-      {error && <p role="alert" style={{ color: 'var(--danger)', fontSize: 13, margin: 0 }}>{error}</p>}
+      {error && <p role="alert" style={{ color: 'var(--danger)', fontSize: '0.8125rem', margin: 0 }}>{error}</p>}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <button type="button" className="vx-btn vx-btn--primary" onClick={submit} disabled={pending || busy}>
           {pending ? 'Đang gửi…' : mine ? 'Lưu đánh giá' : 'Gửi đánh giá'}

@@ -118,7 +118,7 @@ export default async function NewsPage({ searchParams }: Props) {
           <PostLinks title="Xem nhiều" posts={popular} extra={(p) => `${(p as PostCard).views.toLocaleString('vi-VN')} lượt xem`} />
           <div className="nw-box">
             <h3>Liên hệ báo chí</h3>
-            <span style={{ fontSize: 13, lineHeight: '20px' }}>
+            <span style={{ fontSize: '0.8125rem', lineHeight: '20px' }}>
               Email: <a href="mailto:nhanjara@gmail.com" style={{ display: 'inline', padding: 0, border: 0 }}>nhanjara@gmail.com</a><br />
               Điện thoại: <a href={`tel:${SALES_PHONE}`} style={{ display: 'inline', padding: 0, border: 0 }}>{SALES_PHONE.replace(/(\d{4})(\d{3})(\d{3})/, '$1 $2 $3')}</a>
             </span>

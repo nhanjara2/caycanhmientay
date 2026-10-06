@@ -34,7 +34,7 @@ export default async function AdminDeliveryPage({ searchParams }: Props) {
           {date !== today && <Link className="vx-btn vx-btn--outline vx-btn--sm" href={link(today)}>Hôm nay</Link>}
           <Link className="vx-btn vx-btn--outline vx-btn--sm" href={link(addDaysYmd(date, 1))} aria-label="Ngày sau">›</Link>
           <form action="/admin/giao-hang" style={{ display: 'flex', gap: 6 }}>
-            <input className="vx-input" type="date" name="ngay" defaultValue={date} aria-label="Chọn ngày" style={{ padding: '6px 8px', fontSize: 13 }} />
+            <input className="vx-input" type="date" name="ngay" defaultValue={date} aria-label="Chọn ngày" style={{ padding: '6px 8px', fontSize: '0.8125rem' }} />
             <button className="vx-btn vx-btn--outline vx-btn--sm">Xem</button>
           </form>
         </span>

@@ -70,7 +70,7 @@ export function WarrantyDecision({ id, itemQty, itemPrice }: { id: number; itemQ
             </div>
           )}
           {resolution === 'rescue' && (
-            <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 14, cursor: 'pointer' }}>
+            <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: '0.875rem', cursor: 'pointer' }}>
               <input type="checkbox" checked={gift} onChange={(e) => setGift(e.target.checked)} />
               Tặng 1 chai Trichoderma (tự tạo đơn 0đ, trừ kho)
             </label>

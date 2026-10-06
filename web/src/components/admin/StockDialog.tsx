@@ -118,7 +118,7 @@ export function StockDialog({ slug, idx, name, label, stock, lotTracked, stores,
             <div className="vx-modal__body">
               <div>
                 <b>{name}</b>
-                <div style={{ color: 'var(--ink-muted)', fontSize: 13 }}>
+                <div style={{ color: 'var(--ink-muted)', fontSize: '0.8125rem' }}>
                   {label} · tổng tồn <b>{stock}</b> · {stores.map((s) => `${s.code} ${inStore(s.id)}`).join(' · ')}
                 </div>
               </div>

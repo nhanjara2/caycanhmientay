@@ -153,7 +153,7 @@ export function StoreLocatorView() {
                 </div>
               </div>
             </div>{' '}
-            <p style={{ margin: '0', fontSize: '14px', color: 'var(--ink-muted)' }}>
+            <p style={{ margin: '0', fontSize: '0.875rem', color: 'var(--ink-muted)' }}>
               Cây Cảnh Miền Tây có vườn ươm riêng và hệ thống cửa hàng, nơi bạn xem cây tận mắt và nhận tư vấn trực tiếp
               từ kỹ sư:
             </p>{' '}

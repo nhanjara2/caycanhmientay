@@ -34,7 +34,7 @@ function Rows<T>({ title, hint, items, max, blank, onChange, render }: {
           </div>
         ))}
         {!items.length && <span className="hint">Chưa có dòng nào.</span>}
-        {hint && <span className="hint" style={{ fontSize: 11, color: 'var(--ink-muted)' }}>{hint}</span>}
+        {hint && <span className="hint" style={{ fontSize: '0.6875rem', color: 'var(--ink-muted)' }}>{hint}</span>}
       </div>
     </div>
   );
@@ -67,7 +67,7 @@ function SymptomPhoto({ slug, file, onChange }: { slug: string; file?: string; o
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
       {file
         ? <img src={diseaseImageUrl(file)} alt="Ảnh minh họa triệu chứng" width={72} height={54} style={{ width: 72, height: 54, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)' }} />
-        : <span style={{ width: 72, height: 54, borderRadius: 6, border: '1px dashed var(--border)', display: 'grid', placeItems: 'center', fontSize: 11, color: 'var(--ink-muted)' }}>Chưa có ảnh</span>}
+        : <span style={{ width: 72, height: 54, borderRadius: 6, border: '1px dashed var(--border)', display: 'grid', placeItems: 'center', fontSize: '0.6875rem', color: 'var(--ink-muted)' }}>Chưa có ảnh</span>}
       <input ref={input} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(e) => void pick(e.target.files?.[0])} />
       <button type="button" className="vx-btn vx-btn--outline vx-btn--sm" disabled={busy} onClick={() => input.current?.click()}>
         {busy ? 'Đang tải…' : file ? 'Đổi ảnh' : '+ Thêm ảnh'}
@@ -218,7 +218,7 @@ export function DiseaseForm({ initial, canEdit, products, diseases }: {
               <div className="ad-card__b">
                 <textarea className="vx-input" style={{ minHeight: 64 }} value={v.safety} onChange={(e) => set('safety', e.target.value)} maxLength={600} aria-label="Lưu ý an toàn"
                   placeholder="Đeo găng tay, khẩu trang khi pha thuốc…" />
-                <span className="hint" style={{ fontSize: 11, color: 'var(--ink-muted)' }}>Bắt buộc nên có khi cách xử lý dùng thuốc BVTV. Bỏ trống thì trang không hiện khung này.</span>
+                <span className="hint" style={{ fontSize: '0.6875rem', color: 'var(--ink-muted)' }}>Bắt buộc nên có khi cách xử lý dùng thuốc BVTV. Bỏ trống thì trang không hiện khung này.</span>
               </div>
             </div>
           </div>
@@ -276,7 +276,7 @@ export function DiseaseForm({ initial, canEdit, products, diseases }: {
                   const p = byslug.get(s);
                   return (
                     <div key={s} className="ad-frow app-rowx" style={{ alignItems: 'center' }}>
-                      <span style={{ fontSize: 13 }}>
+                      <span style={{ fontSize: '0.8125rem' }}>
                         {p ? p.name : <s>{s}</s>}
                         <small style={{ display: 'block', color: p?.active ? 'var(--ink-muted)' : 'var(--danger)' }}>{!p ? 'Sản phẩm đã bị xóa' : p.active ? p.sku : `${p.sku} · Đang ẩn, không hiện trên web`}</small>
                       </span>
@@ -300,7 +300,7 @@ export function DiseaseForm({ initial, canEdit, products, diseases }: {
                     {terms.length > 0 && !matches.length && <span className="hint">Không tìm thấy sản phẩm.</span>}
                   </div>
                 )}
-                <span className="hint" style={{ fontSize: 11, color: 'var(--ink-muted)' }}>Tối đa {MAX_PRODUCTS} sản phẩm, hiện cuối trang bệnh theo thứ tự này.</span>
+                <span className="hint" style={{ fontSize: '0.6875rem', color: 'var(--ink-muted)' }}>Tối đa {MAX_PRODUCTS} sản phẩm, hiện cuối trang bệnh theo thứ tự này.</span>
               </div>
             </div>
           </div>

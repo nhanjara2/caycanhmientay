@@ -39,7 +39,7 @@ export function FlashSale({ products }: { products: Product[] }) {
     <section className="vx-flash" id="flash-sale">
       <div className="vx-flash__bar">
         <span className="vx-flash__title"><Icon name="bolt" />Flash sale giờ vàng</span>
-        <span style={{ fontSize: 13 }}>{active >= 0 ? 'Kết thúc sau' : 'Bắt đầu sau'}</span>
+        <span style={{ fontSize: '0.8125rem' }}>{active >= 0 ? 'Kết thúc sau' : 'Bắt đầu sau'}</span>
         <span className="vx-count" suppressHydrationWarning>
           <b>{pad(Math.floor(left / 3600))}</b>:<b>{pad(Math.floor(left / 60) % 60)}</b>:<b>{pad(left % 60)}</b>
         </span>

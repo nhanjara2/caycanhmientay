@@ -49,7 +49,7 @@ export default async function DiseaseDetailPage({ params }: Props) {
             <span className="vx-badge vx-badge--info">{d.parts.map(partName).join(', ')}</span>
             {d.season && <span className="vx-badge vx-badge--info">{d.season}</span>}
           </span>
-          <p style={{ margin: 0, color: 'var(--ink-muted)', fontSize: 15, lineHeight: '24px' }}>{d.summary}</p>
+          <p style={{ margin: 0, color: 'var(--ink-muted)', fontSize: '0.9375rem', lineHeight: '24px' }}>{d.summary}</p>
           <div className="dd-facts">
             <div>
               Mức nguy hiểm<b>{SEVERITY[d.severity]}</b>
@@ -70,7 +70,7 @@ export default async function DiseaseDetailPage({ params }: Props) {
         </div>
       </div>
 
-      <h2 style={{ margin: '8px 0 0', fontSize: 20 }}>Triệu chứng</h2>
+      <h2 style={{ margin: '8px 0 0', fontSize: '1.25rem' }}>Triệu chứng</h2>
       <div className="dd-sym">
         {d.symptoms.map((s, i) => (
           <div key={i}>
@@ -94,7 +94,7 @@ export default async function DiseaseDetailPage({ params }: Props) {
         </div>
       )}
 
-      <h2 style={{ margin: '8px 0 0', fontSize: 20 }}>Cách xử lý</h2>
+      <h2 style={{ margin: '8px 0 0', fontSize: '1.25rem' }}>Cách xử lý</h2>
       <div className="dd-steps">
         {d.steps.map((s, i) => (
           <div key={i} className="dd-step">
@@ -112,7 +112,7 @@ export default async function DiseaseDetailPage({ params }: Props) {
 
       {d.prevention.length > 0 && (
         <>
-          <h2 style={{ margin: '8px 0 0', fontSize: 20 }}>Phòng bệnh</h2>
+          <h2 style={{ margin: '8px 0 0', fontSize: '1.25rem' }}>Phòng bệnh</h2>
           <ul className="dd-prev">{d.prevention.map((p, i) => <li key={i}>{p}</li>)}</ul>
         </>
       )}

@@ -72,7 +72,7 @@ function Item({ l, editable, setQty, remove }: {
     <div className="vx-item">
       <Link href={`/san-pham/${l.slug}`} className="vx-item__img">{p.image ? <img src={p.image} alt="" /> : <Art name={p.icon} />}</Link>
       <div className="vx-item__info">
-        {p.flash && <span><span className="vx-badge vx-badge--sale" style={{ fontSize: 11, padding: '2px 6px' }}><Icon name="bolt" size={12} />Flash sale</span></span>}
+        {p.flash && <span><span className="vx-badge vx-badge--sale" style={{ fontSize: '0.6875rem', padding: '2px 6px' }}><Icon name="bolt" size={12} />Flash sale</span></span>}
         <p className="vx-item__name"><Link href={`/san-pham/${l.slug}`}>{p.name}</Link></p>
         <span className="vx-item__unit">Đơn vị: {p.unit} · {p.label}</span>
       </div>

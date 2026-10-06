@@ -46,7 +46,7 @@ export default async function WarrantyPage() {
 
           {requests.length > 0 && (
             <>
-              <b style={{ fontSize: 16, marginTop: 8 }}>Yêu cầu đã gửi</b>
+              <b style={{ fontSize: '1rem', marginTop: 8 }}>Yêu cầu đã gửi</b>
               {requests.map((r) => (
                 <article key={r.w.id} className="vx-order">
                   <div className="vx-order__head">

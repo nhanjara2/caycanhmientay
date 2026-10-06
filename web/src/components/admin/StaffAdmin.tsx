@@ -58,7 +58,7 @@ export function StaffInvite() {
             </div>
             <p className="vx-help" style={{ margin: 0 }}>{STAFF_ROLE_INFO[role].hint}. Nhân viên đăng nhập bằng đúng số điện thoại này (mã OTP gửi về số đó).</p>
             {error && <span className="vx-err" role="alert">{error}</span>}
-            {done && <span className="vx-ok" role="status" style={{ color: 'var(--success)', fontSize: 13 }}>{done}</span>}
+            {done && <span className="vx-ok" role="status" style={{ color: 'var(--success)', fontSize: '0.8125rem' }}>{done}</span>}
             <span className="acts" style={{ display: 'flex', gap: 8 }}>
               <button className="vx-btn vx-btn--primary" disabled={pending}>{pending ? 'Đang thêm…' : 'Thêm nhân viên'}</button>
             </span>

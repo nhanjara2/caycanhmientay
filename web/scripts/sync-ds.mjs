@@ -1,6 +1,8 @@
 // Chép tokens.css + components.css từ ../design-system vào src/styles/ds,
 // và sinh responsive.css: design system chỉ vẽ cho desktop, file này thu lưới/hàng lại trên mobile.
 // Bỏ dòng @import Google Fonts vì font đã nạp qua next/font trong app/layout.tsx.
+// Đổi cỡ chữ + dòng cao từ px sang rem và mốc @media từ px sang em (1rem = 16px mặc định → hiển thị y hệt khi khách chưa chỉnh gì;
+// nhưng khi khách tăng "Cỡ chữ" trong trình duyệt thì chữ và điểm chuyển bố cục co giãn theo). design-system/ giữ nguyên px.
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -10,11 +12,19 @@ const src = join(web, '..', 'design-system');
 const out = join(web, 'src/styles/ds');
 mkdirSync(out, { recursive: true });
 
+const num = (n) => String(+n.toFixed(4));
+/** font-size / line-height: Npx -> N/16 rem; (min|max)-width: Npx trong @media -> N/16 em. */
+export function pxToRem(css) {
+  return css
+    .replace(/(font-size|line-height)(\s*:\s*)(\d*\.?\d+)px/g, (_, p, sep, n) => `${p}${sep}${num(n / 16)}rem`)
+    .replace(/\((min|max)-width(\s*:\s*)(\d*\.?\d+)px\)/g, (_, k, sep, n) => `(${k}-width${sep}${num(n / 16)}em)`);
+}
+
 const files = {};
 for (const file of ['tokens.css', 'components.css']) {
   const css = readFileSync(join(src, file), 'utf8').replace(/^@import url\([^)]*\);\s*/m, '');
   files[file] = css;
-  writeFileSync(join(out, file), `/* Chép từ design-system/${file} — không sửa tay, chạy npm run sync-ds */\n${css}`);
+  writeFileSync(join(out, file), `/* Chép từ design-system/${file} (cỡ chữ px → rem, @media px → em) — không sửa tay, chạy npm run sync-ds */\n${pxToRem(css)}`);
 }
 
 // ---- responsive.css ----------------------------------------------------------------------
@@ -70,7 +80,7 @@ const responsive = `/* Sinh bởi scripts/sync-ds.mjs từ components.css — kh
  * Lưới ghi inline trong view dùng biến --cols (class .app-cols). */
 .app-cols { grid-template-columns: var(--cols); }
 
-@media (max-width: 767px) {
+@media (max-width: 47.9375em) {
 ${frFix.map(([s, v]) => `  ${s} { grid-template-columns: ${v}; }\n`).join('')}${block(oneCol, 'grid-template-columns: minmax(0, 1fr);')}${block(twoCol, 'grid-template-columns: repeat(2, minmax(0, 1fr));')}${shrink.map(([s, n]) => `  ${s} { grid-template-columns: repeat(${n}, minmax(0, 1fr)); }\n`).join('')}${block(wrap, 'flex-wrap: wrap;')}  .app-cols { grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr)); }
   .vx-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
 }

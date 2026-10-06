@@ -20,7 +20,7 @@ export function CampaignView() {
             <h1>Cây Tết đặt sớm – giữ giá, giao đúng ngày</h1>
             <p>Chọn cây từ bây giờ, cọc 30%. Vườn chăm và canh hoa nở đúng Tết, giao tận nhà theo lịch bạn chọn.</p>
             <div className="cp-count">
-              <span style={{ fontSize: '13px', marginRight: '6px' }}>Ưu đãi đặt sớm kết thúc sau</span>
+              <span style={{ fontSize: '0.8125rem', marginRight: '6px' }}>Ưu đãi đặt sớm kết thúc sau</span>
               <div>
                 <b>18</b>
                 <small>ngày</small>
@@ -99,7 +99,7 @@ export function CampaignView() {
         </section>{' '}
         <section className="sv-sec" style={{ paddingTop: '0' }}>
           <div className="vx-sect">
-            <h2 style={{ fontSize: '18px' }}>
+            <h2 style={{ fontSize: '1.125rem' }}>
               <span className="vx-sect__mark">
                 <svg className="vx-ico" viewBox="0 0 24 24">
                   <rect x="4" y="5" width="16" height="15" rx="2" />
@@ -108,7 +108,7 @@ export function CampaignView() {
               </span>
               Lịch giao cây Tết
             </h2>
-            <span style={{ fontSize: '13px', color: 'var(--ink-muted)' }}>
+            <span style={{ fontSize: '0.8125rem', color: 'var(--ink-muted)' }}>
               Mỗi ngày giới hạn số chuyến để giao đúng giờ
             </span>
           </div>

@@ -79,7 +79,7 @@ export default async function AdminExpensesPage({ searchParams }: Props) {
           ))}
         </span>
       </div>
-      <p style={{ margin: 0, fontSize: 12, color: 'var(--ink-muted)' }}>
+      <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--ink-muted)' }}>
         Sổ này ghi các khoản chi <b>ngoài hàng nhập kho</b>. Tiền hàng nhập lấy tự động từ <Link href="/admin/nhap-hang" style={{ color: 'var(--primary)' }}>phiếu nhập</Link> (số lượng × giá nhập) — đừng ghi lại ở đây để khỏi tính hai lần.
       </p>
 
@@ -101,7 +101,7 @@ export default async function AdminExpensesPage({ searchParams }: Props) {
         </div>
         <div className="ad-kpi">
           <span><Icon name="alert" />Nhóm chi lớn nhất</span>
-          <b style={{ fontSize: top ? 18 : undefined }}>{top ? top.name : '—'}</b>
+          <b style={{ fontSize: top ? '1.125rem' : undefined }}>{top ? top.name : '—'}</b>
           <small>{top ? `${shortMoney(top.total)} · ${fmtPct(pct(top.total, fin.expenses))} chi phí khác` : 'Chưa có khoản chi trong kỳ'}</small>
         </div>
       </div>

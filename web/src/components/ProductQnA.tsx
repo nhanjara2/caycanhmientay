@@ -75,8 +75,8 @@ export function ProductQnA({ slug, items, pesticide }: { slug: string; items: Qu
 
   return (
     <section className="vx-card app-qa" id="cau-hoi">
-      <h2 style={{ margin: 0, fontSize: 18 }}>
-        Hỏi đáp <small style={{ fontWeight: 400, color: 'var(--ink-muted)', fontSize: 14 }}>({list.length} câu hỏi)</small>
+      <h2 style={{ margin: 0, fontSize: '1.125rem' }}>
+        Hỏi đáp <small style={{ fontWeight: 400, color: 'var(--ink-muted)', fontSize: '0.875rem' }}>({list.length} câu hỏi)</small>
       </h2>
       <div className="vx-ask">
         <textarea
@@ -96,7 +96,7 @@ export function ProductQnA({ slug, items, pesticide }: { slug: string; items: Qu
             {pending ? 'Đang gửi…' : 'Gửi câu hỏi'}
           </button>
         </div>
-        {error && <p role="alert" style={{ color: 'var(--danger)', fontSize: 13, margin: 0 }}>{error}</p>}
+        {error && <p role="alert" style={{ color: 'var(--danger)', fontSize: '0.8125rem', margin: 0 }}>{error}</p>}
       </div>
       {notice && <div className="vx-note" role="status"><Icon name="check" /><div>{notice}</div></div>}
 
@@ -110,7 +110,7 @@ export function ProductQnA({ slug, items, pesticide }: { slug: string; items: Qu
       )}
 
       {list.slice(0, shown).map((q) => <QuestionItem key={q.id} slug={slug} q={q} pesticide={pesticide} />)}
-      {!list.length && <p style={{ color: 'var(--ink-muted)', fontSize: 14, margin: 0 }}>Chưa có câu hỏi nào. Bạn cần tư vấn gì về sản phẩm này?</p>}
+      {!list.length && <p style={{ color: 'var(--ink-muted)', fontSize: '0.875rem', margin: 0 }}>Chưa có câu hỏi nào. Bạn cần tư vấn gì về sản phẩm này?</p>}
       {list.length > shown && (
         <button type="button" className="vx-btn vx-btn--ghost" style={{ alignSelf: 'center' }} onClick={() => setShown((n) => n + 10)}>
           Xem thêm {list.length - shown} câu hỏi
@@ -234,7 +234,7 @@ function QuestionItem({ slug, q, pesticide }: { slug: string; q: QuestionView; p
                 <button type="button" className="vx-btn vx-btn--primary vx-btn--sm" onClick={send} disabled={pending}>{pending ? 'Đang gửi…' : 'Gửi'}</button>
               </span>
             </div>
-            {error && <p role="alert" style={{ color: 'var(--danger)', fontSize: 13, margin: 0 }}>{error}</p>}
+            {error && <p role="alert" style={{ color: 'var(--danger)', fontSize: '0.8125rem', margin: 0 }}>{error}</p>}
           </div>
         )}
         {notice && <small className="app-qa__wait" role="status"><Icon name="check" size={14} /> {notice}</small>}

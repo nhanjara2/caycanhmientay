@@ -91,7 +91,7 @@ export default async function DiseaseLibraryPage({ searchParams }: Props) {
             </span>
           </div>
           {(part || cause || plant || q) && (
-            <Link href="/benh-cay#danh-sach" className="vx-link" style={{ fontSize: 13 }} scroll={false}>✕ Bỏ tất cả bộ lọc</Link>
+            <Link href="/benh-cay#danh-sach" className="vx-link" style={{ fontSize: '0.8125rem' }} scroll={false}>✕ Bỏ tất cả bộ lọc</Link>
           )}
           {shown.length ? (
             <div className="vx-dlist">

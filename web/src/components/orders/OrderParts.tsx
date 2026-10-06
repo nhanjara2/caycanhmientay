@@ -115,7 +115,7 @@ export function OrderDetail({ o }: { o: OrderFull }) {
           </div>
           <div className="vx-od__state">
             {last && (
-              <span style={{ display: 'flex', gap: 6, alignItems: 'center', fontSize: 13, color: 'var(--ink-muted)' }}>
+              <span style={{ display: 'flex', gap: 6, alignItems: 'center', fontSize: '0.8125rem', color: 'var(--ink-muted)' }}>
                 <Icon name="clock" size={16} />Cập nhật lúc {fmtDateTime(last.createdAt)}
               </span>
             )}
@@ -143,7 +143,7 @@ export function OrderDetail({ o }: { o: OrderFull }) {
             </div>
           )}
         </div>
-        <b style={{ fontSize: 14 }}>Danh sách sản phẩm</b>
+        <b style={{ fontSize: '0.875rem' }}>Danh sách sản phẩm</b>
         <div className="vx-od__card">
           <div className="vx-order__body">
             {o.items.map((i) => (
@@ -167,7 +167,7 @@ export function OrderDetail({ o }: { o: OrderFull }) {
             {plantShip && <div><span>Phí giao cây sống</span>{o.plantShip ? <b>{money(o.plantShip)}</b> : <b className="pos">Miễn phí</b>}</div>}
             {supplyShip && <div><span>Phí giao vật tư</span>{o.supplyShip ? <b>{money(o.supplyShip)}</b> : <b className="pos">Miễn phí</b>}</div>}
           </div>
-          <div className="vx-total"><b>Thành tiền</b><span className="amt" style={{ fontSize: 20 }}>{money(o.total)}</span></div>
+          <div className="vx-total"><b>Thành tiền</b><span className="amt" style={{ fontSize: '1.25rem' }}>{money(o.total)}</span></div>
           <div className="vx-paid">
             <span>Phương thức thanh toán</span>
             {o.paid ? <span className="ok"><Icon name="check" />Đã thanh toán</span> : <span>{o.paymentMethod === 'cod' ? 'Trả khi nhận hàng' : 'Chờ thanh toán'}</span>}

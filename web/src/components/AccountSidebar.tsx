@@ -39,7 +39,7 @@ export function AccountSidebar() {
       <aside className="vx-acct" data-hub={isHub ? '' : undefined}>
         <div className="vx-acct__card">
           <Avatar size="lg" initials={user?.initials ?? 'KH'} url={user?.avatarUrl} />
-          <b style={{ fontSize: 16 }}>{user?.name ?? 'Khách'}</b>
+          <b style={{ fontSize: '1rem' }}>{user?.name ?? 'Khách'}</b>
           <small>{user?.phoneMasked ?? 'Chưa đăng nhập'}</small>
           <span className="vx-tier">{user?.role === 'admin' ? 'Quản trị viên' : 'Thành viên'}</span>
           <div className="vx-acct__points">

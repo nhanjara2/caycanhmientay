@@ -15,7 +15,7 @@ export function WishlistGrid({ products }: { products: Product[] }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0 }}>
       <div className="gd-head">
-        <h2>Sản phẩm yêu thích <small style={{ fontSize: 14, fontWeight: 500, color: 'var(--ink-muted)' }}>({items.length})</small></h2>
+        <h2>Sản phẩm yêu thích <small style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--ink-muted)' }}>({items.length})</small></h2>
         <span className="acts">
           <span className="vx-seg">
             <button type="button" className="vx-chip" aria-pressed={tab === 'all'} onClick={() => setTab('all')}>Tất cả</button>

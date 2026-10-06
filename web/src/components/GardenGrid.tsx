@@ -85,7 +85,7 @@ function GardenCard({ p }: { p: GardenCardData }) {
         <b>{p.nickname || p.name}</b>
         <input
           className="app-bare"
-          style={{ fontSize: 12, color: 'var(--ink-muted)', padding: 0 }}
+          style={{ fontSize: '0.75rem', color: 'var(--ink-muted)', padding: 0 }}
           value={location}
           placeholder="Thêm vị trí đặt cây…"
           onChange={(e) => setLocation(e.target.value)}

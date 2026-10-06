@@ -103,9 +103,12 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
         </button>
       </div>
       <div className="app-buybar" data-show={bar || undefined} aria-hidden={!bar}>
-        <a href={`tel:${SALES_PHONE}`} className="vx-btn vx-btn--outline vx-btn--lg"><Icon name="phone" />Gọi</a>
-        <button type="button" className="vx-btn vx-btn--primary vx-btn--lg" onClick={buyNow} tabIndex={bar ? 0 : -1}>
-          Mua ngay · {money(u.price * qty)}
+        <a href={`tel:${SALES_PHONE}`} className="vx-btn vx-btn--outline vx-btn--lg app-buybar__call"><Icon name="phone" />Gọi</a>
+        <button type="button" className="vx-btn vx-btn--outline vx-btn--lg" onClick={() => add(p, opt, qty)} tabIndex={bar ? 0 : -1}>
+          Thêm vào giỏ
+        </button>
+        <button type="button" className="vx-btn vx-btn--primary vx-btn--lg app-buybar__buy" onClick={buyNow} tabIndex={bar ? 0 : -1}>
+          <span>Mua ngay</span><small>{money(u.price * qty)}</small>
         </button>
       </div>
       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>

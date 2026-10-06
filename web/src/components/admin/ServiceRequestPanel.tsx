@@ -104,7 +104,7 @@ export function ServiceNoteBox({ id, contacted }: { id: number; contacted: boole
 
   return (
     <div className="app-sr-note">
-      <textarea className="vx-input" style={{ minHeight: 60, fontSize: 13 }} maxLength={1000} value={text} onChange={(e) => setText(e.target.value)}
+      <textarea className="vx-input" style={{ minHeight: 60, fontSize: '0.8125rem' }} maxLength={1000} value={text} onChange={(e) => setText(e.target.value)}
         placeholder="Nội dung trao đổi với khách, hẹn gọi lại…" aria-label="Ghi chú" />
       {error && <span className="vx-err" role="alert">{error}</span>}
       <div className="vx-row">

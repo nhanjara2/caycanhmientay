@@ -127,19 +127,19 @@ export function AddressModal({ value, stores, onClose, onSaved, onDeleted }: {
   return (
     <div className="app-modal" role="dialog" aria-modal="true" aria-label={id ? 'Chỉnh sửa địa chỉ' : 'Thêm địa chỉ'} onClick={(e) => e.target === e.currentTarget && onClose()}>
       <form className="vx-modal" style={{ maxWidth: 560 }} onSubmit={submit} noValidate>
-        <div className="vx-modal__head" style={{ fontSize: 20 }}>
+        <div className="vx-modal__head" style={{ fontSize: '1.25rem' }}>
           {id ? 'Chỉnh sửa địa chỉ' : 'Thêm địa chỉ mới'}
           <button type="button" aria-label="Đóng" onClick={onClose}><Icon name="close" /></button>
         </div>
         <div className="vx-modal__body" style={{ gap: 18 }}>
           <div className="app-big">
-            <p className="vx-modal__sec" style={{ fontSize: 18 }}>Người nhận hàng</p>
+            <p className="vx-modal__sec" style={{ fontSize: '1.125rem' }}>Người nhận hàng</p>
             <div className="app-big__f"><label htmlFor="ad-name">Họ và tên</label><input id="ad-name" value={v.name} onChange={(e) => set('name', e.target.value)} autoComplete="name" placeholder="Ví dụ: Nguyễn Văn An" /></div>
             <div className="app-big__f"><label htmlFor="ad-phone">Số điện thoại</label><input id="ad-phone" inputMode="tel" value={v.phone} onChange={(e) => set('phone', e.target.value)} autoComplete="tel" placeholder="Ví dụ: 0912 345 678" /></div>
           </div>
           <hr className="vx-divider" style={{ margin: 0 }} />
           <div className="app-big">
-            <p className="vx-modal__sec" style={{ fontSize: 18 }}>Địa chỉ nhận hàng</p>
+            <p className="vx-modal__sec" style={{ fontSize: '1.125rem' }}>Địa chỉ nhận hàng</p>
             <AddressFields value={addr} onChange={setAddr} stores={stores} idPrefix="ad" />
           </div>
           <details className="app-big__more">
@@ -169,10 +169,10 @@ export function AddressModal({ value, stores, onClose, onSaved, onDeleted }: {
             Dùng làm địa chỉ mặc định
           </label>
           {error && <span className="app-big__err" role="alert">{error}</span>}
-          {id && <button type="button" className="vx-danger-link" onClick={remove} disabled={pending} style={{ alignSelf: 'flex-start', fontSize: 16 }}>Xóa địa chỉ này</button>}
+          {id && <button type="button" className="vx-danger-link" onClick={remove} disabled={pending} style={{ alignSelf: 'flex-start', fontSize: '1rem' }}>Xóa địa chỉ này</button>}
         </div>
         <div className="vx-modal__foot">
-          <button className="vx-btn vx-btn--primary vx-btn--lg vx-btn--block" style={{ minHeight: 56, fontSize: 18 }} disabled={pending}>{pending ? 'Đang lưu…' : id ? 'Lưu thay đổi' : 'Lưu địa chỉ'}</button>
+          <button className="vx-btn vx-btn--primary vx-btn--lg vx-btn--block" style={{ minHeight: 56, fontSize: '1.125rem' }} disabled={pending}>{pending ? 'Đang lưu…' : id ? 'Lưu thay đổi' : 'Lưu địa chỉ'}</button>
         </div>
       </form>
     </div>

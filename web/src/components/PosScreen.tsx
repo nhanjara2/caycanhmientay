@@ -219,7 +219,7 @@ export function PosScreen({ stores, storeId, items, categories, cashier }: {
               </div>
             )}
             {hasPesticide && (
-              <label className="vx-check" style={{ fontSize: 12 }}>
+              <label className="vx-check" style={{ fontSize: '0.75rem' }}>
                 <input type="checkbox" checked={safety} onChange={(e) => setSafety(e.target.checked)} />
                 Đã dặn khách đọc hướng dẫn an toàn thuốc BVTV
               </label>

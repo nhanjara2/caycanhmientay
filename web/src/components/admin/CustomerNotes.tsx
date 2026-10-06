@@ -29,7 +29,7 @@ export function CustomerNotes({ id, initial }: { id: number; initial: string }) 
           onChange={(e) => { setNotes(e.target.value); setSaved(false); }}
           onBlur={() => !saved && save()}
         />
-        <span style={{ fontSize: 12, color: 'var(--ink-muted)' }}>{pending ? 'Đang lưu…' : saved ? 'Đã lưu' : 'Chưa lưu — bấm ra ngoài ô để lưu'}</span>
+        <span style={{ fontSize: '0.75rem', color: 'var(--ink-muted)' }}>{pending ? 'Đang lưu…' : saved ? 'Đã lưu' : 'Chưa lưu — bấm ra ngoài ô để lưu'}</span>
       </div>
     </div>
   );

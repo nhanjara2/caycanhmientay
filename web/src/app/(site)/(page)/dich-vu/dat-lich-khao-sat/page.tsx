@@ -42,7 +42,7 @@ export default async function Page({ searchParams }: Props) {
         </div>
         <div className="nw-box">
           <h3>Bạn sẽ nhận được</h3>
-          <div className="au-why" style={{ fontSize: 13 }}>
+          <div className="au-why" style={{ fontSize: '0.8125rem' }}>
             {WHY.map(([icon, text]) => (
               <div key={text}><svg className="vx-ico" viewBox="0 0 24 24" aria-hidden="true">{icon}</svg>{text}</div>
             ))}

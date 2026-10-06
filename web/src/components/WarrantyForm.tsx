@@ -95,7 +95,7 @@ export function WarrantyForm({ items }: { items: WarrantyItem[] }) {
         <section className="vx-profile" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
           {step === 1 && (
             <>
-              <b style={{ fontSize: 14 }}>Cây nào cần bảo hành?</b>
+              <b style={{ fontSize: '0.875rem' }}>Cây nào cần bảo hành?</b>
               <div className="vx-pay" role="radiogroup">
                 {items.map((it) => (
                   <button key={it.itemId} type="button" role="radio" className="vx-pay__opt" aria-checked={item?.itemId === it.itemId} onClick={() => setItem(it)}>
@@ -118,7 +118,7 @@ export function WarrantyForm({ items }: { items: WarrantyItem[] }) {
 
           {step === 2 && (
             <>
-              <b style={{ fontSize: 14 }}>Chụp 3 ảnh theo gợi ý</b>
+              <b style={{ fontSize: '0.875rem' }}>Chụp 3 ảnh theo gợi ý</b>
               <div className="wr-shots">
                 {SHOTS.map((s, i) => (
                   <button
@@ -140,7 +140,7 @@ export function WarrantyForm({ items }: { items: WarrantyItem[] }) {
                   </button>
                 ))}
               </div>
-              <b style={{ fontSize: 14 }}>Cây bị gì?</b>
+              <b style={{ fontSize: '0.875rem' }}>Cây bị gì?</b>
               <div className="vx-row">
                 {SYMPTOMS.map((s) => (
                   <button key={s} type="button" className="vx-chip" aria-pressed={symptoms.includes(s)}
@@ -149,7 +149,7 @@ export function WarrantyForm({ items }: { items: WarrantyItem[] }) {
               </div>
               <div className="ad-f">
                 <label htmlFor="wr-desc">Mô tả thêm</label>
-                <textarea id="wr-desc" className="vx-input" style={{ minHeight: 60, fontSize: 13 }} value={description} onChange={(e) => setDescription(e.target.value)} maxLength={1000}
+                <textarea id="wr-desc" className="vx-input" style={{ minHeight: 60, fontSize: '0.8125rem' }} value={description} onChange={(e) => setDescription(e.target.value)} maxLength={1000}
                   placeholder="Ví dụ: Lá dưới vàng và mềm từ hôm qua, đất vẫn ẩm dù tưới 2 lần/tuần." />
               </div>
               <div className="ad-frow two">
@@ -192,7 +192,7 @@ export function WarrantyForm({ items }: { items: WarrantyItem[] }) {
               <div><i /><span><b>Kết quả</b><small>Đổi cây · Hướng dẫn cứu cây + tặng vật tư · Hoàn tiền</small></span></div>
               <div><i /><span><b>Hoàn tất</b><small>Giao cây mới hoặc hoàn tiền</small></span></div>
             </div>
-            <span style={{ fontSize: 12, color: 'var(--ink-muted)' }}>Mẹo: giữ nguyên cây, không cắt lá bệnh trước khi kỹ sư xem.</span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--ink-muted)' }}>Mẹo: giữ nguyên cây, không cắt lá bệnh trước khi kỹ sư xem.</span>
           </div>
         </aside>
       </div>

@@ -332,7 +332,7 @@ export function AdminPOSView() {
                 Thẻ
               </button>
             </div>
-            <div className="vx-label-row" style={{ fontSize: '12px' }}>
+            <div className="vx-label-row" style={{ fontSize: '0.75rem' }}>
               <span>Gửi hóa đơn và lịch chăm cây qua Zalo</span>
               <button className="vx-switch" aria-checked="true" />
             </div>

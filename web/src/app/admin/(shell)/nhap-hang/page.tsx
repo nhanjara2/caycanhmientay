@@ -33,7 +33,7 @@ export default async function AdminPurchasingPage() {
             <a href="/admin/nhap-hang/mau" className="vx-btn vx-btn--primary" download>Tải mẫu · tất cả {sum.counts['tat-ca']} quy cách</a>
             <a href="/admin/nhap-hang/mau?loai=duoi-muc" className="vx-btn vx-btn--outline" download>Chỉ hàng dưới mức tối thiểu ({low})</a>
           </div>
-          <div className="vx-callout" style={{ fontSize: 12, lineHeight: '17px' }}>
+          <div className="vx-callout" style={{ fontSize: '0.75rem', lineHeight: '17px' }}>
             <Icon name="alert" />
             <div>
               Dòng để trống Số lượng nhập sẽ được bỏ qua, không cần xóa. Cột <b>Cửa hàng nhập</b> chọn mã: {stores.map((s) => `${s.code} (${s.name})`).join(', ')}.
@@ -45,7 +45,7 @@ export default async function AdminPurchasingPage() {
 
       <div className="ad-card">
         <div className="ad-card__h">Hàng mới, lô mới — làm thế nào?</div>
-        <div className="ad-card__b" style={{ fontSize: 13, lineHeight: '19px' }}>
+        <div className="ad-card__b" style={{ fontSize: '0.8125rem', lineHeight: '19px' }}>
           <div>
             <b>Thêm lô mới cho hàng đã có.</b> Ghi Số lô và Hạn dùng của đợt hàng mới vào file mẫu. Khác với các lô đang có thì tự thành <b>lô mới</b>, lô cũ giữ nguyên.
             Trùng cả Số lô lẫn Hạn dùng (cùng cửa hàng) thì số lượng được <b>cộng thêm</b> vào lô đó. Nhập hàng không bao giờ làm mất tồn cũ.

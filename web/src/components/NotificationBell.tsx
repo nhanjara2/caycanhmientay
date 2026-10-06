@@ -110,7 +110,7 @@ export function NotificationBell() {
                 ? <Link key={n.id} href={n.href} className={cls} style={{ color: 'inherit' }} onClick={() => readOne(n.id)}>{body}</Link>
                 : <div key={n.id} className={cls} onClick={() => readOne(n.id)}>{body}</div>;
             })}
-            {!shown.length && <p style={{ padding: 32, textAlign: 'center', color: 'var(--ink-muted)', fontSize: 13 }}>Chưa có thông báo nào.</p>}
+            {!shown.length && <p style={{ padding: 32, textAlign: 'center', color: 'var(--ink-muted)', fontSize: '0.8125rem' }}>Chưa có thông báo nào.</p>}
           </div>
         </div>
       )}

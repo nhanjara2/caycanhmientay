@@ -57,7 +57,7 @@ export function DeliveryBoard({ date, slots, trips, unassigned, drivers, canEdit
           {unassigned.map((o) => (
             <div key={o.id} className="ad-trip ad-unassigned" draggable={canEdit} onDragStart={(e) => { e.dataTransfer.setData(DRAG, String(o.id)); e.dataTransfer.effectAllowed = 'move'; }}>
               <span className="t"><Link className="code" href={`/admin/don-hang/${o.code}`}>{o.code}</Link><small>{o.slotKey ? slots.find((s) => s.key === o.slotKey)?.time : o.slot ?? 'Chưa hẹn giờ'}</small></span>
-              <span style={{ fontSize: 12 }}>{o.customer} · {o.address || 'Chưa có địa chỉ'}</span>
+              <span style={{ fontSize: '0.75rem' }}>{o.customer} · {o.address || 'Chưa có địa chỉ'}</span>
               <span className="ad-tags">
                 {o.kind === 'warranty' && <span className="vx-badge vx-badge--sun">Đơn bảo hành</span>}
                 {o.plantQty > 0 && <span className="vx-badge vx-badge--info">{o.plantQty} cây</span>}
@@ -138,7 +138,7 @@ function TripCard({ t, drivers, canEdit, pending, over, dnd, run }: {
   return (
     <div className="ad-trip" data-over={over || undefined} {...dnd}>
       <span className="t"><Icon name="truck" />{t.name}<small>{VEHICLE_LABEL[t.vehicle]}</small></span>
-      <span style={{ fontSize: 12, color: 'var(--ink-muted)' }}>
+      <span style={{ fontSize: '0.75rem', color: 'var(--ink-muted)' }}>
         {t.driverName ? `Tài xế ${t.driverName}` : <b style={{ color: 'var(--danger)' }}>Chưa có tài xế</b>}{t.helper ? ` + ${t.helper}` : ''}
       </span>
       <span className="ad-load">Tải {loadLabel(t.load)} / {t.capacity} · {pct}%<i><em style={{ width: `${pct}%`, background: t.load > t.capacity ? 'var(--danger)' : undefined }} /></i></span>
@@ -180,7 +180,7 @@ function TripCard({ t, drivers, canEdit, pending, over, dnd, run }: {
             {drivers.map((d) => <option key={d.id} value={d.id}>{d.name}{d.delivery ? '' : ' (không phải tài xế)'}</option>)}
           </select>
           <input className="vx-input" aria-label="Phụ xe" placeholder="Phụ xe" value={helper} maxLength={60} onChange={(e) => setHelper(e.target.value)} />
-          <label style={{ fontSize: 12 }}>Tải tối đa (điểm)
+          <label style={{ fontSize: '0.75rem' }}>Tải tối đa (điểm)
             <input className="vx-input" inputMode="numeric" value={capacity} onChange={(e) => setCapacity(e.target.value.replace(/\D/g, '').slice(0, 3))} />
           </label>
           <span className="acts" style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>

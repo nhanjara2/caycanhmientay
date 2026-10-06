@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useId, useState, type ReactNode } from 'react';
 import { Icon } from './Icon';
 
-const MOBILE = '(max-width: 767px)';
+const MOBILE = '(max-width: 47.9375em)';
 
 /**
  * Nhóm liên kết của Footer. Desktop/tablet: tiêu đề + danh sách luôn hiện như cũ.

@@ -105,7 +105,7 @@ export default async function AdminWarrantyPage({ params }: Props) {
             <div className="ad-card__b">
               <div className="ad-prod">
                 <span className="ad-thumb"><Thumb src={r.itemImage} icon={r.itemIcon} /></span>
-                <span>{r.itemName}<small style={{ display: 'block', color: 'var(--ink-muted)', fontSize: 11 }}>{r.itemLabel} · {money(r.itemPrice)}</small></span>
+                <span>{r.itemName}<small style={{ display: 'block', color: 'var(--ink-muted)', fontSize: '0.6875rem' }}>{r.itemLabel} · {money(r.itemPrice)}</small></span>
               </div>
               <div className="ad-kv">
                 <span>Khách hàng</span><span>{r.customer ?? 'Khách hàng'} · <a href={`tel:${r.customerPhone}`} style={{ color: 'var(--primary)' }}>{r.customerPhone}</a></span>

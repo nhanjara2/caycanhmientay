@@ -267,7 +267,7 @@ export function QuoteForm({ defaults, slots }: { defaults: QuoteDefaults; slots:
         </div>
         <div className="ad-f">
           <label htmlFor="qf-note">Ghi chú cho kỹ sư (không bắt buộc)</label>
-          <textarea id="qf-note" className="vx-input" style={{ minHeight: 64, fontSize: 13 }} maxLength={1000} value={v.note} onChange={(e) => set('note', e.target.value)}
+          <textarea id="qf-note" className="vx-input" style={{ minHeight: 64, fontSize: '0.8125rem' }} maxLength={1000} value={v.note} onChange={(e) => set('note', e.target.value)}
             placeholder="Ví dụ: muốn thuê 30 cây cho văn phòng 2 tầng, cần báo giá theo tháng" />
         </div>
         {/* Ô bẫy bot — người dùng không thấy */}

@@ -58,7 +58,9 @@ function styleObj(css) {
   const entries = parts.map((p) => p.trim()).filter(Boolean).map((p) => {
     const i = p.indexOf(':');
     const k = p.slice(0, i).trim();
-    const v = p.slice(i + 1).trim();
+    let v = p.slice(i + 1).trim();
+    // Cỡ chữ / dòng cao ghi px trong preview → rem (co giãn theo cỡ chữ trình duyệt; 16px = 1rem nên không đổi khi khách để mặc định)
+    if (/^(font-size|line-height)$/.test(k) && /^\d*\.?\d+px$/.test(v)) v = `${+(parseFloat(v) / 16).toFixed(4)}rem`;
     const key = k.startsWith('--') ? JSON.stringify(k) : camel(k.replace(/^-(webkit|moz|ms)-/, (_, v) => `${v[0].toUpperCase()}${v.slice(1)}-`));
     return `${key}: ${JSON.stringify(v)}`;
   });

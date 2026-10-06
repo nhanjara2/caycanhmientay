@@ -93,7 +93,7 @@ export function DeliverToDialog() {
   return (
     <div className="app-modal" role="dialog" aria-modal="true" aria-label="Chọn nơi nhận hàng" onClick={(e) => e.target === e.currentTarget && closePicker()}>
       <div className="vx-modal" style={{ maxWidth: 520, textAlign: 'left' }}>
-        <div className="vx-modal__head" style={{ fontSize: 20 }}>
+        <div className="vx-modal__head" style={{ fontSize: '1.25rem' }}>
           Giao hàng đến đâu?
           <button type="button" aria-label="Đóng" onClick={closePicker}><Icon name="close" /></button>
         </div>
@@ -119,7 +119,7 @@ export function DeliverToDialog() {
 
           {loggedIn && (
             <div>
-              <p className="vx-modal__sec" style={{ fontSize: 18, marginBottom: 10 }}>Chọn địa chỉ đã lưu</p>
+              <p className="vx-modal__sec" style={{ fontSize: '1.125rem', marginBottom: 10 }}>Chọn địa chỉ đã lưu</p>
               {list === null ? (
                 <span className="vx-help">Đang tải sổ địa chỉ…</span>
               ) : list.length ? (
@@ -138,28 +138,28 @@ export function DeliverToDialog() {
               ) : (
                 <span className="vx-help">Bạn chưa lưu địa chỉ nào. Hãy nhập địa chỉ ở bên dưới.</span>
               )}
-              <Link href="/tai-khoan/so-dia-chi" className="vx-link" onClick={closePicker} style={{ fontSize: 15, marginTop: 8 }}>Quản lý sổ địa chỉ</Link>
+              <Link href="/tai-khoan/so-dia-chi" className="vx-link" onClick={closePicker} style={{ fontSize: '0.9375rem', marginTop: 8 }}>Quản lý sổ địa chỉ</Link>
             </div>
           )}
 
           <div>
-            <p className="vx-modal__sec" style={{ fontSize: 18, marginBottom: 10 }}>{loggedIn ? 'Hoặc nhập địa chỉ khác' : 'Nhập địa chỉ nhận hàng'}</p>
+            <p className="vx-modal__sec" style={{ fontSize: '1.125rem', marginBottom: 10 }}>{loggedIn ? 'Hoặc nhập địa chỉ khác' : 'Nhập địa chỉ nhận hàng'}</p>
             <AddressFields value={typed} onChange={setTyped} stores={stores} idPrefix="dt" />
-            <button type="button" className="vx-btn vx-btn--primary vx-btn--lg vx-btn--block" style={{ minHeight: 56, fontSize: 18, marginTop: 16 }} disabled={!addrComplete(typed)} onClick={useTyped}>
+            <button type="button" className="vx-btn vx-btn--primary vx-btn--lg vx-btn--block" style={{ minHeight: 56, fontSize: '1.125rem', marginTop: 16 }} disabled={!addrComplete(typed)} onClick={useTyped}>
               Dùng địa chỉ này
             </button>
           </div>
 
           {!loggedIn && (
-            <span className="vx-help" style={{ fontSize: 15 }}>
+            <span className="vx-help" style={{ fontSize: '0.9375rem' }}>
               Có tài khoản? <button type="button" className="vx-link" style={{ background: 'none', border: 0, padding: 0, font: 'inherit', cursor: 'pointer' }} onClick={() => { closePicker(); openLogin(); }}>Đăng nhập</button> để chọn nhanh từ sổ địa chỉ.
             </span>
           )}
-          <span className="vx-help" style={{ fontSize: 14 }}>Chỉ để xem phí giao và khả năng giao hàng. Địa chỉ nhận hàng chính thức bạn chọn ở bước thanh toán.</span>
+          <span className="vx-help" style={{ fontSize: '0.875rem' }}>Chỉ để xem phí giao và khả năng giao hàng. Địa chỉ nhận hàng chính thức bạn chọn ở bước thanh toán.</span>
         </div>
         {place && (
           <div className="vx-modal__foot">
-            <button type="button" className="vx-btn vx-btn--ghost vx-btn--block" style={{ fontSize: 16 }} onClick={() => { setPlace(null); closePicker(); }}>Bỏ lựa chọn</button>
+            <button type="button" className="vx-btn vx-btn--ghost vx-btn--block" style={{ fontSize: '1rem' }} onClick={() => { setPlace(null); closePicker(); }}>Bỏ lựa chọn</button>
           </div>
         )}
       </div>

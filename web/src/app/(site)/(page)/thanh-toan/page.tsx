@@ -246,7 +246,7 @@ export default function CheckoutPage() {
                   <div className="vx-note"><Icon name="truck" /><div><b>Shop gửi hàng qua đơn vị vận chuyển.</b> Sau khi bạn đặt, shop gọi hoặc nhắn Zalo xác nhận đơn và báo thời gian dự kiến nhận hàng.</div></div>
                 )}
                 {slotsEnabled && <>
-                <b style={{ fontSize: 14, display: 'flex', gap: 8, alignItems: 'center' }}><Icon name="clock" />Chọn khung giờ giao</b>
+                <b style={{ fontSize: '0.875rem', display: 'flex', gap: 8, alignItems: 'center' }}><Icon name="clock" />Chọn khung giờ giao</b>
                 <div className="vx-slots2">
                   {days === null && <span className="vx-help">Đang tải khung giờ…</span>}
                   {days?.length === 0 && <span className="vx-err" role="alert">Hiện shop chưa nhận khung giờ giao nào. Vui lòng chọn Nhận tại vườn hoặc liên hệ shop.</span>}

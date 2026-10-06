@@ -183,7 +183,7 @@ export default async function BlogPage({ searchParams }: Props) {
           {videos.length > 0 && (
             <section className="vx-cblock">
               <div className="vx-sect">
-                <h2 style={{ fontSize: 18 }}><span className="vx-sect__mark"><Icon name="camera" /></span>Video ngắn</h2>
+                <h2 style={{ fontSize: '1.125rem' }}><span className="vx-sect__mark"><Icon name="camera" /></span>Video ngắn</h2>
                 {videos.length > 6 && <Link href={href({ loai: 'video' })} className="vx-link">Xem tất cả <Icon name="chevron" size={14} /></Link>}
               </div>
               <div className="vx-vrow">{videos.slice(0, 6).map((p, i) => <VCard key={p.id} p={p} alt={i % 2 === 1} />)}</div>
@@ -208,7 +208,7 @@ export default async function BlogPage({ searchParams }: Props) {
           {promo.length > 0 && (
             <section className="vx-cblock">
               <div className="vx-sect">
-                <h2 style={{ fontSize: 18 }}><span className="vx-sect__mark"><Icon name="gift" /></span>Tin khuyến mãi & Sự kiện</h2>
+                <h2 style={{ fontSize: '1.125rem' }}><span className="vx-sect__mark"><Icon name="gift" /></span>Tin khuyến mãi & Sự kiện</h2>
               </div>
               <div className="vx-promo-row">
                 {promo.map((p) => (

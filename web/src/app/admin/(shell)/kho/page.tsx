@@ -93,7 +93,7 @@ export default async function AdminInventoryPage({ searchParams }: Props) {
                       </span>
                     </td>
                     {!store && (
-                      <td data-label="Theo cửa hàng" data-wide style={{ fontSize: 12, color: 'var(--ink-muted)', whiteSpace: 'nowrap' }}>
+                      <td data-label="Theo cửa hàng" data-wide style={{ fontSize: '0.75rem', color: 'var(--ink-muted)', whiteSpace: 'nowrap' }}>
                         {stores.map((s) => <span key={s.id} style={{ marginRight: 8 }}>{s.code} <b style={{ color: 'var(--ink)' }}>{r.byStore[s.id] ?? 0}</b></span>)}
                       </td>
                     )}

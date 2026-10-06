@@ -83,14 +83,14 @@ export function ShippingSettings({ initial }: { initial: ShippingConfig }) {
         <div className="ad-card__h">Phí giao và ngưỡng miễn phí</div>
         <div className="ad-card__b" style={{ gap: 16 }}>
           <div>
-            <b style={{ fontSize: 13 }}>Cây sống</b> <span className="vx-help">đóng khung chống dập, giao qua đơn vị vận chuyển (hoặc xe shop nếu bật bên dưới)</span>
+            <b style={{ fontSize: '0.8125rem' }}>Cây sống</b> <span className="vx-help">đóng khung chống dập, giao qua đơn vị vận chuyển (hoặc xe shop nếu bật bên dưới)</span>
             <div className="ad-frow two" style={{ marginTop: 8 }}>
               {money('plantFee', 'Phí giao (đ)', 'sh-pfee')}
               {money('plantFree', 'Miễn phí giao từ đơn cây (đ)', 'sh-pfree')}
             </div>
           </div>
           <div>
-            <b style={{ fontSize: 13 }}>Vật tư</b> <span className="vx-help">thuốc, phân, chậu, dụng cụ…</span>
+            <b style={{ fontSize: '0.8125rem' }}>Vật tư</b> <span className="vx-help">thuốc, phân, chậu, dụng cụ…</span>
             <div className="ad-frow two" style={{ marginTop: 8 }}>
               {money('supplyFee', 'Phí giao (đ)', 'sh-sfee')}
               {money('supplyFree', 'Miễn phí giao từ đơn vật tư (đ)', 'sh-sfree')}

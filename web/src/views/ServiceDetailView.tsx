@@ -146,7 +146,7 @@ export function ServiceDetailView() {
         <section className="sv-sec" style={{ paddingTop: '0' }}>
           <div className="calc">
             <div>
-              <b style={{ fontSize: '16px' }}>Ước tính chi phí</b>
+              <b style={{ fontSize: '1rem' }}>Ước tính chi phí</b>
               <div className="calc-row">
                 <span>
                   Số cây<small>Gợi ý: 1 cây cho mỗi 5–8m² văn phòng</small>
@@ -197,7 +197,7 @@ export function ServiceDetailView() {
               <Link href="/dich-vu/dat-lich-khao-sat?loai=van-phong" className="vx-btn vx-btn--primary vx-btn--block">
                 Nhận báo giá chính thức
               </Link>
-              <span style={{ fontSize: '12px', color: 'var(--ink-muted)' }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--ink-muted)' }}>
                 Không cần đặt cọc. Lắp đặt trong 3–5 ngày.
               </span>
             </div>
@@ -205,7 +205,7 @@ export function ServiceDetailView() {
         </section>
         <section className="sv-sec" style={{ paddingTop: '0' }}>
           <div className="vx-sect">
-            <h2 style={{ fontSize: '18px' }}>Cây thường dùng cho văn phòng</h2>
+            <h2 style={{ fontSize: '1.125rem' }}>Cây thường dùng cho văn phòng</h2>
             <a className="vx-link">Xem tất cả</a>
           </div>
           <div className="vx-grid app-cols" style={{ '--cols': 'repeat(4,1fr)' }}>

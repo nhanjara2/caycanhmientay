@@ -72,7 +72,7 @@ export function DriverTrip({ trip }: { trip: Trip }) {
               </span>
               {isCur && (
                 <>
-                  <span style={{ fontSize: 12, color: 'var(--ink-muted)' }}>{s.items.join(', ')}</span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--ink-muted)' }}>{s.items.join(', ')}</span>
                   {s.note && <span className="vx-note" style={{ margin: 0 }}><Icon name="chat" /><div>{s.note}</div></span>}
                   {codDue && <div className="s-cod"><span>Thu hộ (COD)</span><b>{money(s.total)}</b></div>}
                   <div className="acts">

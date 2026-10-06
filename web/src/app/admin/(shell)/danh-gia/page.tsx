@@ -124,7 +124,7 @@ export default async function AdminReviewsPage({ searchParams }: Props) {
                 <option value="">Mọi số sao</option>
                 {[5, 4, 3, 2, 1].map((s) => <option key={s} value={s}>{s} sao</option>)}
               </select>
-              <label className="vx-check" style={{ fontSize: 13 }}>
+              <label className="vx-check" style={{ fontSize: '0.8125rem' }}>
                 <input type="checkbox" name="anh" value="1" defaultChecked={photo} /> Có ảnh
               </label>
             </>

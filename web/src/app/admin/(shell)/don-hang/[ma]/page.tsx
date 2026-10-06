@@ -85,7 +85,7 @@ export default async function AdminOrderDetailPage({ params }: Props) {
           <div className="ad-card">
             <div className="ad-card__h">Thanh toán</div>
             <div className="ad-card__b">
-              <div className="vx-lines" style={{ fontSize: 13 }}>
+              <div className="vx-lines" style={{ fontSize: '0.8125rem' }}>
                 <div><span>Tạm tính</span><b>{money(o.subtotal)}</b></div>
                 {o.original > o.subtotal && <div><span>Đã giảm</span><b className="neg">-{money(o.original - o.subtotal)}</b></div>}
                 <div><span>Phí giao cây</span><b>{money(o.plantShip)}</b></div>
@@ -94,7 +94,7 @@ export default async function AdminOrderDetailPage({ params }: Props) {
               </div>
               <div className="vx-total" style={{ paddingTop: 8 }}>
                 <b>{o.paymentMethod === 'cod' && !o.paid ? 'Thu hộ COD' : o.paid ? 'Đã thanh toán' : 'Chờ thanh toán'}</b>
-                <span className="amt" style={{ fontSize: 18 }}>{money(o.total)}</span>
+                <span className="amt" style={{ fontSize: '1.125rem' }}>{money(o.total)}</span>
               </div>
               {fullOrders && o.kind === 'sale' && o.paymentMethod !== 'cod' && o.status !== 'cancelled' && (
                 <PaymentActions code={o.code} paid={o.paid} isAdmin={staff.role === 'admin'} />

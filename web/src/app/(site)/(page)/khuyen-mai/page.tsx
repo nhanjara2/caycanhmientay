@@ -18,7 +18,7 @@ export default async function PromotionsPage() {
   return (
     <div className="vx-content app-page">
       <Breadcrumb items={[{ label: 'Trang chủ', href: '/' }, { label: 'Khuyến mãi' }]} />
-      <h1 style={{ fontSize: 22, marginBottom: 4 }}>Mã giảm giá đang áp dụng</h1>
+      <h1 style={{ fontSize: '1.375rem', marginBottom: 4 }}>Mã giảm giá đang áp dụng</h1>
       <p className="vx-help" style={{ marginBottom: 16 }}>Chép mã và dán vào ô "Nhập mã giảm giá" ở trang thanh toán.</p>
       {vouchers.length > 0 ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

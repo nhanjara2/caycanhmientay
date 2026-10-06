@@ -146,7 +146,7 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
                     <button key={k} type="button" className="vx-chip" aria-pressed={kind === k} onClick={() => pickKind(k)}>{KINDS[k].label}</button>
                   ))}
                 </span>
-                <span className="hint" style={{ fontSize: 11, color: 'var(--ink-muted)' }}>Loại quyết định bộ thông số bên dưới và các trường bắt buộc.</span>
+                <span className="hint" style={{ fontSize: '0.6875rem', color: 'var(--ink-muted)' }}>Loại quyết định bộ thông số bên dưới và các trường bắt buộc.</span>
               </div>
             </div>
 
@@ -350,12 +350,12 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
                     </div>
                   );
                 })}
-                <span className="hint" style={{ fontSize: 11, color: 'var(--ink-muted)' }}>
+                <span className="hint" style={{ fontSize: '0.6875rem', color: 'var(--ink-muted)' }}>
                   Các dòng điền sẵn theo danh mục “{cat?.name ?? v.category}”{cat?.subs.find((s) => s.slug === v.sub) ? ` › ${cat.subs.find((s) => s.slug === v.sub)!.name}` : ''}; dòng để trống sẽ không hiện trên web.
                   {template.some((f) => f.required) && <> Ô viền đỏ là bắt buộc.</>}
                 </span>
                 {v.pesticide && (
-                  <span className="hint" style={{ fontSize: 11, color: 'var(--ink-muted)' }}>
+                  <span className="hint" style={{ fontSize: '0.6875rem', color: 'var(--ink-muted)' }}>
                     Thuốc BVTV bắt buộc: <b>Số đăng ký, Hoạt chất, Liều pha, Thời gian cách ly</b>. Giỏ có thuốc sẽ yêu cầu khách xác nhận đã đọc hướng dẫn an toàn.
                   </span>
                 )}
@@ -399,7 +399,7 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
                 </div>
                 <div className="ad-f">
                   <label>Cách giao</label>
-                  <span style={{ fontSize: 12 }}>{v.ship === 'plant' ? 'Cây sống — đóng khung chống dập, giao toàn quốc' : 'Vật tư — giao nhanh 2h'}</span>
+                  <span style={{ fontSize: '0.75rem' }}>{v.ship === 'plant' ? 'Cây sống — đóng khung chống dập, giao toàn quốc' : 'Vật tư — giao nhanh 2h'}</span>
                 </div>
               </div>
             </div>
