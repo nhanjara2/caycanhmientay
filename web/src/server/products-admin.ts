@@ -1,8 +1,9 @@
 import 'server-only';
-import { and, asc, count, desc, eq, ilike, or, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, ilike, like, or, sql } from 'drizzle-orm';
 import * as z from 'zod';
 import { ELEMENTS, findCategory, MAX_PRODUCT_IMAGES, normalize, parseYoutubeId, productImageUrl, specTemplate, type FengShui } from '@/lib/catalog';
 import { attrKeys, type ProductAttrs } from '@/lib/product-filters';
+import { nextSku, skuPrefix } from '@/lib/sku';
 import { tracksLots } from '@/lib/stock';
 import { mainImageOf } from './catalog';
 import { getCategories } from './categories';
@@ -199,10 +200,8 @@ export async function saveProduct(input: ProductInput, actor: string): Promise<S
 
   let slug = slugify(input.name) || 'san-pham';
   for (let i = 2; (await db.select({ s: products.slug }).from(products).where(eq(products.slug, slug))).length; i++) slug = `${slugify(input.name)}-${i}`;
-  const prefix = input.ship === 'plant' ? 'MT' : 'VT';
-  const n = ((await db.select({ n: count() }).from(products))[0]?.n ?? 0) + 1;
-  let sku = `${prefix}-${String(90000 + n)}`;
-  for (let i = 1; (await db.select({ s: products.sku }).from(products).where(eq(products.sku, sku))).length; i++) sku = `${prefix}-${String(90000 + n + i)}`;
+  const prefix = skuPrefix(input.category);
+  const sku = nextSku(prefix, (await db.select({ s: products.sku }).from(products).where(like(products.sku, `${prefix}-%`))).map((r) => r.s));
 
   await db.transaction(async (tx) => {
     await tx.insert(products).values({ slug, sku, ...values, keywords: [], flashTotal: input.flash ? 50 : null, flashSold: input.flash ? 0 : null });
