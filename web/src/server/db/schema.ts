@@ -164,6 +164,16 @@ export const diseases = pgTable('diseases', {
   createdAt: createdAt(),
 });
 
+/** Ảnh minh họa triệu chứng của bài bệnh (công khai, phục vụ qua /api/disease-images/[file]). Xóa bài → xóa ảnh. */
+export const diseaseImages = pgTable('disease_images', {
+  id: serial('id').primaryKey(),
+  diseaseSlug: text('disease_slug').notNull().references(() => diseases.slug, { onDelete: 'cascade' }),
+  file: text('file').notNull().unique(),
+  mime: text('mime').notNull(),
+  data: bytea('data').notNull(),
+  createdAt: createdAt(),
+}, (t) => [index('disease_images_disease_idx').on(t.diseaseSlug)]);
+
 // ---- Bài viết & video (Góc chăm cây, Truyền thông) --------------------------------------------
 
 /**

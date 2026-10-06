@@ -8,8 +8,9 @@ import { ContactFab, Toaster } from './Overlays';
 import { PhonePrompt } from './PhoneModal';
 
 export function SiteChrome({ children }: { children: ReactNode }) {
+  // .app-site: gốc cho các chỉnh "dễ dùng trên điện thoại" (globals.css, khối cuối) — chỉ áp cho trang khách, không đụng admin / POS / app nhân viên.
   return (
-    <>
+    <div className="app-site">
       <Header />
       {children}
       <Footer />
@@ -19,6 +20,6 @@ export function SiteChrome({ children }: { children: ReactNode }) {
       <DeliverToDialog />
       <PhonePrompt />
       <CookieConsent />
-    </>
+    </div>
   );
 }

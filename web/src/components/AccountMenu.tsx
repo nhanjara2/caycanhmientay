@@ -36,16 +36,17 @@ export function AccountMenu() {
     return (
       <button type="button" className="app-hbtn" onClick={openLogin}>
         <Icon name="user" />
-        <span className="app-hide-sm">Đăng nhập</span>
+        <span className="app-acc-label">Đăng nhập</span>
       </button>
     );
   }
 
   return (
     <div className="vx-user" ref={ref}>
-      <button type="button" className="app-hbtn" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+      <button type="button" className="app-hbtn" aria-expanded={open} aria-label={`Tài khoản của ${user.name}`} onClick={() => setOpen((o) => !o)}>
         <Avatar size="sm" initials={user.initials} url={user.avatarUrl} />
         <span className="app-hide-sm">{user.name}</span>
+        <span className="app-acc-label app-acc-label--sm">Tài khoản</span>
       </button>
       {open && (
         <div className="vx-dd app-dd">

@@ -5,17 +5,20 @@ import { useCart } from '@/lib/cart';
 import { SALES_PHONE, ZALO_URL } from '@/lib/contact';
 import { Icon } from './Icon';
 
-/** Nút liên hệ nổi góc phải dưới, hiện trên mọi trang. */
+/**
+ * Nút liên hệ trên mọi trang. Máy tính / tablet: hai nút nổi góc phải dưới.
+ * Điện thoại (< 768px): thanh cố định dưới đáy, nút có chữ — không đè lên nội dung (.app-site chừa chỗ ở đáy, xem globals.css).
+ */
 export function ContactFab() {
   return (
     <div className="vx-fab app-fab">
       <a className="alt" href={ZALO_URL} target="_blank" rel="noreferrer">
         <img src="/images/social/zalo.svg" alt="" className="app-fab-logo" />
-        <span className="app-hide-sm">Chat Zalo</span>
+        <span>Chat Zalo</span>
       </a>
       <a href={`tel:${SALES_PHONE}`}>
         <Icon name="phone" />
-        <span className="app-hide-sm">Gọi tư vấn</span>
+        <span>Gọi tư vấn</span>
       </a>
     </div>
   );

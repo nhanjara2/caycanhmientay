@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useTransition, type FormEvent } from 'react';
-import { saveStoreAction } from '@/app/actions/stores';
+import { deleteStoreAction, saveStoreAction } from '@/app/actions/stores';
 import type { StoreRow } from '@/server/stores-admin';
 
 type Form = { id?: number; code: string; name: string; address: string; lat: string; lng: string; active: boolean; isDefault: boolean };
@@ -14,6 +14,7 @@ export function StoreAdmin({ stores }: { stores: StoreRow[] }) {
   const router = useRouter();
   const [form, setForm] = useState<Form | null>(null);
   const [error, setError] = useState('');
+  const [listError, setListError] = useState('');
   const [pending, start] = useTransition();
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setForm((f) => (f ? { ...f, [k]: v } : f));
 
@@ -27,6 +28,17 @@ export function StoreAdmin({ stores }: { stores: StoreRow[] }) {
         .catch(() => ({ ok: false as const, error: 'Có lỗi, vui lòng thử lại' }));
       if (!r.ok) { setError(r.error); return; }
       setForm(null);
+      router.refresh();
+    });
+  };
+
+  const remove = (s: StoreRow) => {
+    if (!confirm(`Xóa cửa hàng “${s.name}” (${s.code})?\nKhông thể hoàn tác.`)) return;
+    setListError('');
+    start(async () => {
+      const r = await deleteStoreAction(s.id).catch(() => ({ ok: false as const, error: 'Có lỗi, vui lòng thử lại' }));
+      if (!r.ok) { setListError(r.error); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+      if (form?.id === s.id) setForm(null);
       router.refresh();
     });
   };
@@ -79,6 +91,7 @@ export function StoreAdmin({ stores }: { stores: StoreRow[] }) {
           </div>
         </form>
       )}
+      {listError && <div className="vx-err" role="alert" style={{ marginBottom: 12 }}>{listError}</div>}
       <div className="ad-card">
         <div className="ad-tablewrap">
           <table className="ad-table app-mtable">
@@ -91,7 +104,12 @@ export function StoreAdmin({ stores }: { stores: StoreRow[] }) {
                   <td data-label="Tọa độ">{s.lat.toFixed(4)}, {s.lng.toFixed(4)}</td>
                   <td className="num" data-label="Tồn kho">{s.stock.toLocaleString('vi-VN')}</td>
                   <td data-label="Trạng thái"><span className={`ad-pill ${s.active ? 'done' : 'wait'}`}>{s.active ? 'Hoạt động' : 'Ngừng'}</span></td>
-                  <td data-label="Thao tác"><button type="button" className="vx-btn vx-btn--outline vx-btn--sm" onClick={() => { setForm(toForm(s)); setError(''); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Sửa</button></td>
+                  <td data-label="Thao tác">
+                    <span style={{ display: 'flex', gap: 8 }}>
+                      <button type="button" className="vx-btn vx-btn--outline vx-btn--sm" onClick={() => { setForm(toForm(s)); setError(''); setListError(''); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Sửa</button>
+                      {!s.isDefault && <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" style={{ color: 'var(--danger)' }} disabled={pending} onClick={() => remove(s)}>Xóa</button>}
+                    </span>
+                  </td>
                 </tr>
               ))}
               {!stores.length && <tr><td colSpan={6} style={{ color: 'var(--ink-muted)' }}>Chưa có cửa hàng nào.</td></tr>}

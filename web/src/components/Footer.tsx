@@ -92,10 +92,13 @@ export async function Footer() {
             <a href={ZALO_URL} target="_blank" rel="noreferrer" title="Zalo"><img src="/images/social/zalo.svg" alt="Zalo" /></a>
             <a href={YOUTUBE_URL} target="_blank" rel="noreferrer" title="YouTube"><img src="/images/social/youtube.svg" alt="YouTube" /></a>
           </div>
-          <h4 style={{ marginTop: 8 }}>QUÉT MÃ CHAT ZALO</h4>
-          <a className="vx-qr app-qr" href={ZALO_URL} target="_blank" rel="noreferrer">
-            <img src={ZALO_QR} alt="Mã QR Zalo Cây Cảnh Miền Tây" loading="lazy" />
-          </a>
+          {/* Mã QR chỉ có ích khi xem trên máy tính; điện thoại đã có nút "Chat Zalo" ở thanh dưới. */}
+          <div className="vx-fcol app-qrbox">
+            <h4 style={{ marginTop: 8 }}>QUÉT MÃ CHAT ZALO</h4>
+            <a className="vx-qr app-qr" href={ZALO_URL} target="_blank" rel="noreferrer">
+              <img src={ZALO_QR} alt="Mã QR Zalo Cây Cảnh Miền Tây" loading="lazy" />
+            </a>
+          </div>
           <h4 style={{ marginTop: 8 }}>HỖ TRỢ THANH TOÁN</h4>
           <div className="vx-paylogos">
             {PAY.map(([name, file]) => (

@@ -56,8 +56,9 @@ export function Header() {
           onClick={() => document.body.toggleAttribute('data-sidebar-open')}
         >
           <Icon name="menu" />
+          <span className="app-menubtn__t">Danh mục</span>
         </button>
-        <Link href="/" className="vx-logo">
+        <Link href="/" className="vx-logo" aria-label="Cây Cảnh Miền Tây — về trang chủ">
           <Image src="/images/brand/logo-mark.png" alt="" width={362} height={239} className="app-logo-mark" priority />
           <span className="app-logo-text">Cây Cảnh Miền Tây</span>
         </Link>

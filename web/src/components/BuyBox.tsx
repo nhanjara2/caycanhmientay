@@ -2,10 +2,10 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Product } from '@/lib/catalog';
 import { useCart } from '@/lib/cart';
-import { ZALO_URL } from '@/lib/contact';
+import { SALES_PHONE, ZALO_URL } from '@/lib/contact';
 import { compact, money } from '@/lib/format';
 import { starsText } from '@/lib/reviews';
 import { DeliverToNote } from './DeliverTo';
@@ -24,6 +24,25 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
   const [opt, setOpt] = useState(0);
   const [qty, setQty] = useState(1);
   const u = p.options[opt];
+
+  // Điện thoại: khi nút "Mua ngay" đã cuộn khỏi màn hình thì hiện thanh Gọi / Mua ngay dính ở đáy (trang sản phẩm dài ~6 màn hình).
+  const ctaRef = useRef<HTMLDivElement>(null);
+  const [bar, setBar] = useState(false);
+  useEffect(() => {
+    const el = ctaRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([e]) => setBar(!e.isIntersecting && e.boundingClientRect.top < 0));
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  useEffect(() => {
+    document.body.toggleAttribute('data-buybar', bar);
+    return () => document.body.removeAttribute('data-buybar');
+  }, [bar]);
+  const buyNow = () => {
+    add(p, opt, qty);
+    router.push('/gio-hang');
+  };
 
   return (
     <div className="vx-buy">
@@ -74,20 +93,19 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
         </span>
       </div>
       <DeliverToNote ship={p.ship} />
-      <div className="vx-buy__cta">
-        <button
-          type="button"
-          className="vx-btn vx-btn--primary vx-btn--lg"
-          onClick={() => {
-            add(p, opt, qty);
-            router.push('/gio-hang');
-          }}
-        >
-          Chọn mua
+      <div className="vx-buy__cta" ref={ctaRef}>
+        <button type="button" className="vx-btn vx-btn--primary vx-btn--lg" onClick={buyNow}>
+          Mua ngay
         </button>
         <button type="button" className="vx-btn vx-btn--soft vx-btn--lg" onClick={() => add(p, opt, qty)}>
           <Icon name="cart" />
           Thêm vào giỏ
+        </button>
+      </div>
+      <div className="app-buybar" data-show={bar || undefined} aria-hidden={!bar}>
+        <a href={`tel:${SALES_PHONE}`} className="vx-btn vx-btn--outline vx-btn--lg"><Icon name="phone" />Gọi</a>
+        <button type="button" className="vx-btn vx-btn--primary vx-btn--lg" onClick={buyNow} tabIndex={bar ? 0 : -1}>
+          Mua ngay · {money(u.price * qty)}
         </button>
       </div>
       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>

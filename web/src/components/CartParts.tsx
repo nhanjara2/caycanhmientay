@@ -87,7 +87,7 @@ function Item({ l, editable, setQty, remove }: {
             <span>{l.qty}</span>
             <button type="button" aria-label="Tăng" onClick={() => setQty(l.slug, l.option, l.qty + 1)}>+</button>
           </div>
-          <button type="button" className="vx-remove" onClick={() => remove(l.slug, l.option)}>Xóa</button>
+          <button type="button" className="vx-remove" onClick={() => { if (confirm(`Bỏ "${p.name}" khỏi giỏ hàng?`)) remove(l.slug, l.option); }}>Xóa</button>
         </div>
       ) : (
         <div className="vx-item__qty">x{l.qty} {p.unit}</div>

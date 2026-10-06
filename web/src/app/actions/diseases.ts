@@ -3,7 +3,8 @@
 import { revalidatePath } from 'next/cache';
 import * as z from 'zod';
 import { requireAccess } from '@/server/auth';
-import { DiseaseInputSchema, saveDisease, setDiseaseActive } from '@/server/diseases';
+import { addDiseaseImage, DiseaseInputSchema, saveDisease, setDiseaseActive } from '@/server/diseases';
+import { saveImage } from '@/server/uploads';
 
 // Chỉ quản trị viên được sửa thư viện bệnh cây: kiểm tra quyền trước, rồi mới kiểm tra đầu vào.
 
@@ -29,4 +30,15 @@ export async function setDiseaseActiveAction(slug: unknown, active: unknown) {
   const ok = await setDiseaseActive(p.data.slug, p.data.active);
   if (ok) refresh(p.data.slug);
   return { ok };
+}
+
+/** Tải ảnh minh họa cho một triệu chứng (ảnh đã nén ở trình duyệt). */
+export async function uploadDiseaseImageAction(fd: FormData) {
+  await requireAccess('content', 'full');
+  const slug = z.string().min(1).max(120).safeParse(fd.get('slug'));
+  const f = fd.get('photo');
+  if (!slug.success || !(f instanceof File)) return { ok: false as const, error: 'Thiếu ảnh' };
+  const img = await saveImage(f);
+  if ('error' in img) return { ok: false as const, error: img.error };
+  return addDiseaseImage(slug.data, img);
 }

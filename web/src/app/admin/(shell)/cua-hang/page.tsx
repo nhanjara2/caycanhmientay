@@ -5,7 +5,7 @@ import { listStoresAdmin } from '@/server/stores-admin';
 
 export const metadata: Metadata = { title: 'Cửa hàng' };
 
-/** Quản lý cửa hàng / kho: tên, địa chỉ, tọa độ (vùng giao cây sống), mặc định, ngừng hoạt động. Chỉ Quản lý. */
+/** Quản lý cửa hàng / kho: tên, địa chỉ, tọa độ (vùng giao cây sống), mặc định, ngừng hoạt động, xóa (chỉ khi chưa phát sinh gì). Chỉ Quản lý. */
 export default async function AdminStoresPage() {
   await requireAccess('settings');
   return (

@@ -3,7 +3,7 @@ import { and, asc, desc, eq, ne, sql } from 'drizzle-orm';
 import * as z from 'zod';
 import { db, schema } from './db';
 
-const { stores, stockLots } = schema;
+const { stores, stockLots, orders, purchaseReceiptLines, stockMoves, expenses, recurringExpenses } = schema;
 
 /** Tất cả cửa hàng (kể cả đã ngừng) kèm tổng tồn đang giữ. */
 export async function listStoresAdmin() {
@@ -56,6 +56,31 @@ export async function saveStore(v: StoreInput): Promise<R> {
     if (v.isDefault) await tx.update(stores).set({ isDefault: false });
     const [{ n }] = await tx.select({ n: sql<number>`count(*)`.mapWith(Number) }).from(stores);
     await tx.insert(stores).values({ code: v.code, name: v.name, address: v.address, lat: v.lat, lng: v.lng, active: v.active, isDefault: v.isDefault || n === 0 });
+    return { ok: true };
+  });
+}
+
+/**
+ * Xóa hẳn một cửa hàng — chỉ khi chưa từng phát sinh gì: không phải cửa hàng mặc định, không còn tồn, chưa có đơn / phiếu nhập /
+ * biến động kho / khoản chi nào ghi theo cửa hàng này (xóa sẽ làm sổ sách mất nơi tham chiếu). Đã có lịch sử thì chuyển sang "Ngừng hoạt động".
+ */
+export async function deleteStore(id: number): Promise<R> {
+  return db.transaction(async (tx): Promise<R> => {
+    const [cur] = await tx.select().from(stores).where(eq(stores.id, id)).for('update');
+    if (!cur) return { ok: false, error: 'Không tìm thấy cửa hàng' };
+    if (cur.isDefault) return { ok: false, error: 'Không xóa được cửa hàng mặc định — hãy chọn cửa hàng khác làm mặc định trước' };
+    const [u] = await tx.select({
+      stock: sql<number>`coalesce((select sum(${stockLots.qty}) from ${stockLots} where ${stockLots.storeId} = ${id}), 0)`.mapWith(Number),
+      history: sql<number>`(select count(*) from ${orders} where ${orders.storeId} = ${id})
+        + (select count(*) from ${purchaseReceiptLines} where ${purchaseReceiptLines.storeId} = ${id})
+        + (select count(*) from ${stockMoves} where ${stockMoves.storeId} = ${id})
+        + (select count(*) from ${expenses} where ${expenses.storeId} = ${id})
+        + (select count(*) from ${recurringExpenses} where ${recurringExpenses.storeId} = ${id})`.mapWith(Number),
+    }).from(stores).where(eq(stores.id, id));
+    if (u.stock > 0) return { ok: false, error: `Cửa hàng còn ${u.stock} sản phẩm trong kho — chuyển kho hoặc kiểm kê về 0 trước khi xóa` };
+    if (u.history > 0) return { ok: false, error: 'Cửa hàng này đã có lịch sử (nhập / xuất kho, đơn hàng hoặc chi phí) nên không xóa được. Hãy bấm Sửa rồi bỏ chọn “Đang hoạt động” để ngừng.' };
+    await tx.delete(stockLots).where(eq(stockLots.storeId, id)); // dòng lô tồn 0 (nếu có), không còn gì tham chiếu
+    await tx.delete(stores).where(eq(stores.id, id));
     return { ok: true };
   });
 }

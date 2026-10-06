@@ -315,6 +315,9 @@ a.vx-chip[aria-current="true"] { background: var(--primary-soft); border-color: 
 .dd-cmp a { color: var(--primary); font-weight: 600; font-size: 12px; }
 .ar-cta .app-cta-alt { color: var(--on-deep); font-size: 13px; text-decoration: underline; }
 .dd-sym .img { aspect-ratio: 2 / 1; }
+/* Triệu chứng có ảnh minh họa (admin tải lên): ảnh phủ kín ô, nhãn bộ phận nổi trên ảnh. */
+.dd-sym .img--photo { aspect-ratio: 4 / 3; overflow: hidden; }
+.dd-sym .img--photo > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 #danh-sach { scroll-margin-top: 140px; }
 
 /* Thẻ sản phẩm: viền khung ảnh theo loại (ProductCard) */
@@ -1030,3 +1033,200 @@ button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .app-big__chips .vx-chip { min-height: 46px; padding: 8px 16px; font-size: 16px; }
 .app-big__err { color: var(--danger); font-size: 16px; line-height: 23px; font-weight: 600; }
 @media (max-width: 520px) { .app-big__pick { grid-template-columns: minmax(0, 1fr); } }
+
+/* >>> DỄ DÙNG ĐIỆN THOẠI */
+/* ===================== Dễ dùng trên điện thoại cho người lớn tuổi (06/10/2026) =====================
+ * Chỉ áp cho trang khách (gốc .app-site trong SiteChrome) — không đụng admin / POS / app nhân viên.
+ * - < 768px: thanh Gọi / Chat Zalo dưới đáy (thay 2 nút tròn nổi đè lên chữ), thanh Gọi / Mua ngay dính đáy ở trang sản phẩm,
+ *   đầu trang có chữ dưới biểu tượng, nút ≥ 44px, chữ phụ ≥ 14px, ô nhập viền rõ (≥ 3:1), giỏ hàng xếp lại cho tên không bị bóp.
+ * - < 1024px: nút "Danh mục" có chữ, bảng danh mục có nút "Đóng danh mục".
+ * - Mọi cỡ: màu chữ xanh trên nền xanh nhạt và khối Flash sale đạt tương phản.
+ * Chữ vẫn ghi bằng px (design system) nhưng các dòng cao ở đây là số không đơn vị nên chữ phóng lên không đè nhau. */
+/* ---------- Mọi cỡ màn hình ---------- */
+.app-site .app-lbl { display: block; margin-bottom: 6px; font-size: 15px; line-height: 1.35; font-weight: 600; color: var(--ink); }
+/* Chữ xanh trên nền xanh nhạt: --primary chỉ đạt 4,39:1, --primary-hover đạt ≈5,5:1 */
+.app-site .vx-btn--soft, .app-site .vx-chip[aria-pressed="true"], .app-site .vx-tslot[aria-pressed="true"], .app-site .app-deliver-note .vx-link { color: var(--primary-hover); }
+/* Khối Flash sale: chữ trắng trên nền cam chỉ ≈2,8:1 → đổi đầu cam sang cam đậm (≥5:1) */
+.app-site .vx-flash__bar { background: linear-gradient(90deg, #991b1b 0%, #b91c1c 45%, #c2410c 100%); }
+.app-site .au-terms { font-size: 13px; line-height: 1.45; }
+/* Trang Hệ thống cửa hàng: nút "Xem chỉ đường" bị luật .vx-sinfo a (chữ xanh) đè → chữ xanh trên nền xanh, không đọc được */
+.app-site .vx-sinfo a.vx-btn--primary { color: var(--on-primary); }
+.app-site .vx-sinfo a.vx-btn--soft { color: var(--primary-hover); }
+/* Chữ xanh trên nền xanh nhạt khác (≥ 4,5:1) */
+.app-site .vx-ship-banner b, .app-site .vx-ship-banner a, .app-site .vx-badge--info, .app-site a.vx-chip[aria-current="true"], .app-site span.q, .app-site .vx-dtile[aria-current="true"] { color: var(--primary-hover); }
+/* Giá tiền không bị ngắt đôi giữa số khi cột hẹp hoặc khách phóng chữ ("420.00 / 0đ") */
+.app-site .vx-price, .app-site .vx-buy__price, .app-site .vx-item__price, .app-site .vx-total, .app-site .vx-lines { overflow-wrap: normal; }
+.app-site .app-side__close { display: none; }
+.app-site .app-acc-label--sm, .app-site .app-menubtn__t { display: none; }
+.app-site .app-buybar { display: none; }
+/* ---------- Tablet + điện thoại (< 1024px): nút Danh mục có chữ, bảng danh mục có nút Đóng ---------- */
+@media (max-width: 1023px) {
+  .app-site .app-menubtn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-width: 56px; min-height: 48px; margin: 0 0 0 -6px; padding: 4px; font: inherit; font-size: 12px; font-weight: 600; line-height: 14px; border-radius: var(--radius-md); }
+  .app-site .app-menubtn .vx-ico { width: 26px; height: 26px; }
+  .app-site .app-menubtn__t { display: block; }
+  .app-site .app-side { width: min(320px, 88vw); }
+  .app-site .app-side__close { display: flex; align-items: center; gap: 8px; flex: none; position: sticky; top: 0; z-index: 2; width: 100%; min-height: 56px; padding: 0 16px; border: 0; border-bottom: 1px solid var(--border); background: var(--primary-soft); color: var(--primary-hover); font: inherit; font-size: 17px; font-weight: 700; text-align: left; cursor: pointer; }
+  .app-site .vx-side__title { font-size: 13px; line-height: 18px; }
+  .app-site .vx-side__promo a { min-height: 52px; font-size: 16px; }
+  .app-site .vx-acc__head { min-height: 56px; font-size: 16px; }
+  .app-site .vx-acc__list a { align-items: center; min-height: 48px; font-size: 15px; line-height: 1.3; }
+  .app-site .vx-acc__list a small { font-size: 14px; }
+}
+/* ---------- Điện thoại (< 768px) ---------- */
+@media (max-width: 767px) {
+  .app-site { --header-h: 116px; --bar-h: 68px; --field-border: #7f9488; padding-bottom: calc(var(--bar-h) + env(safe-area-inset-bottom, 0px)); font-size: 16px; line-height: 1.5; }
+  /* Đầu trang: nút có chữ dưới biểu tượng, vùng chạm ≥ 48px */
+  .app-site .vx-header__main { gap: 2px 4px; padding: 6px 10px 8px; }
+  .app-site .vx-logo { min-height: 48px; display: flex; align-items: center; }
+  .app-site .vx-hactions { gap: 2px; }
+  .app-site .vx-hactions .app-hbtn { flex-direction: column; justify-content: center; gap: 2px; min-width: 48px; min-height: 48px; padding: 2px 4px; font-size: 12px; line-height: 14px; }
+  .app-site .vx-hactions .app-hbtn .vx-ico { width: 26px; height: 26px; }
+  .app-site .app-acc-label, .app-site .app-acc-label--sm { display: block; font-size: 12px; line-height: 14px; font-weight: 600; white-space: nowrap; }
+  .app-site .app-hbtn.app-bell { min-width: 44px; }
+  .app-site .app-bell em { left: calc(50% + 2px); top: 2px; }
+  .app-site .vx-cartbtn { flex-direction: column; justify-content: center; gap: 2px; min-width: 64px; min-height: 48px; padding: 4px 8px; border-radius: 16px; font-size: 12px; line-height: 14px; }
+  .app-site .vx-cartbtn .vx-ico { width: 24px; height: 24px; }
+  .app-site .vx-hactions .vx-cartbtn .app-hide-sm { display: block; }
+  .app-site .vx-cartbtn em { top: 0; left: auto; right: 6px; }
+  .app-site .vx-search { padding: 2px 2px 2px 16px; }
+  .app-site .vx-search input { min-height: 44px; }
+  .app-site .vx-search .vx-btn { min-width: 52px; min-height: 44px; }
+  /* Thanh liên hệ dưới đáy (thay cho 2 nút tròn nổi che nội dung) */
+  .app-site .app-fab { left: 0; right: 0; bottom: 0; flex-direction: row; align-items: stretch; gap: 10px; padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px)); background: var(--surface); border-top: 1px solid var(--border); box-shadow: 0 -2px 12px rgba(12, 24, 16, .1); z-index: 30; }
+  .app-site .app-fab a { flex: 1; flex-wrap: nowrap; justify-content: center; min-width: 0; min-height: 52px; padding: 8px 12px; font-size: 17px; line-height: 1.2; text-align: center; white-space: normal; }
+  .app-site .app-fab .vx-ico, .app-site .app-fab-logo { width: 26px; height: 26px; flex: none; }
+  .app-site .app-ck { bottom: calc(var(--bar-h) + 8px + env(safe-area-inset-bottom, 0px)); }
+  .app-site .app-ck-pref { max-height: calc(100vh - var(--bar-h) - 24px); overflow: auto; }
+  /* Trang sản phẩm: thanh Gọi / Mua ngay dính đáy khi nút Mua đã cuộn khỏi màn hình (thay cho thanh liên hệ) */
+  .app-site .app-buybar[data-show] { display: flex; gap: 10px; position: fixed; left: 0; right: 0; bottom: 0; z-index: 31; padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px)); background: var(--surface); border-top: 1px solid var(--border); box-shadow: 0 -2px 12px rgba(12, 24, 16, .12); }
+  .app-site .app-buybar .vx-btn { min-height: 52px; padding-block: 8px; font-size: 17px; line-height: 1.2; white-space: normal; }
+  .app-site .app-buybar .vx-btn--primary { flex: 1; min-width: 0; padding-inline: 12px; }
+  .app-site .app-buybar .vx-btn--outline { flex: none; padding-inline: 20px; }
+  body[data-buybar] .app-fab { display: none; }
+  /* Thông báo "Đã thêm vào giỏ hàng": chữ to hơn, nút Xem giỏ dễ bấm */
+  .app-site .app-toast .ts { padding: 12px 14px; font-size: 17px; line-height: 1.35; }
+  .app-site .app-toast .ts a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 6px; font-size: 17px; }
+  /* Chữ: phụ ≥ 14px, mô tả ≥ 15–16px (dòng cao không đơn vị để chữ phóng lên vẫn không đè nhau) */
+  .app-site .vx-badge, .app-site .vx-price small, .app-site .vx-strike, .app-site .vx-spec, .app-site .vx-item__unit, .app-site .vx-gal__note, .app-site .vx-group-head small, .app-site .vx-help, .app-site .vx-err, .app-site .vx-terms, .app-site .vx-flegal, .app-site .vx-cert, .app-site .vx-fcol h4, .app-site .vx-hot b small, .app-site .vx-tslot small, .app-site .vx-pay__opt small, .app-site .vx-fband__t small, .app-site .vx-acct__points div { font-size: 14px; line-height: 1.4; }
+  .app-site .vx-cert { padding: 6px 10px; }
+  .app-site .vx-flegal { font-size: 13px; line-height: 1.5; }
+  .app-site .vx-price { font-size: 20px; line-height: 1.3; }
+  .app-site .vx-pcard__name { font-size: 16px; line-height: 1.35; -webkit-line-clamp: 3; min-height: 0; }
+  .app-site .vx-item__name { font-size: 16px; line-height: 1.35; }
+  .app-site .vx-item__price b { font-size: 17px; line-height: 1.3; }
+  .app-site .vx-item__qty { font-size: 15px; }
+  .app-site .vx-buy__brand, .app-site .vx-buy__meta, .app-site .vx-crumb, .app-site .vx-steps, .app-site .vx-lines, .app-site .vx-check, .app-site .vx-label-row > b, .app-site .vx-group-head b, .app-site .vx-note, .app-site .vx-promo__head, .app-site .vx-promo__row, .app-site .vx-opt, .app-site .vx-fnews span, .app-site .ck, .app-site .ck-row, .app-site .au-head p, .app-site .au-resend, .app-site .vx-quick__item, .app-site .vx-strip__item { font-size: 15px; line-height: 1.4; }
+  .app-site .vx-buy__title { font-size: 24px; line-height: 1.3; }
+  .app-site .vx-spec-t { font-size: 16px; line-height: 1.45; }
+  .app-site .vx-spec-t dd a { font-size: 15px; }
+  .app-site .vx-lines { gap: 10px; }
+  .app-site .vx-total .amt { font-size: 26px; }
+  .app-site .vx-quick__item, .app-site .vx-strip__item { font-size: 14px; }
+  .app-site small { font-size: 14px; line-height: 1.4; }
+  .app-site .vx-flegal { font-size: 14px; }
+  .app-site .app-pcard__new { font-size: 13px; line-height: 1.3; padding: 3px 10px; }
+  /* Chữ phụ 11–13px trong các khối thiết kế (Dịch vụ, Doanh nghiệp, Cây Tết, Thư viện bệnh cây, Hệ thống cửa hàng, bài viết) → 14px */
+  .app-site .vx-perk span, .app-site .vx-feat p, .app-site .vx-dlist small, .app-site .ar-cta span, .app-site .vx-dtile p, .app-site .vx-dtile small, .app-site .bz-perks div, .app-site .vx-sres__item small, .app-site .vx-sres__item .row span, .app-site .vx-sres__item .row, .app-site .vx-sres__head, .app-site .vx-sinfo span, .app-site .sv-step, .app-site .nw-box a, .app-site .nw-box small, .app-site span.cond, .app-site span.note, .app-site span.from, .app-site span.sub, .app-site span.old, .app-site span.cat, .app-site span.tag, .app-site .dd-sym div, .app-site .dd-step small, .app-site .dd-cmp div, .app-site .dd-cmp b, .app-site .dd-facts div, .app-site .vx-meta span, .app-site .au-why div, .app-site .sv-gal em, .app-site .sv-quote small, .app-site .sv-proof span, .app-site .cp-steps span, .app-site .cp-steps b, .app-site .cp-count span, .app-site .vx-expert p, .app-site .qf-opt small, .app-site .vx-freeship span, .app-site .vx-topics small, .app-site .vx-trust small, .app-site .vx-trust b, .app-site .app-qa__bar small, .app-site .vx-ship-banner span, .app-site .vx-ship-banner b, .app-site .vx-sect span, .app-site .vx-fl label, .app-site .vx-part small, .app-site .vx-pmap__art small, .app-site .vx-slot, .app-site .vx-open, .app-site .vx-closed, .app-site .fs-slot, .app-site .app-cta-alt, .app-site .ad-f label, .app-site .vx-or { font-size: 14px; line-height: 1.4; }
+  .app-site .vx-slot { min-height: 44px; }
+  /* Nút / vùng chạm ≥ 44px */
+  .app-site .vx-chip { min-height: 44px; padding: 8px 16px; font-size: 15px; line-height: 1.3; border: 1.5px solid var(--field-border); }
+  .app-site .vx-chip[aria-pressed="true"] { border-color: var(--primary); }
+  .app-site .vx-seg .vx-chip { padding: 8px 14px; font-size: 15px; line-height: 1.3; }
+  .app-site .vx-pcard .vx-seg { display: flex; flex-wrap: wrap; gap: 6px; }
+  .app-site .vx-pcard .vx-seg .vx-chip { padding: 6px 8px; font-size: 14px; white-space: normal; text-align: center; }
+  .app-site .vx-opt { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .app-site .vx-opt .vx-seg { flex-wrap: wrap; gap: 8px; }
+  .app-site .vx-stepper { border: 1.5px solid var(--field-border); }
+  .app-site .vx-stepper button { width: 48px; height: 48px; font-size: 24px; }
+  .app-site .vx-stepper span { min-width: 40px; font-size: 18px; }
+  .app-site .vx-remove { min-height: 44px; padding: 0 10px; font-size: 15px; }
+  .app-site .vx-link, .app-site .vx-flash__bar a, .app-site .vx-buy__meta a, .app-site .vx-spec-t dd a { display: inline-flex; align-items: center; min-height: 44px; }
+  .app-site .vx-spec-t dd a { display: inline-flex !important; }
+  /* trang sản phẩm ghi style="display:inline" trực tiếp */
+  .app-site .app-ar-toc summary { padding-block: 14px; font-size: 16px; }
+  .app-site .vx-pager a, .app-site .vx-iconbtn { display: inline-grid; place-items: center; min-width: 44px; min-height: 44px; }
+  .app-site .vx-dlist a, .app-site .vx-topics a, .app-site .dd-cmp a, .app-site .vx-cblock a, .app-site .app-cta-alt, .app-site a.vx-badge, .app-site .nw-box a, .app-site .app-ar-toc a { display: flex; align-items: center; min-height: 44px; }
+  .app-site .dd-cmp a, .app-site .vx-cblock a, .app-site a.vx-badge, .app-site .nw-box a { display: inline-flex; }
+  .app-site .vx-pcard__name a, .app-site .vx-item__name a { display: block; padding-block: 3px; min-height: 44px; }
+  .app-site .vx-social a { display: inline-grid; place-items: center; min-width: 44px; min-height: 44px; }
+  .app-site .vx-hot b a { padding-block: 10px; }
+  .app-site .nw-box a[href^="mailto"] { display: inline-flex !important; align-items: center; min-height: 44px; }
+  .app-site .sv-card .b a { min-height: 44px; }
+  .app-site .vx-chip { min-width: 44px; }
+  .app-site .vx-crumb { align-items: center; gap: 0 6px; }
+  .app-site .vx-crumb a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 2px; }
+  .app-site .vx-btn { min-height: 48px; font-size: 16px; }
+  .app-site .vx-btn--sm { min-height: 44px; font-size: 15px; padding-inline: 14px; }
+  .app-site .vx-btn--lg { min-height: 52px; font-size: 17px; }
+  .app-site .vx-btn[disabled] { background: #c9d6ce; color: #3d4d43; }
+  .app-site .vx-toggle button { flex: 1; justify-content: center; min-height: 48px; padding-inline: 8px; font-size: 15px; white-space: nowrap; }
+  .app-site .vx-label-row .vx-toggle { width: 100%; }
+  .app-site .vx-label-row { flex-wrap: wrap; }
+  .app-site .vx-tslot { min-height: 56px; font-size: 16px; line-height: 1.3; border: 1.5px solid var(--field-border); }
+  .app-site .vx-pay__opt { min-height: 60px; font-size: 16px; }
+  .app-site .vx-radio { width: 24px; height: 24px; }
+  .app-site .vx-pay__opt[aria-checked="true"] .vx-radio { border-width: 7px; }
+  .app-site .vx-check input, .app-site .vx-switch { flex: none; }
+  .app-site .vx-check input { width: 24px; height: 24px; }
+  .app-site .vx-switch { width: 52px; height: 30px; }
+  .app-site .vx-switch::after { top: 4px; left: 4px; width: 22px; height: 22px; }
+  .app-site .vx-switch[aria-checked="true"]::after { left: 26px; }
+  .app-site .app-addr-opt__edit { min-height: 44px; min-width: 56px; padding: 0 8px; font-size: 16px; }
+  .app-site .vx-voucher .vx-btn { min-height: 44px; }
+  /* Ô nhập: cao, viền rõ (≥ 3:1), chữ 16px */
+  .app-site input.vx-input, .app-site textarea.vx-input, .app-site select.vx-input { min-height: 52px; padding: 12px 14px; border: 2px solid var(--field-border); border-radius: 12px; font-size: 16px; }
+  .app-site textarea.vx-input { min-height: 96px; }
+  .app-site input.vx-input:focus, .app-site textarea.vx-input:focus { border-color: var(--primary); }
+  .app-site .vx-fnews .vx-input { border-radius: 12px; }
+  .app-site .app-buyer, .app-site .vx-fields.app-buyer { grid-template-columns: minmax(0, 1fr); }
+  .app-site .au-phone { border: 2px solid var(--field-border); }
+  .app-site .au-phone input { min-height: 28px; font-size: 18px; }
+  .app-site .au-otp span { width: 48px; height: 60px; border: 2px solid var(--field-border); font-size: 26px; }
+  .app-site .au-head .x { width: 44px; height: 44px; }
+  .app-site .au-sbtn { height: 52px; font-size: 16px; border: 1.5px solid var(--field-border); }
+  .app-site .au-sbtn .logo { width: 22px; height: 22px; border: 0; border-radius: 0; }
+  .app-site .au-resend { font-size: 15px; }
+  .app-site .au-resend a { display: inline-flex; align-items: center; min-height: 44px; }
+  /* Giỏ hàng: ảnh + tên một hàng, giá và nút +/− một hàng (cột hẹp không còn bóp tên sản phẩm) */
+  .app-site .vx-item { grid-template-columns: 64px minmax(0, 1fr) auto; grid-template-areas: "img info info" "price price qty"; gap: 10px 12px; align-items: center; }
+  .app-site .vx-item__img { grid-area: img; align-self: start; width: 64px; height: 64px; }
+  .app-site .vx-item__info { grid-area: info; align-self: start; }
+  .app-site .vx-item__price { grid-area: price; text-align: left; }
+  .app-site .vx-item__qty { grid-area: qty; justify-self: end; }
+  .app-site .vx-item__promo { grid-column: 1 / -1; }
+  /* Danh sách: sắp xếp xuống dòng (không còn bị cắt "Giá thấp → c…"); bộ lọc chỉ còn một nút lớn */
+  .app-site .fb-sort { flex-wrap: wrap; overflow: visible; white-space: normal; gap: 0 18px; font-size: 16px; }
+  .app-site .fb-sort a { display: inline-flex; align-items: center; min-height: 44px; padding: 0; }
+  .app-site .app-fbar__chips { display: none; }
+  .app-site .app-fbar__all { flex: 1; justify-content: center; min-height: 52px; font-size: 17px; }
+  .app-site .app-ftag { min-height: 44px; font-size: 15px; }
+  .app-site .app-ftags__clear { display: inline-flex; align-items: center; min-height: 44px; font-size: 15px; }
+  .app-site .pl-subs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; overflow: visible; }
+  .app-site .pl-sub span { flex: none; }
+  .app-site .pl-sub { flex-wrap: nowrap; flex-direction: row; align-items: center; justify-content: flex-start; gap: 8px; min-height: 52px; font-size: 15px; line-height: 1.3; text-align: left; }
+  /* Chân trang: hotline lớn, bấm được; bỏ mã QR (đã có nút Chat Zalo ở thanh dưới) */
+  .app-site .vx-hot { gap: 2px; padding: 6px 0; }
+  .app-site .vx-hot span { font-size: 15px; line-height: 1.4; }
+  .app-site .vx-hot b { font-size: 21px; line-height: 1.3; }
+  .app-site .vx-hot b a { display: inline-block; padding: 8px 0; }
+  .app-site .vx-fcol__body a { min-height: 48px; font-size: 16px; }
+  .app-site .vx-fcol__head { min-height: 56px; font-size: 14px; }
+  .app-site .app-qrbox { display: none; }
+  .app-site .vx-fband .vx-btn { margin-left: 0; }
+  /* Banner cookie: nút to */
+  .app-site .ck .acts { flex-wrap: wrap; }
+  .app-site .ck .acts .vx-btn { min-height: 48px; font-size: 16px; }
+  .app-site .ck b { font-size: 17px; }
+}
+/* ---------- Điện thoại nhỏ (≤ 359px): thu hẹp đầu trang cho vừa 1 hàng khi đã đăng nhập ---------- */
+@media (max-width: 359px) {
+  .app-site .app-menubtn { min-width: 52px; padding: 4px 2px; }
+  .app-site .app-logo-mark { height: 28px; }
+  .app-site .vx-hactions .app-hbtn { min-width: 44px; padding-inline: 2px; }
+  .app-site .app-hbtn.app-bell { min-width: 40px; }
+  .app-site .vx-cartbtn { min-width: 58px; padding-inline: 6px; }
+  .app-site .app-buybar .vx-btn { font-size: 16px; }
+  .app-site .app-buybar .vx-btn--outline { padding-inline: 12px; }
+  .app-site .app-buybar .vx-btn--primary { padding-inline: 6px; min-width: 0; }
+}
+/* <<< DỄ DÙNG ĐIỆN THOẠI */

@@ -1,13 +1,17 @@
 import 'server-only';
 import { connection } from 'next/server';
 import { cache } from 'react';
-import { asc, desc, eq } from 'drizzle-orm';
+import { and, asc, desc, eq, lt, notInArray, sql } from 'drizzle-orm';
 import * as z from 'zod';
 import { normalize } from '@/lib/catalog';
-import { CAUSES, PARTS, PLANTS, type Disease } from '@/lib/diseases';
+import { CAUSES, DISEASE_IMAGE_FILE, PARTS, PLANTS, type Disease } from '@/lib/diseases';
 import { db, schema } from './db';
+import type { SavedImage } from './uploads';
 
-const { diseases: D } = schema;
+const { diseases: D, diseaseImages: DI } = schema;
+
+/** Tổng số ảnh một bài được giữ (kể cả ảnh đã bỏ khỏi bài nhưng chưa dọn) — chặn tải ảnh vô hạn. */
+const MAX_DISEASE_IMAGES = 30;
 
 type Row = typeof D.$inferSelect;
 const toDisease = ({ updatedAt: _u, createdAt: _c, ...r }: Row): Disease => r;
@@ -47,7 +51,7 @@ export const DiseaseInputSchema = z.object({
   spread: line(60),
   season: line(60),
   summary: z.string().trim().min(20, 'Mô tả ngắn cần ít nhất 20 ký tự').max(800),
-  symptoms: z.array(z.object({ part: z.enum(keys(PARTS)), text: line(200).min(1) })).min(1, 'Nhập ít nhất 1 triệu chứng').max(8),
+  symptoms: z.array(z.object({ part: z.enum(keys(PARTS)), text: line(200).min(1), image: z.string().regex(DISEASE_IMAGE_FILE).optional() })).min(1, 'Nhập ít nhất 1 triệu chứng').max(8),
   confusions: z.array(z.object({ name: line(60).min(1, 'Nhập tên bệnh dễ nhầm'), text: line(300).min(1, 'Nhập cách phân biệt'), slug: z.string().max(120).optional() })).max(4),
   steps: z.array(z.object({ title: line(120).min(1, 'Nhập tên bước xử lý'), detail: line(300) })).min(1, 'Nhập ít nhất 1 bước xử lý').max(8),
   prevention: z.array(line(200)).max(8).transform((a) => a.filter(Boolean)),
@@ -63,9 +67,18 @@ const slugify = (s: string) => normalize(s).replace(/[^a-z0-9]+/g, '-').replace(
 export async function saveDisease(v: DiseaseInput) {
   const { slug: editSlug, ...data } = v;
   data.confusions = data.confusions.map(({ slug, ...c }) => (slug && slug !== editSlug ? { ...c, slug } : c));
+  // Chỉ giữ ảnh đã tải lên cho chính bài này (bài mới chưa có ảnh nào).
+  const mine = new Set(editSlug ? (await db.select({ file: DI.file }).from(DI).where(eq(DI.diseaseSlug, editSlug))).map((r) => r.file) : []);
+  data.symptoms = data.symptoms.map(({ image, ...s }) => (image && mine.has(image) ? { ...s, image } : s));
   if (editSlug) {
     const r = await db.update(D).set({ ...data, updatedAt: new Date() }).where(eq(D.slug, editSlug)).returning({ slug: D.slug });
-    return r.length ? { ok: true as const, slug: editSlug } : { ok: false as const, error: 'Không tìm thấy bài bệnh' };
+    if (!r.length) return { ok: false as const, error: 'Không tìm thấy bài bệnh' };
+    // Ảnh đã bỏ khỏi bài quá 1 ngày → xóa cho nhẹ database (ảnh mới tải chưa lưu bài thì giữ).
+    const used = data.symptoms.flatMap((s) => (s.image ? [s.image] : []));
+    await db.delete(DI).where(and(
+      eq(DI.diseaseSlug, editSlug), lt(DI.createdAt, new Date(Date.now() - 86_400_000)), used.length ? notInArray(DI.file, used) : undefined,
+    ));
+    return { ok: true as const, slug: editSlug };
   }
   const base = slugify(v.name) || 'benh';
   for (let i = 0; i < 20; i++) {
@@ -80,3 +93,18 @@ export async function setDiseaseActive(slug: string, active: boolean) {
   const r = await db.update(D).set({ active, updatedAt: new Date() }).where(eq(D.slug, slug)).returning({ slug: D.slug });
   return r.length > 0;
 }
+
+// ---- Ảnh minh họa triệu chứng ----------------------------------------------------------------
+
+/** Thêm ảnh vào bài bệnh — lưu ngay; ảnh gắn vào triệu chứng khi bấm Lưu bài bệnh. Bài mới phải lưu trước. */
+export async function addDiseaseImage(slug: string, img: SavedImage) {
+  const [d] = await db.select({ slug: D.slug }).from(D).where(eq(D.slug, slug));
+  if (!d) return { ok: false as const, error: 'Không tìm thấy bài bệnh — hãy lưu bài bệnh trước' };
+  const [{ n }] = await db.select({ n: sql<number>`count(*)`.mapWith(Number) }).from(DI).where(eq(DI.diseaseSlug, slug));
+  if (n >= MAX_DISEASE_IMAGES) return { ok: false as const, error: 'Bài này đã có quá nhiều ảnh chưa dùng — bấm Lưu bài bệnh, ảnh không dùng sẽ tự dọn sau 1 ngày' };
+  await db.insert(DI).values({ diseaseSlug: slug, file: img.file, mime: img.mime, data: img.data });
+  return { ok: true as const, file: img.file };
+}
+
+export const readDiseaseImage = async (name: string) =>
+  (await db.select({ data: DI.data, mime: DI.mime }).from(DI).where(eq(DI.file, name)))[0] ?? null;

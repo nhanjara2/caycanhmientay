@@ -50,7 +50,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!toast) return;
-    const t = setTimeout(() => setToast(null), 2600);
+    const t = setTimeout(() => setToast(null), 5000);
     return () => clearTimeout(t);
   }, [toast]);
 

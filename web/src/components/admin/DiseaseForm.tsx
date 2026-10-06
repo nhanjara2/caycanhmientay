@@ -2,10 +2,11 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState, useTransition, type FormEvent, type ReactNode } from 'react';
-import { saveDiseaseAction } from '@/app/actions/diseases';
+import { useRef, useState, useTransition, type FormEvent, type ReactNode } from 'react';
+import { saveDiseaseAction, uploadDiseaseImageAction } from '@/app/actions/diseases';
 import { normalize } from '@/lib/catalog';
-import { CAUSES, PARTS, PLANTS, SEVERITY, type Disease, type PartKey } from '@/lib/diseases';
+import { compressImage } from '@/lib/compress-image';
+import { CAUSES, diseaseImageUrl, PARTS, PLANTS, SEVERITY, type Disease, type PartKey } from '@/lib/diseases';
 
 type ProductPick = { slug: string; name: string; sku: string; active: boolean };
 type DiseasePick = { slug: string; name: string };
@@ -35,6 +36,44 @@ function Rows<T>({ title, hint, items, max, blank, onChange, render }: {
         {!items.length && <span className="hint">Chưa có dòng nào.</span>}
         {hint && <span className="hint" style={{ fontSize: 11, color: 'var(--ink-muted)' }}>{hint}</span>}
       </div>
+    </div>
+  );
+}
+
+/** Ảnh minh họa của một triệu chứng: tải ngay lên server (nén ở trình duyệt), gắn vào bài khi bấm Lưu bài bệnh. */
+function SymptomPhoto({ slug, file, onChange }: { slug: string; file?: string; onChange: (file: string | undefined) => void }) {
+  const input = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  const pick = async (f?: File) => {
+    if (!f) return;
+    setError('');
+    setBusy(true);
+    try {
+      const fd = new FormData();
+      fd.set('slug', slug);
+      fd.set('photo', await compressImage(f, 1200));
+      const r = await uploadDiseaseImageAction(fd);
+      if (r.ok) onChange(r.file); else setError(r.error);
+    } catch {
+      setError('Không đọc được ảnh này, vui lòng chọn ảnh khác (JPG, PNG, WebP)');
+    }
+    setBusy(false);
+    if (input.current) input.current.value = '';
+  };
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+      {file
+        ? <img src={diseaseImageUrl(file)} alt="Ảnh minh họa triệu chứng" width={72} height={54} style={{ width: 72, height: 54, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)' }} />
+        : <span style={{ width: 72, height: 54, borderRadius: 6, border: '1px dashed var(--border)', display: 'grid', placeItems: 'center', fontSize: 11, color: 'var(--ink-muted)' }}>Chưa có ảnh</span>}
+      <input ref={input} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(e) => void pick(e.target.files?.[0])} />
+      <button type="button" className="vx-btn vx-btn--outline vx-btn--sm" disabled={busy} onClick={() => input.current?.click()}>
+        {busy ? 'Đang tải…' : file ? 'Đổi ảnh' : '+ Thêm ảnh'}
+      </button>
+      {file && !busy && <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" onClick={() => onChange(undefined)}>Bỏ ảnh</button>}
+      {error && <span className="vx-err" role="alert">{error}</span>}
     </div>
   );
 }
@@ -128,14 +167,20 @@ export function DiseaseForm({ initial, canEdit, products, diseases }: {
             </div>
 
             <Rows title={<>Triệu chứng <i style={{ color: 'var(--danger)', fontStyle: 'normal' }}>*</i></>} items={v.symptoms} max={8} blank={{ part: 'la' as PartKey, text: '' }}
-              onChange={(x) => set('symptoms', x)} hint="Mỗi dòng một dấu hiệu nhìn thấy được, kèm bộ phận có dấu hiệu đó."
+              onChange={(x) => set('symptoms', x)}
+              hint={v.slug
+                ? 'Mỗi dòng một dấu hiệu nhìn thấy được, kèm bộ phận có dấu hiệu đó. Ảnh minh họa (không bắt buộc) hiện trên trang bệnh thay cho biểu tượng bộ phận.'
+                : 'Mỗi dòng một dấu hiệu nhìn thấy được, kèm bộ phận có dấu hiệu đó. Muốn thêm ảnh minh họa: bấm Lưu bài bệnh trước, rồi quay lại thêm ảnh cho từng triệu chứng.'}
               render={(s, upd) => (
-                <div className="ad-frow app-symrow">
-                  <select className="vx-input" value={s.part} onChange={(e) => upd({ part: e.target.value as PartKey })} aria-label="Bộ phận">
-                    {PARTS.map((p) => <option key={p.key} value={p.key}>{p.name}</option>)}
-                  </select>
-                  <input className="vx-input" value={s.text} onChange={(e) => upd({ text: e.target.value })} maxLength={200} placeholder="Lá dưới vàng, mềm, rũ…" aria-label="Triệu chứng" />
-                </div>
+                <>
+                  <div className="ad-frow app-symrow">
+                    <select className="vx-input" value={s.part} onChange={(e) => upd({ part: e.target.value as PartKey })} aria-label="Bộ phận">
+                      {PARTS.map((p) => <option key={p.key} value={p.key}>{p.name}</option>)}
+                    </select>
+                    <input className="vx-input" value={s.text} onChange={(e) => upd({ text: e.target.value })} maxLength={200} placeholder="Lá dưới vàng, mềm, rũ…" aria-label="Triệu chứng" />
+                  </div>
+                  {v.slug && <SymptomPhoto slug={v.slug} file={s.image} onChange={(image) => upd({ image })} />}
+                </>
               )} />
 
             <Rows title="Dễ nhầm với" items={v.confusions} max={4} blank={{ name: '', text: '', slug: '' }}

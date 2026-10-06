@@ -23,6 +23,9 @@ export function SidebarMenu({ categories, counts }: { categories: Category[]; co
     <>
       <div className="app-scrim" onClick={() => document.body.removeAttribute('data-sidebar-open')} />
       <aside className="vx-side app-side" aria-label="Danh mục sản phẩm">
+        <button type="button" className="app-side__close" onClick={() => document.body.removeAttribute('data-sidebar-open')}>
+          <Icon name="close" size={22} />Đóng danh mục
+        </button>
         <DeliverToButton variant="side" />
         <div className="vx-side__title">DANH MỤC SẢN PHẨM</div>
         <div className="vx-side__promo">

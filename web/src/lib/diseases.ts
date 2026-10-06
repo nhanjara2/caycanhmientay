@@ -40,6 +40,11 @@ export const PLANTS = [
 ] as const;
 export type PlantKey = (typeof PLANTS)[number]['key'];
 
+/** Ảnh minh họa triệu chứng: công khai, phục vụ qua /api/disease-images/[file]. */
+export const diseaseImageUrl = (file: string) => `/api/disease-images/${file}`;
+/** Tên file ảnh hợp lệ (hex ngẫu nhiên + đuôi) — khớp `isSafeName` ở server/uploads.ts. */
+export const DISEASE_IMAGE_FILE = /^[a-f0-9]{32}\.(jpg|png|webp)$/;
+
 export const SEVERITY = ['', 'Thấp', 'Trung bình', 'Khá cao', 'Cao', 'Rất cao'] as const;
 
 export const partName = (k: string) => PARTS.find((p) => p.key === k)?.name ?? k;
@@ -65,7 +70,8 @@ export type Disease = {
   season: string;
   /** Mô tả ngắn: bệnh là gì, vì sao bị. */
   summary: string;
-  symptoms: { part: PartKey; text: string }[];
+  /** `image` = tên file ảnh minh họa trong disease_images (không bắt buộc). */
+  symptoms: { part: PartKey; text: string; image?: string }[];
   /** Dễ nhầm với — `slug` (không bắt buộc) trỏ tới bài bệnh kia. */
   confusions: { name: string; text: string; slug?: string }[];
   steps: { title: string; detail: string }[];

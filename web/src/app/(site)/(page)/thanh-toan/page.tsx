@@ -191,13 +191,15 @@ export default function CheckoutPage() {
             </div>
 
             <h3 className="vx-card__title"><Icon name="user" />Thông tin người đặt</h3>
-            <div className="vx-fields">
+            <div className="vx-fields app-buyer">
               <div className="vx-field">
-                <input className={`vx-input${touched && errors.name ? ' vx-input--error' : ''}`} placeholder="Họ và tên người đặt" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" />
+                <label htmlFor="co-name" className="app-lbl">Họ và tên</label>
+                <input id="co-name" className={`vx-input${touched && errors.name ? ' vx-input--error' : ''}`} placeholder="Ví dụ: Nguyễn Văn An" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" />
                 {err('name')}
               </div>
               <div className="vx-field">
-                <input className={`vx-input${touched && errors.phone ? ' vx-input--error' : ''}`} placeholder="Số điện thoại" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" />
+                <label htmlFor="co-phone" className="app-lbl">Số điện thoại</label>
+                <input id="co-phone" className={`vx-input${touched && errors.phone ? ' vx-input--error' : ''}`} placeholder="Ví dụ: 0912 345 678" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" />
                 {err('phone')}
               </div>
             </div>

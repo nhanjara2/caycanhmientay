@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { Breadcrumb, SectionHeader } from '@/components/Blocks';
 import { PartIcon } from '@/components/DiseaseArt';
 import { ProductGrid } from '@/components/ProductCard';
-import { SEVERITY, causeOf, partName, plantName } from '@/lib/diseases';
+import { SEVERITY, causeOf, diseaseImageUrl, partName, plantName } from '@/lib/diseases';
 import { getProducts } from '@/server/catalog';
 import { allDiseases, getDisease } from '@/server/diseases';
 import { categoryOf, postPath } from '@/lib/posts';
@@ -74,8 +74,8 @@ export default async function DiseaseDetailPage({ params }: Props) {
       <div className="dd-sym">
         {d.symptoms.map((s, i) => (
           <div key={i}>
-            <span className="img">
-              <PartIcon part={s.part} plain />
+            <span className={s.image ? 'img img--photo' : 'img'}>
+              {s.image ? <img src={diseaseImageUrl(s.image)} alt={s.text} loading="lazy" /> : <PartIcon part={s.part} plain />}
               <em>{partName(s.part)}</em>
             </span>
             {s.text}

@@ -65,7 +65,7 @@ export function ProductCard({ product: p, showFlash = false, onRemoveFromWishlis
       </div>
       <div className="vx-pcard__foot">
         <button type="button" className="vx-btn vx-btn--primary vx-btn--block" onClick={() => add(p, opt)}>
-          Chọn mua
+          Thêm vào giỏ
         </button>
       </div>
     </article>
