@@ -33,7 +33,18 @@ export const ProductInputSchema = z.object({
   unit: z.string().trim().min(1, 'Nhập đơn vị bán').max(20),
   spec: z.string().trim().max(120),
   lead: z.string().trim().min(10, 'Mô tả ngắn cần ít nhất 10 ký tự').max(600),
-  specs: z.array(z.tuple([z.string().trim().min(1).max(60), z.string().trim().min(1).max(200)])).max(20),
+  specs: z.array(z.tuple([z.string().trim().min(1).max(60), z.string().trim().min(1).max(200)])).max(30),
+  // Tên gọi khác / tên khoa học để khách tìm ra sản phẩm, ngăn cách bằng dấu phẩy hoặc xuống dòng → mảng, bỏ trùng (không phân biệt dấu, hoa thường)
+  keywords: z.string().max(600, 'Tên gọi khác tối đa 600 ký tự').optional().transform((v, ctx): string[] => {
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const k of (v ?? '').split(/[,;\n]/).map((x) => x.trim()).filter(Boolean)) {
+      if (k.length > 60) { ctx.addIssue({ code: 'custom', message: `Tên gọi khác “${k.slice(0, 20)}…” dài quá 60 ký tự, hãy ngăn cách bằng dấu phẩy` }); continue; }
+      if (!seen.has(normalize(k))) { seen.add(normalize(k)); out.push(k); }
+    }
+    if (out.length > 15) ctx.addIssue({ code: 'custom', message: 'Tối đa 15 tên gọi khác' });
+    return out;
+  }),
   active: z.boolean(),
   flash: z.boolean(),
   // Link YouTube (bỏ trống = không có video) → lưu mã video
@@ -164,7 +175,7 @@ export async function saveProduct(input: ProductInput, actor: string): Promise<S
   const values = {
     name: input.name, category: input.category, sub: input.sub, icon: input.icon, origin: input.origin, ship: input.ship,
     pesticide: input.pesticide, unit: input.unit, spec: input.spec, lead: input.lead, specs: input.specs, active: input.active,
-    youtubeId: input.video,
+    youtubeId: input.video, keywords: input.keywords,
     fengshui: input.fengshui,
     attrs: input.attrs,
   };
@@ -204,7 +215,7 @@ export async function saveProduct(input: ProductInput, actor: string): Promise<S
   const sku = nextSku(prefix, (await db.select({ s: products.sku }).from(products).where(like(products.sku, `${prefix}-%`))).map((r) => r.s));
 
   await db.transaction(async (tx) => {
-    await tx.insert(products).values({ slug, sku, ...values, keywords: [], flashTotal: input.flash ? 50 : null, flashSold: input.flash ? 0 : null });
+    await tx.insert(products).values({ slug, sku, ...values, flashTotal: input.flash ? 50 : null, flashSold: input.flash ? 0 : null });
     for (const [idx, o] of input.options.entries()) {
       await tx.insert(productOptions).values({ productSlug: slug, idx, label: o.label, price: o.price, oldPrice: o.oldPrice, stock: 0 });
       if (o.stock) await applyStock(tx, slug, idx, o.stock, 'import', actor, 'Tồn đầu kỳ');

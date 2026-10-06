@@ -15,6 +15,7 @@ import { fullAddress, type AddressDTO } from '@/lib/address-labels';
 import { PAY_LABEL, PAY_LOGO } from '@/lib/order-labels';
 import { useAuth } from '@/lib/auth';
 import { useCart } from '@/lib/cart';
+import { useDeliverTo } from '@/lib/deliver-to';
 import { computeTotals } from '@/lib/pricing';
 import { useShipping } from '@/lib/shipping-client';
 import type { DayOption } from '@/lib/shipping';
@@ -55,6 +56,7 @@ export default function CheckoutPage() {
   const [serverError, setServerError] = useState('');
   const [busy, setBusy] = useState(false);
   const { user } = useAuth();
+  const { getPlace } = useDeliverTo();
   const [saved, setSaved] = useState<AddressDTO[]>([]);
   const [savedId, setSavedId] = useState<number | null>(null);
   const [stores, setStores] = useState<StorePoint[]>([]);
@@ -76,7 +78,8 @@ export default function CheckoutPage() {
   const loadAddresses = async (select?: number) => {
     const list = await listAddressesAction();
     setSaved(list);
-    const a = list.find((x) => x.id === select) ?? list.find((x) => x.isDefault) ?? list[0];
+    // mặc định: địa chỉ đang chọn ở "Giao đến" trên đầu trang (nếu lấy từ sổ), không có thì địa chỉ mặc định
+    const a = list.find((x) => x.id === select) ?? list.find((x) => x.id === getPlace()?.addressId) ?? list.find((x) => x.isDefault) ?? list[0];
     if (a) pickSaved(a); else setSavedId(null);
   };
   /** Xóa địa chỉ trong hộp Sửa: đang chọn đúng địa chỉ đó thì chọn lại địa chỉ mặc định. */

@@ -25,6 +25,8 @@ export type ProductFormValue = {
   unit: string;
   spec: string;
   lead: string;
+  /** Tên gọi khác + tên khoa học, ngăn cách bằng dấu phẩy (lưu thành `products.keywords`). */
+  keywords: string;
   specs: [string, string][];
   active: boolean;
   flash: boolean;
@@ -155,6 +157,11 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
                   <label htmlFor="pf-name">Tên sản phẩm <i>*</i></label>
                   <input id="pf-name" className="vx-input" value={v.name} onChange={(e) => set('name', e.target.value)} maxLength={120} required />
                   <span className="hint">Loại + tên + đặc điểm + quy cách. {v.name.length}/120 ký tự.</span>
+                </div>
+                <div className="ad-f">
+                  <label htmlFor="pf-keywords">Tên gọi khác</label>
+                  <input id="pf-keywords" className="vx-input" value={v.keywords} onChange={(e) => set('keywords', e.target.value)} maxLength={600} placeholder="kim phát tài, Zamioculcas zamiifolia" />
+                  <span className="hint">Cách gọi khác và tên khoa học, ngăn cách bằng dấu phẩy. Khách gõ tên nào ở ô tìm kiếm cũng ra sản phẩm này (gõ không dấu cũng được); không hiện trên trang sản phẩm.</span>
                 </div>
                 <div className="ad-frow">
                   <div className="ad-f">

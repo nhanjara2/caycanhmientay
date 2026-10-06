@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import type { Category } from '@/lib/catalog';
+import { DeliverToButton } from './DeliverTo';
 import { Icon } from './Icon';
 
 /** Menu danh mục cố định bên trái (desktop), bảng trượt trái trên tablet/mobile. */
@@ -22,6 +23,7 @@ export function SidebarMenu({ categories, counts }: { categories: Category[]; co
     <>
       <div className="app-scrim" onClick={() => document.body.removeAttribute('data-sidebar-open')} />
       <aside className="vx-side app-side" aria-label="Danh mục sản phẩm">
+        <DeliverToButton variant="side" />
         <div className="vx-side__title">DANH MỤC SẢN PHẨM</div>
         <div className="vx-side__promo">
           <Link href="/khuyen-mai">

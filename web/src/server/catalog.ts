@@ -82,12 +82,15 @@ export async function categoryCounts(): Promise<Record<string, number>> {
   return out;
 }
 
+/** Thông số "Tên khoa học" của sản phẩm cũng tìm được, không bắt nhập lại vào "Tên gọi khác". */
+const scientificNames = (p: Product) => p.specs.filter(([k]) => normalize(k) === 'ten khoa hoc').map(([, v]) => v);
+
 /** Tìm không phân biệt dấu: "tri nam" khớp "trị nấm". */
 export async function searchProducts(q: string, categoryName: (slug: string) => string | undefined) {
   const terms = normalize(q).split(/\s+/).filter(Boolean);
   if (!terms.length) return [];
   return (await allProducts()).filter((p) => {
-    const hay = normalize([p.name, p.spec, categoryName(p.category), ...(p.keywords ?? [])].join(' '));
+    const hay = normalize([p.name, p.spec, categoryName(p.category), ...(p.keywords ?? []), ...scientificNames(p)].join(' '));
     return terms.every((t) => hay.includes(t));
   });
 }

@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState, type FormEvent } from 'react';
 import { useCart } from '@/lib/cart';
 import { AccountMenu } from './AccountMenu';
+import { DeliverToButton } from './DeliverTo';
 import { NotificationBell } from './NotificationBell';
 import { Icon } from './Icon';
 
@@ -61,12 +62,7 @@ export function Header() {
           <span className="app-logo-text">Cây Cảnh Miền Tây</span>
         </Link>
         <SearchBox />
-        <div className="vx-loc">
-          <Icon name="pin" size={18} />
-          <span>
-            <small>Giao đến</small>Q.1, TP.HCM
-          </span>
-        </div>
+        <DeliverToButton />
         <div className="vx-hactions">
           <NotificationBell />
           <AccountMenu />

@@ -979,3 +979,29 @@ a.vx-chip { text-decoration: none; }
 .mt-list a { cursor: pointer; }
 .mt-edit textarea.mt-body { width: 100%; font: inherit; font-size: 13px; line-height: 20px; }
 @media (max-width: 1023px) { .mt { grid-template-columns: minmax(0, 1fr); } }
+
+/* "Giao đến" (DeliverTo): nút ở đầu trang, hàng đầu bảng danh mục (tablet/điện thoại), hộp chọn, dòng báo ở trang sản phẩm */
+button.vx-loc { border: 0; font: inherit; font-size: 13px; line-height: 18px; text-align: left; cursor: pointer; transition: background .15s; }
+button.vx-loc:hover { background: rgba(255, 255, 255, .22); }
+button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.app-loc__v { display: block; max-width: 190px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.app-loc-side { display: none; }
+@media (max-width: 1023px) {
+  .app-loc-side { display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px var(--space-4); border: 0; border-bottom: 1px solid var(--border); background: var(--primary-soft); color: var(--ink); font: inherit; font-size: 14px; text-align: left; cursor: pointer; }
+  .app-loc-side > span { flex: 1; min-width: 0; }
+  .app-loc-side small { display: block; font-size: 11px; line-height: 14px; color: var(--ink-muted); }
+  .app-loc-side .app-loc__v { max-width: none; font-weight: 600; }
+}
+.app-deliver-list { display: flex; flex-direction: column; gap: 8px; max-height: 280px; overflow: auto; }
+.app-deliver-item { display: flex; gap: 10px; align-items: flex-start; width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); font: inherit; text-align: left; cursor: pointer; }
+.app-deliver-item:hover { border-color: var(--primary); }
+.app-deliver-item[aria-pressed="true"] { border-color: var(--primary); background: var(--primary-soft); }
+.app-deliver-item .vx-ico { margin-top: 2px; color: var(--primary); flex: none; }
+.app-deliver-item > span { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; }
+.app-deliver-item b { font-size: 14px; }
+.app-deliver-item small { font-size: 13px; color: var(--ink-muted); }
+.app-deliver-note { display: flex; gap: 8px; align-items: flex-start; padding: 10px 12px; border-radius: var(--radius-md); background: var(--primary-soft); font-size: 13px; line-height: 19px; }
+.app-deliver-note .vx-ico { color: var(--primary); margin-top: 1px; flex: none; }
+.app-deliver-note .vx-link { background: none; border: 0; padding: 0; font: inherit; cursor: pointer; }
+.app-deliver-note--out { background: #fdecea; color: var(--danger); }
+.app-deliver-note--out .vx-ico { color: var(--danger); }

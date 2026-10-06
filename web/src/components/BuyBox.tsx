@@ -8,6 +8,7 @@ import { useCart } from '@/lib/cart';
 import { ZALO_URL } from '@/lib/contact';
 import { compact, money } from '@/lib/format';
 import { starsText } from '@/lib/reviews';
+import { DeliverToNote } from './DeliverTo';
 import { Icon } from './Icon';
 import { WishlistHeart } from './WishlistHeart';
 
@@ -72,6 +73,7 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
           <button type="button" aria-label="Tăng" onClick={() => setQty((q) => q + 1)}>+</button>
         </span>
       </div>
+      <DeliverToNote ship={p.ship} />
       <div className="vx-buy__cta">
         <button
           type="button"
