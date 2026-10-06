@@ -183,6 +183,13 @@
       "when": 1791256705850,
       "tag": "0025_cay_canh_subgroups",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1791264345943,
+      "tag": "0026_expenses",
+      "breakpoints": true
     }
   ]
 }

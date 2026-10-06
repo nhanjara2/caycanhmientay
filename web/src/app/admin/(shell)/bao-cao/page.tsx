@@ -1,11 +1,14 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { ExpenseBreakdown } from '@/components/admin/ExpenseBreakdown';
 import { Icon } from '@/components/Icon';
+import { shortMoney } from '@/lib/expense-labels';
 import { findCategory } from '@/lib/catalog';
 import { money } from '@/lib/format';
 import { PAY_LABEL } from '@/lib/order-labels';
 import { requireAccess } from '@/server/auth';
 import { getCategories } from '@/server/categories';
+import { materializeRecurring } from '@/server/expenses';
 import { buildReport, DEFAULT_RANGE, isReportRange, REPORT_RANGES, type ReportRange } from '@/server/reports';
 
 export const metadata: Metadata = { title: 'Báo cáo' };
@@ -31,6 +34,7 @@ const CHANNEL_LABEL: Record<string, string> = { web: 'Website', pos: 'Tại cử
 /** AdminReports với số liệu thật: doanh thu, đơn, khách quay lại, bảo hành, kênh thanh toán, bán kèm, chăm sóc khách. */
 export default async function AdminReportsPage({ searchParams }: Props) {
   await requireAccess('reports');
+  await materializeRecurring(); // ghi các khoản chi định kỳ đã đến hạn trước khi tính lãi lỗ
   const sp = await searchParams;
   const range: ReportRange = isReportRange(sp.ky) ? sp.ky : DEFAULT_RANGE;
   const [r, cats] = await Promise.all([buildReport(range), getCategories()]);
@@ -47,6 +51,8 @@ export default async function AdminReportsPage({ searchParams }: Props) {
   const shipTotal = r.delivery.reduce((a, d) => a + d.n, 0);
   const channelTotal = r.channel.reduce((a, d) => a + d.n, 0);
   const empty = !r.orders;
+  const f = r.finance;
+  const margin = r.revenue ? (f.profit / r.revenue) * 100 : 0;
 
   return (
     <div className="ad-body">
@@ -96,6 +102,38 @@ export default async function AdminReportsPage({ searchParams }: Props) {
           <small>{r.voucherOrders ? `${r.voucherOrders} đơn · đã giảm ${short(r.voucherDiscount)}` : 'Chưa có đơn dùng mã'}</small>
         </div>
       </div>
+
+      <div className="ad-card">
+        <div className="ad-card__h">Lãi lỗ ước tính<Link href="/admin/chi-phi">Sổ chi phí</Link></div>
+        <div className="ad-card__b">
+          <div className="ad-kpis">
+            <div className="ad-kpi">
+              <span><Icon name="cash" />Doanh thu</span>
+              <b>{shortMoney(r.revenue)}</b>
+              <small>{r.orders} đơn trong kỳ</small>
+            </div>
+            <div className="ad-kpi">
+              <span><Icon name="box" />Tiền hàng nhập</span>
+              <b>{shortMoney(f.purchases)}</b>
+              <small>{f.uncosted ? `${f.uncosted} dòng phiếu nhập chưa ghi giá nên chưa tính` : <>Kỳ trước: {shortMoney(f.prev.purchases)}</>}</small>
+            </div>
+            <div className="ad-kpi">
+              <span><Icon name="cash" />Chi phí khác</span>
+              <b>{shortMoney(f.expenses)}</b>
+              <small>{f.expenseCount} khoản · kỳ trước: {shortMoney(f.prev.expenses)}</small>
+            </div>
+            <div className={`ad-kpi${f.profit < 0 ? ' warn' : ''}`}>
+              <span><Icon name={f.profit < 0 ? 'alert' : 'cash'} />{f.profit < 0 ? 'Lỗ ước tính' : 'Lãi ước tính'}</span>
+              <b>{shortMoney(f.profit)}</b>
+              <small>{r.revenue ? `Biên ${fmtPct(margin)} doanh thu · ` : ''}kỳ trước: {shortMoney(f.prev.profit)}</small>
+            </div>
+          </div>
+          <span style={{ fontSize: 12, color: 'var(--ink-muted)' }}>
+            Lãi ước tính = doanh thu − tiền hàng nhập − chi phí khác, cùng kỳ. Doanh thu là đơn chưa hủy (kể cả chưa giao / chưa thu tiền); tiền hàng nhập là số lượng × giá nhập trên phiếu nhập trong kỳ — không phải giá vốn đúng số hàng đã bán.
+          </span>
+        </div>
+      </div>
+      <ExpenseBreakdown fin={f} />
 
       <div className="ad-grid2">
         <div className="ad-card">

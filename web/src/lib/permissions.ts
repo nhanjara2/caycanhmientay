@@ -22,7 +22,7 @@ export type Level = 'none' | 'view' | 'full';
 
 export const AREAS = [
   'dashboard', 'orders', 'pos', 'delivery', 'warranty', 'services', 'customers', 'promotions',
-  'products', 'inventory', 'content', 'qna', 'reports', 'settings',
+  'products', 'inventory', 'expenses', 'content', 'qna', 'reports', 'settings',
 ] as const;
 export type Area = (typeof AREAS)[number];
 
@@ -40,6 +40,7 @@ export const AREA_INFO: Record<Area, { name: string; levels: readonly [Level, Le
   promotions: { name: 'Khuyến mãi', levels: [F, V, N, N, N] },
   products: { name: 'Sản phẩm & danh mục', levels: [F, V, V, V, N] },
   inventory: { name: 'Kho & nhập hàng', levels: [F, N, F, N, N] },
+  expenses: { name: 'Chi phí & lãi lỗ', levels: [F, N, N, N, N] },
   content: { name: 'Bài viết & bệnh cây', levels: [F, N, N, F, N] },
   qna: { name: 'Hỏi đáp & đánh giá', levels: [F, F, N, F, N] },
   reports: { name: 'Báo cáo', levels: [F, N, N, N, N] },
@@ -61,6 +62,7 @@ export const NAV_AREA: Record<string, Area> = {
   '/admin/danh-muc': 'products',
   '/admin/kho': 'inventory',
   '/admin/nhap-hang': 'inventory',
+  '/admin/chi-phi': 'expenses',
   '/admin/noi-dung': 'content',
   '/admin/benh-cay': 'content',
   '/admin/danh-gia': 'qna',

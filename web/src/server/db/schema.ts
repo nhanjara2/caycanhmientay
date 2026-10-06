@@ -615,6 +615,73 @@ export const purchaseReceiptLines = pgTable('purchase_receipt_lines', {
   note: text('note'),
 }, (t) => [index('purchase_lines_receipt_idx').on(t.receiptId), index('purchase_lines_product_idx').on(t.productSlug, t.optionIdx)]);
 
+// ---- Chi phí ---------------------------------------------------------------------------------
+
+/** Nhóm chi (Mặt bằng, Điện nước…): Quản lý tự thêm / đổi tên / ẩn. `khac` là nhóm hệ thống, không xóa được (lib/expense-labels.ts). */
+export const expenseCategories = pgTable('expense_categories', {
+  slug: text('slug').primaryKey(),
+  name: text('name').notNull(),
+  sort: integer('sort').notNull().default(0),
+  /** false = không chọn được cho khoản chi mới (khoản đã ghi vẫn giữ nhóm). */
+  active: boolean('active').notNull().default(true),
+  createdAt: createdAt(),
+});
+
+/**
+ * Khoản chi lặp hằng tháng (tiền thuê, lương…). Tự ghi thành khoản chi thật vào đúng ngày mỗi tháng — xem `materializeRecurring()` trong server/expenses.ts.
+ * `generatedThrough` = tháng (YYYY-MM) cuối cùng đã ghi; xóa khoản chi đã sinh thì không bị sinh lại.
+ */
+export const recurringExpenses = pgTable('recurring_expenses', {
+  id: serial('id').primaryKey(),
+  categorySlug: text('category_slug').notNull().references(() => expenseCategories.slug),
+  /** Đồng. */
+  amount: integer('amount').notNull(),
+  storeId: integer('store_id').references(() => stores.id),
+  supplierId: integer('supplier_id').references(() => suppliers.id, { onDelete: 'set null' }),
+  note: text('note'),
+  /** Ngày trong tháng, 1–28 (tháng nào cũng có). */
+  dayOfMonth: integer('day_of_month').notNull(),
+  startMonth: text('start_month').notNull(),
+  endMonth: text('end_month'),
+  generatedThrough: text('generated_through'),
+  active: boolean('active').notNull().default(true),
+  createdAt: createdAt(),
+});
+
+/**
+ * Sổ chi phí của cửa hàng: mọi khoản chi KHÔNG phải hàng nhập kho (hàng nhập kho đã có phiếu nhập, báo cáo tự cộng).
+ * `storeId` null = chi chung cho cả hệ thống. `spentOn` dạng YYYY-MM-DD theo giờ Việt Nam.
+ */
+export const expenses = pgTable('expenses', {
+  id: serial('id').primaryKey(),
+  spentOn: text('spent_on').notNull(),
+  categorySlug: text('category_slug').notNull().references(() => expenseCategories.slug),
+  /** Đồng. */
+  amount: integer('amount').notNull(),
+  storeId: integer('store_id').references(() => stores.id),
+  supplierId: integer('supplier_id').references(() => suppliers.id, { onDelete: 'set null' }),
+  note: text('note'),
+  /** Khoản chi do chi phí định kỳ tự sinh. */
+  recurringId: integer('recurring_id').references(() => recurringExpenses.id, { onDelete: 'set null' }),
+  actor: text('actor').notNull(),
+  createdAt: createdAt(),
+}, (t) => [
+  index('expenses_spent_idx').on(t.spentOn),
+  index('expenses_category_idx').on(t.categorySlug),
+  // mỗi khoản định kỳ chỉ có một khoản chi cho mỗi ngày: hai lượt sinh cùng lúc không tạo trùng (recurring_id null = nhập tay, không bị ràng buộc)
+  uniqueIndex('expenses_recurring_day_idx').on(t.recurringId, t.spentOn),
+]);
+
+/** Ảnh hóa đơn của một khoản chi (tối đa 1): lưu trong database, chỉ nhân viên có quyền Chi phí xem được (/api/expense-photos/<file>). */
+export const expensePhotos = pgTable('expense_photos', {
+  id: serial('id').primaryKey(),
+  expenseId: integer('expense_id').notNull().unique().references(() => expenses.id, { onDelete: 'cascade' }),
+  file: text('file').notNull().unique(),
+  mime: text('mime').notNull(),
+  data: bytea('data').notNull(),
+  createdAt: createdAt(),
+});
+
 // ---- Bảo hành cây ----------------------------------------------------------------------------
 
 export const WARRANTY_STATUSES = ['pending', 'approved', 'rejected'] as const;

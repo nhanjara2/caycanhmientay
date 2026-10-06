@@ -39,7 +39,8 @@ export type ReceiptMeta = {
   fileName?: string | null;
 };
 
-async function supplierId(tx: Tx | DB, name: string) {
+/** Nhà cung cấp theo tên (không phân biệt hoa/thường); chưa có thì tạo. */
+export async function supplierId(tx: Tx | DB, name: string) {
   await tx.insert(suppliers).values({ name }).onConflictDoNothing();
   const [s] = await tx.select({ id: suppliers.id }).from(suppliers).where(sql`lower(${suppliers.name}) = lower(${name})`);
   return s.id;

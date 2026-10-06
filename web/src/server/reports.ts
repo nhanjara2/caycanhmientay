@@ -1,6 +1,7 @@
 import 'server-only';
 import { sql } from 'drizzle-orm';
 import { db } from './db';
+import { periodFinance } from './expenses';
 
 // Báo cáo admin (/admin/bao-cao): mọi số liệu tính từ đơn hàng / bảo hành / hỏi đáp / đánh giá thật.
 // Chỉ tính đơn bán (kind = 'sale', bỏ đơn 0đ do bảo hành tạo) chưa hủy — giống trang Tổng quan.
@@ -178,12 +179,17 @@ export async function buildReport(range: ReportRange) {
            (count(*) filter (where status = 'pending'))::int as pending
     from reviews where created_at >= ${F} and created_at < ${T}`);
 
+  // Lãi lỗ ước tính = doanh thu − tiền hàng nhập (phiếu nhập) − chi phí khác (sổ chi phí) trong cùng kỳ; kỳ trước tính tương tự.
+  const [fin, prevFin] = await Promise.all([periodFinance(from, to), periodFinance(prevFrom, from)]);
+  const revenue = kpi?.revenue ?? 0, prevRevenue = kpi?.prev_revenue ?? 0;
+
   const plantItems = warrantyByGroup.reduce((a, g) => a + g.items, 0);
   const claims = warrantyByGroup.reduce((a, g) => a + g.claims, 0);
 
   return {
     range, from, to, daily,
-    revenue: kpi?.revenue ?? 0, prevRevenue: kpi?.prev_revenue ?? 0,
+    revenue, prevRevenue,
+    finance: { ...fin, profit: revenue - fin.purchases - fin.expenses, prev: { expenses: prevFin.expenses, purchases: prevFin.purchases, profit: prevRevenue - prevFin.purchases - prevFin.expenses } },
     orders: kpi?.orders ?? 0, prevOrders: kpi?.prev_orders ?? 0,
     buyers: kpi?.buyers ?? 0, prevBuyers: kpi?.prev_buyers ?? 0,
     voucherOrders: kpi?.voucher_orders ?? 0, voucherDiscount: kpi?.voucher_discount ?? 0,

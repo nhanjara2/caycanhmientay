@@ -14,6 +14,7 @@ import type { PublicUser } from '@/server/auth';
 const I = {
   dash: <><rect x="4" y="4" width="7" height="7" rx="1" /><rect x="13" y="4" width="7" height="4" rx="1" /><rect x="13" y="10" width="7" height="10" rx="1" /><rect x="4" y="13" width="7" height="7" rx="1" /></>,
   chart: <path d="M4 20V4M4 20h16M8 16v-5M12 16V8M16 16v-3" />,
+  wallet: <><path d="M4 7h14a2 2 0 0 1 2 2v9H6a2 2 0 0 1-2-2z" /><path d="M4 7V6a2 2 0 0 1 2-2h10" /><circle cx="16" cy="13.5" r="1.2" /></>,
   box: <><path d="M3 7 12 3l9 4v10l-9 4-9-4z" /><path d="M3 7l9 4 9-4M12 11v10" /></>,
   pos: <><rect x="3" y="4" width="18" height="12" rx="2" /><path d="M8 20h8M12 16v4" /></>,
   truck: <><path d="M3 6h11v10H3zM14 10h4l3 3v3h-7" /><circle cx="7" cy="18" r="1.8" /><circle cx="17" cy="18" r="1.8" /></>,
@@ -40,6 +41,7 @@ export const ADMIN_NAV: { group: string; items: { href: string; label: string; i
   { group: 'TỔNG QUAN', items: [
     { href: '/admin', label: 'Tổng quan', icon: 'dash' },
     { href: '/admin/bao-cao', label: 'Báo cáo', icon: 'chart' },
+    { href: '/admin/chi-phi', label: 'Chi phí', icon: 'wallet' },
   ] },
   { group: 'BÁN HÀNG', items: [
     { href: '/admin/don-hang', label: 'Đơn hàng', icon: 'box' },

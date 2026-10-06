@@ -2,7 +2,8 @@ import ExcelJS from 'exceljs';
 import { PAY_LABEL, STATUS_LABEL } from '@/lib/order-labels';
 import { todayVN } from '@/lib/stock';
 import { requireAccess } from '@/server/auth';
-import { buildReport, DEFAULT_RANGE, isReportRange, ordersInRange, REPORT_RANGES } from '@/server/reports';
+import { expensesForExport, materializeRecurring } from '@/server/expenses';
+import { buildReport, DEFAULT_RANGE, isReportRange, ordersInRange, rangeBounds, REPORT_RANGES } from '@/server/reports';
 
 const DELIVERY = { ship: 'Giao tận nơi', pickup: 'Nhận tại vườn' } as const;
 
@@ -11,7 +12,10 @@ export async function GET(req: Request) {
   await requireAccess('reports');
   const ky = new URL(req.url).searchParams.get('ky') ?? undefined;
   const range = isReportRange(ky) ? ky : DEFAULT_RANGE;
-  const [r, orders] = await Promise.all([buildReport(range), ordersInRange(range)]);
+  await materializeRecurring();
+  const ymd = (ms: number) => new Date(ms + 7 * 3_600_000).toISOString().slice(0, 10);
+  const { from, to } = rangeBounds(range);
+  const [r, orders, spend] = await Promise.all([buildReport(range), ordersInRange(range), expensesForExport({ from: ymd(from), to: ymd(to) })]);
 
   const wb = new ExcelJS.Workbook();
   wb.creator = 'Cây Cảnh Miền Tây';
@@ -24,10 +28,12 @@ export async function GET(req: Request) {
   const ov = wb.addWorksheet('Tổng quan');
   ov.columns = [{ header: 'Chỉ số', width: 34 }, { header: 'Kỳ này', width: 18 }, { header: 'Kỳ trước', width: 18 }];
   head(ov);
-  const ymd = (ms: number) => new Date(ms + 7 * 3_600_000).toISOString().slice(0, 10);
   ov.addRows([
     ['Kỳ báo cáo', REPORT_RANGES[range], `${ymd(r.from)} → ${ymd(r.to - 86_400_000)}`],
     ['Doanh thu (đ)', r.revenue, r.prevRevenue],
+    ['Tiền hàng nhập — phiếu nhập (đ)', r.finance.purchases, r.finance.prev.purchases],
+    ['Chi phí khác — sổ chi phí (đ)', r.finance.expenses, r.finance.prev.expenses],
+    ['Lãi / lỗ ước tính (đ)', r.finance.profit, r.finance.prev.profit],
     ['Số đơn', r.orders, r.prevOrders],
     ['Số khách mua', r.buyers, r.prevBuyers],
     ['Khách đã mua trước kỳ (quay lại)', r.returning.back, r.returning.prev.back],
@@ -45,6 +51,15 @@ export async function GET(req: Request) {
   for (const p of r.chart) ov.addRow([p.key, p.revenue, p.before]);
   ov.getColumn(2).numFmt = '#,##0';
   ov.getColumn(3).numFmt = '#,##0';
+
+  const cp = wb.addWorksheet('Chi phí');
+  cp.columns = [
+    { header: 'Ngày', width: 12 }, { header: 'Nhóm chi', width: 26 }, { header: 'Nội dung', width: 44 }, { header: 'Cửa hàng', width: 24 },
+    { header: 'Nhà cung cấp / người nhận', width: 28 }, { header: 'Số tiền (đ)', width: 16 }, { header: 'Người ghi', width: 18 },
+  ];
+  head(cp);
+  cp.addRows(spend.map((e) => [e.spentOn, e.category, e.note ?? '', e.store ?? 'Chi chung', e.supplier ?? '', e.amount, e.actor]));
+  cp.getColumn(6).numFmt = '#,##0';
 
   const top = wb.addWorksheet('Sản phẩm bán chạy');
   top.columns = [{ header: 'Sản phẩm', width: 44 }, { header: 'Mã (slug)', width: 30 }, { header: 'Đã bán', width: 10 }, { header: 'Doanh thu hàng hóa (đ)', width: 22 }];
