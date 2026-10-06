@@ -17,12 +17,34 @@ const STORES = [
   { code: 'TD', name: 'Cửa hàng Thảo Điền', address: '25 Quốc Hương, Phường An Khánh, TP. Hồ Chí Minh', lat: 10.8036, lng: 106.7327 },
 ];
 
-export async function seedIfEmpty(db: NodePgDatabase<typeof schema>) {
+type Db = NodePgDatabase<typeof schema>;
+
+const markSeeded = (db: Db, key: string) =>
+  db.insert(schema.appSettings).values({ key, value: true, updatedBy: 'db-setup' }).onConflictDoNothing({ target: schema.appSettings.key });
+
+/**
+ * Dữ liệu mẫu chỉ nạp MỘT LẦN cho database mới. `db:setup` chạy mỗi lần deploy, nên "bảng trống thì nạp" một mình sẽ làm
+ * sản phẩm / bài mẫu mà chủ shop đã xóa hiện lại sau mỗi lần deploy. Nên:
+ *  - đã có dấu `seeded:<nhóm>` trong `app_settings` → không nạp;
+ *  - chưa có dấu mà database đã được dùng (đã có tài khoản đăng nhập) → bảng trống là do chủ shop xóa, ghi dấu và không nạp;
+ *  - còn lại (database mới tinh) → nạp, rồi ghi dấu (hàm gọi `markSeeded`).
+ * Thêm nhóm dữ liệu mẫu mới cho database đã dùng thì phải nạp bằng migration, vì database đã dùng sẽ không bao giờ vào nhánh nạp.
+ */
+async function shouldSeed(db: Db, key: string) {
+  const [done] = await db.select({ key: schema.appSettings.key }).from(schema.appSettings).where(eq(schema.appSettings.key, key));
+  if (done) return false;
+  const [{ n: users }] = await db.select({ n: count() }).from(schema.users);
+  if (users > 0) { await markSeeded(db, key); return false; }
+  return true;
+}
+
+export async function seedIfEmpty(db: Db) {
   const [{ n: storeCount }] = await db.select({ n: count() }).from(schema.stores);
   if (storeCount === 0) await db.insert(schema.stores).values(STORES);
 
   const [{ n }] = await db.select({ n: count() }).from(schema.products);
   if (n > 0) return false;
+  if (!(await shouldSeed(db, 'seeded:products'))) return false;
   // Tồn mẫu 100 / quy cách chia cho các cửa hàng.
   const stores = await db.select({ id: schema.stores.id }).from(schema.stores).orderBy(asc(schema.stores.id));
   const split = [60, 25, 15].slice(0, stores.length);
@@ -43,6 +65,7 @@ export async function seedIfEmpty(db: NodePgDatabase<typeof schema>) {
       }
     }
   });
+  await markSeeded(db, 'seeded:products');
   return true;
 }
 
@@ -60,19 +83,22 @@ export async function seedPlantAttrs(db: NodePgDatabase<typeof schema>) {
 }
 
 /** Nạp bài bệnh cây mẫu khi bảng `diseases` còn trống (chạy riêng: database đã có sản phẩm vẫn nạp). */
-export async function seedDiseasesIfEmpty(db: NodePgDatabase<typeof schema>) {
+export async function seedDiseasesIfEmpty(db: Db) {
   const [{ n }] = await db.select({ n: count() }).from(schema.diseases);
   if (n > 0) return false;
+  if (!(await shouldSeed(db, 'seeded:diseases'))) return false;
   await db.insert(schema.diseases).values(seedDiseases.map((d) => ({
     ...d, aliases: d.aliases ?? [], confusions: d.confusions ?? [], prevention: d.prevention ?? [], safety: d.safety ?? '', products: d.products ?? [],
   })));
+  await markSeeded(db, 'seeded:diseases');
   return true;
 }
 
 /** Nạp bài Góc chăm cây mẫu (đã đăng, cách nhau 1 ngày) khi bảng `posts` còn trống. */
-export async function seedPostsIfEmpty(db: NodePgDatabase<typeof schema>) {
+export async function seedPostsIfEmpty(db: Db) {
   const [{ n }] = await db.select({ n: count() }).from(schema.posts);
   if (n > 0) return false;
+  if (!(await shouldSeed(db, 'seeded:posts'))) return false;
   const now = Date.now();
   await db.insert(schema.posts).values(seedPosts.map((p, i) => {
     const at = new Date(now - i * 86_400_000);
@@ -81,6 +107,7 @@ export async function seedPostsIfEmpty(db: NodePgDatabase<typeof schema>) {
       readMinutes: readMinutes(p.title, p.excerpt, p.body), publishedAt: at, updatedAt: at, updatedBy: 'Dữ liệu mẫu',
     };
   }));
+  await markSeeded(db, 'seeded:posts');
   return true;
 }
 
