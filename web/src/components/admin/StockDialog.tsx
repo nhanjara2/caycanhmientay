@@ -2,11 +2,11 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useTransition, type FormEvent } from 'react';
-import { adjustStockAction, stockHistoryAction } from '@/app/actions/admin';
+import { adjustStockAction, deleteLotAction, stockHistoryAction } from '@/app/actions/admin';
 import { Icon } from '@/components/Icon';
 import { expiryLevel, fmtYmd } from '@/lib/stock';
 
-const REASON = { import: 'Nhập hàng', adjust: 'Kiểm kê', order: 'Bán', cancel: 'Hủy đơn', transfer: 'Chuyển kho', warranty: 'Bảo hành' } as const;
+const REASON = { import: 'Nhập hàng', adjust: 'Kiểm kê', order: 'Bán', cancel: 'Hủy đơn', transfer: 'Chuyển kho', warranty: 'Bảo hành', discard: 'Xóa lô' } as const;
 type Move = Awaited<ReturnType<typeof stockHistoryAction>>[number];
 type Mode = 'import' | 'count' | 'transfer';
 
@@ -36,13 +36,24 @@ export function StockDialog({ slug, idx, name, label, stock, lotTracked, stores,
   const [moves, setMoves] = useState<Move[]>([]);
   const [pending, start] = useTransition();
 
+  const [removing, setRemoving] = useState<number | null>(null);
+  const [lotError, setLotError] = useState('');
+
+  const loadMoves = () => stockHistoryAction(slug, idx).then(setMoves).catch(() => setMoves([]));
+
   useEffect(() => {
     if (!open) return;
-    stockHistoryAction(slug, idx).then(setMoves).catch(() => setMoves([]));
+    loadMoves();
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [open, slug, idx]);
+
+  // lô vừa bị xóa: chọn lại lô còn lại, hết lô thì về chế độ Nhập hàng
+  useEffect(() => {
+    if (!lots.some((l) => l.id === lotId)) setLotId(lots[0]?.id ?? 0);
+    if (!lots.length && mode === 'count') setMode('import');
+  }, [lots, lotId, mode]);
 
   const storeCode = (id: number) => stores.find((s) => s.id === id)?.code ?? '?';
   const lotText = (l: Pick<LotOpt, 'lotCode' | 'expiry'>) => [l.lotCode && `Lô ${l.lotCode}`, l.expiry && `HSD ${fmtYmd(l.expiry)}`].filter(Boolean).join(' · ') || 'Không theo lô';
@@ -55,6 +66,20 @@ export function StockDialog({ slug, idx, name, label, stock, lotTracked, stores,
       : mode === 'import' ? <>Tồn tổng sau khi lưu: <b>{stock + n}</b></>
       : mode === 'count' ? (lot ? <>Lô sau kiểm kê: <b>{n}</b>{n !== lot.qty ? ` (${n - lot.qty > 0 ? '+' : ''}${n - lot.qty})` : ' — khớp'}</> : null)
       : <>{storeCode(storeId)} còn {inStore(storeId) - n} · {storeCode(to)} thêm {n}</>;
+
+  const removeLot = (l: LotOpt) => {
+    if (!confirm(`Xóa lô “${lotText(l)}” tại ${storeCode(l.storeId)}?\n${name} · ${label} sẽ giảm ${l.qty} (từ ${stock} còn ${stock - l.qty}). Lịch sử kho vẫn ghi lại.`)) return;
+    setLotError('');
+    setRemoving(l.id);
+    deleteLotAction(l.id, expiryLevel(l.expiry) === 'expired' ? 'Xóa lô hết hạn' : undefined)
+      .catch(() => ({ ok: false as const, error: 'Có lỗi, vui lòng thử lại' }))
+      .then((r) => {
+        setRemoving(null);
+        if (!r.ok) { setLotError(r.error); return; }
+        loadMoves();
+        router.refresh();
+      });
+  };
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -165,13 +190,18 @@ export function StockDialog({ slug, idx, name, label, stock, lotTracked, stores,
                           {/* gói trong 1 span: .ad-log là lưới 2 cột, mỗi thẻ <b> rời sẽ rớt xuống hàng mới */}
                           <span style={{ color: 'var(--ink)' }}>
                             {lotText(l)} · <b>{l.qty}</b>
-                            {lv === 'expired' && <b style={{ color: 'var(--danger)' }}> · Đã hết hạn — kiểm kê về 0 khi hủy</b>}
+                            {lv === 'expired' && <b style={{ color: 'var(--danger)' }}> · Đã hết hạn — nên xóa lô</b>}
                             {lv === 'soon' && <b style={{ color: 'var(--warning, #b7791f)' }}> · Sắp hết hạn</b>}
+                            {' '}
+                            <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" style={{ color: 'var(--danger)' }} disabled={removing !== null || pending} onClick={() => removeLot(l)}>
+                              {removing === l.id ? 'Đang xóa…' : 'Xóa lô'}
+                            </button>
                           </span>
                         </div>
                       );
                     })}
                   </div>
+                  {lotError && <span className="vx-err" role="alert">{lotError}</span>}
                 </>
               )}
               {moves.length > 0 && (

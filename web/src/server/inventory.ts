@@ -108,6 +108,18 @@ export async function countLot(tx: Tx, lotId: number, qty: number, actor: string
   return applyStock(tx, lot.productSlug, lot.optionIdx, qty - lot.qty, 'adjust', actor, note || 'Kiểm kê', { lotId, storeId: lot.storeId });
 }
 
+/**
+ * Xóa một lô khỏi kho (hết hạn, hư, nhập nhầm): trừ hết số còn lại và ghi một dòng lịch sử 'discard'.
+ * Dòng lô giữ lại với qty = 0 (không hiện ở màn Kho) để lịch sử cũ còn tra được số lô + hạn dùng.
+ * Trả về thông tin lô, hoặc null nếu không có lô này.
+ */
+export async function deleteLot(tx: Tx, lotId: number, actor: string, note?: string) {
+  const [lot] = await tx.select().from(L).where(eq(L.id, lotId)).for('update');
+  if (!lot) return null;
+  if (lot.qty > 0) await applyStock(tx, lot.productSlug, lot.optionIdx, -lot.qty, 'discard', actor, note || 'Xóa lô', { lotId, storeId: lot.storeId });
+  return lot;
+}
+
 /** Chuyển hàng giữa hai cửa hàng, giữ nguyên mã lô và hạn dùng. Trả về false nếu kho đi không đủ. */
 export async function transferStock(tx: Tx, slug: string, idx: number, from: number, to: number, qty: number, actor: string, note?: string) {
   const names = await tx.select({ id: stores.id, code: stores.code }).from(stores).where(inArray(stores.id, [from, to]));

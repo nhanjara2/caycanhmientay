@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import * as z from 'zod';
 import { requireAccess, requireStaff, staffName } from '@/server/auth';
-import { countLot, recentMoves, transferStock } from '@/server/inventory';
+import { countLot, deleteLot, recentMoves, transferStock } from '@/server/inventory';
 import { cleanText, MAX_DOC_NO, MAX_RECEIPT_NOTE, MAX_SUPPLIER, receiveGoods } from '@/server/receipts';
 import { todayVN, tracksLots } from '@/lib/stock';
 import { addProductImage, deleteProduct, deleteProductImage, listProductImages, moveProductImage, ProductInputSchema, saveProduct, setProductActive } from '@/server/products-admin';
@@ -131,6 +131,17 @@ export async function adjustStockAction(input: unknown) {
     slug = v.slug;
   }
   refreshCatalog(slug);
+  return { ok: true as const };
+}
+
+/** Xóa một lô hàng khỏi kho (trừ hết tồn của lô, lịch sử vẫn ghi lại). */
+export async function deleteLotAction(lotId: unknown, note?: unknown) {
+  const staff = await requireAccess('inventory', 'full');
+  const p = z.object({ lotId: z.number().int().positive(), note: z.string().trim().max(200).optional() }).safeParse({ lotId, note: typeof note === 'string' ? note : undefined });
+  if (!p.success) return { ok: false as const, error: 'Yêu cầu không hợp lệ' };
+  const lot = await db.transaction((tx) => deleteLot(tx, p.data.lotId, actorName(staff), p.data.note));
+  if (!lot) return { ok: false as const, error: 'Không tìm thấy lô (có thể đã được xóa)' };
+  refreshCatalog(lot.productSlug);
   return { ok: true as const };
 }
 

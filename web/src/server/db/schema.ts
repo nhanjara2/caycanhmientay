@@ -517,7 +517,7 @@ export const faqs = pgTable('faqs', {
 
 // ---- Kho -------------------------------------------------------------------------------------
 
-export const STOCK_REASONS = ['import', 'adjust', 'order', 'cancel', 'transfer', 'warranty'] as const;
+export const STOCK_REASONS = ['import', 'adjust', 'order', 'cancel', 'transfer', 'warranty', 'discard'] as const;
 
 /** Cửa hàng / kho. Tọa độ dùng tính vùng giao cây sống. */
 export const stores = pgTable('stores', {
