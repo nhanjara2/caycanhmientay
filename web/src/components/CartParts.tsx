@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { SHIP_RULES, type CartLine, type Totals, useCart } from '@/lib/cart';
+import { type CartLine, type Totals, useCart } from '@/lib/cart';
+import { useShipping } from '@/lib/shipping-client';
 import { money } from '@/lib/format';
 import { Art, Icon } from './Icon';
 
@@ -23,6 +24,7 @@ export function Steps({ step }: { step: 1 | 2 | 3 }) {
 /** Danh sách sản phẩm chia nhóm Cây sống / Vật tư (giao khác nhau, tính phí riêng). */
 export function CartList({ editable }: { editable: boolean }) {
   const { lines, totals, setQty, remove } = useCart();
+  const { rules } = useShipping();
   const plants = lines.filter((l) => l.snap.ship === 'plant');
   const supplies = lines.filter((l) => l.snap.ship === 'supply');
 
@@ -31,7 +33,7 @@ export function CartList({ editable }: { editable: boolean }) {
       <h3 className="vx-card__title">Danh sách sản phẩm</h3>
       <div className="vx-ship-banner">
         <Icon name="truck" />
-        <span><b>Miễn phí vận chuyển</b> cho đơn vật tư từ {money(SHIP_RULES.supply.freeFrom)}</span>
+        <span><b>Miễn phí vận chuyển</b> cho đơn vật tư từ {money(rules.supply.freeFrom)}</span>
       </div>
       {plants.length > 0 && (
         <>
@@ -96,7 +98,8 @@ function Item({ l, editable, setQty, remove }: {
 
 /** OrderSummary: khối tổng tiền cột phải, dính khi cuộn. */
 export function OrderSummary({ totals: t, children }: { totals: Totals; children: ReactNode }) {
-  const plantLeft = t.plantSubtotal > 0 && t.plantShip > 0 ? SHIP_RULES.plant.freeFrom - t.plantSubtotal : 0;
+  const { rules } = useShipping();
+  const plantLeft = t.plantSubtotal > 0 && t.plantShip > 0 ? rules.plant.freeFrom - t.plantSubtotal : 0;
   return (
     <aside className="vx-sum">
       <div className="vx-lines">
@@ -110,7 +113,7 @@ export function OrderSummary({ totals: t, children }: { totals: Totals; children
       {plantLeft > 0 && (
         <div className="vx-freeship">
           <span>Mua thêm <b>{money(plantLeft)}</b> để miễn phí giao cây sống</span>
-          <div className="bar"><i style={{ width: `${(t.plantSubtotal / SHIP_RULES.plant.freeFrom) * 100}%` }} /></div>
+          <div className="bar"><i style={{ width: `${(t.plantSubtotal / rules.plant.freeFrom) * 100}%` }} /></div>
         </div>
       )}
       <div className="vx-total">

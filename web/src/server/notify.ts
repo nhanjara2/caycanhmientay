@@ -4,6 +4,8 @@ import { after } from 'next/server';
 import { db, schema, type DB } from './db';
 import type { NOTIFICATION_KINDS } from './db/schema';
 import type { Tx } from './inventory';
+import { renderText } from '@/lib/message-templates';
+import { renderEvent } from './messages';
 
 const { notifications: N, outboundMessages: OUT, users } = schema;
 
@@ -26,6 +28,23 @@ export async function notify(tx: Tx | DB, userId: number, n: Notice) {
   await tx.insert(N).values({ userId, kind: n.kind, text: n.text, href: n.href ?? null });
   if (!n.external) return;
   const run = () => sendExternal(userId, n).catch((e) => console.error('[notify]', e));
+  try { after(run); } catch { void run(); }
+}
+
+/**
+ * Thông báo theo sự kiện (mẫu tin nhắn ở admin /admin/mau-tin-nhan): nội dung = mẫu đã chỉnh hoặc mặc định + biến;
+ * mẫu quyết định có hiện trong chuông (inApp) và có gửi thêm Zalo / email (external).
+ */
+export async function notifyEvent(tx: Tx | DB, userId: number, event: string, vars: Record<string, string | number | undefined>, href?: string) {
+  const r = await renderEvent(event, vars);
+  if (!r) return;
+  if (r.text.includes('{ten_khach}') && vars.ten_khach === undefined) {
+    const [u] = await tx.select({ name: users.name }).from(users).where(eq(users.id, userId));
+    r.rendered = renderText(r.text, { ...vars, ten_khach: u?.name ?? 'bạn' });
+  }
+  if (r.inApp) await tx.insert(N).values({ userId, kind: r.def.kind, text: r.rendered, href: href ?? null });
+  if (!r.external) return;
+  const run = () => sendExternal(userId, { kind: r.def.kind, text: r.rendered, href, external: true }).catch((e) => console.error('[notify]', e));
   try { after(run); } catch { void run(); }
 }
 

@@ -1,17 +1,19 @@
 import 'server-only';
-import { and, count, desc, eq, getTableColumns, ilike, inArray, or, sql } from 'drizzle-orm';
+import { and, count, desc, eq, getTableColumns, ilike, inArray, ne, or, sql } from 'drizzle-orm';
 import { randomInt } from 'node:crypto';
 import * as z from 'zod';
 import type { Product, Unit } from '@/lib/catalog';
 import { computeTotals } from '@/lib/pricing';
 import { accountPhone, normalizePhone, isPhone, type SessionUser } from './auth';
 import { getProducts, mainImageOf } from './catalog';
-import { PLANT_ZONE_KM, plantZone } from '@/lib/stock';
+import { buildSlotOptions, dayLabel, slotTime, vnDate, type ShippingConfig } from '@/lib/shipping';
+import { plantZone } from '@/lib/stock';
 import { getAddress } from './addresses';
 import { applyStock, listStores, restoreOrderStock, type Tx } from './inventory';
-import { notify, orderOwner } from './notify';
+import { notifyEvent, orderOwner } from './notify';
 import { db, schema } from './db';
 import { PAYMENT_METHODS, type OrderStatus } from './db/schema';
+import { getShippingConfig, usedSlots } from './shipping';
 import { checkVoucher } from './vouchers';
 
 const { orders, orderItems, orderEvents, productOptions } = schema;
@@ -25,6 +27,9 @@ export const PlaceOrderSchema = z.object({
   phone: z.string().trim().refine(isPhone, 'Số điện thoại chưa đúng'),
   delivery: z.enum(['ship', 'pickup']),
   address: z.string().trim().max(300).optional(),
+  /** Khung giờ giao: ngày + mã khung (do trang thanh toán lấy từ cài đặt giao hàng). `slot` là cách cũ (chữ "Hôm nay, 8:00 – 12:00") — vẫn nhận cho trang thanh toán mở từ trước. */
+  slotDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  slotKey: z.string().trim().max(20).optional(),
   slot: z.string().trim().max(60).optional(),
   note: z.string().trim().max(500).optional(),
   payment: z.enum(PAYMENT_METHODS),
@@ -34,7 +39,7 @@ export const PlaceOrderSchema = z.object({
   voucherCode: z.string().trim().max(30).optional(),
 }).superRefine((v, ctx) => {
   if (v.delivery === 'ship' && !v.address) ctx.addIssue({ code: 'custom', path: ['address'], message: 'Vui lòng nhập địa chỉ nhận hàng' });
-  if (v.delivery === 'ship' && !v.slot) ctx.addIssue({ code: 'custom', path: ['slot'], message: 'Chọn khung giờ giao' });
+  if (v.delivery === 'ship' && !v.slot && !(v.slotDate && v.slotKey)) ctx.addIssue({ code: 'custom', path: ['slot'], message: 'Chọn khung giờ giao' });
 });
 export type PlaceOrderInput = z.infer<typeof PlaceOrderSchema>;
 
@@ -44,6 +49,7 @@ export type PlaceOrderResult = { ok: true; code: string } | { ok: false; error: 
 export async function createOrder(input: PlaceOrderInput, user: SessionUser | null): Promise<PlaceOrderResult> {
   // Tài khoản (Google) phải có SĐT liên hệ trước khi đặt — khách vãng lai thì SĐT nằm ngay trong đơn.
   if (user && !accountPhone(user)) return { ok: false, error: 'Vui lòng cập nhật số điện thoại cho tài khoản trước khi đặt hàng', needsPhone: true };
+  const cfg = await getShippingConfig();
   const products = new Map((await getProducts([...new Set(input.items.map((i) => i.slug))])).map((p) => [p.slug, p]));
   const lines: { p: Product; u: Unit; it: PlaceOrderInput['items'][number] }[] = [];
   for (const it of input.items) {
@@ -60,9 +66,9 @@ export async function createOrder(input: PlaceOrderInput, user: SessionUser | nu
   // Cây sống chỉ giao trong vùng quanh cửa hàng (khi địa chỉ đã ghim bản đồ).
   if (input.delivery === 'ship' && user && input.addressId && lines.some((l) => l.p.ship === 'plant')) {
     const a = await getAddress(user.id, input.addressId);
-    const zone = a?.lat != null && a.lng != null ? plantZone({ lat: a.lat, lng: a.lng }, await listStores()) : null;
+    const zone = a?.lat != null && a.lng != null ? plantZone({ lat: a.lat, lng: a.lng }, await listStores(), cfg.plantZoneKm) : null;
     if (zone && !zone.inZone) {
-      return { ok: false, error: `Địa chỉ này ngoài vùng giao cây sống (${PLANT_ZONE_KM} km quanh cửa hàng). Vui lòng chọn Nhận tại vườn hoặc bỏ cây sống khỏi giỏ.` };
+      return { ok: false, error: `Địa chỉ này ngoài vùng giao cây sống (${cfg.plantZoneKm} km quanh cửa hàng). Vui lòng chọn Nhận tại vườn hoặc bỏ cây sống khỏi giỏ.` };
     }
   }
 
@@ -75,12 +81,13 @@ export async function createOrder(input: PlaceOrderInput, user: SessionUser | nu
 
   const totals = computeTotals(
     lines.map(({ p, u, it }) => ({ price: u.price, oldPrice: u.oldPrice, qty: it.qty, ship: p.ship, pesticide: p.pesticide })),
-    input.delivery,
+    input.delivery, 0, cfg,
   );
 
   try {
-    return await db.transaction((tx) => createOrderTx(tx, input, user, lines, totals));
+    return await db.transaction((tx) => createOrderTx(tx, input, user, lines, totals, cfg));
   } catch (e) {
+    if (e instanceof SlotUnavailable) return { ok: false, error: e.message };
     if (e instanceof OutOfStock) return { ok: false, error: `“${e.product}” vừa hết hàng. Vui lòng giảm số lượng hoặc chọn sản phẩm khác.` };
     if (e instanceof InvalidVoucher) return { ok: false, error: e.message };
     throw e;
@@ -90,6 +97,32 @@ export async function createOrder(input: PlaceOrderInput, user: SessionUser | nu
 /** Ném ra trong transaction khi tồn không đủ, để hủy toàn bộ đơn. */
 class OutOfStock extends Error {
   constructor(public product: string) { super('out of stock'); }
+}
+
+/** Ném ra trong transaction khi khung giờ giao đã kín / đã qua / không còn nhận đơn. */
+class SlotUnavailable extends Error {}
+
+/**
+ * Giữ chỗ khung giờ giao: khóa theo "ngày|khung" rồi đếm lại số đơn — hai đơn cùng lúc không vượt số đơn tối đa.
+ * Trả về chữ hiển thị + ngày + mã khung để ghi vào đơn.
+ */
+async function claimSlot(tx: Tx, cfg: ShippingConfig, input: PlaceOrderInput) {
+  let date = input.slotDate, key = input.slotKey;
+  if (!date || !key) {
+    // Trang thanh toán cũ gửi chữ "Hôm nay, 8:00 – 12:00": đổi sang ngày + khung nếu khớp, không khớp thì chỉ lưu chữ.
+    const m = /^(Hôm nay|Ngày mai),\s*(.+)$/.exec(input.slot ?? '');
+    const def = m && cfg.slots.find((s) => slotTime(s) === m[2].replace(/\s+/g, ' ').trim());
+    if (!m || !def) return { text: input.slot ?? '', date: null, key: null };
+    date = m[1] === 'Hôm nay' ? vnDate() : vnDate(Date.now() + 86_400_000);
+    key = def.key;
+  }
+  const def = cfg.slots.find((s) => s.key === key);
+  if (!def) throw new SlotUnavailable('Khung giờ này không còn nhận đơn, vui lòng chọn khung giờ khác.');
+  await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${`order-slot:${date}|${key}`}))`);
+  const opt = buildSlotOptions(cfg, await usedSlots([date], tx)).find((d) => d.date === date)?.slots.find((s) => s.key === key);
+  if (!opt || opt.past) throw new SlotUnavailable('Khung giờ này không còn nhận đơn, vui lòng chọn khung giờ khác.');
+  if (opt.full) throw new SlotUnavailable('Khung giờ này vừa kín, vui lòng chọn khung giờ khác.');
+  return { text: `${dayLabel(date)}, ${slotTime(def)}`, date, key };
 }
 
 /** Ném ra trong transaction khi mã giảm giá không còn dùng được (hết lượt, hết hạn…) tại thời điểm chốt đơn. */
@@ -110,7 +143,9 @@ async function createOrderTx(
   user: SessionUser | null,
   lines: { p: Product; u: Unit; it: PlaceOrderInput['items'][number] }[],
   totals: ReturnType<typeof computeTotals>,
+  cfg: ShippingConfig,
 ): Promise<PlaceOrderResult> {
+  const slot = input.delivery === 'ship' ? await claimSlot(tx, cfg, input) : null;
   const code = await newOrderCode(tx);
   if (!code) return { ok: false as const, error: 'Không tạo được mã đơn, vui lòng thử lại' };
 
@@ -129,7 +164,7 @@ async function createOrderTx(
   const [order] = await tx.insert(orders).values({
     code, userId: user?.id ?? null, customerName: input.name, phone: normalizePhone(input.phone),
     delivery: input.delivery, address: input.delivery === 'ship' ? input.address : null,
-    slot: input.delivery === 'ship' ? input.slot : null, note: input.note || null, paymentMethod: input.payment,
+    slot: slot?.text ?? null, slotDate: slot?.date ?? null, slotKey: slot?.key ?? null, note: input.note || null, paymentMethod: input.payment,
     original: totals.original, subtotal: totals.subtotal, plantShip: totals.plantShip, supplyShip: totals.supplyShip,
     voucherCode, voucherDiscount, total,
   }).returning({ id: orders.id });
@@ -144,7 +179,7 @@ async function createOrderTx(
     }
   }
   await tx.insert(orderEvents).values({ orderId: order.id, status: 'pending', actor: user ? 'Khách hàng' : 'Khách vãng lai' });
-  if (user) await notify(tx, user.id, { kind: 'order', text: STATUS_NOTICE.pending(code), href: `/tai-khoan/don-hang/${code}` });
+  if (user) await notifyEvent(tx, user.id, STATUS_EVENT.pending, { ma_don: code }, `/tai-khoan/don-hang/${code}`);
   return { ok: true as const, code };
 }
 
@@ -154,7 +189,7 @@ export async function previewVoucher(code: string, items: PlaceOrderInput['items
   const lines = items
     .map((it) => { const p = products.get(it.slug); const u = p?.options[it.option]; return p && u ? { p, u, it } : null; })
     .filter((x): x is { p: Product; u: Unit; it: PlaceOrderInput['items'][number] } => x !== null);
-  const totals = computeTotals(lines.map(({ p, u, it }) => ({ price: u.price, oldPrice: u.oldPrice, qty: it.qty, ship: p.ship, pesticide: p.pesticide })));
+  const totals = computeTotals(lines.map(({ p, u, it }) => ({ price: u.price, oldPrice: u.oldPrice, qty: it.qty, ship: p.ship, pesticide: p.pesticide })), 'ship', 0, await getShippingConfig());
   return checkVoucher(db, code, { subtotal: totals.subtotal, userId: user?.id ?? null, phone: phone ? normalizePhone(phone) : '' });
 }
 
@@ -214,14 +249,23 @@ export async function countOrdersByTab(user: SessionUser) {
 // ---- Admin -----------------------------------------------------------------------------------
 
 /** Danh sách đơn cho admin; q tìm theo mã đơn, tên hoặc SĐT khách. */
-export async function listOrders({ status, q, limit = 100 }: { status?: OrderStatus; q?: string; limit?: number } = {}) {
+export async function listOrders({ status, q, unpaid, limit = 100 }: { status?: OrderStatus; q?: string; unpaid?: boolean; limit?: number } = {}) {
   const term = q?.trim() ? `%${q.trim().replace(/[%_]/g, '')}%` : undefined;
   return withDetails(await db.select().from(orders)
     .where(and(
       status ? eq(orders.status, status) : undefined,
+      unpaid ? awaitingPayment : undefined,
       term ? or(ilike(orders.code, term), ilike(orders.customerName, term), ilike(orders.phone, term)) : undefined,
     ))
     .orderBy(desc(orders.id)).limit(limit));
+}
+
+/** Đơn thanh toán online (QR / ví / thẻ) còn đang chờ shop xác nhận đã nhận tiền. */
+const awaitingPayment = and(eq(orders.kind, 'sale'), eq(orders.paid, false), ne(orders.paymentMethod, 'cod'), ne(orders.status, 'cancelled'));
+
+export async function countAwaitingPayment() {
+  const [r] = await db.select({ n: count() }).from(orders).where(awaitingPayment);
+  return r?.n ?? 0;
 }
 
 export async function countOrdersByStatus() {
@@ -239,13 +283,10 @@ export const NEXT_STATUS: Record<OrderStatus, OrderStatus[]> = {
   cancelled: [],
 };
 
-const STATUS_NOTICE: Record<OrderStatus, (code: string) => string> = {
-  pending: (c) => `Đã nhận đơn **${c}**`,
-  confirmed: (c) => `Đơn **${c}** đã được xác nhận`,
-  preparing: (c) => `Shop đang chuẩn bị cây cho đơn **${c}**`,
-  shipping: (c) => `Đơn **${c}** đang được giao đến bạn`,
-  delivered: (c) => `Đơn **${c}** đã giao thành công. Cảm ơn bạn!`,
-  cancelled: (c) => `Đơn **${c}** đã bị hủy`,
+/** Trạng thái đơn → sự kiện của mẫu tin nhắn. */
+const STATUS_EVENT: Record<OrderStatus, string> = {
+  pending: 'order_placed', confirmed: 'order_confirmed', preparing: 'order_preparing',
+  shipping: 'order_shipping', delivered: 'order_delivered', cancelled: 'order_cancelled',
 };
 
 export async function setOrderStatus(code: string, next: OrderStatus, actor: string, note?: string) {
@@ -268,7 +309,28 @@ export async function setOrderStatus(code: string, next: OrderStatus, actor: str
     if (next === 'delivered' && owner && o.total > 0) {
       await tx.update(schema.users).set({ points: sql`${schema.users.points} + ${Math.floor(o.total / 10000)}` }).where(eq(schema.users.id, owner));
     }
-    if (owner) await notify(tx, owner, { kind: 'order', text: STATUS_NOTICE[next](o.code), href: `/tai-khoan/don-hang/${o.code}`, external: next === 'shipping' || next === 'cancelled' });
+    if (owner) await notifyEvent(tx, owner, STATUS_EVENT[next], { ma_don: o.code }, `/tai-khoan/don-hang/${o.code}`);
+    return { ok: true as const };
+  });
+}
+
+/**
+ * Nhân viên xác nhận đã nhận tiền (chuyển khoản / ví / thẻ) hoặc bỏ đánh dấu khi bấm nhầm.
+ * Tiền mặt (COD) không dùng được: tự tính đã thu khi giao xong. Ghi vào lịch sử đơn; khách nhận thông báo khi đã nhận tiền.
+ */
+export async function setOrderPaid(code: string, paid: boolean, actor: string, ref?: string) {
+  return db.transaction(async (tx) => {
+    const [o] = await tx.select().from(orders).where(eq(orders.code, code)).for('update');
+    if (!o) return { ok: false as const, error: 'Không tìm thấy đơn' };
+    if (o.kind !== 'sale' || o.total <= 0) return { ok: false as const, error: 'Đơn 0đ không cần thu tiền' };
+    if (o.paymentMethod === 'cod') return { ok: false as const, error: 'Đơn thanh toán khi nhận hàng: hệ thống tự tính đã thu khi giao xong' };
+    if (o.status === 'cancelled') return { ok: false as const, error: 'Đơn đã hủy' };
+    if (o.paid === paid) return { ok: true as const };
+    await tx.update(orders).set({ paid, updatedAt: new Date() }).where(eq(orders.id, o.id));
+    const note = paid ? `Đã nhận tiền${ref ? ` — ${ref}` : ''}` : `Bỏ đánh dấu đã nhận tiền${ref ? ` — ${ref}` : ''}`;
+    await tx.insert(orderEvents).values({ orderId: o.id, status: o.status, actor, note });
+    const owner = await orderOwner(tx, o);
+    if (paid && owner) await notifyEvent(tx, owner, 'order_paid', { ma_don: o.code }, `/tai-khoan/don-hang/${o.code}`);
     return { ok: true as const };
   });
 }

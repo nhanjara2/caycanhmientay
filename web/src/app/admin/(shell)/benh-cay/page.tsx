@@ -3,7 +3,8 @@ import Link from 'next/link';
 import { DiseaseActiveToggle } from '@/components/admin/DiseaseActiveToggle';
 import { Icon } from '@/components/Icon';
 import { CAUSES, causeOf, isCause, matchesDisease, partName, SEVERITY } from '@/lib/diseases';
-import { requireStaff } from '@/server/auth';
+import { hasAccess } from '@/lib/permissions';
+import { requireAccess } from '@/server/auth';
 import { listDiseasesAdmin } from '@/server/diseases';
 
 export const metadata: Metadata = { title: 'Bệnh cây' };
@@ -12,12 +13,12 @@ type Props = { searchParams: Promise<{ nguyen_nhan?: string; q?: string }> };
 
 /** Thư viện bệnh cây: danh sách bài, lọc theo nguyên nhân, hiện/ẩn nhanh. */
 export default async function AdminDiseasesPage({ searchParams }: Props) {
-  const me = await requireStaff();
+  const me = await requireAccess('content');
   const sp = await searchParams;
   const cause = isCause(sp.nguyen_nhan) ? sp.nguyen_nhan : undefined;
   const q = sp.q?.slice(0, 60);
   const rows = (await listDiseasesAdmin()).filter((d) => (!cause || d.cause === cause) && (!q || matchesDisease(d, q)));
-  const isAdmin = me.role === 'admin';
+  const isAdmin = hasAccess(me, 'content', 'full');
 
   return (
     <div className="ad-body">

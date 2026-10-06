@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { getCurrentUser, requireStaff, staffName } from '@/server/auth';
+import { getCurrentUser, requireAccess, staffName } from '@/server/auth';
 import {
   addServiceNote, createByStaff, createServiceRequest, NoteSchema, ServiceInputSchema, StaffCreateSchema, UpdateSchema, updateServiceRequest,
 } from '@/server/service-requests';
@@ -34,7 +34,7 @@ export async function createServiceRequestAction(fd: FormData) {
 
 /** Nhân viên tạo yêu cầu từ hotline / Zalo / tại cửa hàng. */
 export async function createServiceByStaffAction(input: unknown) {
-  const staff = await requireStaff();
+  const staff = await requireAccess('services', 'full');
   const p = StaffCreateSchema.safeParse(input);
   if (!p.success) return { ok: false as const, error: p.error.issues[0].message };
   const r = await createByStaff(p.data, staff, staffName(staff));
@@ -44,7 +44,7 @@ export async function createServiceByStaffAction(input: unknown) {
 
 /** Đổi giai đoạn (kéo thẻ Kanban), người phụ trách, lịch khảo sát, giá trị báo giá. */
 export async function updateServiceRequestAction(input: unknown) {
-  const staff = await requireStaff();
+  const staff = await requireAccess('services', 'full');
   const p = UpdateSchema.safeParse(input);
   if (!p.success) return { ok: false as const, error: p.error.issues[0].message };
   const r = await updateServiceRequest(p.data, staffName(staff));
@@ -54,7 +54,7 @@ export async function updateServiceRequestAction(input: unknown) {
 
 /** Ghi nhận cuộc gọi / ghi chú nội bộ vào lịch sử liên hệ. */
 export async function addServiceNoteAction(input: unknown) {
-  const staff = await requireStaff();
+  const staff = await requireAccess('services', 'full');
   const p = NoteSchema.safeParse(input);
   if (!p.success) return { ok: false as const, error: p.error.issues[0].message };
   const r = await addServiceNote(p.data, staffName(staff));

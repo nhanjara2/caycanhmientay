@@ -3,7 +3,8 @@
 import 'leaflet/dist/leaflet.css';
 import type { Map as LeafletMap } from 'leaflet';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { plantZone, PLANT_ZONE_KM, type StorePoint } from '@/lib/stock';
+import { useShipping } from '@/lib/shipping-client';
+import { plantZone, type StorePoint } from '@/lib/stock';
 import { Icon } from './Icon';
 
 export type PickedPlace = { lat: number; lng: number; street: string; area: string };
@@ -119,7 +120,8 @@ export function MapPicker({ initial, stores, onPick, onClose }: {
     );
   };
 
-  const zone = plantZone(center, stores);
+  const { plantZoneKm } = useShipping();
+  const zone = plantZone(center, stores, plantZoneKm);
 
   return (
     <div className="app-modal app-modal--top" role="dialog" aria-modal="true" aria-label="Chọn vị trí nhận hàng" onClick={(e) => e.target === e.currentTarget && onClose()}>
@@ -152,7 +154,7 @@ export function MapPicker({ initial, stores, onPick, onClose }: {
             <div className="vx-zone"><Icon name="check" /><span>Trong vùng giao <b>cây sống</b> · cách {zone.store.name} {zone.km.toFixed(1).replace('.', ',')} km</span></div>
           ) : (
             <div className="vx-zone app-zone--out">
-              <Icon name="alert" /><span>Ngoài vùng giao cây sống ({PLANT_ZONE_KM} km quanh cửa hàng) · chỉ giao được vật tư, thuốc, phân bón</span>
+              <Icon name="alert" /><span>Ngoài vùng giao cây sống ({plantZoneKm} km quanh cửa hàng) · chỉ giao được vật tư, thuốc, phân bón</span>
             </div>
           )
         )}

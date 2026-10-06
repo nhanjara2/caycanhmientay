@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { CategoryForm, SubcategoryManager } from '@/components/admin/CategoryAdmin';
 import { SYSTEM_CATEGORIES } from '@/lib/catalog';
-import { requireStaff } from '@/server/auth';
+import { requireAccess } from '@/server/auth';
 import { categoryProductCounts, getCategory } from '@/server/categories';
 
 type Props = { params: Promise<{ slug: string }> };
@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 /** /admin/danh-muc/moi để thêm, /admin/danh-muc/<slug> để sửa thông tin, bộ thông số và nhóm con. */
 export default async function AdminCategoryPage({ params }: Props) {
-  const me = await requireStaff();
+  const me = await requireAccess('products');
   const { slug } = await params;
   const canEdit = me.role === 'admin';
   const creating = slug === 'moi';

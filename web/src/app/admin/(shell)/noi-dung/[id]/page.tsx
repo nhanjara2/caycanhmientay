@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { PostEditor, type EditorPost } from '@/components/admin/PostEditor';
+import { hasAccess } from '@/lib/permissions';
 import { isCategory } from '@/lib/posts';
-import { requireStaff } from '@/server/auth';
+import { requireAccess } from '@/server/auth';
 import { listDiseasesAdmin } from '@/server/diseases';
 import { getPostAdmin, peopleSuggestions } from '@/server/posts';
 import { listProductsAdmin } from '@/server/products-admin';
@@ -15,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 /** /admin/noi-dung/moi (?loai=video) để viết bài / thêm video, /admin/noi-dung/<id> để sửa. */
 export default async function AdminPostPage({ params, searchParams }: Props) {
-  const me = await requireStaff();
+  const me = await requireAccess('content');
   const { id } = await params;
   const sp = await searchParams;
 
@@ -47,7 +48,7 @@ export default async function AdminPostPage({ params, searchParams }: Props) {
     <PostEditor
       key={`${id}-${initial.kind}`}
       initial={initial}
-      role={me.role === 'admin' ? 'admin' : 'staff'}
+      role={hasAccess(me, 'content', 'full') ? 'admin' : 'staff'}
       stats={stats}
       people={people}
       products={products.map((p) => ({

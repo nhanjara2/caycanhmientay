@@ -3,9 +3,10 @@
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import * as z from 'zod';
-import { getCurrentUser, requireStaff, staffName } from '@/server/auth';
+import { getCurrentUser, requireAccess, requireStaff, staffName } from '@/server/auth';
+import { hasAccess } from '@/lib/permissions';
 import { getProducts } from '@/server/catalog';
-import { createOrder, LAST_ORDER_COOKIE, PlaceOrderSchema, setOrderStatus } from '@/server/orders';
+import { createOrder, LAST_ORDER_COOKIE, PlaceOrderSchema, setOrderPaid, setOrderStatus } from '@/server/orders';
 import { ORDER_STATUSES } from '@/server/db/schema';
 import { snapOf, type CartLine } from '@/lib/cart-snap';
 
@@ -37,10 +38,26 @@ export async function refreshCartAction(input: unknown) {
 }
 
 export async function setOrderStatusAction(code: unknown, status: unknown, note?: unknown) {
-  const staff = await requireStaff();
   const p = z.object({ code: z.string().max(20), status: z.enum(ORDER_STATUSES), note: z.string().max(300).optional() }).safeParse({ code, status, note });
   if (!p.success) return { ok: false as const, error: 'Dữ liệu không hợp lệ' };
+  // Xác nhận / chuẩn bị / hủy: quyền Đơn hàng. "Giao cho tài xế" và "Đã giao xong" còn làm được bằng quyền Giao hàng (kho, tài xế).
+  const me = await getCurrentUser();
+  const viaDelivery = !!me && (p.data.status === 'shipping' || p.data.status === 'delivered') && hasAccess(me, 'delivery', 'full');
+  const staff = viaDelivery && me ? me : await requireAccess('orders', 'full');
   const r = await setOrderStatus(p.data.code, p.data.status, staffName(staff), p.data.note);
+  if (r.ok) {
+    revalidatePath('/admin', 'layout');
+    revalidatePath('/tai-khoan', 'layout');
+  }
+  return r;
+}
+
+/** Xác nhận đã nhận tiền cho đơn thanh toán online (nhân viên); bỏ đánh dấu chỉ quản trị viên. */
+export async function setOrderPaidAction(code: unknown, paid: unknown, ref?: unknown) {
+  const p = z.object({ code: z.string().max(20), paid: z.boolean(), ref: z.string().trim().max(120).optional() }).safeParse({ code, paid, ref });
+  if (!p.success) return { ok: false as const, error: 'Dữ liệu không hợp lệ' };
+  const staff = p.data.paid ? await requireAccess('orders', 'full') : await requireStaff('admin');
+  const r = await setOrderPaid(p.data.code, p.data.paid, staffName(staff), p.data.ref || undefined);
   if (r.ok) {
     revalidatePath('/admin', 'layout');
     revalidatePath('/tai-khoan', 'layout');

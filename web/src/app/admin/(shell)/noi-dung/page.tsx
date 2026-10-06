@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { Icon, Thumb } from '@/components/Icon';
 import { normalize } from '@/lib/catalog';
 import { categoryOf, postPath, postState, SECTIONS, sectionOf, STATE_LABELS, type PostState } from '@/lib/posts';
-import { requireStaff } from '@/server/auth';
+import { requireAccess } from '@/server/auth';
 import { listPostsAdmin } from '@/server/posts';
 
 export const metadata: Metadata = { title: 'Bài viết & video' };
@@ -19,7 +19,7 @@ const date = (d: Date | null) => (d ? d.toLocaleDateString('vi-VN', { timeZone: 
 
 /** Bài viết & video: danh sách bài Góc chăm cây + Truyền thông, lọc theo trạng thái / mục / loại. */
 export default async function AdminPostsPage({ searchParams }: Props) {
-  await requireStaff();
+  await requireAccess('content');
   const sp = await searchParams;
   const tab = TABS.find((t) => t.key === sp.tt)?.key ?? '';
   const muc = sp.muc === 'blog' || sp.muc === 'news' ? sp.muc : '';

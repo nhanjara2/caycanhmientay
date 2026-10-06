@@ -10,20 +10,16 @@ import { PhoneModal } from '@/components/PhoneModal';
 import { CartList, OrderSummary, Steps } from '@/components/CartParts';
 import { Icon, type IconName } from '@/components/Icon';
 import { placeOrderAction } from '@/app/actions/orders';
+import { slotOptionsAction } from '@/app/actions/shipping';
 import { fullAddress, type AddressDTO } from '@/lib/address-labels';
 import { PAY_LABEL, PAY_LOGO } from '@/lib/order-labels';
 import { useAuth } from '@/lib/auth';
 import { useCart } from '@/lib/cart';
 import { computeTotals } from '@/lib/pricing';
-import { plantZone, PLANT_ZONE_KM, type StorePoint } from '@/lib/stock';
+import { useShipping } from '@/lib/shipping-client';
+import type { DayOption } from '@/lib/shipping';
+import { plantZone, type StorePoint } from '@/lib/stock';
 import { VoucherInput, type AppliedVoucher } from '@/components/VoucherInput';
-
-const SLOTS = [
-  { day: 'Hôm nay', time: '8:00 – 12:00' },
-  { day: 'Hôm nay', time: '14:00 – 18:00' },
-  { day: 'Ngày mai', time: '8:00 – 12:00' },
-  { day: 'Ngày mai', time: '14:00 – 18:00' },
-];
 
 // Logo lấy theo PAY_LOGO (public/images/pay/); cards: dải logo nhỏ dưới tên
 const PAYMENTS: { key: keyof typeof PAY_LABEL; label: string; note?: string; icon: IconName; cards?: [string, string][] }[] = [
@@ -43,13 +39,15 @@ export default function CheckoutPage() {
   const { lines, ready, clear } = useCart();
   const router = useRouter();
   const hasFlash = lines.some((l) => l.snap.flash);
-  const hour = new Date().getHours();
 
   const [delivery, setDelivery] = useState<'ship' | 'pickup'>('ship');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
-  const [slot, setSlot] = useState<number | null>(null);
+  const { rules, plantZoneKm } = useShipping();
+  // Khung giờ lấy từ Cài đặt giao hàng (còn chỗ / đã kín / đã qua giờ); chọn = "ngày|mã khung"
+  const [days, setDays] = useState<DayOption[] | null>(null);
+  const [slot, setSlot] = useState<string | null>(null);
   const [note, setNote] = useState('');
   const [picked, setPay] = useState('qr');
   const [safety, setSafety] = useState(false);
@@ -66,6 +64,8 @@ export default function CheckoutPage() {
   const blankAddress = useNewAddress();
 
   useEffect(() => { deliveryStoresAction().then(setStores).catch(() => {}); }, []);
+  const loadSlots = () => slotOptionsAction().then(setDays).catch(() => setDays([]));
+  useEffect(() => { void loadSlots(); }, []);
 
   const pickSaved = (a: AddressDTO) => {
     setSavedId(a.id); setName(a.name); setPhone(a.phone); setAddress(fullAddress(a));
@@ -106,7 +106,15 @@ export default function CheckoutPage() {
   }
 
   // Nhận tại vườn thì không tính phí giao. Server tính lại đúng công thức này (kể cả mã giảm giá) khi tạo đơn.
-  const totals = computeTotals(lines.map((l) => ({ ...l.snap, qty: l.qty })), delivery, voucher?.discount ?? 0);
+  const totals = computeTotals(lines.map((l) => ({ ...l.snap, qty: l.qty })), delivery, voucher?.discount ?? 0, rules);
+
+  // Khung đã chọn còn dùng được (chưa kín / chưa qua giờ) → gửi lên server
+  const chosen = (() => {
+    if (!slot || !days) return null;
+    const [date, key] = slot.split('|');
+    const s = days.find((d) => d.date === date)?.slots.find((x) => x.key === key);
+    return s && !s.full && !s.past ? { date, key } : null;
+  })();
 
   // Đơn có Flash sale không được trả tiền mặt.
   const pay = picked === 'cod' && hasFlash ? 'qr' : picked;
@@ -115,12 +123,12 @@ export default function CheckoutPage() {
     name: !name.trim() && 'Vui lòng nhập họ tên',
     phone: !PHONE.test(phone.replace(/\s/g, '')) && 'Số điện thoại chưa đúng',
     address: delivery === 'ship' && !address.trim() && 'Vui lòng nhập địa chỉ nhận hàng',
-    slot: delivery === 'ship' && slot === null && 'Chọn khung giờ giao',
+    slot: delivery === 'ship' && (slot === null || !chosen) && 'Chọn khung giờ giao',
     safety: totals.hasPesticide && !safety && 'Vui lòng xác nhận đã đọc hướng dẫn an toàn',
   };
   // Địa chỉ đã lưu có ghim bản đồ nằm ngoài vùng giao cây sống (server cũng kiểm tra lại).
   const savedAddr = saved.find((a) => a.id === savedId);
-  const zone = savedAddr?.lat != null && savedAddr.lng != null ? plantZone({ lat: savedAddr.lat, lng: savedAddr.lng }, stores) : null;
+  const zone = savedAddr?.lat != null && savedAddr.lng != null ? plantZone({ lat: savedAddr.lat, lng: savedAddr.lng }, stores, plantZoneKm) : null;
   const outOfZone = delivery === 'ship' && lines.some((l) => l.snap.ship === 'plant') && zone !== null && !zone.inZone;
   const valid = !Object.values(errors).some(Boolean) && !outOfZone;
 
@@ -140,7 +148,8 @@ export default function CheckoutPage() {
       items: lines.map((l) => ({ slug: l.slug, option: l.option, qty: l.qty })),
       name, phone, delivery, note,
       address: delivery === 'ship' ? address : undefined,
-      slot: delivery === 'ship' && slot !== null ? `${SLOTS[slot].day}, ${SLOTS[slot].time}` : undefined,
+      slotDate: delivery === 'ship' && chosen ? chosen.date : undefined,
+      slotKey: delivery === 'ship' && chosen ? chosen.key : undefined,
       payment: pay,
       safetyAck: safety,
       addressId: delivery === 'ship' && savedId !== null ? savedId : undefined,
@@ -149,6 +158,7 @@ export default function CheckoutPage() {
     setBusy(false);
     if (!r.ok) {
       setServerError(r.error);
+      if (/khung giờ/i.test(r.error)) { setSlot(null); void loadSlots(); }
       if ('needsPhone' in r && r.needsPhone) setAskPhone(true);
       return;
     }
@@ -219,21 +229,26 @@ export default function CheckoutPage() {
                     {user && !saved.length && <span className="vx-help">Bấm “Thêm địa chỉ mới” để lưu vào sổ địa chỉ (ghim bản đồ, điều kiện giao cây lớn) — lần sau chỉ cần chọn.</span>}
                     {outOfZone && (
                       <span className="vx-err" role="alert">
-                        Địa chỉ này cách cửa hàng gần nhất {zone!.km.toFixed(0)} km — ngoài vùng giao cây sống ({PLANT_ZONE_KM} km). Chọn Nhận tại vườn hoặc bỏ cây sống khỏi giỏ.
+                        Địa chỉ này cách cửa hàng gần nhất {zone!.km.toFixed(0)} km — ngoài vùng giao cây sống ({plantZoneKm} km). Chọn Nhận tại vườn hoặc bỏ cây sống khỏi giỏ.
                       </span>
                     )}
                   </div>
                 </div>
                 <b style={{ fontSize: 14, display: 'flex', gap: 8, alignItems: 'center' }}><Icon name="clock" />Chọn khung giờ giao</b>
                 <div className="vx-slots2">
-                  {SLOTS.map((s, i) => {
-                    const past = s.day === 'Hôm nay' && hour >= parseInt(s.time) + 2;
+                  {days === null && <span className="vx-help">Đang tải khung giờ…</span>}
+                  {days?.length === 0 && <span className="vx-err" role="alert">Hiện shop chưa nhận khung giờ giao nào. Vui lòng chọn Nhận tại vườn hoặc liên hệ shop.</span>}
+                  {days?.map((d) => d.closed ? (
+                    <button key={d.date} type="button" className="vx-tslot" aria-disabled="true" disabled>{d.label}<small>Nghỉ · {d.closed}</small></button>
+                  ) : d.slots.map((s) => {
+                    const id = `${d.date}|${s.key}`;
+                    const off = s.past || s.full;
                     return (
-                      <button key={i} type="button" className="vx-tslot" aria-pressed={slot === i} aria-disabled={past || undefined} onClick={() => !past && setSlot(i)}>
-                        {s.day}<small>{s.time}</small>
+                      <button key={id} type="button" className="vx-tslot" aria-pressed={slot === id} aria-disabled={off || undefined} onClick={() => !off && setSlot(id)}>
+                        {d.label}<small>{s.full ? `${s.time} · Đã kín` : s.time}</small>
                       </button>
                     );
-                  })}
+                  }))}
                 </div>
                 {err('slot')}
               </>

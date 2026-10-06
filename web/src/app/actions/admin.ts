@@ -3,11 +3,12 @@
 import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import * as z from 'zod';
-import { requireStaff, staffName } from '@/server/auth';
-import { applyStock, countLot, recentMoves, transferStock } from '@/server/inventory';
+import { requireAccess, requireStaff, staffName } from '@/server/auth';
+import { countLot, recentMoves, transferStock } from '@/server/inventory';
+import { cleanText, MAX_DOC_NO, MAX_RECEIPT_NOTE, MAX_SUPPLIER, receiveGoods } from '@/server/receipts';
 import { todayVN, tracksLots } from '@/lib/stock';
 import { addProductImage, deleteProduct, deleteProductImage, listProductImages, moveProductImage, ProductInputSchema, saveProduct, setProductActive } from '@/server/products-admin';
-import { applyStockImport, MAX_IMPORT_BYTES, parseStockImport } from '@/server/stock-import';
+import { applyStockImport, DuplicateImportError, findDuplicateImport, MAX_IMPORT_BYTES, parseStockImport } from '@/server/stock-import';
 import { saveImage } from '@/server/uploads';
 import { db, schema } from '@/server/db';
 
@@ -84,6 +85,9 @@ const AdjustSchema = z.discriminatedUnion('mode', [
     mode: z.literal('import'), slug: z.string().max(120), idx: z.number().int().min(0), storeId: z.number().int().positive(),
     qty: z.number().int().min(1, 'Số lượng nhập phải lớn hơn 0').max(100_000),
     lotCode: z.string().trim().max(40).optional(), expiry: ymd.optional(), note,
+    supplier: z.string().trim().max(MAX_SUPPLIER).optional(),
+    /** Giá nhập 1 đơn vị (đồng). */
+    unitCost: z.number().int().min(0).max(100_000_000).optional(),
   }),
   z.object({ mode: z.literal('count'), lotId: z.number().int().positive(), qty: z.number().int().min(0).max(100_000), note }),
   z.object({
@@ -94,7 +98,7 @@ const AdjustSchema = z.discriminatedUnion('mode', [
 
 /** Nhập hàng vào một cửa hàng (theo lô nếu là hàng có hạn dùng), kiểm kê một lô, hoặc chuyển kho. */
 export async function adjustStockAction(input: unknown) {
-  const staff = await requireStaff();
+  const staff = await requireAccess('inventory', 'full');
   const p = AdjustSchema.safeParse(input);
   if (!p.success) return { ok: false as const, error: p.error.issues[0].message };
   const v = p.data;
@@ -106,8 +110,14 @@ export async function adjustStockAction(input: unknown) {
     if (!prod) return { ok: false as const, error: 'Không tìm thấy sản phẩm' };
     if (tracksLots(prod) && (!v.lotCode || !v.expiry)) return { ok: false as const, error: 'Hàng có hạn dùng: nhập Số lô và Hạn dùng (in trên bao bì)' };
     if (v.expiry && v.expiry < todayVN()) return { ok: false as const, error: 'Lô này đã hết hạn, không nhập kho' };
-    const after = await db.transaction((tx) => applyStock(tx, v.slug, v.idx, v.qty, 'import', actor, v.note, { storeId: v.storeId, lotCode: v.lotCode, expiry: v.expiry }));
-    if (after === null) return { ok: false as const, error: 'Không tìm thấy quy cách' };
+    // Nhập tay cũng thành một phiếu nhập (1 dòng) để mọi lần nhập nằm chung một sổ
+    try {
+      await db.transaction((tx) => receiveGoods(tx, [{
+        slug: v.slug, idx: v.idx, storeId: v.storeId, qty: v.qty, unitCost: v.unitCost ?? null, lotCode: v.lotCode || null, expiry: v.expiry ?? null, note: v.note || null,
+      }], { supplier: cleanText(v.supplier, MAX_SUPPLIER), docNo: null, note: null, source: 'manual' }, actor));
+    } catch (e) {
+      return { ok: false as const, error: e instanceof Error ? e.message.replace(/^Dòng: /, '') : 'Có lỗi, vui lòng thử lại' };
+    }
     slug = v.slug;
   } else if (v.mode === 'count') {
     const [lot] = await db.select().from(schema.stockLots).where(eq(schema.stockLots.id, v.lotId));
@@ -125,41 +135,58 @@ export async function adjustStockAction(input: unknown) {
 }
 
 export async function stockHistoryAction(slug: unknown, idx: unknown) {
-  await requireStaff();
+  await requireAccess('inventory');
   const p = z.object({ slug: z.string().max(120), idx: z.number().int().min(0) }).safeParse({ slug, idx });
   if (!p.success) return [];
-  return (await recentMoves(p.data.slug, p.data.idx)).map(({ m, store, lotCode, expiry }) => ({
+  return (await recentMoves(p.data.slug, p.data.idx)).map(({ m, store, lotCode, expiry, receipt }) => ({
     id: m.id, reason: m.reason, delta: m.delta, after: m.after, actor: m.actor, note: m.note,
-    store, lotCode, expiry, createdAt: m.createdAt.getTime(),
+    store, lotCode, expiry, receipt, createdAt: m.createdAt.getTime(),
   }));
 }
 
+const ReceiptInfo = z.object({
+  supplier: z.string().max(MAX_SUPPLIER * 2),
+  docNo: z.string().max(MAX_DOC_NO * 2),
+  note: z.string().max(MAX_RECEIPT_NOTE * 2),
+});
+
 /**
- * Nhập hàng bằng Excel. FormData: file (.xlsx), mode = 'preview' (chỉ kiểm tra) | 'commit' (kiểm tra lại rồi ghi kho).
+ * Nhập hàng bằng Excel. FormData: file (.xlsx), mode = 'preview' (chỉ kiểm tra) | 'commit' (kiểm tra lại rồi ghi kho thành một phiếu nhập),
+ * supplier / docNo / note (thông tin phiếu, tùy chọn), allowDuplicate = '1' (xác nhận nhập lại bộ dòng đã có phiếu).
  * Có dòng lỗi thì không ghi dòng nào; client luôn gửi lại đúng file vừa xem trước nên server tự kiểm tra lại từ đầu.
  */
 export async function importStockAction(fd: FormData) {
-  const staff = await requireStaff();
+  const staff = await requireAccess('inventory', 'full');
   const f = fd.get('file');
   if (!(f instanceof File) || !f.size) return { ok: false as const, error: 'Chưa chọn file' };
   if (!/\.xlsx$/i.test(f.name)) return { ok: false as const, error: 'Chỉ nhận file Excel .xlsx (tải file mẫu ở bước 1)' };
   if (f.size > MAX_IMPORT_BYTES) return { ok: false as const, error: 'File quá lớn (tối đa 2MB)' };
+  const info = ReceiptInfo.safeParse({ supplier: fd.get('supplier') ?? '', docNo: fd.get('docNo') ?? '', note: fd.get('note') ?? '' });
+  if (!info.success) return { ok: false as const, error: 'Thông tin phiếu nhập quá dài' };
+  const meta = {
+    supplier: cleanText(info.data.supplier, MAX_SUPPLIER), docNo: cleanText(info.data.docNo, MAX_DOC_NO), note: cleanText(info.data.note, MAX_RECEIPT_NOTE),
+    fileName: cleanText(f.name, 120), allowDuplicate: fd.get('allowDuplicate') === '1',
+  };
 
   const parsed = await parseStockImport(Buffer.from(await f.arrayBuffer()));
   if (!parsed.ok) return { ok: false as const, error: parsed.error };
   const { rows, skipped } = parsed;
   const view = rows.map(({ slug: _slug, idx: _idx, storeId: _storeId, ...r }) => r);
-  const preview = { ok: true as const, committed: false as const, rows: view, skipped };
+  const clean = rows.length > 0 && !rows.some((r) => r.errors.length);
+  const dup = clean ? await findDuplicateImport(rows) : null;
+  const duplicate = dup ? { code: dup.code, at: dup.createdAt.getTime(), actor: dup.actor } : null;
+  const preview = { ok: true as const, committed: false as const, rows: view, skipped, duplicate };
 
   if (fd.get('mode') !== 'commit') return preview;
   if (!rows.length) return { ok: false as const, error: 'Không có dòng nào có Số lượng nhập. Điền số lượng rồi tải lại.' };
-  if (rows.some((r) => r.errors.length)) return preview;
+  if (!clean) return preview;
 
   try {
-    const done = await applyStockImport(rows, actorName(staff));
+    const done = await applyStockImport(rows, actorName(staff), meta);
     refreshCatalog();
-    return { ok: true as const, committed: true as const, rows: view, skipped, ...done };
+    return { ok: true as const, committed: true as const, rows: view, skipped, duplicate: null, ...done };
   } catch (e) {
+    if (e instanceof DuplicateImportError) return { ...preview, duplicate: { ...(duplicate ?? { at: Date.now(), actor: '' }), code: e.code } };
     return { ok: false as const, error: e instanceof Error ? e.message : 'Có lỗi, chưa nhập dòng nào. Vui lòng thử lại.' };
   }
 }

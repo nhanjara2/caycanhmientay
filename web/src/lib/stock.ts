@@ -23,7 +23,7 @@ export function expiryLevel(expiry: string | null | undefined, today = todayVN()
 
 export type StorePoint = { id: number; code: string; name: string; lat: number; lng: number };
 
-/** Cây sống chỉ giao trong bán kính này (km) tính từ cửa hàng gần nhất; xa hơn chỉ giao vật tư qua đơn vị vận chuyển. */
+/** Cây sống chỉ giao trong bán kính này (km) tính từ cửa hàng gần nhất; xa hơn chỉ giao vật tư qua đơn vị vận chuyển. Giá trị mặc định — số thật chỉnh ở Cài đặt giao hàng. */
 export const PLANT_ZONE_KM = 30;
 
 export function distanceKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
@@ -36,11 +36,11 @@ export function distanceKm(a: { lat: number; lng: number }, b: { lat: number; ln
 }
 
 /** Cửa hàng gần nhất và có nằm trong vùng giao cây sống không. */
-export function plantZone(p: { lat: number; lng: number }, stores: StorePoint[]) {
+export function plantZone(p: { lat: number; lng: number }, stores: StorePoint[], zoneKm: number = PLANT_ZONE_KM) {
   let best: { store: StorePoint; km: number } | null = null;
   for (const s of stores) {
     const km = distanceKm(p, s);
     if (!best || km < best.km) best = { store: s, km };
   }
-  return best ? { ...best, inZone: best.km <= PLANT_ZONE_KM } : null;
+  return best ? { ...best, inZone: best.km <= zoneKm } : null;
 }

@@ -6,7 +6,7 @@ import { fmtDate } from '@/lib/order-labels';
 import { voucherStatus, WELCOME_CODE, WELCOME_DAYS, welcomeText, type WelcomeOffer, type WelcomeProgram } from '@/lib/voucher-labels';
 import { db, schema } from './db';
 import type { Tx } from './inventory';
-import { notify } from './notify';
+import { notifyEvent } from './notify';
 
 const { vouchers, orders, users } = schema;
 
@@ -186,10 +186,6 @@ export async function announceWelcome(userId: number): Promise<WelcomeOffer | nu
   const offer = await welcomeOffer(userId);
   if (offer?.status !== 'available') return null;
   const what = welcomeText(offer, money);
-  await notify(db, userId, {
-    kind: 'promo',
-    text: `Chào mừng bạn! Tặng bạn mã **${offer.code}**: ${what.charAt(0).toLowerCase()}${what.slice(1)}, dùng đến ${fmtDate(new Date(offer.expiresAt))}.`,
-    href: '/khuyen-mai',
-  });
+  await notifyEvent(db, userId, 'welcome_gift', { ma_voucher: offer.code, noi_dung_qua: `${what.charAt(0).toLowerCase()}${what.slice(1)}`, han_dung: fmtDate(new Date(offer.expiresAt)) }, '/khuyen-mai');
   return offer;
 }

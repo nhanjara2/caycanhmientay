@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ServiceRequestNew } from '@/components/admin/ServiceRequestNew';
-import { requireStaff } from '@/server/auth';
+import { requireAccess } from '@/server/auth';
 
 export const metadata: Metadata = { title: 'Tạo yêu cầu dịch vụ' };
 
 export default async function NewServiceRequestPage() {
-  await requireStaff();
+  await requireAccess('services', 'full');
   return (
     <div className="ad-body">
       <div className="ad-title">

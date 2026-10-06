@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { ProductForm, type ProductFormValue } from '@/components/admin/ProductForm';
 import type { IconName } from '@/components/Icon';
-import { requireStaff } from '@/server/auth';
+import { requireAccess } from '@/server/auth';
 import { getCategories } from '@/server/categories';
 import { getProductAdmin } from '@/server/products-admin';
 
@@ -24,7 +24,7 @@ const EMPTY: ProductFormValue = {
 
 /** AdminProductForm: /admin/san-pham/moi để thêm, /admin/san-pham/<slug> để sửa. */
 export default async function AdminProductPage({ params }: Props) {
-  const me = await requireStaff();
+  const me = await requireAccess('products');
   const { slug } = await params;
   let initial = EMPTY;
   if (slug !== 'moi') {

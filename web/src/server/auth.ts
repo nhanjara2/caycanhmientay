@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { createHash, createHmac, randomBytes, randomInt, timingSafeEqual } from 'node:crypto';
 import { cache } from 'react';
 import { cleanGoogleAvatar } from '@/lib/avatar';
+import { hasAccess, homeFor, type Area } from '@/lib/permissions';
 import type { WelcomeOffer } from '@/lib/voucher-labels';
 import { db, schema } from './db';
 import type { Role } from './db/schema';
@@ -35,12 +36,15 @@ const hmac = (s: string) => createHmac('sha256', secret()).update(s).digest('hex
 
 export const normalizePhone = (s: string) => s.replace(/[^\d+]/g, '').replace(/^\+?84/, '0');
 export const isPhone = (s: string) => /^0(3|5|7|8|9)\d{8}$/.test(normalizePhone(s));
-export const maskPhone = (p: string) => `${p.slice(0, 4)} xxx ${p.slice(-3)}`;
+export const maskPhone = (p: string) => (p ? `${p.slice(0, 4)} xxx ${p.slice(-3)}` : '');
 
 /** SĐT trong ADMIN_PHONES / email Google trong ADMIN_EMAILS (cách nhau bằng dấu phẩy) được cấp quyền admin khi đăng nhập. */
 const envList = (name: string) => (process.env[name] ?? '').split(',').map((s) => s.trim()).filter(Boolean);
 const adminPhones = () => envList('ADMIN_PHONES').map(normalizePhone);
 const adminEmails = () => envList('ADMIN_EMAILS').map((e) => e.toLowerCase());
+/** Tài khoản được cấp quyền quản trị bằng biến môi trường (đăng nhập lại là tự lên admin) — không hạ quyền / gỡ được trên giao diện. */
+export const isConfigAdmin = (u: { phone: string | null; email: string | null }) =>
+  (!!u.phone && adminPhones().includes(u.phone)) || (!!u.email && adminEmails().includes(u.email.toLowerCase()));
 
 // ---- OTP -------------------------------------------------------------------------------------
 
@@ -261,9 +265,9 @@ export async function destroySession() {
   store.delete(SESSION_COOKIE);
 }
 
-export type SessionUser = Pick<typeof users.$inferSelect, 'id' | 'phone' | 'contactPhone' | 'email' | 'googleSub' | 'avatarUrl' | 'name' | 'role' | 'points'>;
-const toSessionUser = ({ id, phone, contactPhone, email, googleSub, avatarUrl, name, role, points }: typeof users.$inferSelect): SessionUser =>
-  ({ id, phone, contactPhone, email, googleSub, avatarUrl, name, role, points });
+export type SessionUser = Pick<typeof users.$inferSelect, 'id' | 'phone' | 'contactPhone' | 'email' | 'googleSub' | 'avatarUrl' | 'name' | 'role' | 'staffRole' | 'points'>;
+const toSessionUser = ({ id, phone, contactPhone, email, googleSub, avatarUrl, name, role, staffRole, points }: typeof users.$inferSelect): SessionUser =>
+  ({ id, phone, contactPhone, email, googleSub, avatarUrl, name, role, staffRole, points });
 
 /** SĐT để liên lạc: SĐT đã xác thực OTP, không có thì SĐT khách tự khai. */
 export const accountPhone = (u: Pick<SessionUser, 'phone' | 'contactPhone'>) => u.phone ?? u.contactPhone ?? null;
@@ -294,6 +298,18 @@ export async function requireStaff(minRole: 'staff' | 'admin' = 'staff') {
   return user;
 }
 
+/**
+ * Cửa vào từng chức năng của khu quản trị theo vai trò (lib/permissions.ts): `need = 'view'` cho trang xem,
+ * `'full'` cho thao tác ghi. Không đủ quyền → về trang đầu tiên được phép (không phải trang đăng nhập).
+ */
+export async function requireAccess(area: Area, need: 'view' | 'full' = 'view') {
+  const user = await getCurrentUser();
+  if (!user) redirect('/admin/dang-nhap');
+  if (user.role === 'customer') redirect('/admin/dang-nhap?khong-du-quyen=1');
+  if (!hasAccess(user, area, need)) redirect(`${homeFor(user)}?khong-du-quyen=1`);
+  return user;
+}
+
 /** Tên ghi vào lịch sử khi nhân viên thao tác. */
 export const staffName = (u: SessionUser) => {
   const phone = accountPhone(u);
@@ -313,6 +329,7 @@ export const publicUser = (u: SessionUser) => ({
   /** Ảnh Google của chính người đó; null = hiện chữ cái đầu (initials). */
   avatarUrl: u.avatarUrl ?? null,
   role: u.role,
+  staffRole: u.staffRole ?? null,
   points: u.points,
 });
 export type PublicUser = ReturnType<typeof publicUser>;

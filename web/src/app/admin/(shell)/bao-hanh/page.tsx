@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { Thumb } from '@/components/Icon';
 import { fmtDateTime } from '@/lib/order-labels';
 import { WARRANTY_RESOLUTION_LABEL, WARRANTY_STATUS_LABEL } from '@/lib/warranty-labels';
-import { maskPhone, requireStaff } from '@/server/auth';
+import { maskPhone, requireAccess } from '@/server/auth';
 import { WARRANTY_STATUSES } from '@/server/db/schema';
 import { countWarrantyByStatus, listWarranty } from '@/server/warranty';
 
@@ -14,7 +14,7 @@ type Props = { searchParams: Promise<{ trang_thai?: string }> };
 const PILL: Record<Status, string> = { pending: 'new', approved: 'done', rejected: 'cancel' };
 
 export default async function AdminWarrantyListPage({ searchParams }: Props) {
-  await requireStaff();
+  await requireAccess('warranty');
   const raw = (await searchParams).trang_thai;
   const status = WARRANTY_STATUSES.includes(raw as Status) ? (raw as Status) : undefined;
   const rows = await listWarranty(status);

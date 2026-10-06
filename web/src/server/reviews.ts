@@ -12,7 +12,7 @@ import type { SessionUser } from './auth';
 import { mainImageOf } from './catalog';
 import { db, schema } from './db';
 import type { ReviewStatus } from './db/schema';
-import { notify } from './notify';
+import { notifyEvent } from './notify';
 import { saveImage, type SavedImage } from './uploads';
 
 const {
@@ -318,11 +318,7 @@ export async function moderateReview(input: z.infer<typeof ModerateSchema>, acto
 
     if (!r.reply && input.reply && status === 'published') {
       const [p] = await tx.select({ name: products.name }).from(products).where(eq(products.slug, r.slug));
-      await notify(tx, r.userId, {
-        kind: 'reply',
-        text: `Shop đã trả lời đánh giá của bạn về **${p?.name ?? 'sản phẩm'}**`,
-        href: `/san-pham/${r.slug}#danh-gia`,
-      });
+      await notifyEvent(tx, r.userId, 'review_replied', { ten_san_pham: p?.name ?? 'sản phẩm' }, `/san-pham/${r.slug}#danh-gia`);
     }
     return { ok: true as const, slug: r.slug };
   });

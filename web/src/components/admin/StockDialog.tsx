@@ -14,6 +14,7 @@ export type StoreOpt = { id: number; code: string; name: string };
 export type LotOpt = { id: number; storeId: number; lotCode: string | null; expiry: string | null; qty: number };
 
 const digits = (s: string) => s.replace(/\D/g, '').slice(0, 6);
+const costDigits = (s: string) => s.replace(/\D/g, '').slice(0, 9);
 
 /** Nút "Nhập / Kiểm kê" + hộp thoại: nhập hàng vào cửa hàng (theo lô), kiểm kê từng lô, chuyển kho; kèm lịch sử gần nhất. */
 export function StockDialog({ slug, idx, name, label, stock, lotTracked, stores, lots }: {
@@ -28,6 +29,8 @@ export function StockDialog({ slug, idx, name, label, stock, lotTracked, stores,
   const [lotCode, setLotCode] = useState('');
   const [expiry, setExpiry] = useState('');
   const [qty, setQty] = useState('');
+  const [cost, setCost] = useState('');
+  const [supplier, setSupplier] = useState('');
   const [note, setNote] = useState('');
   const [error, setError] = useState('');
   const [moves, setMoves] = useState<Move[]>([]);
@@ -57,13 +60,13 @@ export function StockDialog({ slug, idx, name, label, stock, lotTracked, stores,
     e.preventDefault();
     setError('');
     const payload =
-      mode === 'import' ? { mode, slug, idx, storeId, qty: n, lotCode: lotCode || undefined, expiry: expiry || undefined, note: note || undefined }
+      mode === 'import' ? { mode, slug, idx, storeId, qty: n, lotCode: lotCode || undefined, expiry: expiry || undefined, note: note || undefined, unitCost: cost ? Number(cost) : undefined, supplier: supplier.trim() || undefined }
         : mode === 'count' ? { mode, lotId, qty: n, note: note || undefined }
         : { mode, slug, idx, from: storeId, to, qty: n, note: note || undefined };
     start(async () => {
       const r = await adjustStockAction(payload).catch(() => ({ ok: false as const, error: 'Có lỗi, vui lòng thử lại' }));
       if (!r.ok) { setError(r.error); return; }
-      setOpen(false); setQty(''); setNote(''); setLotCode(''); setExpiry('');
+      setOpen(false); setQty(''); setNote(''); setLotCode(''); setExpiry(''); setCost(''); setSupplier('');
       router.refresh();
     });
   };
@@ -109,6 +112,10 @@ export function StockDialog({ slug, idx, name, label, stock, lotTracked, stores,
                       <div className="vx-fl"><label htmlFor="sd-exp">Hạn dùng</label><input id="sd-exp" type="date" value={expiry} onChange={(e) => setExpiry(e.target.value)} /></div>
                     </div>
                   )}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
+                    <div className="vx-fl"><label htmlFor="sd-cost">Giá nhập (đ/đơn vị)</label><input id="sd-cost" inputMode="numeric" value={cost} onChange={(e) => setCost(costDigits(e.target.value))} placeholder="Không bắt buộc" /></div>
+                    <div className="vx-fl"><label htmlFor="sd-sup">Nhà cung cấp</label><input id="sd-sup" list="supplier-list" value={supplier} onChange={(e) => setSupplier(e.target.value)} maxLength={80} placeholder="Không bắt buộc" autoComplete="off" /></div>
+                  </div>
                 </>
               )}
 
@@ -175,7 +182,7 @@ export function StockDialog({ slug, idx, name, label, stock, lotTracked, stores,
                     {moves.map((m) => (
                       <div key={m.id}>
                         <span>{new Date(m.createdAt).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
-                        {REASON[m.reason]}{m.store ? ` ${m.store}` : ''}{m.lotCode ? ` (lô ${m.lotCode})` : ''} {m.delta > 0 ? `+${m.delta}` : m.delta} → tổng {m.after} · {m.actor}{m.note ? ` · ${m.note}` : ''}
+                        {REASON[m.reason]}{m.receipt ? ` ${m.receipt}` : ''}{m.store ? ` ${m.store}` : ''}{m.lotCode ? ` (lô ${m.lotCode})` : ''} {m.delta > 0 ? `+${m.delta}` : m.delta} → tổng {m.after} · {m.actor}{m.note ? ` · ${m.note}` : ''}
                       </div>
                     ))}
                   </div>

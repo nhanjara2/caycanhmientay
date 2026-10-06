@@ -1,18 +1,22 @@
 import 'server-only';
+import { createHash } from 'node:crypto';
 import ExcelJS from 'exceljs';
 import { eq } from 'drizzle-orm';
 import { normalize } from '@/lib/catalog';
 import { expiryLevel, todayVN, tracksLots } from '@/lib/stock';
+import { getCategories } from './categories';
 import { db, schema } from './db';
-import { applyStock, listInventory, listStores, type InventoryTab } from './inventory';
+import { listInventory, listStores, type InventoryTab } from './inventory';
+import { findReceiptByHash, lastCosts, lockHash, receiveGoods, type ReceiptMeta } from './receipts';
 
 const { products, productOptions } = schema;
 
-/** Nhập hàng bằng Excel: tải file mẫu (đã điền sẵn SKU) → điền số lượng/lô/hạn → tải lên kiểm tra → xác nhận. */
+/** Nhập hàng bằng Excel: tải file mẫu (đã điền sẵn SKU) → điền số lượng/giá nhập/lô/hạn → tải lên kiểm tra → xác nhận. Mỗi lần xác nhận tạo một phiếu nhập. */
 
 export const MAX_IMPORT_BYTES = 2 * 1024 * 1024;
 export const MAX_IMPORT_ROWS = 2000;
 const MAX_QTY = 100_000;
+const MAX_COST = 100_000_000;
 
 const SHEET = 'Nhập hàng';
 const GUIDE = 'Hướng dẫn';
@@ -22,16 +26,23 @@ const COLS = {
   sku: 'Mã SKU',
   name: 'Sản phẩm',
   label: 'Quy cách',
+  unit: 'Đơn vị',
+  origin: 'Xuất xứ',
+  category: 'Danh mục',
   stock: 'Tồn hiện tại',
+  lastCost: 'Giá nhập gần nhất',
   lots: 'Theo lô',
   store: 'Cửa hàng nhập',
   qty: 'Số lượng nhập',
+  cost: 'Giá nhập (đ/đơn vị)',
   lot: 'Số lô',
   expiry: 'Hạn dùng',
   note: 'Ghi chú',
 } as const;
 type ColKey = keyof typeof COLS;
-const WIDTH: Record<ColKey, number> = { sku: 16, name: 40, label: 18, stock: 13, lots: 10, store: 15, qty: 15, lot: 14, expiry: 14, note: 28 };
+const WIDTH: Record<ColKey, number> = { sku: 16, name: 40, label: 18, unit: 10, origin: 14, category: 16, stock: 13, lastCost: 16, lots: 10, store: 15, qty: 15, cost: 19, lot: 14, expiry: 14, note: 28 };
+/** Cột người dùng điền (tiêu đề xanh); còn lại chỉ để xem, khi đọc file không dùng đến. */
+const INPUT_COLS: ColKey[] = ['store', 'qty', 'cost', 'lot', 'expiry', 'note'];
 
 /** Tên cột đem so khớp: bỏ dấu, bỏ dấu *, bỏ phần ghi chú trong ngoặc. */
 const headKey = (s: string) => normalize(s).replace(/\(.*?\)|\*/g, '').replace(/\s+/g, ' ').trim();
@@ -41,14 +52,24 @@ export const skuKey = (sku: string, idx: number) => `${sku}-${idx + 1}`;
 
 // ---- File mẫu --------------------------------------------------------------------------------
 
-export type TemplateRow = { sku: string; idx: number; name: string; label: string; stock: number; pesticide: boolean; category: string };
+export type TemplateRow = {
+  sku: string; idx: number; name: string; label: string; stock: number; pesticide: boolean; category: string;
+  /** Đơn vị bán (Chậu, Chai…), xuất xứ, tên danh mục, giá nhập gần nhất — chỉ để xem trong file. */
+  unit: string; origin: string; categoryName: string; lastCost: number | null;
+};
 type StoreRef = { id: number; code: string; name: string };
 
 export async function buildStockTemplate(tab: Extract<InventoryTab, 'tat-ca' | 'duoi-muc'>) {
-  const [stores, all] = await Promise.all([listStores(), listInventory({ tab })]);
-  const rows = tab === 'tat-ca' ? all.toSorted((a, b) => a.name.localeCompare(b.name, 'vi') || a.idx - b.idx) : all;
+  const [stores, all, cats, costs] = await Promise.all([listStores(), listInventory({ tab }), getCategories(), lastCosts()]);
+  const catName = new Map(cats.map((c) => [c.slug, c.name]));
+  const rows = (tab === 'tat-ca' ? all.toSorted((a, b) => a.name.localeCompare(b.name, 'vi') || a.idx - b.idx) : all).map((r): TemplateRow => ({
+    sku: r.sku, idx: r.idx, name: r.name, label: r.label, stock: r.stock, pesticide: r.pesticide, category: r.category,
+    unit: r.unit, origin: r.origin, categoryName: catName.get(r.category) ?? r.category, lastCost: costs.get(`${r.slug}#${r.idx}`) ?? null,
+  }));
   return renderStockTemplate(rows, stores);
 }
+
+const GRAY = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF3F4F6' } } as const;
 
 /** Dựng file Excel từ danh sách quy cách (tách riêng để kiểm thử không cần database). */
 export async function renderStockTemplate(rows: TemplateRow[], stores: Pick<StoreRef, 'code' | 'name'>[]) {
@@ -63,9 +84,8 @@ export async function renderStockTemplate(rows: TemplateRow[], stores: Pick<Stor
   const head = ws.getRow(1);
   head.height = 24;
   head.eachCell((c, n) => {
-    const input = keys[n - 1] === 'store' || keys[n - 1] === 'qty' || keys[n - 1] === 'lot' || keys[n - 1] === 'expiry' || keys[n - 1] === 'note';
     c.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-    c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: input ? 'FF1F6F43' : 'FF6B7280' } };
+    c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: INPUT_COLS.includes(keys[n - 1]) ? 'FF1F6F43' : 'FF6B7280' } };
     c.alignment = { vertical: 'middle', horizontal: 'left' };
   });
 
@@ -73,19 +93,26 @@ export async function renderStockTemplate(rows: TemplateRow[], stores: Pick<Stor
   rows.forEach((r) => {
     const lots = tracksLots(r);
     const row = ws.addRow({
-      sku: skuKey(r.sku, r.idx), name: r.name, label: r.label, stock: r.stock, lots: lots ? 'Có' : '',
-      store: defaultStore, qty: null, lot: null, expiry: null, note: null,
+      sku: skuKey(r.sku, r.idx), name: r.name, label: r.label, unit: r.unit, origin: r.origin, category: r.categoryName,
+      stock: r.stock, lastCost: r.lastCost, lots: lots ? 'Có' : '',
+      store: defaultStore, qty: null, cost: null, lot: null, expiry: null, note: null,
     });
-    for (const k of ['sku', 'name', 'label', 'stock', 'lots'] as const) {
+    for (const k of ['sku', 'name', 'label', 'unit', 'origin', 'category', 'stock', 'lastCost', 'lots'] as const) {
       const c = row.getCell(k);
       c.font = { color: { argb: 'FF6B7280' } };
-      c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF3F4F6' } };
+      c.fill = GRAY;
     }
     row.getCell('stock').alignment = { horizontal: 'right' };
+    row.getCell('lastCost').numFmt = '#,##0';
     row.getCell('lots').font = { bold: true, color: { argb: 'FFB45309' } };
     row.getCell('qty').dataValidation = {
       type: 'whole', operator: 'between', formulae: [0, MAX_QTY], allowBlank: true, showErrorMessage: true,
       errorTitle: 'Số lượng nhập', error: `Nhập số nguyên từ 1 đến ${MAX_QTY.toLocaleString('vi-VN')}`,
+    };
+    row.getCell('cost').numFmt = '#,##0';
+    row.getCell('cost').dataValidation = {
+      type: 'whole', operator: 'between', formulae: [0, MAX_COST], allowBlank: true, showErrorMessage: true,
+      errorTitle: 'Giá nhập', error: `Nhập số tiền nguyên (đồng) từ 0 đến ${MAX_COST.toLocaleString('vi-VN')}`,
     };
     if (listFormula.length <= 255) {
       row.getCell('store').dataValidation = {
@@ -104,24 +131,31 @@ export async function renderStockTemplate(rows: TemplateRow[], stores: Pick<Stor
   g.getColumn(1).width = 26;
   g.getColumn(2).width = 90;
   const lines: [string, string][] = [
-    ['Cách dùng', 'Điền cột "Số lượng nhập" cho các mặt hàng cần nhập, rồi tải file lên ở trang Nhập hàng. Hệ thống kiểm tra trước, bạn xác nhận mới ghi vào kho.'],
+    ['Cách dùng', 'Điền cột "Số lượng nhập" cho các mặt hàng cần nhập, rồi tải file lên ở trang Nhập hàng. Hệ thống kiểm tra trước, bạn xác nhận mới ghi vào kho. Mỗi lần xác nhận tạo một phiếu nhập (PN-xxxxx).'],
+    ['Cột xám (chỉ để xem)', 'Mã SKU, Sản phẩm, Quy cách, Đơn vị, Xuất xứ, Danh mục, Tồn hiện tại, Giá nhập gần nhất, Theo lô. Không sửa: khi tải lên hệ thống không đọc các cột này (trừ Mã SKU). Muốn đổi Đơn vị / Xuất xứ thì sửa ở Sản phẩm.'],
     ['Mã SKU', 'Giữ nguyên, không sửa. Mỗi dòng là một quy cách của sản phẩm (mã dạng MT-90001-1).'],
-    ['Số lượng nhập', 'Số nguyên dương. Để trống (hoặc 0) = bỏ qua dòng đó. Không cần xóa các dòng không nhập.'],
+    ['Số lượng nhập', 'Số nguyên dương, tính theo cột Đơn vị / Quy cách. Để trống (hoặc 0) = bỏ qua dòng đó. Không cần xóa các dòng không nhập.'],
+    ['Giá nhập (đ/đơn vị)', 'Không bắt buộc. Giá nhập của 1 đơn vị (đồng), gõ 125000 hoặc 125.000. Dùng để ghi sổ phiếu nhập (tổng tiền hàng), không đổi giá bán.'],
     ['Cửa hàng nhập', `Mã cửa hàng nhận hàng. Để trống = ${defaultStore || 'cửa hàng mặc định'}. Các mã hợp lệ ở bảng bên dưới.`],
     ['Số lô, Hạn dùng', 'Bắt buộc với dòng có chữ "Có" ở cột Theo lô (thuốc BVTV, phân bón, hạt giống). Hạn dùng nhập dd/mm/yyyy hoặc mm/yyyy (mm/yyyy = ngày cuối tháng). Lô đã hết hạn không nhập kho.'],
-    ['Ghi chú', 'Tùy chọn (nhà cung cấp, số phiếu…), tối đa 200 ký tự. Được ghi vào lịch sử kho.'],
+    ['Ghi chú', 'Tùy chọn (số phiếu, ghi chú riêng của dòng…), tối đa 200 ký tự. Được ghi vào lịch sử kho. Nhà cung cấp và số chứng từ không điền ở đây mà điền ở màn hình tải lên.'],
+    ['Nhập vào lô đã có', 'Nhập đúng Số lô + Hạn dùng đang có (cùng cửa hàng) thì số lượng được CỘNG THÊM vào lô đó. Nhập hàng không bao giờ làm mất tồn cũ; muốn đặt lại số đếm thực tế thì dùng Kiểm kê ở trang Kho.'],
+    ['Lô hàng mới', 'Ghi Số lô hoặc Hạn dùng khác với các lô đang có: hệ thống tạo thêm một lô mới, lô cũ giữ nguyên. Hàng không theo lô (cây, chậu…) để trống Số lô và Hạn dùng.'],
+    ['Sản phẩm chưa có', 'File này không tạo được sản phẩm. Vào Sản phẩm → Thêm mới, tạo xong (hàng theo lô thì để Tồn đầu kỳ = 0), rồi quay lại Nhập hàng TẢI LẠI FILE MẪU — file tải từ trước sẽ không có sản phẩm mới.'],
+    ['Nhập trùng', 'Tải lại đúng nội dung đã nhập thì hệ thống cảnh báo và chỉ nhập khi bạn tích xác nhận. Cùng SKU + cửa hàng + lô + hạn xuất hiện 2 dòng thì số lượng cộng dồn (có cảnh báo).'],
     ['Lưu ý', 'Nếu có dòng lỗi thì không dòng nào được nhập. Sửa file rồi tải lại.'],
-    ['', ''],
-    ['Mã cửa hàng', 'Tên cửa hàng'],
-    ...stores.map((s): [string, string] => [s.code, s.name]),
   ];
-  lines.forEach(([a, b], i) => {
+  lines.forEach(([a, b]) => {
     const row = g.addRow([a, b]);
     row.getCell(1).font = { bold: true };
     row.getCell(2).alignment = { wrapText: true, vertical: 'top' };
-    row.getCell(1).alignment = { vertical: 'top' };
-    if (i === 8) row.eachCell((c) => { c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF3F4F6' } }; });
+    row.getCell(1).alignment = { vertical: 'top', wrapText: true };
   });
+  g.addRow(['', '']);
+  const storeHead = g.addRow(['Mã cửa hàng', 'Tên cửa hàng']);
+  storeHead.font = { bold: true };
+  storeHead.eachCell((c) => { c.fill = GRAY; });
+  for (const s of stores) g.addRow([s.code, s.name]).getCell(1).font = { bold: true };
 
   return Buffer.from(await wb.xlsx.writeBuffer());
 }
@@ -139,6 +173,8 @@ export type ImportRow = {
   storeId: number | null;
   storeCode: string | null;
   qty: number | null;
+  /** Giá nhập 1 đơn vị (đồng); null = không ghi. */
+  unitCost: number | null;
   lotCode: string | null;
   expiry: string | null;
   note: string | null;
@@ -190,6 +226,23 @@ function parseExpiry(v: string | number | Date): string | null {
   return null;
 }
 
+/** Giá nhập: ô số, hoặc chữ "125000" / "125.000" / "125,000đ". Rỗng = không ghi giá. */
+function parseCost(v: string | number | Date | null): { value: number | null; error?: string } {
+  if (v === null || v === '') return { value: null };
+  const bad = { value: null, error: 'Giá nhập phải là số tiền nguyên (đồng), ví dụ 125000 hoặc 125.000' };
+  let n: number;
+  if (typeof v === 'number') n = v;
+  else if (typeof v === 'string') {
+    const t = v.replace(/\s|đ|₫|vnd/gi, '');
+    if (/^\d{1,3}([.,]\d{3})+$/.test(t)) n = Number(t.replace(/[.,]/g, ''));
+    else if (/^\d+$/.test(t)) n = Number(t);
+    else return bad;
+  } else return bad;
+  if (!Number.isInteger(n) || n < 0) return bad;
+  if (n > MAX_COST) return { value: null, error: `Giá nhập tối đa ${MAX_COST.toLocaleString('vi-VN')}đ / đơn vị` };
+  return { value: n };
+}
+
 export type OptionRef = { slug: string; sku: string; name: string; category: string; pesticide: boolean; idx: number; label: string };
 
 export async function parseStockImport(buf: Buffer): Promise<ImportParse> {
@@ -229,26 +282,28 @@ export async function parseStockSheet(buf: Buffer, stores: StoreRef[], opts: Opt
   const text = (row: ExcelJS.Row, k: ColKey) => { const n = col.get(k); return n ? cellText(row.getCell(n).value) : ''; };
 
   const rows: ImportRow[] = [];
+  const seen = new Map<string, number>();
   let skipped = 0;
   for (let r = headRow + 1; r <= ws.rowCount; r++) {
     const xr = ws.getRow(r);
     const sku = text(xr, 'sku');
     const qtyRaw = get(xr, 'qty');
+    const costRaw = get(xr, 'cost');
     const lotCode = text(xr, 'lot').toUpperCase();
     const expiryRaw = get(xr, 'expiry');
     const note = text(xr, 'note');
-    if (!sku && qtyRaw === null && !lotCode && expiryRaw === null && !note) continue; // dòng trống
+    if (!sku && qtyRaw === null && costRaw === null && !lotCode && expiryRaw === null && !note) continue; // dòng trống
 
     const qtyEmpty = qtyRaw === null || qtyRaw === '' || qtyRaw === 0 || qtyRaw === '0';
     // Dòng chỉ có sẵn mã SKU/cửa hàng (không điền gì thêm) = không nhập
-    if (qtyEmpty && !lotCode && (expiryRaw === null || expiryRaw === '') && !note) { skipped++; continue; }
+    if (qtyEmpty && !lotCode && (expiryRaw === null || expiryRaw === '') && (costRaw === null || costRaw === '') && !note) { skipped++; continue; }
     if (rows.length >= MAX_IMPORT_ROWS) return { ok: false, error: `File có quá ${MAX_IMPORT_ROWS} dòng cần nhập, hãy chia nhỏ` };
 
     const errors: string[] = [];
     const warnings: string[] = [];
     const o = bySku.get(sku.toUpperCase());
     if (!sku) errors.push('Thiếu Mã SKU');
-    else if (!o) errors.push(`Không có mã SKU “${sku}” (giữ nguyên Mã SKU trong file mẫu)`);
+    else if (!o) errors.push(`Mã SKU “${sku}” chưa có trong hệ thống. Sản phẩm mới: tạo ở Sản phẩm → Thêm mới rồi tải lại file mẫu; đừng sửa Mã SKU.`);
 
     let qty: number | null = null;
     if (qtyEmpty) errors.push('Thiếu Số lượng nhập (phải lớn hơn 0)');
@@ -256,6 +311,9 @@ export async function parseStockSheet(buf: Buffer, stores: StoreRef[], opts: Opt
       qty = Number(qtyRaw);
       if (qty < 1 || qty > MAX_QTY) { errors.push(`Số lượng nhập phải từ 1 đến ${MAX_QTY.toLocaleString('vi-VN')}`); qty = null; }
     } else errors.push('Số lượng nhập phải là số nguyên dương');
+
+    const cost = parseCost(costRaw);
+    if (cost.error) errors.push(cost.error);
 
     const storeText = text(xr, 'store');
     let store = stores[0];
@@ -278,9 +336,17 @@ export async function parseStockSheet(buf: Buffer, stores: StoreRef[], opts: Opt
       if (expiryRaw === null || expiryRaw === '') errors.push('Hàng có hạn dùng: cần Hạn dùng');
     }
 
+    // Cùng quy cách + cửa hàng + lô + hạn xuất hiện nhiều dòng: vẫn nhập (cộng dồn) nhưng báo để người dùng soát lại
+    if (o && store && qty) {
+      const key = [o.slug, o.idx, store.id, lotCode, expiry ?? ''].join('|');
+      const first = seen.get(key);
+      if (first) warnings.push(`Cùng SKU, cửa hàng, lô và hạn với dòng ${first}: số lượng sẽ cộng dồn`);
+      else seen.set(key, r);
+    }
+
     rows.push({
       row: r, sku, slug: o?.slug ?? null, idx: o?.idx ?? null, name: o?.name ?? null, label: o?.label ?? null,
-      storeId: store?.id ?? null, storeCode: store?.code ?? null, qty, lotCode: lotCode || null, expiry, note: note || null, errors, warnings,
+      storeId: store?.id ?? null, storeCode: store?.code ?? null, qty, unitCost: cost.value, lotCode: lotCode || null, expiry, note: note || null, errors, warnings,
     });
   }
   return { ok: true, rows, skipped };
@@ -288,17 +354,36 @@ export async function parseStockSheet(buf: Buffer, stores: StoreRef[], opts: Opt
 
 // ---- Ghi vào kho -----------------------------------------------------------------------------
 
-/** Ghi toàn bộ dòng hợp lệ trong một transaction: lỗi giữa chừng thì không dòng nào được nhập. */
-export async function applyStockImport(rows: ImportRow[], actor: string) {
-  // Khóa quy cách theo thứ tự cố định để hai lượt nhập cùng lúc không bế tắc
-  const sorted = rows.toSorted((a, b) => a.slug!.localeCompare(b.slug!) || a.idx! - b.idx!);
-  await db.transaction(async (tx) => {
-    for (const r of sorted) {
-      const after = await applyStock(tx, r.slug!, r.idx!, r.qty!, 'import', actor, r.note ? `Excel · ${r.note}` : 'Nhập từ Excel', {
-        storeId: r.storeId!, lotCode: r.lotCode, expiry: r.expiry,
-      });
-      if (after === null) throw new Error(`Dòng ${r.row}: không tìm thấy quy cách ${r.sku}`);
+/** Dấu vân tay của bộ dòng sẽ nhập (không phụ thuộc thứ tự dòng, tên file hay việc file được lưu lại bằng Excel). */
+export function linesHash(rows: ImportRow[]) {
+  const keys = rows.map((r) => [r.slug, r.idx, r.storeId, r.qty, r.unitCost ?? '', r.lotCode ?? '', r.expiry ?? ''].join('|')).sort();
+  return createHash('sha256').update(keys.join('\n')).digest('hex');
+}
+
+/** Phiếu trước đó đã nhập đúng bộ dòng này, nếu có. */
+export async function findDuplicateImport(rows: ImportRow[]) {
+  return rows.length ? findReceiptByHash(linesHash(rows)) : null;
+}
+
+export class DuplicateImportError extends Error {
+  constructor(public code: string) { super(`Nội dung này đã được nhập ở phiếu ${code}`); }
+}
+
+export type ImportMeta = { supplier: string | null; docNo: string | null; note: string | null; fileName: string | null; allowDuplicate: boolean };
+
+/** Ghi toàn bộ dòng hợp lệ thành một phiếu nhập trong một transaction: lỗi giữa chừng thì không dòng nào được nhập. */
+export async function applyStockImport(rows: ImportRow[], actor: string, meta: ImportMeta) {
+  const hash = linesHash(rows);
+  const receipt: ReceiptMeta = { supplier: meta.supplier, docNo: meta.docNo, note: meta.note, source: 'excel', linesHash: hash, fileName: meta.fileName };
+  const done = await db.transaction(async (tx) => {
+    if (!meta.allowDuplicate) {
+      await lockHash(tx, hash);
+      const dup = await findReceiptByHash(hash, tx);
+      if (dup) throw new DuplicateImportError(dup.code);
     }
+    return receiveGoods(tx, rows.map((r) => ({
+      slug: r.slug!, idx: r.idx!, storeId: r.storeId!, qty: r.qty!, unitCost: r.unitCost, lotCode: r.lotCode, expiry: r.expiry, note: r.note, ref: `Dòng ${r.row}`,
+    })), receipt, actor);
   });
-  return { lines: rows.length, units: rows.reduce((s, r) => s + r.qty!, 0) };
+  return { code: done.code, lines: done.lines, units: done.units };
 }

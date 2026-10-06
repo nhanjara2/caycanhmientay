@@ -11,7 +11,7 @@ import type { SessionUser } from './auth';
 import { mainImageOf } from './catalog';
 import { db, schema } from './db';
 import type { ReviewStatus } from './db/schema';
-import { notify } from './notify';
+import { notifyEvent } from './notify';
 import { AD_FLAG, displayName, hasPurchased, looksLikeAd, voteInfo, type ReviewFlag } from './reviews';
 
 const { questions: Q, questionAnswers: QA, faqs: F, users, products } = schema;
@@ -137,11 +137,9 @@ export async function answerAsCustomer(user: SessionUser, input: z.infer<typeof 
   await db.transaction(async (tx) => {
     await tx.insert(QA).values({ questionId: input.questionId, userId: user.id, content: input.content, status, verified: bought });
     if (status === 'published' && q.userId !== user.id) {
-      await notify(tx, q.userId, {
-        kind: 'reply',
-        text: `${isStaffRole(user.role) ? 'Nhân viên shop' : bought ? 'Một khách đã mua' : 'Một khách hàng'} vừa trả lời câu hỏi của bạn về **${q.productName}**`,
-        href: `/san-pham/${q.slug}#cau-hoi`,
-      });
+      await notifyEvent(tx, q.userId, 'question_peer_answer', {
+        nguoi_tra_loi: isStaffRole(user.role) ? 'Nhân viên shop' : bought ? 'Một khách đã mua' : 'Một khách hàng', ten_san_pham: q.productName,
+      }, `/san-pham/${q.slug}#cau-hoi`);
     }
   });
   return { ok: true, slug: q.slug };
@@ -296,12 +294,7 @@ export async function answerQuestion(input: z.infer<typeof AnswerSchema>, actor:
 
     if (!q.answer && input.answer && status === 'visible') {
       const [p] = await tx.select({ name: products.name }).from(products).where(eq(products.slug, q.slug));
-      await notify(tx, q.userId, {
-        kind: 'reply',
-        text: `Shop đã trả lời câu hỏi của bạn về **${p?.name ?? 'sản phẩm'}**`,
-        href: `/san-pham/${q.slug}#cau-hoi`,
-        external: true,
-      });
+      await notifyEvent(tx, q.userId, 'question_answered', { ten_san_pham: p?.name ?? 'sản phẩm' }, `/san-pham/${q.slug}#cau-hoi`);
     }
     return { ok: true as const, slug: q.slug };
   });
@@ -320,11 +313,9 @@ export async function moderateAnswer(input: z.infer<typeof ModerateAnswerSchema>
     const status: ReviewStatus = input.action === 'publish' ? 'published' : 'hidden';
     if (status !== a.status) await tx.update(QA).set({ status, moderatedBy: actor, moderatedAt: new Date() }).where(eq(QA.id, input.id));
     if (a.status === 'pending' && status === 'published' && q && q.status === 'visible' && q.userId !== a.userId) {
-      await notify(tx, q.userId, {
-        kind: 'reply',
-        text: `${a.verified ? 'Một khách đã mua' : 'Một khách hàng'} vừa trả lời câu hỏi của bạn về **${q.productName}**`,
-        href: `/san-pham/${q.slug}#cau-hoi`,
-      });
+      await notifyEvent(tx, q.userId, 'question_peer_answer', {
+        nguoi_tra_loi: a.verified ? 'Một khách đã mua' : 'Một khách hàng', ten_san_pham: q.productName,
+      }, `/san-pham/${q.slug}#cau-hoi`);
     }
     return { ok: true as const, slug: q?.slug };
   });

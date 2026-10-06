@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { ServiceBoard, ServiceFilters } from '@/components/admin/ServiceBoard';
 import { Icon } from '@/components/Icon';
 import { SERVICE_TYPES, shortMoney, type ServiceType } from '@/lib/service-labels';
-import { requireStaff } from '@/server/auth';
+import { requireAccess } from '@/server/auth';
 import { serviceBoard, serviceKpis, staffOptions } from '@/server/service-requests';
 
 export const metadata: Metadata = { title: 'Yêu cầu dịch vụ' };
@@ -12,7 +12,7 @@ type Props = { searchParams: Promise<{ loai?: string; ks?: string; thua?: string
 
 /** AdminServiceRequests: 4 chỉ số + bảng Kanban Mới → Đã hẹn khảo sát → Đã báo giá → Đang thi công → Hoàn thành (+ Thua). */
 export default async function AdminServiceRequestsPage({ searchParams }: Props) {
-  await requireStaff();
+  await requireAccess('services');
   const sp = await searchParams;
   const service = SERVICE_TYPES.includes(sp.loai as ServiceType) ? (sp.loai as ServiceType) : undefined;
   const assignee = Number(sp.ks) > 0 ? Number(sp.ks) : undefined;

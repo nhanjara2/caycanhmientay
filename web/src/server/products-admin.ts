@@ -3,6 +3,7 @@ import { and, asc, count, desc, eq, ilike, or, sql } from 'drizzle-orm';
 import * as z from 'zod';
 import { ELEMENTS, findCategory, MAX_PRODUCT_IMAGES, normalize, parseYoutubeId, productImageUrl, specTemplate, type FengShui } from '@/lib/catalog';
 import { attrKeys, type ProductAttrs } from '@/lib/product-filters';
+import { tracksLots } from '@/lib/stock';
 import { mainImageOf } from './catalog';
 import { getCategories } from './categories';
 import { db, schema } from './db';
@@ -149,6 +150,13 @@ async function checkCategory(input: ProductInput): Promise<string | null> {
   return miss.length ? `Danh mục “${cat.name}” bắt buộc nhập thông số: ${miss.map((f) => f.name).join(', ')}` : null;
 }
 
+/** Hàng theo lô (thuốc BVTV, phân bón, hạt giống) phải có Số lô + Hạn dùng khi nhập kho, mà Tồn đầu kỳ không có hai thông tin đó. */
+function lotStockError(input: ProductInput, firstNew: number): string | null {
+  if (!tracksLots({ pesticide: input.pesticide, category: input.category })) return null;
+  if (!input.options.some((o, i) => i >= firstNew && (o.stock ?? 0) > 0)) return null;
+  return 'Hàng theo lô (thuốc BVTV, phân bón, hạt giống) không nhập Tồn đầu kỳ ở đây. Để Tồn đầu kỳ = 0, lưu sản phẩm rồi nhập hàng ở trang Nhập hàng kèm Số lô và Hạn dùng.';
+}
+
 export async function saveProduct(input: ProductInput, actor: string): Promise<SaveResult> {
   const bad = await checkCategory(input);
   if (bad) return { ok: false, error: bad };
@@ -165,6 +173,8 @@ export async function saveProduct(input: ProductInput, actor: string): Promise<S
     if (!existing) return { ok: false, error: 'Không tìm thấy sản phẩm' };
     // Không xóa quy cách cũ: đơn hàng cũ tham chiếu theo thứ tự quy cách.
     if (input.options.length < existing.options.length) return { ok: false, error: 'Không thể xóa quy cách đã có. Hãy ẩn sản phẩm hoặc đổi tên quy cách.' };
+    const lotBad = lotStockError(input, existing.options.length);
+    if (lotBad) return { ok: false, error: lotBad };
     await db.transaction(async (tx) => {
       await tx.update(products).set({
         ...values,
@@ -183,6 +193,9 @@ export async function saveProduct(input: ProductInput, actor: string): Promise<S
     });
     return { ok: true, slug: input.slug };
   }
+
+  const lotBad = lotStockError(input, 0);
+  if (lotBad) return { ok: false, error: lotBad };
 
   let slug = slugify(input.name) || 'san-pham';
   for (let i = 2; (await db.select({ s: products.slug }).from(products).where(eq(products.slug, slug))).length; i++) slug = `${slugify(input.name)}-${i}`;

@@ -5,7 +5,7 @@ import { ServiceNoteBox, ServiceRequestPanel } from '@/components/admin/ServiceR
 import { money } from '@/lib/format';
 import { fmtDateTime } from '@/lib/order-labels';
 import { SERVICE_INFO, SOURCE_LABEL, STAGE_LABEL, STAGE_PILL, fmtSlot, serviceCode } from '@/lib/service-labels';
-import { requireStaff } from '@/server/auth';
+import { requireAccess } from '@/server/auth';
 import { getServiceRequest, staffOptions } from '@/server/service-requests';
 
 type Props = { params: Promise<{ id: string }> };
@@ -19,7 +19,7 @@ const toLocalInput = (d: Date | null) => (d ? d.toLocaleString('sv-SE', { timeZo
 
 /** Chi tiết yêu cầu dịch vụ: nhu cầu + ảnh hiện trạng, lịch sử liên hệ | khách hàng, khung xử lý. */
 export default async function AdminServiceRequestPage({ params }: Props) {
-  await requireStaff();
+  await requireAccess('services');
   const id = Number((await params).id);
   const d = Number.isInteger(id) && id > 0 ? await getServiceRequest(id) : undefined;
   if (!d) notFound();

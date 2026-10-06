@@ -141,6 +141,41 @@
       "when": 1791208123872,
       "tag": "0019_posts",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1791250586395,
+      "tag": "0020_purchase_receipts",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1791251118143,
+      "tag": "0021_staff_role",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1791251708140,
+      "tag": "0022_delivery_settings",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1791252511374,
+      "tag": "0023_pos_orders",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1791252814634,
+      "tag": "0024_message_templates",
+      "breakpoints": true
     }
   ]
 }

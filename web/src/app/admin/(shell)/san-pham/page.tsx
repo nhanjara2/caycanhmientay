@@ -5,7 +5,7 @@ import { ProductDeleteButton } from '@/components/admin/ProductDeleteButton';
 import { Icon, Thumb } from '@/components/Icon';
 import { categoryLabel, findCategory } from '@/lib/catalog';
 import { money } from '@/lib/format';
-import { requireStaff } from '@/server/auth';
+import { requireAccess } from '@/server/auth';
 import { getCategories } from '@/server/categories';
 import { MIN_STOCK } from '@/server/inventory';
 import { listProductsAdmin } from '@/server/products-admin';
@@ -15,7 +15,7 @@ export const metadata: Metadata = { title: 'Sản phẩm' };
 type Props = { searchParams: Promise<{ danh_muc?: string; q?: string }> };
 
 export default async function AdminProductsPage({ searchParams }: Props) {
-  const me = await requireStaff();
+  const me = await requireAccess('products');
   const sp = await searchParams;
   const categories = await getCategories();
   const category = findCategory(categories, sp.danh_muc ?? '')?.slug;

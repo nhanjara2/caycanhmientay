@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import * as z from 'zod';
 import { postPath, SECTIONS, sectionOf } from '@/lib/posts';
-import { requireStaff } from '@/server/auth';
+import { requireAccess } from '@/server/auth';
 import { addPostImage, deletePost, INTENTS, PostInputSchema, savePost, votePost } from '@/server/posts';
 import { saveImage } from '@/server/uploads';
 
@@ -17,7 +17,7 @@ function refresh(p?: { slug: string; category: string }) {
 }
 
 export async function savePostAction(input: unknown, intent: unknown) {
-  const user = await requireStaff();
+  const user = await requireAccess('content', 'full');
   const i = z.enum(INTENTS).safeParse(intent);
   const p = PostInputSchema.safeParse(input);
   if (!i.success) return { ok: false as const, error: 'Yêu cầu không hợp lệ' };
@@ -28,7 +28,7 @@ export async function savePostAction(input: unknown, intent: unknown) {
 }
 
 export async function uploadPostImageAction(fd: FormData) {
-  const user = await requireStaff();
+  const user = await requireAccess('content', 'full');
   const id = z.coerce.number().int().positive().safeParse(fd.get('postId'));
   const f = fd.get('photo');
   if (!id.success || !(f instanceof File)) return { ok: false as const, error: 'Thiếu ảnh' };
@@ -38,7 +38,7 @@ export async function uploadPostImageAction(fd: FormData) {
 }
 
 export async function deletePostAction(id: unknown) {
-  await requireStaff('admin');
+  await requireAccess('content', 'full');
   const p = z.number().int().positive().safeParse(id);
   if (!p.success) return { ok: false as const };
   const r = await deletePost(p.data);

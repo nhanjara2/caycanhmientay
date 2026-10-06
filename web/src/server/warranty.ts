@@ -7,7 +7,7 @@ import { mainImageOf } from './catalog';
 import { db, schema } from './db';
 import { WARRANTY_RESOLUTIONS, WARRANTY_STATUSES } from './db/schema';
 import { applyStock, type Tx } from './inventory';
-import { notify } from './notify';
+import { notifyEvent } from './notify';
 import { newOrderCode } from './orders';
 import { saveImage, type SavedImage } from './uploads';
 import { normalize } from '@/lib/catalog';
@@ -168,10 +168,7 @@ export async function createWarrantyFromReview(input: z.infer<typeof ReviewWarra
     if (copies.length) await tx.insert(WP).values(copies);
 
     const code = warrantyCode(row.id);
-    await notify(tx, r.userId, {
-      kind: 'warranty', href: '/tai-khoan/bao-hanh',
-      text: `Shop đã tạo yêu cầu bảo hành **#${code}** cho **${item.name}** từ đánh giá của bạn — kỹ sư sẽ liên hệ trong 24 giờ`,
-    });
+    await notifyEvent(tx, r.userId, 'warranty_from_review', { ma_bh: code, ten_cay: item.name }, '/tai-khoan/bao-hanh');
     return { ok: true as const, id: row.id, code };
   });
 }
@@ -306,10 +303,7 @@ export async function decideWarranty(input: z.infer<typeof DecideSchema>, actor:
       }).where(eq(W.id, w.id));
 
       const tail = replacement ? ` — đơn giao ${replacement.code}` : refundAmount ? ` — hoàn ${refundAmount.toLocaleString('vi-VN')}đ` : '';
-      await notify(tx, w.userId, {
-        kind: 'warranty', href: '/tai-khoan/bao-hanh', external: true,
-        text: `Kỹ sư đã phản hồi yêu cầu bảo hành #${code}: **${WARRANTY_RESOLUTION_LABEL[input.resolution]}**${tail}`,
-      });
+      await notifyEvent(tx, w.userId, 'warranty_decided', { ma_bh: code, huong_xu_ly: WARRANTY_RESOLUTION_LABEL[input.resolution], chi_tiet: tail }, '/tai-khoan/bao-hanh');
       return { ok: true as const, replacementCode: replacement?.code ?? null };
     });
   } catch (e) {
@@ -333,10 +327,7 @@ export async function confirmRefund(input: z.infer<typeof RefundSchema>, actor: 
     if (!w || w.resolution !== 'refund') return { ok: false as const, error: 'Không tìm thấy yêu cầu hoàn tiền' };
     if (w.refundStatus === 'done') return { ok: false as const, error: 'Yêu cầu đã hoàn tiền' };
     await tx.update(W).set({ refundStatus: 'done', refundRef: input.ref, refundedBy: actor, refundedAt: new Date() }).where(eq(W.id, w.id));
-    await notify(tx, w.userId, {
-      kind: 'warranty', href: '/tai-khoan/bao-hanh', external: true,
-      text: `Đã hoàn **${(w.refundAmount ?? 0).toLocaleString('vi-VN')}đ** cho yêu cầu bảo hành #${warrantyCode(w.id)}`,
-    });
+    await notifyEvent(tx, w.userId, 'warranty_refunded', { so_tien: `${(w.refundAmount ?? 0).toLocaleString('vi-VN')}đ`, ma_bh: warrantyCode(w.id) }, '/tai-khoan/bao-hanh');
     return { ok: true as const };
   });
 }

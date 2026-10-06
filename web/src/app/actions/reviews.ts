@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import * as z from 'zod';
 import { MAX_REVIEW_PHOTOS } from '@/lib/reviews';
-import { getCurrentUser, requireStaff, staffName } from '@/server/auth';
+import { getCurrentUser, requireAccess, staffName } from '@/server/auth';
 import {
   AnswerSchema, answerAsCustomer, answerQuestion, askQuestion, AskSchema, CustomerAnswerSchema, deleteAnswer, deleteQuestion,
   ModerateAnswerSchema, moderateAnswer,
@@ -104,7 +104,7 @@ export async function deleteAnswerAction(id: unknown) {
 
 /** Nhân viên và admin đều được duyệt / ẩn câu trả lời của khách. */
 export async function moderateAnswerAction(input: unknown) {
-  const staff = await requireStaff();
+  const staff = await requireAccess('qna', 'full');
   const p = ModerateAnswerSchema.safeParse(input);
   if (!p.success) return { ok: false as const, error: p.error.issues[0].message };
   const r = await moderateAnswer(p.data, staffName(staff));
@@ -117,7 +117,7 @@ export async function moderateAnswerAction(input: unknown) {
 
 /** Nhân viên và admin đều được trả lời / ẩn câu hỏi. */
 export async function answerQuestionAction(input: unknown) {
-  const staff = await requireStaff();
+  const staff = await requireAccess('qna', 'full');
   const p = AnswerSchema.safeParse(input);
   if (!p.success) return { ok: false as const, error: p.error.issues[0].message };
   const r = await answerQuestion(p.data, staffName(staff));
@@ -130,7 +130,7 @@ export async function answerQuestionAction(input: unknown) {
 
 /** Nhân viên và admin đều được duyệt / ẩn / trả lời (việc chăm sóc khách hằng ngày). */
 export async function moderateReviewAction(input: unknown) {
-  const staff = await requireStaff();
+  const staff = await requireAccess('qna', 'full');
   const p = ModerateSchema.safeParse(input);
   if (!p.success) return { ok: false as const, error: p.error.issues[0].message };
   const r = await moderateReview(p.data, staffName(staff));

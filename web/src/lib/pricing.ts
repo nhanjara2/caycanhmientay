@@ -2,10 +2,12 @@
 import type { ShipGroup } from './catalog';
 
 // Phí giao tách theo nhóm, như BRANDBOOK: cây sống giao riêng bằng xe, vật tư giao nhanh.
-export const SHIP_RULES = {
+// Đây là giá trị mặc định; số thật do admin chỉnh ở Cài đặt giao hàng (lib/shipping.ts) và truyền vào `rules`.
+export type ShipRules = { plant: { fee: number; freeFrom: number }; supply: { fee: number; freeFrom: number } };
+export const SHIP_RULES: ShipRules = {
   plant: { fee: 35000, freeFrom: 800000 },
   supply: { fee: 20000, freeFrom: 300000 },
-} as const;
+};
 
 export type PricedLine = { price: number; oldPrice?: number | null; qty: number; ship: ShipGroup; pesticide?: boolean };
 
@@ -23,7 +25,7 @@ export type Totals = {
   hasPesticide: boolean;
 };
 
-export function computeTotals(lines: PricedLine[], delivery: 'ship' | 'pickup' = 'ship', voucherDiscount = 0): Totals {
+export function computeTotals(lines: PricedLine[], delivery: 'ship' | 'pickup' = 'ship', voucherDiscount = 0, rules: ShipRules = SHIP_RULES): Totals {
   let subtotal = 0, original = 0, plantSubtotal = 0, supplySubtotal = 0, count = 0;
   for (const l of lines) {
     const line = l.price * l.qty;
@@ -35,8 +37,8 @@ export function computeTotals(lines: PricedLine[], delivery: 'ship' | 'pickup' =
   }
   const ship = (sub: number, rule: { fee: number; freeFrom: number }) =>
     delivery === 'pickup' || sub === 0 || sub >= rule.freeFrom ? 0 : rule.fee;
-  const plantShip = ship(plantSubtotal, SHIP_RULES.plant);
-  const supplyShip = ship(supplySubtotal, SHIP_RULES.supply);
+  const plantShip = ship(plantSubtotal, rules.plant);
+  const supplyShip = ship(supplySubtotal, rules.supply);
   return {
     count, subtotal, original, plantSubtotal, supplySubtotal, plantShip, supplyShip,
     directDiscount: original - subtotal,

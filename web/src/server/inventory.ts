@@ -5,7 +5,7 @@ import { mainImageOf } from './catalog';
 import { db, schema, type DB } from './db';
 import type { STOCK_REASONS } from './db/schema';
 
-const { products, productOptions, stockMoves, stockLots: L, stores } = schema;
+const { products, productOptions, stockMoves, stockLots: L, stores, purchaseReceipts } = schema;
 
 export type Tx = Parameters<Parameters<DB['transaction']>[0]>[0];
 export type StockReason = (typeof STOCK_REASONS)[number];
@@ -29,6 +29,8 @@ export type StockOpts = {
   lotId?: number;
   lotCode?: string | null;
   expiry?: string | null;
+  /** Phiếu nhập tạo ra lần thay đổi này (ghi vào lịch sử kho). */
+  receiptId?: number;
 };
 
 /**
@@ -81,7 +83,7 @@ export async function applyStock(tx: Tx | DB, slug: string, idx: number, delta: 
   for (const p of parts) {
     await tx.update(L).set({ qty: sql`${L.qty} + ${p.delta}` }).where(eq(L.id, p.lotId));
     after += p.delta;
-    await tx.insert(stockMoves).values({ productSlug: slug, optionIdx: idx, storeId: p.storeId, lotId: p.lotId, delta: p.delta, after, reason, note: note || null, actor });
+    await tx.insert(stockMoves).values({ productSlug: slug, optionIdx: idx, storeId: p.storeId, lotId: p.lotId, delta: p.delta, after, reason, note: note || null, actor, receiptId: opts.receiptId ?? null });
   }
   await tx.update(productOptions).set({ stock: after }).where(where);
   return after;
@@ -157,7 +159,7 @@ export type LotRow = typeof L.$inferSelect;
 export async function listInventory({ tab = 'tat-ca', q }: { tab?: InventoryTab; q?: string } = {}) {
   const term = q?.trim() ? `%${q.trim().replace(/[%_]/g, '')}%` : undefined;
   const rows = await db.select({
-    slug: products.slug, sku: products.sku, name: products.name, icon: products.icon, image: mainImageOf(products.slug), unit: products.unit,
+    slug: products.slug, sku: products.sku, name: products.name, icon: products.icon, image: mainImageOf(products.slug), unit: products.unit, origin: products.origin,
     ship: products.ship, pesticide: products.pesticide, category: products.category, active: products.active,
     idx: productOptions.idx, label: productOptions.label, price: productOptions.price, stock: productOptions.stock,
   })
@@ -200,8 +202,8 @@ export const lotsOf = (slug: string, idx: number) =>
   db.select().from(L).where(and(eq(L.productSlug, slug), eq(L.optionIdx, idx), gt(L.qty, 0))).orderBy(asc(L.storeId), asc(L.expiry), asc(L.id));
 
 export async function recentMoves(slug: string, idx: number, limit = 10) {
-  return db.select({ m: stockMoves, store: stores.code, lotCode: L.lotCode, expiry: L.expiry }).from(stockMoves)
-    .leftJoin(stores, eq(stores.id, stockMoves.storeId)).leftJoin(L, eq(L.id, stockMoves.lotId))
+  return db.select({ m: stockMoves, store: stores.code, lotCode: L.lotCode, expiry: L.expiry, receipt: purchaseReceipts.code }).from(stockMoves)
+    .leftJoin(stores, eq(stores.id, stockMoves.storeId)).leftJoin(L, eq(L.id, stockMoves.lotId)).leftJoin(purchaseReceipts, eq(purchaseReceipts.id, stockMoves.receiptId))
     .where(and(eq(stockMoves.productSlug, slug), eq(stockMoves.optionIdx, idx)))
     .orderBy(desc(stockMoves.id)).limit(limit);
 }

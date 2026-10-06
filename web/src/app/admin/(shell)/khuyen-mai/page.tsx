@@ -4,7 +4,7 @@ import { VoucherActiveToggle } from '@/components/admin/VoucherActiveToggle';
 import { money } from '@/lib/format';
 import { fmtDate } from '@/lib/order-labels';
 import { VOUCHER_STATUS_LABEL, voucherStatus, voucherValueText, WELCOME_CODE, WELCOME_DAYS } from '@/lib/voucher-labels';
-import { requireStaff } from '@/server/auth';
+import { requireAccess } from '@/server/auth';
 import { listVouchers } from '@/server/vouchers';
 
 export const metadata: Metadata = { title: 'Khuyến mãi' };
@@ -12,7 +12,7 @@ export const metadata: Metadata = { title: 'Khuyến mãi' };
 const STATUS_PILL = { active: 'done', scheduled: 'prep', expired: 'cancel', off: 'wait' } as const;
 
 export default async function AdminVouchersPage() {
-  const me = await requireStaff();
+  const me = await requireAccess('promotions');
   const rows = await listVouchers();
   const isAdmin = me.role === 'admin';
 

@@ -3,13 +3,14 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { OrderPill } from '@/components/admin/OrderPill';
 import { CustomerNotes } from '@/components/admin/CustomerNotes';
+import { hasAccess } from '@/lib/permissions';
 import { Thumb } from '@/components/Icon';
 import { CONDITION_LABEL, fullAddress, KIND_LABEL } from '@/lib/address-labels';
 import { customerInitials, customerTier } from '@/lib/customer-labels';
 import { money } from '@/lib/format';
 import { fmtDate, fmtDateTime } from '@/lib/order-labels';
 import { WARRANTY_STATUS_LABEL } from '@/lib/warranty-labels';
-import { maskPhone, requireStaff } from '@/server/auth';
+import { maskPhone, requireAccess } from '@/server/auth';
 import { getCustomerDetail } from '@/server/customers';
 
 type Props = { params: Promise<{ id: string }> };
@@ -22,7 +23,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 /** AdminCustomers (chi tiết): hồ sơ, đơn hàng, địa chỉ, bảo hành, ghi chú nội bộ — dữ liệu thật. */
 export default async function AdminCustomerDetailPage({ params }: Props) {
-  await requireStaff();
+  const me = await requireAccess('customers');
   const id = Number((await params).id);
   const d = Number.isInteger(id) && id > 0 ? await getCustomerDetail(id) : null;
   if (!d) notFound();
@@ -73,7 +74,14 @@ export default async function AdminCustomerDetailPage({ params }: Props) {
               </div>
             </div>
           )}
-          <CustomerNotes id={user.id} initial={user.notes ?? ''} />
+          {hasAccess(me, 'customers', 'full') ? (
+            <CustomerNotes id={user.id} initial={user.notes ?? ''} />
+          ) : (
+            <div className="ad-card">
+              <div className="ad-card__h">Ghi chú nội bộ</div>
+              <div className="ad-card__b"><p className="ao-note" style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{user.notes || 'Chưa có ghi chú.'}</p></div>
+            </div>
+          )}
           <div className="ad-card">
             <div className="ad-card__h">Sổ địa chỉ ({addresses.length})</div>
             <div className="ad-card__b">

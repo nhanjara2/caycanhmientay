@@ -888,3 +888,94 @@ a.vx-chip { text-decoration: none; }
   /* Đếm ngược: chữ "Ưu đãi… kết thúc sau" một dòng, 3 ô cùng một hàng (trước đây ô "phút" rớt xuống) */
   .cp-hero .cp-count > span { flex-basis: 100%; }
 }
+
+/* ---- Báo cáo admin (/admin/bao-cao) ---- */
+.ad-chart2 span { white-space: nowrap; }
+@media (max-width: 767px) {
+  .ad-chart2 { gap: 5px; }
+  .ad-chart2 span { font-size: 9px; letter-spacing: -.2px; }
+}
+
+/* ---- Xác nhận đã nhận tiền (trang chi tiết đơn admin) ---- */
+.app-pay-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); }
+.app-pay-actions label { font-size: 12px; color: var(--ink-muted); }
+.app-pay-actions .vx-btn { align-self: flex-start; }
+
+/* ---- Phân quyền admin (/admin/phan-quyen) ---- */
+.ad-matrix .ad-perm { font-size: 12px; }
+.app-staff-ava { display: grid; place-items: center; flex: none; width: 36px; height: 36px; border-radius: 50%; background: var(--primary-soft); color: var(--primary); font-weight: 700; font-size: 12px; }
+.app-staff-act { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.app-staff-act select.vx-input { width: auto; min-width: 130px; }
+.ad-title .acts:has(.app-staff-invite) { position: relative; }
+.app-staff-invite { position: absolute; right: 0; top: calc(100% + 8px); z-index: 30; width: min(620px, calc(100vw - 32px)); margin: 0; box-shadow: var(--shadow-lg, 0 12px 32px rgba(0, 0, 0, .16)); text-align: left; }
+.app-staff-invite__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 767px) { .app-staff-invite__grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---- Cài đặt giao hàng (admin /admin/cai-dat-giao-hang) ---- */
+.app-slot-table { display: flex; flex-direction: column; gap: 6px; overflow-x: auto; }
+.app-slot-row { display: grid; grid-template-columns: 170px repeat(7, minmax(44px, 1fr)) 56px; gap: 6px; align-items: center; min-width: 660px; }
+.app-slot-row--head { font-size: 11px; font-weight: 700; color: var(--ink-muted); text-align: center; }
+.app-slot-row--head span:first-child { text-align: left; }
+.app-slot-time { display: flex; align-items: center; gap: 4px; }
+.app-slot-time .vx-input { padding: 6px 8px; font-size: 13px; text-align: center; min-width: 0; }
+.app-slot-cap .vx-input { padding: 6px 2px; text-align: center; border-radius: 6px; font-weight: 700; background: var(--primary-soft); color: var(--primary); border-color: transparent; }
+.app-slot-cap .vx-input[data-off] { background: var(--surface-sunken); color: var(--ink-muted); font-weight: 500; }
+.app-closed-row { display: grid; grid-template-columns: 170px minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+@media (max-width: 767px) { .app-closed-row { grid-template-columns: minmax(0, 1fr) auto; } .app-closed-row input[type="date"] { grid-column: 1 / -1; } }
+
+/* ---- Giao hàng admin (/admin/giao-hang): bảng xếp chuyến ---- */
+.app-dboard { overflow-x: auto; align-items: start; }
+.app-dboard .ad-col[data-over], .app-dboard .ad-trip[data-over] { box-shadow: inset 0 0 0 2px var(--primary); background: var(--primary-soft); }
+.app-dboard .ad-trip[draggable="true"], .app-dboard .ad-stop[draggable="true"] { cursor: grab; }
+.app-dboard__assign { padding: 6px 8px; font-size: 13px; }
+.app-dboard__form { display: flex; flex-direction: column; gap: 6px; }
+.app-dboard__form .vx-input { padding: 6px 8px; font-size: 13px; }
+.app-dboard .ad-stop > span:nth-child(2) { flex: 1; min-width: 0; }
+.app-dboard__stopacts { display: flex; flex-direction: column; gap: 2px; }
+.app-dboard__stopacts .vx-btn { padding: 0 6px; min-height: 22px; }
+.app-dboard .ad-stop small { overflow-wrap: anywhere; }
+
+/* ---- App tài xế (/nhan-vien/giao-hang) ---- */
+.app-driver { width: 100%; max-width: 480px; min-height: 100vh; background: var(--surface-page); display: flex; flex-direction: column; gap: 16px; padding-bottom: 32px; }
+.app-driver__stops { display: flex; flex-direction: column; gap: 10px; padding-top: 12px; }
+.app-driver__empty { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; padding: 48px 24px; color: var(--ink-muted); }
+.app-driver__empty b { color: var(--ink); font-size: 16px; }
+.app-driver__fail { display: flex; flex-direction: column; gap: 8px; }
+.app-driver .s-stop .acts .vx-btn { display: inline-flex; align-items: center; justify-content: center; gap: 4px; text-decoration: none; }
+
+/* ---- Bán tại quầy (/admin/pos) ---- */
+.app-pos { height: 100vh; background: var(--surface-page); }
+.app-pos .pos { height: 100%; }
+.app-pos .pos-left { overflow-y: auto; min-height: 0; }
+.app-pos .pos-right { min-height: 0; }
+.app-pos .pos-lines { overflow-y: auto; min-height: 0; }
+.app-pos .pos-sum { overflow-y: auto; max-height: 70%; }
+.app-pos .pos-cats { overflow-x: auto; flex: none; padding-bottom: 2px; }
+.app-pos .pos-grid { align-content: start; }
+.app-pos-item { font: inherit; text-align: left; cursor: pointer; color: inherit; }
+.app-pos-item:hover:not(:disabled) { border-color: var(--primary); }
+.app-pos-item:disabled { opacity: .5; cursor: not-allowed; }
+.app-pos .pos-top select.ad-sel { width: auto; max-width: 220px; }
+.app-pos-voucher { display: flex; gap: 6px; }
+.app-pos-voucher .vx-input { flex: 1; padding: 8px 10px; font-size: 13px; }
+.app-pos-cash { display: flex; align-items: center; gap: 8px; }
+.app-pos-cash .vx-input { flex: 1; padding: 8px 10px; font-size: 14px; }
+.app-pos-done { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; background: rgba(12, 24, 16, .55); padding: 16px; }
+.app-pos-done__box { width: min(420px, 100%); background: var(--surface); border-radius: var(--radius-lg); padding: 28px 24px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; box-shadow: var(--shadow-pop); }
+.app-pos-done__box h2 { margin: 0; font-size: 22px; }
+.app-pos-done__box p { margin: 0; color: var(--ink-muted); }
+.app-pos-done__box .acts { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; justify-content: center; }
+.app-pos-done__ok { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; background: var(--primary-soft); color: var(--primary); }
+@media (max-width: 767px) {
+  .app-pos { height: auto; min-height: 100vh; }
+  .app-pos .pos { grid-template-columns: minmax(0, 1fr); height: auto; }
+  .app-pos .pos-left { overflow: visible; }
+  .app-pos .pos-top { flex-wrap: wrap; }
+  .app-pos .pos-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .app-pos .pos-right { border-left: 0; border-top: 1px solid var(--border); position: sticky; bottom: 0; max-height: 75vh; }
+}
+
+/* ---- Mẫu tin nhắn (/admin/mau-tin-nhan) ---- */
+.mt-list a { cursor: pointer; }
+.mt-edit textarea.mt-body { width: 100%; font: inherit; font-size: 13px; line-height: 20px; }
+@media (max-width: 1023px) { .mt { grid-template-columns: minmax(0, 1fr); } }

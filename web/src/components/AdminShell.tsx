@@ -7,6 +7,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { Avatar } from '@/components/Avatar';
 import { Icon } from '@/components/Icon';
 import { useAuth } from '@/lib/auth';
+import { effectiveRole, hasAccess, NAV_AREA, STAFF_ROLE_INFO } from '@/lib/permissions';
 import type { PublicUser } from '@/server/auth';
 
 // Icon riêng của menu admin, lấy từ design-system/components/AdminShell/preview.html.
@@ -62,6 +63,7 @@ export const ADMIN_NAV: { group: string; items: { href: string; label: string; i
     { href: '/admin/mau-tin-nhan', label: 'Mẫu tin nhắn', icon: 'bell' },
   ] },
   { group: 'HỆ THỐNG', items: [
+    { href: '/admin/cua-hang', label: 'Cửa hàng', icon: 'inbound' },
     { href: '/admin/cai-dat-giao-hang', label: 'Cài đặt giao hàng', icon: 'map' },
     { href: '/admin/phan-quyen', label: 'Phân quyền', icon: 'gear' },
   ] },
@@ -103,7 +105,7 @@ export function AdminShell({ children, me, badges = {} }: { children: ReactNode;
           <span><small>Đang xem</small>Tất cả cửa hàng</span>
           <svg className="vx-ico" viewBox="0 0 24 24" style={{ width: 14, height: 14 }}><path d="m6 9 6 6 6-6" /></svg>
         </div>
-        {ADMIN_NAV.map((g) => (
+        {ADMIN_NAV.map((g) => ({ ...g, items: g.items.filter((it) => !NAV_AREA[it.href] || hasAccess(me, NAV_AREA[it.href], 'view')) })).filter((g) => g.items.length).map((g) => (
           <div key={g.group} style={{ display: 'contents' }}>
             <div className="ad-group">{g.group}</div>
             {g.items.map((it) => (
@@ -136,7 +138,7 @@ export function AdminShell({ children, me, badges = {} }: { children: ReactNode;
           <div className="sp">
             <span className="ad-me" title={me.name}>
               <Avatar size="sm" initials={me.initials} url={me.avatarUrl} />
-              <span className="app-admin-who">{me.name}<small>{me.role === 'admin' ? 'Quản trị viên' : 'Nhân viên'}</small></span>
+              <span className="app-admin-who">{me.name}<small>{STAFF_ROLE_INFO[effectiveRole(me) ?? 'cskh'].name}</small></span>
             </span>
             <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm app-admin-logout" aria-label="Đăng xuất" onClick={async () => { await logout(); router.push('/admin/dang-nhap'); }}>
               {ico('logout')}<span>Đăng xuất</span>

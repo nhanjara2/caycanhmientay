@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import * as z from 'zod';
-import { requireStaff } from '@/server/auth';
+import { requireAccess } from '@/server/auth';
 import { DiseaseInputSchema, saveDisease, setDiseaseActive } from '@/server/diseases';
 
 // Chỉ quản trị viên được sửa thư viện bệnh cây: kiểm tra quyền trước, rồi mới kiểm tra đầu vào.
@@ -14,7 +14,7 @@ function refresh(slug?: string) {
 }
 
 export async function saveDiseaseAction(input: unknown) {
-  await requireStaff('admin');
+  await requireAccess('content', 'full');
   const p = DiseaseInputSchema.safeParse(input);
   if (!p.success) return { ok: false as const, error: p.error.issues[0].message };
   const r = await saveDisease(p.data);
@@ -23,7 +23,7 @@ export async function saveDiseaseAction(input: unknown) {
 }
 
 export async function setDiseaseActiveAction(slug: unknown, active: unknown) {
-  await requireStaff('admin');
+  await requireAccess('content', 'full');
   const p = z.object({ slug: z.string().max(120), active: z.boolean() }).safeParse({ slug, active });
   if (!p.success) return { ok: false as const };
   const ok = await setDiseaseActive(p.data.slug, p.data.active);

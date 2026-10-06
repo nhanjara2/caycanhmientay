@@ -7,6 +7,7 @@ import { saveProductAction } from '@/app/actions/admin';
 import { Art, type IconName } from '@/components/Icon';
 import { applySpecTemplate, ELEMENTS, parseYoutubeId, specTemplate, type Category, type FengShui } from '@/lib/catalog';
 import { KICH_THUOC, MAU_SAC, VI_TRI } from '@/lib/product-filters';
+import { tracksLots } from '@/lib/stock';
 import { ProductDeleteButton } from './ProductDeleteButton';
 import { ProductImages, type AdminImage } from './ProductImages';
 
@@ -76,6 +77,8 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
   const [pending, start] = useTransition();
   const set = <K extends keyof ProductFormValue>(k: K, val: ProductFormValue[K]) => { setV((x) => ({ ...x, [k]: val })); setSaved(false); };
   const kind = kindOf(v);
+  /** Thuốc BVTV, phân bón, hạt giống nhập theo lô: Tồn đầu kỳ không có Số lô + Hạn dùng nên chỉ nhập ở trang Nhập hàng. */
+  const lotted = tracksLots({ pesticide: v.pesticide, category: v.category });
   const videoId = parseYoutubeId(v.video);
   const setFs = (patch: Partial<FengShui>) => set('fengshui', { ...v.fengshui, ...patch });
   const setAttrs = (patch: Partial<ProductFormValue['attrs']>) => set('attrs', { ...v.attrs, ...patch });
@@ -111,7 +114,7 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
         label: o.label,
         price: Number(digits(o.price) || 0),
         oldPrice: digits(o.oldPrice) ? Number(digits(o.oldPrice)) : null,
-        stock: o.existingStock === undefined ? Number(digits(o.stock) || 0) : undefined,
+        stock: o.existingStock === undefined ? (lotted ? 0 : Number(digits(o.stock) || 0)) : undefined,
       })),
     };
     start(async () => {
@@ -301,7 +304,7 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
                           <td className="num" data-label={o.existingStock !== undefined ? 'Tồn' : 'Tồn đầu kỳ'}>
                             {o.existingStock !== undefined
                               ? <Link href="/admin/kho" title="Đổi tồn ở trang Kho">{o.existingStock}</Link>
-                              : <input className="vx-input" inputMode="numeric" style={{ width: 80 }} value={o.stock} onChange={(e) => upd('stock', digits(e.target.value))} placeholder="0" aria-label="Tồn đầu kỳ" />}
+                              : <input className="vx-input" inputMode="numeric" style={{ width: 80 }} value={lotted ? '' : o.stock} onChange={(e) => upd('stock', digits(e.target.value))} placeholder="0" disabled={lotted} title={lotted ? 'Hàng theo lô: nhập ở trang Nhập hàng kèm Số lô và Hạn dùng' : undefined} aria-label="Tồn đầu kỳ" />}
                           </td>
                           <td>{o.existingStock === undefined && opts.length > 1 && (
                             <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" onClick={() => setOpts((x) => x.filter((_, j) => j !== i))}>Xóa</button>
@@ -311,6 +314,13 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
                     })}
                   </tbody>
                 </table>
+              </div>
+              <div className="ad-card__b" style={{ paddingTop: 0 }}>
+                <small className="vx-help">
+                  {lotted
+                    ? <>Hàng theo lô (thuốc BVTV, phân bón, hạt giống) không điền Tồn đầu kỳ ở đây. Lưu sản phẩm xong, vào <Link href="/admin/nhap-hang" style={{ color: 'var(--primary)', fontWeight: 600 }}>Nhập hàng</Link> để ghi số lượng kèm Số lô và Hạn dùng.</>
+                    : <>Tồn đầu kỳ là số đang có sẵn. Hàng nhập thêm sau này làm ở <Link href="/admin/nhap-hang" style={{ color: 'var(--primary)', fontWeight: 600 }}>Nhập hàng</Link> (Excel) hoặc nút “Nhập / Kiểm kê” ở trang Kho.</>}
+                </small>
               </div>
             </div>
 

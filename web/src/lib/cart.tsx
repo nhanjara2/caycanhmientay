@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import type { Product } from './catalog';
 import { snapOf, type CartLine } from './cart-snap';
 import { computeTotals, type Totals } from './pricing';
+import { useShipping } from './shipping-client';
 
 export { SHIP_RULES } from './pricing';
 export type { CartLine, CartSnap } from './cart-snap';
@@ -32,6 +33,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [lines, setLines] = useState<CartLine[]>([]);
   const [ready, setReady] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const { rules } = useShipping();
 
   useEffect(() => {
     try {
@@ -85,7 +87,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const totals = useMemo(() => computeTotals(lines.map((l) => ({ ...l.snap, qty: l.qty }))), [lines]);
+  const totals = useMemo(() => computeTotals(lines.map((l) => ({ ...l.snap, qty: l.qty })), 'ship', 0, rules), [lines, rules]);
 
   return (
     <Ctx.Provider value={{ lines, totals, ready, add, setQty, remove, replace: setLines, merge, clear, toast, notify: setToast }}>

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { VoucherForm, type VoucherFormValue } from '@/components/admin/VoucherForm';
-import { requireStaff } from '@/server/auth';
+import { requireAccess } from '@/server/auth';
 import { getVoucher } from '@/server/vouchers';
 
 type Props = { params: Promise<{ id: string }> };
@@ -19,7 +19,7 @@ const EMPTY: VoucherFormValue = {
 
 /** AdminVoucherForm: /admin/khuyen-mai/moi để tạo, /admin/khuyen-mai/<id> để sửa. */
 export default async function AdminVoucherPage({ params }: Props) {
-  await requireStaff('admin');
+  await requireAccess('promotions', 'full');
   const { id } = await params;
   let initial = EMPTY;
   if (id !== 'moi') {

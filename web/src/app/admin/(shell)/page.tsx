@@ -3,8 +3,9 @@ import Link from 'next/link';
 import { Icon, Thumb } from '@/components/Icon';
 import { findCategory } from '@/lib/catalog';
 import { money } from '@/lib/format';
-import { requireStaff } from '@/server/auth';
+import { requireAccess } from '@/server/auth';
 import { getCategories } from '@/server/categories';
+import { countAwaitingPayment } from '@/server/orders';
 import { dashboardStats } from '@/server/stats';
 
 export const metadata: Metadata = { title: 'Tổng quan' };
@@ -18,9 +19,10 @@ function Delta({ now, before, unit = '%' }: { now: number; before: number; unit?
 }
 
 /** AdminDashboard với số liệu thật: KPI, doanh thu 14 ngày, việc cần xử lý, nhóm hàng, tồn kho thấp. */
-export default async function AdminDashboardPage() {
-  await requireStaff();
-  const [s, cats] = await Promise.all([dashboardStats(), getCategories()]);
+export default async function AdminDashboardPage({ searchParams }: { searchParams: Promise<{ 'khong-du-quyen'?: string }> }) {
+  await requireAccess('dashboard');
+  const denied = (await searchParams)['khong-du-quyen'] === '1';
+  const [s, cats, awaiting] = await Promise.all([dashboardStats(), getCategories(), countAwaitingPayment()]);
   const maxDay = Math.max(1, ...s.days.map((d) => d.revenue));
   const catTotal = s.byCategory.reduce((a, c) => a + c.sum, 0) || 1;
 
@@ -30,6 +32,9 @@ export default async function AdminDashboardPage() {
         <h1>Tổng quan</h1>
         <span className="acts"><Link href="/admin/pos" className="vx-btn vx-btn--primary"><Icon name="cart" />Tạo đơn tại quầy</Link></span>
       </div>
+      {denied && (
+        <div className="vx-note" role="alert"><Icon name="alert" /><div>Tài khoản của bạn chưa được cấp quyền vào mục vừa chọn. Cần thêm quyền thì nhờ Quản lý vào <b>Phân quyền</b>.</div></div>
+      )}
       <div className="ad-kpis">
         <div className="ad-kpi">
           <span><Icon name="cash" />Doanh thu hôm nay</span>
@@ -71,6 +76,7 @@ export default async function AdminDashboardPage() {
           <div className="ad-card__b" style={{ gap: 0 }}>
             <div className="ad-task"><span className={`n${s.pending ? ' hot' : ''}`}>{s.pending}</span>Đơn chờ xác nhận<Link href="/admin/don-hang?trang_thai=pending">Xử lý</Link></div>
             <div className="ad-task"><span className={`n${s.preparingPlants ? ' hot' : ''}`}>{s.preparingPlants}</span>Đơn có cây đang chuẩn bị<Link href="/admin/don-hang?trang_thai=preparing">Xử lý</Link></div>
+            <div className="ad-task"><span className={`n${awaiting ? ' hot' : ''}`}>{awaiting}</span>Đơn online chờ xác nhận đã nhận tiền<Link href="/admin/don-hang?thanh_toan=cho">Xử lý</Link></div>
             <div className="ad-task"><span className="n">{s.lowStock.length}</span>Quy cách dưới mức tồn tối thiểu<Link href="/admin/kho">Xem</Link></div>
           </div>
         </div>

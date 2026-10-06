@@ -114,15 +114,9 @@ export const views = [
   // Đặt lịch khảo sát (/dich-vu/dat-lich-khao-sat) đã viết tay: lưu thật, admin xem ở /admin/dich-vu.
   site('BusinessView', 'BusinessLayout'),
 
-  // Admin — khung AdminShell ở src/app/admin/(shell)/layout.tsx. Tổng quan, đơn hàng, khách hàng, khuyến mãi, đánh giá, yêu cầu dịch vụ, bài viết & video đã viết tay với dữ liệu thật.
-  admin('AdminDeliveryView', 'AdminDelivery'),
-  admin('AdminRolesView', 'AdminRoles'),
-  admin('AdminShippingView', 'AdminShippingSettings'),
-  admin('AdminMessagesView', 'MessageTemplates'),
-  admin('AdminReportsView', 'AdminReports'),
+  // Admin — khung AdminShell ở src/app/admin/(shell)/layout.tsx. Tổng quan, báo cáo, đơn hàng, khách hàng, khuyến mãi, đánh giá, yêu cầu dịch vụ, bài viết & video đã viết tay với dữ liệu thật.
   { name: 'AdminPOSView', from: 'AdminPOS' },
 
   // App nhân viên (web mobile)
-  { name: 'StaffDeliveryView', from: 'StaffDeliveryApp' },
   { name: 'StaffWarehouseView', from: 'StaffWarehouseApp' },
 ];

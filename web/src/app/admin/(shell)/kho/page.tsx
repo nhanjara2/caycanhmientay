@@ -2,9 +2,10 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { StockDialog } from '@/components/admin/StockDialog';
 import { Icon, Thumb } from '@/components/Icon';
-import { requireStaff } from '@/server/auth';
+import { requireAccess } from '@/server/auth';
 import { expiryLevel, fmtYmd, tracksLots } from '@/lib/stock';
 import { INVENTORY_TABS, inventorySummary, listInventory, listStores, MIN_STOCK, type InventoryTab } from '@/server/inventory';
+import { listSupplierNames } from '@/server/receipts';
 
 export const metadata: Metadata = { title: 'Kho & tồn kho' };
 
@@ -14,11 +15,11 @@ const short = (n: number) => (n >= 1e6 ? `${(n / 1e6).toFixed(1).replace('.', ',
 
 /** AdminInventory: tồn theo từng quy cách, nhập hàng và kiểm kê có ghi lịch sử. */
 export default async function AdminInventoryPage({ searchParams }: Props) {
-  await requireStaff();
+  await requireAccess('inventory');
   const sp = await searchParams;
   const tab: InventoryTab = sp.tab && sp.tab in INVENTORY_TABS ? (sp.tab as InventoryTab) : 'tat-ca';
   const q = sp.q?.slice(0, 60);
-  const stores = await listStores();
+  const [stores, suppliers] = await Promise.all([listStores(), listSupplierNames()]);
   const store = stores.find((s) => s.code === sp.kho);
   const all = await listInventory({ tab, q });
   // Lọc theo cửa hàng: cột Tồn là tồn tại cửa hàng đó
@@ -38,6 +39,7 @@ export default async function AdminInventoryPage({ searchParams }: Props) {
   return (
     <div className="ad-body">
       <div className="ad-title"><h1>Kho &amp; tồn kho</h1></div>
+      <datalist id="supplier-list">{suppliers.map((n) => <option key={n} value={n} />)}</datalist>
       <div className="ad-kpis">
         <div className="ad-kpi"><span><Icon name="cash" />Giá trị tồn kho (giá bán)</span><b>{short(sum.value)}</b><small>{sum.skus} quy cách</small></div>
         <div className={`ad-kpi${sum.low ? ' warn' : ''}`}><span><Icon name="alert" />Dưới mức tối thiểu</span><b>{sum.low}</b><small>Còn dưới {MIN_STOCK}</small></div>

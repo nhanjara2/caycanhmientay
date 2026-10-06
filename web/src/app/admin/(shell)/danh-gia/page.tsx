@@ -3,8 +3,9 @@ import Link from 'next/link';
 import { FaqNew, FaqRow } from '@/components/admin/FaqAdmin';
 import { QuestionRow, ReviewRow } from '@/components/admin/ReviewModeration';
 import { Icon } from '@/components/Icon';
+import { hasAccess } from '@/lib/permissions';
 import { FAQ_LIMIT, REVIEW_HOLD_STARS } from '@/lib/reviews';
-import { requireStaff } from '@/server/auth';
+import { requireAccess } from '@/server/auth';
 import { countFaqs, FAQ_FILTERS, listFaqsAdmin, type FaqFilter } from '@/server/faqs';
 import { countQuestions, listQuestionsAdmin, QUESTION_FILTERS, type QuestionFilter } from '@/server/questions';
 import { countReviewsByStatus, listReviewsAdmin, REVIEW_TABS, reviewKpis, type ReviewTab } from '@/server/reviews';
@@ -27,7 +28,8 @@ const TABS: { key: Tab; label: string }[] = [
  * ẩn nội dung vi phạm, quản lý Câu hỏi thường gặp ở trang sản phẩm (dữ liệu thật).
  */
 export default async function AdminReviewsPage({ searchParams }: Props) {
-  await requireStaff();
+  const me = await requireAccess('qna');
+  const canCreateWarranty = hasAccess(me, 'warranty', 'full');
   const sp = await searchParams;
   const [counts, qc, k, faqTotal] = await Promise.all([countReviewsByStatus(), countQuestions(), reviewKpis(), countFaqs()]);
   const tab: Tab = TABS.some((t) => t.key === sp.tab) ? (sp.tab as Tab)
@@ -171,6 +173,7 @@ export default async function AdminReviewsPage({ searchParams }: Props) {
         {reviews.map((r) => (
           <ReviewRow
             key={r.id}
+            canCreateWarranty={canCreateWarranty}
             r={{
               id: r.id, status: r.status, stars: r.stars, content: r.content, verified: r.verified,
               customer: r.customer, userId: r.userId, productSlug: r.productSlug, productName: r.productName,

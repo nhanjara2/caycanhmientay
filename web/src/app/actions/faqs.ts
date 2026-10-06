@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import * as z from 'zod';
-import { requireStaff, staffName } from '@/server/auth';
+import { requireAccess, staffName } from '@/server/auth';
 import { deleteFaq, FaqSchema, moveFaq, saveFaq, setFaqActive } from '@/server/faqs';
 
 /** Câu riêng → chỉ trang sản phẩm đó; câu chung → mọi trang sản phẩm. */
@@ -15,7 +15,7 @@ const Id = z.number().int().positive();
 
 /** Nhân viên và admin đều quản lý Câu hỏi thường gặp (cùng trang Hỏi đáp & đánh giá). */
 export async function saveFaqAction(input: unknown) {
-  const staff = await requireStaff();
+  const staff = await requireAccess('qna', 'full');
   const p = FaqSchema.safeParse(input);
   if (!p.success) return { ok: false as const, error: p.error.issues[0].message };
   const r = await saveFaq(p.data, staffName(staff));
@@ -24,7 +24,7 @@ export async function saveFaqAction(input: unknown) {
 }
 
 export async function moveFaqAction(id: unknown, dir: unknown) {
-  await requireStaff();
+  await requireAccess('qna', 'full');
   const p = z.object({ id: Id, dir: z.union([z.literal(-1), z.literal(1)]) }).safeParse({ id, dir });
   if (!p.success) return { ok: false as const, error: 'Yêu cầu không hợp lệ' };
   const r = await moveFaq(p.data.id, p.data.dir);
@@ -34,7 +34,7 @@ export async function moveFaqAction(id: unknown, dir: unknown) {
 }
 
 export async function setFaqActiveAction(id: unknown, active: unknown) {
-  await requireStaff();
+  await requireAccess('qna', 'full');
   const p = z.object({ id: Id, active: z.boolean() }).safeParse({ id, active });
   if (!p.success) return { ok: false as const, error: 'Yêu cầu không hợp lệ' };
   const r = await setFaqActive(p.data.id, p.data.active);
@@ -44,7 +44,7 @@ export async function setFaqActiveAction(id: unknown, active: unknown) {
 }
 
 export async function deleteFaqAction(id: unknown) {
-  await requireStaff();
+  await requireAccess('qna', 'full');
   const p = Id.safeParse(id);
   if (!p.success) return { ok: false as const, error: 'Yêu cầu không hợp lệ' };
   const r = await deleteFaq(p.data);

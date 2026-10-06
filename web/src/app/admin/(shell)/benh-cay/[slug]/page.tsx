@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { DiseaseForm } from '@/components/admin/DiseaseForm';
 import type { Disease } from '@/lib/diseases';
-import { requireStaff } from '@/server/auth';
+import { hasAccess } from '@/lib/permissions';
+import { requireAccess } from '@/server/auth';
 import { getDiseaseAdmin, listDiseasesAdmin } from '@/server/diseases';
 import { listProductsAdmin } from '@/server/products-admin';
 
@@ -19,7 +20,7 @@ const EMPTY: Disease = {
 
 /** /admin/benh-cay/moi để thêm, /admin/benh-cay/<slug> để sửa. */
 export default async function AdminDiseasePage({ params }: Props) {
-  const me = await requireStaff();
+  const me = await requireAccess('content');
   const { slug } = await params;
   const initial = slug === 'moi' ? EMPTY : await getDiseaseAdmin(slug);
   if (!initial) notFound();
@@ -28,7 +29,7 @@ export default async function AdminDiseasePage({ params }: Props) {
     <DiseaseForm
       key={slug}
       initial={initial}
-      canEdit={me.role === 'admin'}
+      canEdit={hasAccess(me, 'content', 'full')}
       products={products.map((p) => ({ slug: p.slug, name: p.name, sku: p.sku, active: p.active }))}
       diseases={others.filter((d) => d.slug !== initial.slug).map((d) => ({ slug: d.slug, name: d.name }))}
     />

@@ -4,6 +4,7 @@ import type { FengShui, SpecField } from '../../lib/catalog';
 import type { Disease } from '../../lib/diseases';
 import type { PostBlock } from '../../lib/posts';
 import type { ProductAttrs } from '../../lib/product-filters';
+import { STAFF_ROLES } from '../../lib/permissions';
 import { SERVICE_STAGES, SERVICE_TYPES, SOURCES } from '../../lib/service-labels';
 import { boolean, customType, doublePrecision, index, integer, jsonb, pgTable, primaryKey, serial, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 
@@ -31,6 +32,8 @@ export const users = pgTable('users', {
   /** Ảnh đại diện Google (https://*.googleusercontent.com), cập nhật mỗi lần đăng nhập Google; null = không có. */
   avatarUrl: text('avatar_url'),
   role: text('role', { enum: ROLES }).notNull().default('customer'),
+  /** Vai trò của nhân viên (role = 'staff'): CSKH / Kho / Kỹ sư / Giao hàng — xem lib/permissions.ts. null = chưa gán (xem như CSKH). */
+  staffRole: text('staff_role', { enum: STAFF_ROLES }),
   points: integer('points').notNull().default(0),
   /** Ghi chú nội bộ của shop về khách (admin Khách hàng) — khách không thấy. */
   notes: text('notes'),
@@ -250,6 +253,7 @@ export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 
 /** sale = đơn khách đặt; warranty = đơn đổi cây / tặng vật tư 0đ do bảo hành tạo. */
 export const ORDER_KINDS = ['sale', 'warranty'] as const;
+export const ORDER_CHANNELS = ['web', 'pos'] as const;
 
 export const orders = pgTable('orders', {
   id: serial('id').primaryKey(),
@@ -262,7 +266,17 @@ export const orders = pgTable('orders', {
   delivery: text('delivery', { enum: ['ship', 'pickup'] }).notNull(),
   address: text('address'),
   slot: text('slot'),
+  /** Ngày + khung giờ giao khách chọn (YYYY-MM-DD, mã khung ở cài đặt giao hàng); null với đơn cũ chỉ có chữ ở `slot`. */
+  slotDate: text('slot_date'),
+  slotKey: text('slot_key'),
+  /** Chuyến giao đã xếp (admin Giao hàng) và thứ tự điểm dừng trong chuyến. */
+  tripId: integer('trip_id').references(() => deliveryTrips.id, { onDelete: 'set null' }),
+  tripPos: integer('trip_pos'),
   note: text('note'),
+  /** Kênh bán: web = khách đặt trên website; pos = bán tại quầy (admin /admin/pos, đơn giao ngay, đã thu tiền). */
+  channel: text('channel', { enum: ORDER_CHANNELS }).notNull().default('web'),
+  /** Cửa hàng bán / xuất hàng (đơn POS); null với đơn web (xuất theo kho mặc định). */
+  storeId: integer('store_id').references(() => stores.id),
   paymentMethod: text('payment_method', { enum: PAYMENT_METHODS }).notNull(),
   paid: boolean('paid').notNull().default(false),
   original: integer('original').notNull(),
@@ -275,7 +289,37 @@ export const orders = pgTable('orders', {
   total: integer('total').notNull(),
   createdAt: createdAt(),
   updatedAt: ts('updated_at').notNull().defaultNow(),
-}, (t) => [uniqueIndex('orders_code_idx').on(t.code), index('orders_user_idx').on(t.userId), index('orders_status_idx').on(t.status)]);
+}, (t) => [uniqueIndex('orders_code_idx').on(t.code), index('orders_user_idx').on(t.userId), index('orders_status_idx').on(t.status), index('orders_slot_idx').on(t.slotDate, t.slotKey), index('orders_trip_idx').on(t.tripId)]);
+
+// ---- Giao hàng: chuyến giao & cài đặt -------------------------------------------------------
+
+export const VEHICLES = ['truck', 'bike'] as const;
+export type Vehicle = (typeof VEHICLES)[number];
+
+/**
+ * Chuyến giao (admin Giao hàng): một xe + tài xế cho một khung giờ của một ngày; đơn xếp vào chuyến qua `orders.trip_id`.
+ * `capacity` = tải tối đa tính bằng "điểm tải" (mỗi cây sống 1 điểm, mỗi món vật tư 0,25 điểm).
+ */
+export const deliveryTrips = pgTable('delivery_trips', {
+  id: serial('id').primaryKey(),
+  date: text('date').notNull(),
+  slotKey: text('slot_key').notNull(),
+  vehicle: text('vehicle', { enum: VEHICLES }).notNull(),
+  name: text('name').notNull(),
+  driverId: integer('driver_id').references(() => users.id, { onDelete: 'set null' }),
+  helper: text('helper'),
+  capacity: integer('capacity').notNull(),
+  createdBy: text('created_by').notNull(),
+  createdAt: createdAt(),
+}, (t) => [index('delivery_trips_date_idx').on(t.date, t.slotKey), index('delivery_trips_driver_idx').on(t.driverId)]);
+
+/** Cài đặt dạng khóa → JSON (hiện có 'shipping': phí giao, vùng giao, khung giờ — xem lib/shipping.ts). */
+export const appSettings = pgTable('app_settings', {
+  key: text('key').primaryKey(),
+  value: jsonb('value').notNull(),
+  updatedBy: text('updated_by'),
+  updatedAt: ts('updated_at').notNull().defaultNow(),
+});
 
 /** Dòng hàng chụp lại tên/giá lúc đặt — đổi giá sản phẩm sau đó không làm sai đơn cũ. */
 export const orderItems = pgTable('order_items', {
@@ -517,8 +561,59 @@ export const stockMoves = pgTable('stock_moves', {
   reason: text('reason', { enum: STOCK_REASONS }).notNull(),
   note: text('note'),
   actor: text('actor').notNull(),
+  /** Phiếu nhập tạo ra dòng này (reason = import từ trang Nhập hàng / hộp Nhập ở trang Kho); null với tồn đầu kỳ, bán, kiểm kê… */
+  receiptId: integer('receipt_id').references(() => purchaseReceipts.id, { onDelete: 'set null' }),
   createdAt: createdAt(),
-}, (t) => [index('stock_moves_product_idx').on(t.productSlug, t.optionIdx)]);
+}, (t) => [index('stock_moves_product_idx').on(t.productSlug, t.optionIdx), index('stock_moves_receipt_idx').on(t.receiptId)]);
+
+// ---- Phiếu nhập hàng -------------------------------------------------------------------------
+
+/** Nhà cung cấp: tự tạo khi gõ tên mới trên phiếu nhập; tên không phân biệt hoa/thường. */
+export const suppliers = pgTable('suppliers', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull(),
+  createdAt: createdAt(),
+}, (t) => [uniqueIndex('suppliers_name_idx').on(sql`lower(${t.name})`)]);
+
+export const RECEIPT_SOURCES = ['excel', 'manual'] as const;
+
+/**
+ * Một lần nhập hàng = một phiếu (PN-00001…): một lần tải file Excel hoặc một lần nhập tay ở trang Kho.
+ * Số lượng, tiền hàng, số dòng tính từ `purchase_receipt_lines`; tồn kho vẫn do `stock_lots` giữ.
+ */
+export const purchaseReceipts = pgTable('purchase_receipts', {
+  id: serial('id').primaryKey(),
+  code: text('code').notNull().unique(),
+  supplierId: integer('supplier_id').references(() => suppliers.id, { onDelete: 'set null' }),
+  /** Số hóa đơn / chứng từ của nhà cung cấp. */
+  docNo: text('doc_no'),
+  note: text('note'),
+  source: text('source', { enum: RECEIPT_SOURCES }).notNull(),
+  /** SHA-256 của nội dung các dòng đã nhập (không phải của file) — phát hiện nhập lại đúng bộ dòng đó, kể cả khi file được lưu lại bằng Excel. */
+  linesHash: text('lines_hash'),
+  fileName: text('file_name'),
+  actor: text('actor').notNull(),
+  createdAt: createdAt(),
+}, (t) => [index('purchase_receipts_hash_idx').on(t.linesHash), index('purchase_receipts_created_idx').on(t.createdAt)]);
+
+/** Dòng phiếu: chụp lại tên/quy cách/đơn vị lúc nhập (không khóa ngoại sản phẩm) nên xóa sản phẩm không làm mất sổ sách nhập hàng. */
+export const purchaseReceiptLines = pgTable('purchase_receipt_lines', {
+  id: serial('id').primaryKey(),
+  receiptId: integer('receipt_id').notNull().references(() => purchaseReceipts.id, { onDelete: 'cascade' }),
+  productSlug: text('product_slug').notNull(),
+  optionIdx: integer('option_idx').notNull(),
+  sku: text('sku').notNull(),
+  name: text('name').notNull(),
+  label: text('label').notNull(),
+  unit: text('unit').notNull(),
+  storeId: integer('store_id').notNull().references(() => stores.id),
+  qty: integer('qty').notNull(),
+  /** Giá nhập 1 đơn vị (đồng); null = chưa ghi. */
+  unitCost: integer('unit_cost'),
+  lotCode: text('lot_code'),
+  expiry: text('expiry'),
+  note: text('note'),
+}, (t) => [index('purchase_lines_receipt_idx').on(t.receiptId), index('purchase_lines_product_idx').on(t.productSlug, t.optionIdx)]);
 
 // ---- Bảo hành cây ----------------------------------------------------------------------------
 
@@ -610,6 +705,21 @@ export const notifications = pgTable('notifications', {
   readAt: ts('read_at'),
   createdAt: createdAt(),
 }, (t) => [index('notifications_user_idx').on(t.userId, t.id)]);
+
+/**
+ * Mẫu tin nhắn tự động (admin /admin/mau-tin-nhan): nội dung thông báo cho từng sự kiện (xem lib/message-templates.ts).
+ * Chưa có dòng = dùng nội dung mặc định trong code. `text` có thể chứa {biến} và **chữ đậm**.
+ */
+export const messageTemplates = pgTable('message_templates', {
+  key: text('key').primaryKey(),
+  text: text('text').notNull(),
+  /** Hiện trong chuông thông báo của khách. */
+  inApp: boolean('in_app').notNull().default(true),
+  /** Gửi thêm qua Zalo ZNS / email (mất phí ZNS). */
+  external: boolean('external').notNull(),
+  updatedBy: text('updated_by'),
+  updatedAt: ts('updated_at').notNull().defaultNow(),
+});
 
 export const MESSAGE_CHANNELS = ['zalo', 'email'] as const;
 export const MESSAGE_STATUSES = ['sent', 'failed', 'skipped'] as const;

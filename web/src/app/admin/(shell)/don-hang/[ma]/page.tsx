@@ -2,11 +2,13 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { OrderPill } from '@/components/admin/OrderPill';
+import { PaymentActions } from '@/components/admin/PaymentActions';
 import { StatusActions } from '@/components/admin/StatusActions';
 import { Icon, Thumb } from '@/components/Icon';
+import { hasAccess } from '@/lib/permissions';
 import { money } from '@/lib/format';
 import { fmtDateTime, PAY_LABEL, STATUS_LABEL, TIMELINE } from '@/lib/order-labels';
-import { requireStaff } from '@/server/auth';
+import { requireAccess } from '@/server/auth';
 import { getOrderByCode, NEXT_STATUS } from '@/server/orders';
 
 type Props = { params: Promise<{ ma: string }> };
@@ -17,16 +19,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 /** AdminOrderDetail: tiến trình, sản phẩm, khách, thanh toán, lịch sử (dữ liệu thật). */
 export default async function AdminOrderDetailPage({ params }: Props) {
-  await requireStaff();
+  const staff = await requireAccess('orders');
   const o = await getOrderByCode((await params).ma.slice(0, 20));
   if (!o) notFound();
   const cur = TIMELINE.findIndex((t) => t.status === o.status);
+  // Nút chuyển trạng thái: Đơn hàng toàn quyền thấy hết; kho / tài xế (quyền Giao hàng) chỉ thấy bước giao.
+  const fullOrders = hasAccess(staff, 'orders', 'full');
+  const actions = NEXT_STATUS[o.status].filter((s) => fullOrders || ((s === 'shipping' || s === 'delivered') && hasAccess(staff, 'delivery', 'full')));
 
   return (
     <div className="ad-body">
       <div className="ad-title">
-        <h1>Đơn {o.code} <OrderPill status={o.status} style={{ verticalAlign: 'middle' }} />{o.kind === 'warranty' && <span className="vx-badge vx-badge--info" style={{ marginLeft: 8, verticalAlign: 'middle' }}>Đơn bảo hành 0đ</span>}</h1>
-        <StatusActions code={o.code} next={NEXT_STATUS[o.status]} />
+        <h1>Đơn {o.code} <OrderPill status={o.status} style={{ verticalAlign: 'middle' }} />{o.kind === 'warranty' && <span className="vx-badge vx-badge--info" style={{ marginLeft: 8, verticalAlign: 'middle' }}>Đơn bảo hành 0đ</span>}{o.channel === 'pos' && <span className="vx-badge vx-badge--outline" style={{ marginLeft: 8, verticalAlign: 'middle' }}>Bán tại cửa hàng</span>}</h1>
+        <StatusActions code={o.code} next={actions} />
       </div>
       {o.status !== 'cancelled' && (
         <div className="ao-steps">
@@ -70,7 +75,7 @@ export default async function AdminOrderDetailPage({ params }: Props) {
             <div className="ad-card__h">Khách hàng</div>
             <div className="ad-card__b">
               <div className="ad-kv">
-                <span>Khách</span><span><b>{o.customerName}</b> · <a href={`tel:${o.phone}`} style={{ color: 'var(--primary)' }}>{o.phone}</a></span>
+                <span>Khách</span><span><b>{o.customerName}</b>{o.phone ? <> · <a href={`tel:${o.phone}`} style={{ color: 'var(--primary)' }}>{o.phone}</a></> : ' · không để số điện thoại'}</span>
                 <span>Nhận hàng</span><span>{o.delivery === 'ship' ? o.address : 'Nhận tại vườn'}</span>
                 {o.slot && <><span>Khung giờ</span><span>{o.slot}</span></>}
                 <span>Tài khoản</span><span>{o.userId ? `#${o.userId}` : 'Khách vãng lai'}</span>
@@ -91,6 +96,9 @@ export default async function AdminOrderDetailPage({ params }: Props) {
                 <b>{o.paymentMethod === 'cod' && !o.paid ? 'Thu hộ COD' : o.paid ? 'Đã thanh toán' : 'Chờ thanh toán'}</b>
                 <span className="amt" style={{ fontSize: 18 }}>{money(o.total)}</span>
               </div>
+              {fullOrders && o.kind === 'sale' && o.paymentMethod !== 'cod' && o.status !== 'cancelled' && (
+                <PaymentActions code={o.code} paid={o.paid} isAdmin={staff.role === 'admin'} />
+              )}
             </div>
           </div>
           <div className="ad-card">

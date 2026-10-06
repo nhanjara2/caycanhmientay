@@ -4,22 +4,24 @@ import { OrderPill } from '@/components/admin/OrderPill';
 import { Icon, Thumb } from '@/components/Icon';
 import { money } from '@/lib/format';
 import { fmtDateTime, PAY_LABEL, STATUS_LABEL, type Status } from '@/lib/order-labels';
-import { maskPhone, requireStaff } from '@/server/auth';
+import { maskPhone, requireAccess } from '@/server/auth';
 import { ORDER_STATUSES } from '@/server/db/schema';
-import { countOrdersByStatus, listOrders } from '@/server/orders';
+import { countAwaitingPayment, countOrdersByStatus, listOrders } from '@/server/orders';
 
 export const metadata: Metadata = { title: 'Đơn hàng' };
 
-type Props = { searchParams: Promise<{ trang_thai?: string; q?: string }> };
+type Props = { searchParams: Promise<{ trang_thai?: string; q?: string; thanh_toan?: string }> };
 
 /** AdminOrders: tab trạng thái + tìm kiếm + DataTable (dữ liệu thật). */
 export default async function AdminOrdersPage({ searchParams }: Props) {
-  await requireStaff();
+  await requireAccess('orders');
   const sp = await searchParams;
   const status = ORDER_STATUSES.includes(sp.trang_thai as Status) ? (sp.trang_thai as Status) : undefined;
   const q = sp.q?.slice(0, 60);
-  const orders = await listOrders({ status, q });
-  const counts = await countOrdersByStatus();
+  // ?thanh_toan=cho: đơn thanh toán online chưa xác nhận đã nhận tiền (không kết hợp với tab trạng thái)
+  const unpaid = sp.thanh_toan === 'cho';
+  const orders = await listOrders({ status: unpaid ? undefined : status, q, unpaid });
+  const [counts, awaiting] = await Promise.all([countOrdersByStatus(), countAwaitingPayment()]);
   const total = Object.values(counts).reduce((a, b) => a + (b ?? 0), 0);
   const href = (s?: Status) => `/admin/don-hang${s ? `?trang_thai=${s}` : ''}`;
 
@@ -28,21 +30,23 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
       <div className="ad-title"><h1>Đơn hàng</h1></div>
       <div className="ad-card">
         <div className="ad-stabs">
-          <Link href={href()} aria-current={!status ? 'true' : undefined}>Tất cả<em>{total}</em></Link>
+          <Link href={href()} aria-current={!status && !unpaid ? 'true' : undefined}>Tất cả<em>{total}</em></Link>
           {ORDER_STATUSES.map((s) => (
-            <Link key={s} href={href(s)} aria-current={status === s ? 'true' : undefined}>
+            <Link key={s} href={href(s)} aria-current={status === s && !unpaid ? 'true' : undefined}>
               {STATUS_LABEL[s]}{counts[s] ? <em>{counts[s]}</em> : null}
             </Link>
           ))}
+          <Link href="/admin/don-hang?thanh_toan=cho" aria-current={unpaid ? 'true' : undefined}>Chờ nhận tiền{awaiting ? <em>{awaiting}</em> : null}</Link>
         </div>
         <form className="ad-filters" action="/admin/don-hang">
-          {status && <input type="hidden" name="trang_thai" value={status} />}
+          {status && !unpaid && <input type="hidden" name="trang_thai" value={status} />}
+          {unpaid && <input type="hidden" name="thanh_toan" value="cho" />}
           <label className="vx-sfind__search">
             <Icon name="search" />
             <input className="app-bare" name="q" defaultValue={q} placeholder="Mã đơn, tên, SĐT khách" aria-label="Tìm đơn" />
           </label>
           <button className="vx-btn vx-btn--outline vx-btn--sm">Tìm</button>
-          {q && <Link href={href(status)} className="vx-btn vx-btn--ghost vx-btn--sm">Xóa tìm kiếm</Link>}
+          {q && <Link href={unpaid ? '/admin/don-hang?thanh_toan=cho' : href(status)} className="vx-btn vx-btn--ghost vx-btn--sm">Xóa tìm kiếm</Link>}
         </form>
         <div className="ad-tablewrap">
           <table className="ad-table app-mtable">
@@ -57,8 +61,8 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
                 const first = o.items[0];
                 return (
                   <tr key={o.id}>
-                    <td><Link className="code" href={`/admin/don-hang/${o.code}`}>{o.code}</Link>{o.kind === 'warranty' && <span className="vx-badge vx-badge--info" style={{ marginLeft: 6 }}>Bảo hành 0đ</span>}<small>{fmtDateTime(o.createdAt)}</small></td>
-                    <td data-label="Khách hàng">{o.customerName}<small>{maskPhone(o.phone)}</small></td>
+                    <td><Link className="code" href={`/admin/don-hang/${o.code}`}>{o.code}</Link>{o.kind === 'warranty' && <span className="vx-badge vx-badge--info" style={{ marginLeft: 6 }}>Bảo hành 0đ</span>}{o.channel === 'pos' && <span className="vx-badge vx-badge--outline" style={{ marginLeft: 6 }}>Tại cửa hàng</span>}<small>{fmtDateTime(o.createdAt)}</small></td>
+                    <td data-label="Khách hàng">{o.customerName}<small>{maskPhone(o.phone) || 'Không để SĐT'}</small></td>
                     <td data-label="Sản phẩm" data-wide>
                       <span className="ad-prod">
                         <span className="ad-thumb"><Thumb src={first.image} icon={first.icon} /></span>

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import * as z from 'zod';
-import { getCurrentUser, requireStaff, staffName } from '@/server/auth';
+import { getCurrentUser, requireAccess, requireStaff, staffName } from '@/server/auth';
 import {
   confirmRefund, createWarranty, createWarrantyFromReview, DecideSchema, decideWarranty, RefundSchema, reviewWarrantyOptions,
   ReviewWarrantySchema, WarrantyInputSchema,
@@ -30,7 +30,7 @@ export async function createWarrantyAction(fd: FormData) {
 }
 
 export async function decideWarrantyAction(input: unknown) {
-  const staff = await requireStaff();
+  const staff = await requireAccess('warranty', 'full');
   const p = DecideSchema.safeParse(input);
   if (!p.success) return { ok: false as const, error: p.error.issues[0].message };
   const r = await decideWarranty(p.data, staffName(staff));
@@ -57,7 +57,7 @@ export async function confirmRefundAction(input: unknown) {
 
 /** Cây của khách để tạo yêu cầu bảo hành từ đánh giá (nhân viên + admin). */
 export async function reviewWarrantyOptionsAction(reviewId: unknown) {
-  await requireStaff();
+  await requireAccess('warranty', 'full');
   const p = z.number().int().positive().safeParse(reviewId);
   if (!p.success) return { ok: false as const, error: 'Đánh giá không hợp lệ' };
   const r = await reviewWarrantyOptions(p.data);
@@ -66,7 +66,7 @@ export async function reviewWarrantyOptionsAction(reviewId: unknown) {
 
 /** Nhân viên tạo yêu cầu bảo hành thay khách từ đánh giá xấu. */
 export async function createWarrantyFromReviewAction(input: unknown) {
-  const staff = await requireStaff();
+  const staff = await requireAccess('warranty', 'full');
   const p = ReviewWarrantySchema.safeParse(input);
   if (!p.success) return { ok: false as const, error: p.error.issues[0].message };
   const r = await createWarrantyFromReview(p.data, staffName(staff));

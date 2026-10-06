@@ -8,6 +8,7 @@ import {
   blockingChecks, CATEGORY_KEYS, MAX_BLOCK_PRODUCTS, NOTE_TITLE, postChecks, postImageUrl, PRODUCTS_TITLE, readMinutes,
   TITLE_MAX, youtubeThumb, type PostBlock, type PostStatus,
 } from '@/lib/posts';
+import { hasAccess } from '@/lib/permissions';
 import { staffName, type SessionUser } from './auth';
 import { db, schema } from './db';
 import type { SavedImage } from './uploads';
@@ -199,14 +200,15 @@ type SaveResult =
  * `unpublish` gỡ về nháp. Nhân viên chỉ sửa bài chưa đăng và không đăng/gỡ được; quyền kiểm tra cả ở đây lẫn action.
  */
 export async function savePost(v: PostInput, intent: Intent, user: SessionUser): Promise<SaveResult> {
-  const isAdmin = user.role === 'admin';
-  if (!isAdmin && (intent === 'publish' || intent === 'unpublish')) return { ok: false, error: 'Chỉ quản trị viên được đăng hoặc gỡ bài' };
+  // Đăng / gỡ / sửa bài đã đăng: Quản lý và Kỹ sư (quyền "Bài viết & bệnh cây" toàn quyền); người khác chỉ gửi duyệt.
+  const isAdmin = hasAccess(user, 'content', 'full');
+  if (!isAdmin && (intent === 'publish' || intent === 'unpublish')) return { ok: false, error: 'Chỉ Quản lý hoặc Kỹ sư được đăng hoặc gỡ bài' };
   const pesticides = await pesticideSlugs();
 
   return db.transaction(async (tx): Promise<SaveResult> => {
     const [cur] = v.id ? await tx.select({ id: P.id, slug: P.slug, status: P.status, publishedAt: P.publishedAt }).from(P).where(eq(P.id, v.id)).for('update') : [];
     if (v.id && !cur) return { ok: false, error: 'Không tìm thấy bài (có thể đã bị xóa)' };
-    if (cur?.status === 'published' && !isAdmin) return { ok: false, error: 'Bài đã đăng: chỉ quản trị viên được sửa' };
+    if (cur?.status === 'published' && !isAdmin) return { ok: false, error: 'Bài đã đăng: chỉ Quản lý hoặc Kỹ sư được sửa' };
 
     const files = new Set(cur ? (await tx.select({ file: PI.file }).from(PI).where(eq(PI.postId, cur.id))).map((r) => r.file) : []);
     const body = cleanBody(v.body, files);
@@ -262,7 +264,7 @@ export async function savePost(v: PostInput, intent: Intent, user: SessionUser):
 export async function addPostImage(postId: number, img: SavedImage, user: SessionUser) {
   const [p] = await db.select({ status: P.status }).from(P).where(eq(P.id, postId));
   if (!p) return { ok: false as const, error: 'Không tìm thấy bài — hãy lưu bài trước' };
-  if (p.status === 'published' && user.role !== 'admin') return { ok: false as const, error: 'Bài đã đăng: chỉ quản trị viên được sửa' };
+  if (p.status === 'published' && !hasAccess(user, 'content', 'full')) return { ok: false as const, error: 'Bài đã đăng: chỉ Quản lý hoặc Kỹ sư được sửa' };
   const [{ n }] = await db.select({ n: sql<number>`count(*)`.mapWith(Number) }).from(PI).where(eq(PI.postId, postId));
   if (n >= MAX_POST_IMAGES) return { ok: false as const, error: `Mỗi bài tối đa ${MAX_POST_IMAGES} ảnh` };
   await db.insert(PI).values({ postId, file: img.file, mime: img.mime, data: img.data });

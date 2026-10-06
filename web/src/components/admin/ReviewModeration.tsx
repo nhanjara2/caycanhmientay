@@ -55,7 +55,8 @@ function SuggestBox({ s, current, onUse }: { s: Suggestion; current: string; onU
 }
 
 /** Một dòng AdminReviews: nội dung + nhãn tự động bên trái, ô trả lời công khai + Duyệt / Ẩn bên phải. */
-export function ReviewRow({ r }: { r: AdminReviewRow }) {
+/** `canCreateWarranty`: người xem có quyền Bảo hành cây toàn quyền (CSKH chỉ xem thì không có nút tạo yêu cầu). */
+export function ReviewRow({ r, canCreateWarranty = true }: { r: AdminReviewRow; canCreateWarranty?: boolean }) {
   const router = useRouter();
   const [reply, setReply] = useState(r.reply);
   const [error, setError] = useState('');
@@ -143,7 +144,7 @@ export function ReviewRow({ r }: { r: AdminReviewRow }) {
               {changed && <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" disabled={pending} onClick={() => act('reply')}>Lưu trả lời</button>}
             </>
           )}
-          {canWarranty && !r.warranty && !wOpen && (
+          {canWarranty && canCreateWarranty && !r.warranty && !wOpen && (
             <button type="button" className="vx-btn vx-btn--outline vx-btn--sm" disabled={pending} onClick={() => setWOpen(true)}>Tạo yêu cầu bảo hành</button>
           )}
         </span>

@@ -5,6 +5,7 @@ import { useEffect, useState, useTransition, type FormEvent } from 'react';
 import { deleteAddressAction, saveAddressAction } from '@/app/actions/addresses';
 import { CONDITION_LABEL, KIND_LABEL, type AddressDTO, type AddressKind, type DeliveryCondition } from '@/lib/address-labels';
 import { useAuth } from '@/lib/auth';
+import { useShipping } from '@/lib/shipping-client';
 import { plantZone, type StorePoint } from '@/lib/stock';
 import { EmptyState } from './Blocks';
 import { Icon } from './Icon';
@@ -20,8 +21,9 @@ export function useNewAddress(): Omit<AddressDTO, 'id'> {
 
 /** Nhãn vùng giao theo ghim bản đồ. */
 function ZoneBadge({ a, stores }: { a: Pick<AddressDTO, 'lat' | 'lng'>; stores: StorePoint[] }) {
+  const { plantZoneKm } = useShipping();
   if (a.lat == null || a.lng == null) return <span className="vx-badge vx-badge--outline">Chưa ghim bản đồ</span>;
-  const z = plantZone({ lat: a.lat, lng: a.lng }, stores);
+  const z = plantZone({ lat: a.lat, lng: a.lng }, stores, plantZoneKm);
   if (!z) return null;
   return z.inZone
     ? <span className="vx-badge vx-badge--success">Giao được cây sống · {z.km.toFixed(1).replace('.', ',')} km</span>

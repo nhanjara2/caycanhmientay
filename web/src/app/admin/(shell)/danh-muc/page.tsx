@@ -3,14 +3,14 @@ import Link from 'next/link';
 import { MenuToggle, MoveButtons } from '@/components/admin/CategoryAdmin';
 import { Icon } from '@/components/Icon';
 import { SYSTEM_CATEGORIES } from '@/lib/catalog';
-import { requireStaff } from '@/server/auth';
+import { requireAccess } from '@/server/auth';
 import { categoryProductCounts, getCategories } from '@/server/categories';
 
 export const metadata: Metadata = { title: 'Danh mục & thông số' };
 
 /** Danh mục sản phẩm: thứ tự trên menu, hiện/ẩn, số nhóm con, bộ thông số, số sản phẩm. Sửa chi tiết ở /admin/danh-muc/<slug>. */
 export default async function AdminCategoriesPage() {
-  const me = await requireStaff();
+  const me = await requireAccess('products');
   const [cats, counts] = await Promise.all([getCategories(), categoryProductCounts()]);
   const isAdmin = me.role === 'admin';
 

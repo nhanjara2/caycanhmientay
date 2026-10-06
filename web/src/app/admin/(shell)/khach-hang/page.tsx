@@ -4,7 +4,7 @@ import { Icon } from '@/components/Icon';
 import { money } from '@/lib/format';
 import { customerInitials, customerTier } from '@/lib/customer-labels';
 import { fmtDate } from '@/lib/order-labels';
-import { maskPhone, requireStaff } from '@/server/auth';
+import { maskPhone, requireAccess } from '@/server/auth';
 import { listCustomers } from '@/server/customers';
 
 export const metadata: Metadata = { title: 'Khách hàng' };
@@ -13,7 +13,7 @@ type Props = { searchParams: Promise<{ q?: string }> };
 
 /** AdminCustomers: tìm kiếm + bảng khách hàng (dữ liệu thật: đơn, chi tiêu, điểm từ database). */
 export default async function AdminCustomersPage({ searchParams }: Props) {
-  await requireStaff();
+  await requireAccess('customers');
   const sp = await searchParams;
   const q = sp.q?.slice(0, 60);
   const customers = await listCustomers({ q });

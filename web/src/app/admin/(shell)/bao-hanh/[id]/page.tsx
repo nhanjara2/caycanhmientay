@@ -4,9 +4,10 @@ import { notFound } from 'next/navigation';
 import { RefundConfirm, WarrantyDecision } from '@/components/admin/WarrantyDecision';
 import { Thumb } from '@/components/Icon';
 import { money } from '@/lib/format';
+import { hasAccess } from '@/lib/permissions';
 import { fmtDateTime, PAY_LABEL } from '@/lib/order-labels';
 import { REFUND_STATUS_LABEL, WARRANTY_RESOLUTION_LABEL, WARRANTY_STATUS_LABEL } from '@/lib/warranty-labels';
-import { requireStaff } from '@/server/auth';
+import { requireAccess } from '@/server/auth';
 import { getWarranty, warrantyCode } from '@/server/warranty';
 
 type Props = { params: Promise<{ id: string }> };
@@ -17,7 +18,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 /** AdminWarranty: ảnh khách gửi, mô tả, thông tin đơn, quyết định của kỹ sư. */
 export default async function AdminWarrantyPage({ params }: Props) {
-  const staff = await requireStaff();
+  const staff = await requireAccess('warranty');
   const id = Number((await params).id);
   const r = Number.isInteger(id) && id > 0 ? await getWarranty(id) : undefined;
   if (!r) notFound();
@@ -62,7 +63,12 @@ export default async function AdminWarrantyPage({ params }: Props) {
               </div>
             </div>
           </div>
-          {w.status === 'pending' ? (
+          {w.status === 'pending' && !hasAccess(staff, 'warranty', 'full') ? (
+            <div className="ad-card">
+              <div className="ad-card__h">Chờ duyệt</div>
+              <div className="ad-card__b"><p className="vx-help" style={{ margin: 0 }}>Bạn chỉ có quyền xem. Kỹ sư hoặc quản lý sẽ quyết định hướng xử lý.</p></div>
+            </div>
+          ) : w.status === 'pending' ? (
             <WarrantyDecision id={w.id} itemQty={r.itemQty} itemPrice={r.itemPrice} />
           ) : (
             <div className="ad-card">
