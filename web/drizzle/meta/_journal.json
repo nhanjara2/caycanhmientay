@@ -176,6 +176,13 @@
       "when": 1791252814634,
       "tag": "0024_message_templates",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1791256705850,
+      "tag": "0025_cay_canh_subgroups",
+      "breakpoints": true
     }
   ]
 }

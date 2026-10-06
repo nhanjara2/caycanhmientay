@@ -16,7 +16,7 @@ const NO_FENGSHUI = { elements: [], ages: '', meaning: '', placement: '' };
 const NO_ATTRS = { viTri: [], kichThuoc: null, mau: [] };
 
 const EMPTY: ProductFormValue = {
-  name: '', category: 'cay-canh', sub: 'kieng-la', icon: 'plant', origin: 'Việt Nam', ship: 'plant', pesticide: false,
+  name: '', category: 'cay-canh', sub: '', icon: 'plant', origin: 'Việt Nam', ship: 'plant', pesticide: false,
   unit: 'Chậu', spec: '', lead: '', active: true, flash: false, video: '', images: [], fengshui: NO_FENGSHUI, attrs: NO_ATTRS,
   specs: [], // form tự điền bộ thông số của danh mục + nhóm con
   options: [{ label: '', price: 0, oldPrice: null, stock: 0 }],
