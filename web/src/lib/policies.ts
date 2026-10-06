@@ -19,7 +19,7 @@ export const policies: Policy[] = [
     { h: 'Kỹ sư nông nghiệp', p: ['Mọi nội dung chăm cây, bắt bệnh và hướng dẫn dùng thuốc đều được kỹ sư kiểm duyệt trước khi đăng.'] },
   ] },
   { slug: 'giao-hang', title: 'Chính sách giao hàng', group: POLICY_GROUPS[1], body: [
-    { h: 'Cây sống', p: ['Giao riêng bằng xe tải nhỏ, chỉ nội thành. Phí 35.000đ, miễn phí cho đơn cây từ 800.000đ.', 'Khách chọn khung giờ giao khi đặt hàng; shop gửi ảnh cây thật trước khi giao.'] },
+    { h: 'Cây sống', p: ['Giao cây sống toàn quốc, đóng khung chống dập. Phí 35.000đ, miễn phí cho đơn cây từ 800.000đ.', 'Shop gửi ảnh cây thật trước khi giao và nhắn bạn thời gian dự kiến nhận hàng.'] },
     { h: 'Vật tư – Thuốc – Phân bón', p: ['Giao nhanh 2 giờ nội thành. Phí 20.000đ, miễn phí cho đơn vật tư từ 300.000đ.'] },
   ] },
   { slug: 'bao-hanh-cay', title: 'Chính sách bảo hành cây', group: POLICY_GROUPS[1], body: [
@@ -46,7 +46,7 @@ export const policies: Policy[] = [
     { h: 'Sau khi phun', p: ['Rửa tay, tắm; cất thuốc xa tầm tay trẻ em và vật nuôi; không đổ thuốc thừa xuống cống.'] },
   ] },
   { slug: 'huong-dan-mua-hang', title: 'Hướng dẫn mua hàng', group: POLICY_GROUPS[2], body: [
-    { h: 'Các bước', p: ['Chọn sản phẩm → Giỏ hàng → Thanh toán: chọn hình thức nhận, khung giờ giao, phương thức thanh toán → Đặt hàng.'] },
+    { h: 'Các bước', p: ['Chọn sản phẩm → Giỏ hàng → Thanh toán: chọn hình thức nhận, địa chỉ, phương thức thanh toán → Đặt hàng.'] },
   ] },
   { slug: 'tich-diem', title: 'Thể lệ tích điểm thành viên', group: POLICY_GROUPS[2], body: [
     { h: 'Tích điểm', p: ['Mỗi 10.000đ thanh toán được 1 điểm, cộng sau khi nhận hàng.'] },

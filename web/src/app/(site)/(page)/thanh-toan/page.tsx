@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, type FormEvent } from 'react';
 import { deliveryStoresAction, listAddressesAction } from '@/app/actions/addresses';
+import { AddressFields, EMPTY_ADDR, type AddrValue } from '@/components/AddressFields';
 import { AddressModal, useNewAddress } from '@/components/AddressBook';
 import { EmptyState } from '@/components/Blocks';
 import { PhoneModal } from '@/components/PhoneModal';
@@ -20,6 +21,7 @@ import { computeTotals } from '@/lib/pricing';
 import { useShipping } from '@/lib/shipping-client';
 import type { DayOption } from '@/lib/shipping';
 import { plantZone, type StorePoint } from '@/lib/stock';
+import { addrComplete, composeFull } from '@/lib/vn-provinces';
 import { VoucherInput, type AppliedVoucher } from '@/components/VoucherInput';
 
 // Logo lấy theo PAY_LOGO (public/images/pay/); cards: dải logo nhỏ dưới tên
@@ -45,7 +47,10 @@ export default function CheckoutPage() {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
-  const { rules, plantZoneKm } = useShipping();
+  // Địa chỉ gõ / chọn tại chỗ (khi không dùng địa chỉ trong sổ): `address` là chuỗi ghép từ các ô này
+  const [addr, setAddr] = useState<AddrValue>(EMPTY_ADDR);
+  const typeAddr = (v: AddrValue) => { setAddr(v); setAddress(composeFull(v)); };
+  const { rules, plantZoneKm, plantZoneEnabled, slotsEnabled } = useShipping();
   // Khung giờ lấy từ Cài đặt giao hàng (còn chỗ / đã kín / đã qua giờ); chọn = "ngày|mã khung"
   const [days, setDays] = useState<DayOption[] | null>(null);
   const [slot, setSlot] = useState<string | null>(null);
@@ -67,12 +72,12 @@ export default function CheckoutPage() {
 
   useEffect(() => { deliveryStoresAction().then(setStores).catch(() => {}); }, []);
   const loadSlots = () => slotOptionsAction().then(setDays).catch(() => setDays([]));
-  useEffect(() => { void loadSlots(); }, []);
+  useEffect(() => { if (slotsEnabled) void loadSlots(); }, [slotsEnabled]);
 
   const pickSaved = (a: AddressDTO) => {
     setSavedId(a.id); setName(a.name); setPhone(a.phone); setAddress(fullAddress(a));
   };
-  const pickOther = () => { setSavedId(null); setAddress(''); };
+  const pickOther = () => { setSavedId(null); setAddress(composeFull(addr)); };
 
   /** Đọc lại sổ địa chỉ rồi chọn `select` (vừa thêm/sửa), không có thì địa chỉ mặc định. */
   const loadAddresses = async (select?: number) => {
@@ -113,7 +118,7 @@ export default function CheckoutPage() {
 
   // Khung đã chọn còn dùng được (chưa kín / chưa qua giờ) → gửi lên server
   const chosen = (() => {
-    if (!slot || !days) return null;
+    if (!slotsEnabled || !slot || !days) return null;
     const [date, key] = slot.split('|');
     const s = days.find((d) => d.date === date)?.slots.find((x) => x.key === key);
     return s && !s.full && !s.past ? { date, key } : null;
@@ -125,14 +130,14 @@ export default function CheckoutPage() {
   const errors = {
     name: !name.trim() && 'Vui lòng nhập họ tên',
     phone: !PHONE.test(phone.replace(/\s/g, '')) && 'Số điện thoại chưa đúng',
-    address: delivery === 'ship' && !address.trim() && 'Vui lòng nhập địa chỉ nhận hàng',
-    slot: delivery === 'ship' && (slot === null || !chosen) && 'Chọn khung giờ giao',
+    address: delivery === 'ship' && (savedId === null ? !addrComplete(addr) : !address.trim()) && 'Bạn nhập giúp số nhà, tên đường và chọn Tỉnh / Thành phố nhé',
+    slot: delivery === 'ship' && slotsEnabled && (slot === null || !chosen) && 'Chọn khung giờ giao',
     safety: totals.hasPesticide && !safety && 'Vui lòng xác nhận đã đọc hướng dẫn an toàn',
   };
   // Địa chỉ đã lưu có ghim bản đồ nằm ngoài vùng giao cây sống (server cũng kiểm tra lại).
   const savedAddr = saved.find((a) => a.id === savedId);
   const zone = savedAddr?.lat != null && savedAddr.lng != null ? plantZone({ lat: savedAddr.lat, lng: savedAddr.lng }, stores, plantZoneKm) : null;
-  const outOfZone = delivery === 'ship' && lines.some((l) => l.snap.ship === 'plant') && zone !== null && !zone.inZone;
+  const outOfZone = plantZoneEnabled && delivery === 'ship' && lines.some((l) => l.snap.ship === 'plant') && zone !== null && !zone.inZone;
   const valid = !Object.values(errors).some(Boolean) && !outOfZone;
 
   const submit = (e: FormEvent) => {
@@ -225,11 +230,9 @@ export default function CheckoutPage() {
                 )}
                 <div className="vx-fields">
                   <div className="vx-field vx-field--full">
-                    {savedId === null && (
-                      <input className={`vx-input${touched && errors.address ? ' vx-input--error' : ''}`} placeholder="Số nhà, đường, Phường, Tỉnh/Thành" value={address} onChange={(e) => setAddress(e.target.value)} autoComplete="street-address" />
-                    )}
+                    {savedId === null && <AddressFields value={addr} onChange={typeAddr} stores={stores} idPrefix="co" />}
                     {err('address')}
-                    {user && !saved.length && <span className="vx-help">Bấm “Thêm địa chỉ mới” để lưu vào sổ địa chỉ (ghim bản đồ, điều kiện giao cây lớn) — lần sau chỉ cần chọn.</span>}
+                    {user && !saved.length && <span className="vx-help">Muốn lần sau chỉ cần bấm chọn? Bấm “Thêm địa chỉ mới” để lưu vào sổ địa chỉ.</span>}
                     {outOfZone && (
                       <span className="vx-err" role="alert">
                         Địa chỉ này cách cửa hàng gần nhất {zone!.km.toFixed(0)} km — ngoài vùng giao cây sống ({plantZoneKm} km). Chọn Nhận tại vườn hoặc bỏ cây sống khỏi giỏ.
@@ -237,6 +240,10 @@ export default function CheckoutPage() {
                     )}
                   </div>
                 </div>
+                {!slotsEnabled && (
+                  <div className="vx-note"><Icon name="truck" /><div><b>Shop gửi hàng qua đơn vị vận chuyển.</b> Sau khi bạn đặt, shop gọi hoặc nhắn Zalo xác nhận đơn và báo thời gian dự kiến nhận hàng.</div></div>
+                )}
+                {slotsEnabled && <>
                 <b style={{ fontSize: 14, display: 'flex', gap: 8, alignItems: 'center' }}><Icon name="clock" />Chọn khung giờ giao</b>
                 <div className="vx-slots2">
                   {days === null && <span className="vx-help">Đang tải khung giờ…</span>}
@@ -254,6 +261,7 @@ export default function CheckoutPage() {
                   }))}
                 </div>
                 {err('slot')}
+                </>}
               </>
             ) : (
               <div className="vx-note"><Icon name="pin" /><div><b>Nhận tại vườn Cái Mơn – Chợ Lách.</b> Shop giữ hàng 3 ngày và nhắn Zalo khi cây sẵn sàng.</div></div>

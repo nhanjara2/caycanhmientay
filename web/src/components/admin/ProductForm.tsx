@@ -399,7 +399,7 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
                 </div>
                 <div className="ad-f">
                   <label>Cách giao</label>
-                  <span style={{ fontSize: 12 }}>{v.ship === 'plant' ? 'Cây sống — giao riêng bằng xe, chỉ nội thành' : 'Vật tư — giao nhanh 2h'}</span>
+                  <span style={{ fontSize: 12 }}>{v.ship === 'plant' ? 'Cây sống — đóng khung chống dập, giao toàn quốc' : 'Vật tư — giao nhanh 2h'}</span>
                 </div>
               </div>
             </div>

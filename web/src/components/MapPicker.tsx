@@ -3,50 +3,26 @@
 import 'leaflet/dist/leaflet.css';
 import type { Map as LeafletMap } from 'leaflet';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { reverseGeocode, searchPlace } from '@/lib/geo';
 import { useShipping } from '@/lib/shipping-client';
 import { plantZone, type StorePoint } from '@/lib/stock';
 import { Icon } from './Icon';
 
 export type PickedPlace = { lat: number; lng: number; street: string; area: string };
 
-// Nền bản đồ: máy chủ OpenStreetMap Đức (miễn phí, lượng truy cập vừa phải). Tìm địa chỉ: Photon (komoot).
+// Nền bản đồ: máy chủ OpenStreetMap Đức (miễn phí, lượng truy cập vừa phải). Tìm địa chỉ: Photon (komoot) — xem lib/geo.ts.
 // Không dùng thẳng openstreetmap.org vì một số nhà mạng Việt Nam chặn tên miền này.
 // Chạy thật với lượng khách lớn: đổi sang Goong / Vietmap (có hợp đồng, bản đồ đúng chủ quyền Hoàng Sa – Trường Sa)
-// bằng biến NEXT_PUBLIC_MAP_TILES / NEXT_PUBLIC_MAP_ATTRIBUTION, và thay 2 hàm geocode bên dưới.
+// bằng biến NEXT_PUBLIC_MAP_TILES / NEXT_PUBLIC_MAP_ATTRIBUTION, và thay 2 hàm geocode trong lib/geo.ts.
 const TILES = process.env.NEXT_PUBLIC_MAP_TILES ?? 'https://tile.openstreetmap.de/{z}/{x}/{y}.png';
 const ATTRIBUTION = process.env.NEXT_PUBLIC_MAP_ATTRIBUTION ?? '© OpenStreetMap';
-const PHOTON = 'https://photon.komoot.io';
 const HCM = { lat: 10.7769, lng: 106.7009 };
 
-type PhotonProps = Partial<Record<'name' | 'housenumber' | 'street' | 'locality' | 'district' | 'city' | 'state' | 'countrycode', string>>;
-type PhotonResult = { features: { properties: PhotonProps; geometry: { coordinates: [number, number] } }[] };
-
-/** Tách kết quả Photon thành "số nhà, đường" + "Phường, Tỉnh/Thành" (khách sửa lại được). */
-function split(a: PhotonProps): { street: string; area: string } {
-  const road = [a.housenumber, a.street].filter(Boolean).join(' ');
-  const street = a.name && a.name !== a.street ? [a.name, road].filter(Boolean).join(', ') : road || a.name || '';
-  const city = a.city || a.state || '';
-  return { street, area: [a.district, city].filter(Boolean).join(', ') };
-}
-
-async function reverseGeocode(lat: number, lng: number, signal: AbortSignal) {
-  const r = await fetch(`${PHOTON}/reverse?lat=${lat}&lon=${lng}&limit=1`, { signal });
-  const j = (await r.json()) as PhotonResult;
-  const f = j.features?.[0];
-  return f && f.properties.countrycode === 'VN' ? split(f.properties) : null;
-}
-
-async function searchPlace(q: string, near: { lat: number; lng: number }) {
-  const r = await fetch(`${PHOTON}/api/?q=${encodeURIComponent(q)}&limit=1&lat=${near.lat}&lon=${near.lng}&bbox=102,8,110,24`);
-  const j = (await r.json()) as PhotonResult;
-  const c = j.features?.[0]?.geometry.coordinates;
-  return c ? { lat: c[1], lng: c[0] } : null;
-}
-
 /** MapPicker: ghim cố định giữa khung, kéo bản đồ để đặt; tìm đường; vị trí của tôi; báo vùng giao cây sống. */
-export function MapPicker({ initial, stores, onPick, onClose }: {
+export function MapPicker({ initial, stores = [], onPick, onClose }: {
   initial?: { lat: number; lng: number } | null;
-  stores: StorePoint[];
+  /** Chỉ cần khi bật giới hạn vùng giao cây sống (để báo trong / ngoài vùng). */
+  stores?: StorePoint[];
   onPick: (p: PickedPlace) => void;
   onClose: () => void;
 }) {
@@ -120,8 +96,8 @@ export function MapPicker({ initial, stores, onPick, onClose }: {
     );
   };
 
-  const { plantZoneKm } = useShipping();
-  const zone = plantZone(center, stores, plantZoneKm);
+  const { plantZoneKm, plantZoneEnabled } = useShipping();
+  const zone = plantZoneEnabled ? plantZone(center, stores, plantZoneKm) : null;
 
   return (
     <div className="app-modal app-modal--top" role="dialog" aria-modal="true" aria-label="Chọn vị trí nhận hàng" onClick={(e) => e.target === e.currentTarget && onClose()}>

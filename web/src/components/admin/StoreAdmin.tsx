@@ -66,7 +66,7 @@ export function StoreAdmin({ stores }: { stores: StoreRow[] }) {
               </div>
             </div>
             <span className="vx-help" style={{ margin: 0 }}>
-              Tọa độ dùng để tính vùng giao cây sống (bán kính ở Cài đặt giao hàng). Lấy bằng cách mở Google Maps, bấm chuột phải vào đúng vị trí cửa hàng rồi bấm vào cặp số hiện ra để chép.
+              Tọa độ chỉ dùng khi bật giới hạn vùng giao cây sống ở Cài đặt giao hàng (mặc định đang giao cây sống toàn quốc). Lấy bằng cách mở Google Maps, bấm chuột phải vào đúng vị trí cửa hàng rồi bấm vào cặp số hiện ra để chép.
               {form.lat && form.lng && !Number.isNaN(Number(form.lat.replace(',', '.'))) && <> <a href={`https://www.google.com/maps?q=${form.lat.replace(',', '.')},${form.lng.replace(',', '.')}`} target="_blank" rel="noreferrer" style={{ color: 'var(--primary)' }}>Xem trên bản đồ</a></>}
             </span>
             <label className="vx-check"><input type="checkbox" checked={form.isDefault} onChange={(e) => set('isDefault', e.target.checked)} /> Cửa hàng mặc định (nhận hàng nhập, xuất đơn online trước)</label>

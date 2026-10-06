@@ -39,7 +39,7 @@ export function CartList({ editable }: { editable: boolean }) {
         <>
           <div className="vx-group-head">
             <b><Icon name="plant" />Cây sống ({plants.length})</b>
-            <small>Giao riêng bằng xe tải nhỏ · chỉ nội thành</small>
+            <small>Đóng khung chống dập · giao toàn quốc</small>
           </div>
           {plants.map((l) => <Item key={`${l.slug}-${l.option}`} l={l} editable={editable} setQty={setQty} remove={remove} />)}
         </>

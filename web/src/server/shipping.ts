@@ -44,6 +44,7 @@ export async function usedSlots(dates: string[], conn: Tx | typeof db = db) {
 /** Khung giờ khách chọn được ở trang thanh toán (còn chỗ / đã kín / đã qua giờ). */
 export async function slotOptions(now = Date.now()): Promise<DayOption[]> {
   const cfg = await getShippingConfig();
+  if (!cfg.slotsEnabled) return [];
   const today = vnDate(now);
   const used = await usedSlots(Array.from({ length: cfg.daysAhead }, (_, i) => addDaysYmd(today, i)));
   return buildSlotOptions(cfg, used, now);

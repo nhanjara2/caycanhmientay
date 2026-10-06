@@ -39,7 +39,6 @@ export const PlaceOrderSchema = z.object({
   voucherCode: z.string().trim().max(30).optional(),
 }).superRefine((v, ctx) => {
   if (v.delivery === 'ship' && !v.address) ctx.addIssue({ code: 'custom', path: ['address'], message: 'Vui lòng nhập địa chỉ nhận hàng' });
-  if (v.delivery === 'ship' && !v.slot && !(v.slotDate && v.slotKey)) ctx.addIssue({ code: 'custom', path: ['slot'], message: 'Chọn khung giờ giao' });
 });
 export type PlaceOrderInput = z.infer<typeof PlaceOrderSchema>;
 
@@ -63,8 +62,11 @@ export async function createOrder(input: PlaceOrderInput, user: SessionUser | nu
   if (hasFlash && input.payment === 'cod') return { ok: false, error: 'Đơn có sản phẩm Flash sale không áp dụng thanh toán khi nhận hàng' };
   if (hasPesticide && !input.safetyAck) return { ok: false, error: 'Vui lòng xác nhận đã đọc hướng dẫn an toàn thuốc BVTV' };
 
-  // Cây sống chỉ giao trong vùng quanh cửa hàng (khi địa chỉ đã ghim bản đồ).
-  if (input.delivery === 'ship' && user && input.addressId && lines.some((l) => l.p.ship === 'plant')) {
+  // Khung giờ giao chỉ bắt buộc khi shop bật hẹn giờ (có xe giao riêng).
+  if (input.delivery === 'ship' && cfg.slotsEnabled && !input.slot && !(input.slotDate && input.slotKey)) return { ok: false, error: 'Chọn khung giờ giao' };
+
+  // Giới hạn vùng giao cây sống chỉ áp dụng khi shop bật (mặc định giao toàn quốc); kiểm tra khi địa chỉ đã ghim bản đồ.
+  if (cfg.plantZoneEnabled && input.delivery === 'ship' && user && input.addressId && lines.some((l) => l.p.ship === 'plant')) {
     const a = await getAddress(user.id, input.addressId);
     const zone = a?.lat != null && a.lng != null ? plantZone({ lat: a.lat, lng: a.lng }, await listStores(), cfg.plantZoneKm) : null;
     if (zone && !zone.inZone) {
@@ -145,7 +147,7 @@ async function createOrderTx(
   totals: ReturnType<typeof computeTotals>,
   cfg: ShippingConfig,
 ): Promise<PlaceOrderResult> {
-  const slot = input.delivery === 'ship' ? await claimSlot(tx, cfg, input) : null;
+  const slot = input.delivery === 'ship' && cfg.slotsEnabled ? await claimSlot(tx, cfg, input) : null;
   const code = await newOrderCode(tx);
   if (!code) return { ok: false as const, error: 'Không tạo được mã đơn, vui lòng thử lại' };
 

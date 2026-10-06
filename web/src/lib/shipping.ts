@@ -9,8 +9,12 @@ export type ShippingConfig = {
   /** Phí giao + ngưỡng miễn phí, tách theo nhóm: cây sống giao riêng bằng xe, vật tư giao nhanh. */
   plant: FeeRule;
   supply: FeeRule;
-  /** Cây sống chỉ giao trong bán kính này (km) tính từ cửa hàng gần nhất. */
+  /** Bật = cây sống chỉ giao trong bán kính `plantZoneKm` quanh cửa hàng gần nhất. Tắt (mặc định) = giao cây sống toàn quốc qua đơn vị vận chuyển. */
+  plantZoneEnabled: boolean;
+  /** Bán kính (km) khi bật giới hạn vùng; vẫn lưu khi đang tắt. */
   plantZoneKm: number;
+  /** Bật = khách chọn khung giờ giao (shop có xe / tài xế riêng). Tắt (mặc định) = không hẹn giờ, shop giao qua đơn vị vận chuyển và nhắn khách. */
+  slotsEnabled: boolean;
   slots: SlotDef[];
   /** Số đơn giao tối đa mỗi khung theo thứ trong tuần [T2, T3, T4, T5, T6, T7, CN]; 0 = không giao khung đó. */
   cap: Record<string, number[]>;
@@ -20,11 +24,13 @@ export type ShippingConfig = {
   closed: { date: string; note: string }[];
 };
 
-/** Khớp cách tính cũ trước khi có trang cài đặt: phí 35k / 20k, miễn phí từ 800k / 300k, 30 km, 2 khung × 2 ngày. */
+/** Phí 35k / 20k, miễn phí từ 800k / 300k. Mặc định giao toàn quốc, không hẹn khung giờ; bật giới hạn vùng (30 km) và khung giờ (2 khung × 2 ngày) ở Cài đặt giao hàng khi shop có xe giao riêng. */
 export const DEFAULT_SHIPPING: ShippingConfig = {
   plant: { fee: 35000, freeFrom: 800000 },
   supply: { fee: 20000, freeFrom: 300000 },
+  plantZoneEnabled: false,
   plantZoneKm: 30,
+  slotsEnabled: false,
   slots: [{ key: 'sang', from: '08:00', to: '12:00' }, { key: 'chieu', from: '14:00', to: '18:00' }],
   cap: { sang: [20, 20, 20, 20, 20, 20, 20], chieu: [20, 20, 20, 20, 20, 20, 20] },
   daysAhead: 2,
@@ -44,6 +50,8 @@ const ymd = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Ngày nghỉ chưa đúng')
 export const ShippingConfigSchema = z.object({
   plant: fee,
   supply: fee,
+  plantZoneEnabled: z.boolean().default(false),
+  slotsEnabled: z.boolean().default(false),
   plantZoneKm: z.number().min(1, 'Vùng giao cây sống tối thiểu 1 km').max(500, 'Vùng giao cây sống tối đa 500 km'),
   slots: z.array(z.object({ key: z.string().regex(/^[a-z0-9-]{1,20}$/), from: hhmm, to: hhmm })).min(1, 'Cần ít nhất một khung giờ').max(MAX_SLOTS, `Tối đa ${MAX_SLOTS} khung giờ`),
   cap: z.record(z.string(), z.array(z.number().int().min(0, 'Số đơn không được âm').max(999, 'Số đơn tối đa 999')).length(7)),

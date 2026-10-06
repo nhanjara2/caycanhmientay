@@ -6,7 +6,7 @@ import { saveShippingAction } from '@/app/actions/shipping';
 import { MAX_SLOTS, WEEKDAYS, type ShippingConfig } from '@/lib/shipping';
 
 type Form = {
-  plantFee: string; plantFree: string; supplyFee: string; supplyFree: string; zoneKm: string; daysAhead: string;
+  plantFee: string; plantFree: string; supplyFee: string; supplyFree: string; zoneKm: string; zoneOn: boolean; slotsOn: boolean; daysAhead: string;
   slots: { key: string; from: string; to: string }[];
   cap: Record<string, string[]>;
   closed: { date: string; note: string }[];
@@ -16,12 +16,12 @@ const digits = (s: string) => s.replace(/\D/g, '');
 const fmt = (n: number) => new Intl.NumberFormat('vi-VN').format(n);
 const toForm = (c: ShippingConfig): Form => ({
   plantFee: String(c.plant.fee), plantFree: String(c.plant.freeFrom), supplyFee: String(c.supply.fee), supplyFree: String(c.supply.freeFrom),
-  zoneKm: String(c.plantZoneKm), daysAhead: String(c.daysAhead), slots: c.slots.map((s) => ({ ...s })),
+  zoneKm: String(c.plantZoneKm), zoneOn: c.plantZoneEnabled, slotsOn: c.slotsEnabled, daysAhead: String(c.daysAhead), slots: c.slots.map((s) => ({ ...s })),
   cap: Object.fromEntries(c.slots.map((s) => [s.key, (c.cap[s.key] ?? Array(7).fill(0)).map(String)])),
   closed: c.closed.map((x) => ({ ...x })),
 });
 
-/** AdminShippingSettings: phí giao theo nhóm, vùng giao cây sống, khung giờ × thứ với số đơn tối đa, ngày nghỉ lễ. */
+/** AdminShippingSettings: phí giao theo nhóm, giới hạn vùng giao cây sống (tùy chọn), khung giờ × thứ với số đơn tối đa và ngày nghỉ lễ (khi shop có xe giao riêng). */
 export function ShippingSettings({ initial }: { initial: ShippingConfig }) {
   const router = useRouter();
   const [f, setF] = useState<Form>(() => toForm(initial));
@@ -50,7 +50,9 @@ export function ShippingSettings({ initial }: { initial: ShippingConfig }) {
     const payload = {
       plant: { fee: Number(f.plantFee || 0), freeFrom: Number(f.plantFree || 0) },
       supply: { fee: Number(f.supplyFee || 0), freeFrom: Number(f.supplyFree || 0) },
+      plantZoneEnabled: f.zoneOn,
       plantZoneKm: Number(f.zoneKm || 0),
+      slotsEnabled: f.slotsOn,
       daysAhead: Number(f.daysAhead || 0),
       slots: f.slots,
       cap: Object.fromEntries(f.slots.map((s) => [s.key, f.cap[s.key].map((c) => Number(c || 0))])),
@@ -81,7 +83,7 @@ export function ShippingSettings({ initial }: { initial: ShippingConfig }) {
         <div className="ad-card__h">Phí giao và ngưỡng miễn phí</div>
         <div className="ad-card__b" style={{ gap: 16 }}>
           <div>
-            <b style={{ fontSize: 13 }}>Cây sống</b> <span className="vx-help">giao riêng bằng xe, chỉ trong vùng giao cây sống</span>
+            <b style={{ fontSize: 13 }}>Cây sống</b> <span className="vx-help">đóng khung chống dập, giao qua đơn vị vận chuyển (hoặc xe shop nếu bật bên dưới)</span>
             <div className="ad-frow two" style={{ marginTop: 8 }}>
               {money('plantFee', 'Phí giao (đ)', 'sh-pfee')}
               {money('plantFree', 'Miễn phí giao từ đơn cây (đ)', 'sh-pfree')}
@@ -94,13 +96,23 @@ export function ShippingSettings({ initial }: { initial: ShippingConfig }) {
               {money('supplyFree', 'Miễn phí giao từ đơn vật tư (đ)', 'sh-sfree')}
             </div>
           </div>
-          <div className="ad-frow two">
-            <div className="ad-f">
-              <label htmlFor="sh-km">Vùng giao cây sống: bán kính (km)</label>
-              <input id="sh-km" className="vx-input" inputMode="decimal" value={f.zoneKm} onChange={(e) => edit((x) => ({ ...x, zoneKm: e.target.value.replace(/[^\d.]/g, '').slice(0, 5) }))} />
-              <span className="hint">Tính từ cửa hàng gần nhất tới địa chỉ khách (đã ghim bản đồ). Xa hơn chỉ giao vật tư, thuốc, phân bón.</span>
-            </div>
+          <div className="ad-f">
+            <label className="vx-check"><input type="checkbox" checked={f.zoneOn} onChange={(e) => edit((x) => ({ ...x, zoneOn: e.target.checked }))} /> Chỉ giao cây sống trong một vùng quanh cửa hàng</label>
+            <span className="hint">
+              {f.zoneOn
+                ? 'Đang giới hạn: địa chỉ ngoài vùng không đặt được cây sống (chỉ nhận tại vườn hoặc mua vật tư). Chỉ kiểm tra được khi địa chỉ khách đã ghim bản đồ.'
+                : 'Đang TẮT: giao cây sống toàn quốc, không giới hạn khoảng cách (phù hợp khi giao qua đơn vị vận chuyển / sàn khác).'}
+            </span>
           </div>
+          {f.zoneOn && (
+            <div className="ad-frow two">
+              <div className="ad-f">
+                <label htmlFor="sh-km">Bán kính vùng giao cây sống (km)</label>
+                <input id="sh-km" className="vx-input" inputMode="decimal" value={f.zoneKm} onChange={(e) => edit((x) => ({ ...x, zoneKm: e.target.value.replace(/[^\d.]/g, '').slice(0, 5) }))} />
+                <span className="hint">Tính từ cửa hàng gần nhất tới địa chỉ khách (đã ghim bản đồ). Xa hơn chỉ giao vật tư, thuốc, phân bón.</span>
+              </div>
+            </div>
+          )}
           <span className="vx-help" style={{ margin: 0 }}>Nhận tại vườn luôn miễn phí giao. Giỏ hàng, trang thanh toán và đơn mới dùng số này ngay sau khi lưu; đơn đã đặt giữ nguyên phí cũ.</span>
         </div>
       </div>
@@ -108,6 +120,15 @@ export function ShippingSettings({ initial }: { initial: ShippingConfig }) {
       <div className="ad-card">
         <div className="ad-card__h">Khung giờ giao và số đơn tối đa</div>
         <div className="ad-card__b" style={{ gap: 14 }}>
+          <div className="ad-f">
+            <label className="vx-check"><input type="checkbox" checked={f.slotsOn} onChange={(e) => edit((x) => ({ ...x, slotsOn: e.target.checked }))} /> Cho khách chọn khung giờ giao (shop có xe / tài xế riêng)</label>
+            <span className="hint">
+              {f.slotsOn
+                ? 'Đang BẬT: khách phải chọn khung giờ ở trang thanh toán, đơn vào bảng xếp chuyến ở mục Giao hàng.'
+                : 'Đang TẮT: khách không chọn giờ; shop liên hệ xác nhận và gửi qua đơn vị vận chuyển. Bật lên khi shop tự giao bằng xe / tài xế.'}
+            </span>
+          </div>
+          {f.slotsOn && <>
           <div className="ad-frow two">
             <div className="ad-f">
               <label htmlFor="sh-days">Khách được chọn giao trong</label>
@@ -140,10 +161,11 @@ export function ShippingSettings({ initial }: { initial: ShippingConfig }) {
             <button type="button" className="vx-btn vx-btn--outline vx-btn--sm" disabled={f.slots.length >= MAX_SLOTS} onClick={addSlot}>+ Thêm khung giờ</button>
             <span className="vx-help" style={{ margin: 0 }}>Số đơn tối đa mỗi khung theo từng thứ; nhập 0 = không giao khung đó. Đủ số đơn thì khung tự hiện “Đã kín” ở trang thanh toán; khung đóng nhận đơn trước giờ kết thúc 2 giờ.</span>
           </span>
+          </>}
         </div>
       </div>
 
-      <div className="ad-card">
+      {f.slotsOn && <div className="ad-card">
         <div className="ad-card__h">Ngày nghỉ lễ, Tết</div>
         <div className="ad-card__b" style={{ gap: 10 }}>
           {f.closed.map((c, i) => (
@@ -157,7 +179,7 @@ export function ShippingSettings({ initial }: { initial: ShippingConfig }) {
           <span><button type="button" className="vx-btn vx-btn--outline vx-btn--sm" onClick={() => edit((x) => ({ ...x, closed: [...x.closed, { date: '', note: '' }] }))}>+ Thêm ngày nghỉ</button></span>
           <span className="vx-help" style={{ margin: 0 }}>Ngày nghỉ không có khung giờ giao; khách thấy “Nghỉ” kèm ghi chú.</span>
         </div>
-      </div>
+      </div>}
 
       <div className="ad-sticky">
         <span className="note">

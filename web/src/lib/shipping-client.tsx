@@ -7,11 +7,11 @@ import { SHIP_RULES } from './pricing';
 import { PLANT_ZONE_KM } from './stock';
 
 /** Phí giao + vùng giao cây sống mà khách thấy: lấy từ Cài đặt giao hàng, mặc định cho tới khi tải xong. */
-export type PublicShipping = { rules: ShipRules; plantZoneKm: number };
-const DEFAULTS: PublicShipping = { rules: SHIP_RULES, plantZoneKm: PLANT_ZONE_KM };
+export type PublicShipping = { rules: ShipRules; plantZoneKm: number; plantZoneEnabled: boolean; slotsEnabled: boolean };
+const DEFAULTS: PublicShipping = { rules: SHIP_RULES, plantZoneKm: PLANT_ZONE_KM, plantZoneEnabled: false, slotsEnabled: false };
 
 const Ctx = createContext<PublicShipping>(DEFAULTS);
-const CACHE_KEY = 'ccmt-shipping-v1';
+const CACHE_KEY = 'ccmt-shipping-v2';
 const CACHE_MS = 3 * 60_000;
 
 export function ShippingProvider({ children }: { children: ReactNode }) {

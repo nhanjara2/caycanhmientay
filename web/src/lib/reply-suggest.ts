@@ -2,7 +2,6 @@
 // Không dùng AI: lấy câu trả lời cũ cho câu hỏi giống nhau, hoặc ghép câu từ thông số sản phẩm theo chủ đề câu hỏi.
 import { normalize } from './catalog';
 import { SALES_PHONE } from './contact';
-import { PLANT_ZONE_KM } from './stock';
 
 // ---- Độ giống nhau giữa 2 câu hỏi ------------------------------------------------------------
 
@@ -133,7 +132,7 @@ const TOPICS: Topic[] = [
   {
     re: /\b(giao|ship|van chuyen|nhan hang|tinh khac|ngoai tinh|cac tinh|ve tinh|ngoai thanh)\b/,
     say: (p) => (p.ship === 'plant'
-      ? `Cây sống shop giao trong bán kính ${PLANT_ZONE_KM} km quanh cửa hàng gần nhất, đóng khung chống dập; anh/chị cũng có thể chọn Nhận tại vườn (không tính phí giao).`
+      ? 'Shop giao cây sống toàn quốc qua đơn vị vận chuyển, đóng khung chống dập; anh/chị cũng có thể chọn Nhận tại vườn (không tính phí giao).'
       : 'Nội thành giao nhanh 2 giờ; tỉnh khác 2–4 ngày qua đơn vị vận chuyển.'),
   },
   {
