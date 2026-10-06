@@ -5,6 +5,7 @@ import { Breadcrumb, SectionHeader } from '@/components/Blocks';
 import { PartIcon } from '@/components/DiseaseArt';
 import { ProductGrid } from '@/components/ProductCard';
 import { SEVERITY, causeOf, diseaseImageUrl, partName, plantName } from '@/lib/diseases';
+import { diseaseImageCredit } from '@/lib/seed-disease-images';
 import { getProducts } from '@/server/catalog';
 import { allDiseases, getDisease } from '@/server/diseases';
 import { categoryOf, postPath } from '@/lib/posts';
@@ -72,16 +73,26 @@ export default async function DiseaseDetailPage({ params }: Props) {
 
       <h2 style={{ margin: '8px 0 0', fontSize: '1.25rem' }}>Triệu chứng</h2>
       <div className="dd-sym">
-        {d.symptoms.map((s, i) => (
-          <div key={i}>
-            <span className={s.image ? 'img img--photo' : 'img'}>
-              {s.image ? <img src={diseaseImageUrl(s.image)} alt={s.text} loading="lazy" /> : <PartIcon part={s.part} plain />}
-              <em>{partName(s.part)}</em>
-            </span>
-            {s.text}
-          </div>
-        ))}
+        {d.symptoms.map((s, i) => {
+          const credit = diseaseImageCredit(s.image);
+          return (
+            <div key={i}>
+              <span className={s.image ? 'img img--photo' : 'img'}>
+                {s.image ? <img src={diseaseImageUrl(s.image)} alt={s.text} loading="lazy" /> : <PartIcon part={s.part} plain />}
+                <em>{partName(s.part)}</em>
+              </span>
+              {s.text}
+              {credit && <small className="dd-credit">Ảnh: {credit.author} · {credit.license}</small>}
+            </div>
+          );
+        })}
       </div>
+      {d.symptoms.some((s) => diseaseImageCredit(s.image)) && (
+        <p className="dd-credit-note">
+          Ảnh minh họa chụp trên nhiều loại cây khác nhau, lấy từ Wikimedia Commons (giấy phép mở).{' '}
+          <Link href="/chinh-sach/nguon-anh#anh-benh-cay">Xem nguồn ảnh</Link>
+        </p>
+      )}
       {d.confusions.length > 0 && (
         <div className="dd-cmp">
           {d.confusions.map((c, i) => (

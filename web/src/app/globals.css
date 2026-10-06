@@ -319,6 +319,10 @@ a.vx-chip[aria-current="true"] { background: var(--primary-soft); border-color: 
 .dd-sym .img--photo, .dd-sym:has(.img--photo) .img { aspect-ratio: 4 / 3; } /* có ảnh thì mọi ô cùng tỉ lệ cho đều hàng */
 .dd-sym .img--photo { overflow: hidden; }
 .dd-sym .img--photo > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Ghi công ảnh minh họa nạp sẵn (lib/seed-disease-images.ts) */
+.dd-sym .dd-credit { color: var(--ink-muted); font-size: 0.875rem; line-height: 1.3; }
+.dd-credit-note { margin: 0; color: var(--ink-muted); font-size: 0.875rem; line-height: 1.5; }
+.dd-credit-note a { color: var(--primary-hover); font-weight: 600; display: inline-flex; align-items: center; min-height: 2.75rem; }
 #danh-sach { scroll-margin-top: 140px; }
 
 /* Thẻ sản phẩm: viền khung ảnh theo loại (ProductCard) */
