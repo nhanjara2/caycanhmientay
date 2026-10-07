@@ -1,6 +1,7 @@
 import 'server-only';
 import { and, asc, desc, eq, ne, sql } from 'drizzle-orm';
 import * as z from 'zod';
+import { STORE_SERVICE_KEYS, TIME_RE } from '@/lib/stores';
 import { db, schema } from './db';
 
 const { stores, stockLots, orders, purchaseReceiptLines, stockMoves, expenses, recurringExpenses } = schema;
@@ -10,6 +11,8 @@ export async function listStoresAdmin() {
   return db.select({
     id: stores.id, code: stores.code, name: stores.name, address: stores.address, lat: stores.lat, lng: stores.lng,
     isDefault: stores.isDefault, active: stores.active,
+    isPublic: stores.isPublic, phone: stores.phone, contactName: stores.contactName,
+    open24h: stores.open24h, openFrom: stores.openFrom, openTo: stores.openTo, services: stores.services,
     stock: sql<number>`coalesce((select sum(l.qty) from stock_lots l where l.store_id = stores.id), 0)`.mapWith(Number),
   }).from(stores).orderBy(desc(stores.isDefault), desc(stores.active), asc(stores.id));
 }
@@ -25,6 +28,14 @@ export const StoreSchema = z.object({
   lng: z.number().min(102, 'Kinh độ (lng) không nằm trong Việt Nam').max(110, 'Kinh độ (lng) không nằm trong Việt Nam'),
   active: z.boolean(),
   isDefault: z.boolean(),
+  // Phần hiện ở trang khách Hệ thống cửa hàng
+  isPublic: z.boolean(),
+  phone: z.string().trim().transform((v) => v.replace(/[\s.]/g, '')).pipe(z.string().regex(/^(0\d{9,10})?$/, 'Số điện thoại gồm 10 số, bắt đầu bằng 0')),
+  contactName: z.string().trim().max(60),
+  open24h: z.boolean(),
+  openFrom: z.string().trim().refine((v) => v === '' || TIME_RE.test(v), 'Giờ mở cửa không đúng (VD: 07:00)'),
+  openTo: z.string().trim().refine((v) => v === '' || TIME_RE.test(v), 'Giờ đóng cửa không đúng (VD: 21:00)'),
+  services: z.array(z.enum(STORE_SERVICE_KEYS)).max(STORE_SERVICE_KEYS.length),
 });
 export type StoreInput = z.infer<typeof StoreSchema>;
 
@@ -35,6 +46,16 @@ type R = { ok: true } | { ok: false; error: string };
  * hoặc cửa hàng còn tồn kho. Mã không đổi được sau khi tạo (tồn kho / đơn tham chiếu theo id, nhưng nhân viên quen gọi theo mã).
  */
 export async function saveStore(v: StoreInput): Promise<R> {
+  if (!v.open24h) {
+    if (Boolean(v.openFrom) !== Boolean(v.openTo)) return { ok: false, error: 'Nhập đủ giờ mở và giờ đóng cửa (hoặc để trống cả hai)' };
+    if (v.openFrom && v.openFrom === v.openTo) return { ok: false, error: 'Giờ mở và giờ đóng cửa không được trùng nhau' };
+  }
+  // Phần hiển thị cho khách; mở 24/24 thì bỏ giờ cụ thể, dịch vụ bỏ trùng.
+  const shown = {
+    isPublic: v.isPublic, phone: v.phone || null, contactName: v.contactName || null, open24h: v.open24h,
+    openFrom: v.open24h ? null : v.openFrom || null, openTo: v.open24h ? null : v.openTo || null,
+    services: [...new Set(v.services)],
+  };
   return db.transaction(async (tx): Promise<R> => {
     const [clash] = await tx.select({ id: stores.id }).from(stores).where(v.id ? and(eq(stores.code, v.code), ne(stores.id, v.id)) : eq(stores.code, v.code));
     if (clash) return { ok: false, error: 'Mã cửa hàng này đã có' };
@@ -50,12 +71,12 @@ export async function saveStore(v: StoreInput): Promise<R> {
       }
       if (v.isDefault && !v.active) return { ok: false, error: 'Cửa hàng mặc định phải đang hoạt động' };
       if (v.isDefault) await tx.update(stores).set({ isDefault: false }).where(ne(stores.id, v.id));
-      await tx.update(stores).set({ name: v.name, address: v.address, lat: v.lat, lng: v.lng, active: v.active, isDefault: v.isDefault }).where(eq(stores.id, v.id));
+      await tx.update(stores).set({ name: v.name, address: v.address, lat: v.lat, lng: v.lng, active: v.active, isDefault: v.isDefault, ...shown }).where(eq(stores.id, v.id));
       return { ok: true };
     }
     if (v.isDefault) await tx.update(stores).set({ isDefault: false });
     const [{ n }] = await tx.select({ n: sql<number>`count(*)`.mapWith(Number) }).from(stores);
-    await tx.insert(stores).values({ code: v.code, name: v.name, address: v.address, lat: v.lat, lng: v.lng, active: v.active, isDefault: v.isDefault || n === 0 });
+    await tx.insert(stores).values({ code: v.code, name: v.name, address: v.address, lat: v.lat, lng: v.lng, active: v.active, isDefault: v.isDefault || n === 0, ...shown });
     return { ok: true };
   });
 }

@@ -3,19 +3,14 @@
 import 'leaflet/dist/leaflet.css';
 import type { Map as LeafletMap } from 'leaflet';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { reverseGeocode, searchPlace } from '@/lib/geo';
+import { MAP_ATTRIBUTION, MAP_TILES, reverseGeocode, searchPlace } from '@/lib/geo';
 import { useShipping } from '@/lib/shipping-client';
 import { plantZone, type StorePoint } from '@/lib/stock';
 import { Icon } from './Icon';
 
 export type PickedPlace = { lat: number; lng: number; street: string; area: string };
 
-// Nền bản đồ: máy chủ OpenStreetMap Đức (miễn phí, lượng truy cập vừa phải). Tìm địa chỉ: Photon (komoot) — xem lib/geo.ts.
-// Không dùng thẳng openstreetmap.org vì một số nhà mạng Việt Nam chặn tên miền này.
-// Chạy thật với lượng khách lớn: đổi sang Goong / Vietmap (có hợp đồng, bản đồ đúng chủ quyền Hoàng Sa – Trường Sa)
-// bằng biến NEXT_PUBLIC_MAP_TILES / NEXT_PUBLIC_MAP_ATTRIBUTION, và thay 2 hàm geocode trong lib/geo.ts.
-const TILES = process.env.NEXT_PUBLIC_MAP_TILES ?? 'https://tile.openstreetmap.de/{z}/{x}/{y}.png';
-const ATTRIBUTION = process.env.NEXT_PUBLIC_MAP_ATTRIBUTION ?? '© OpenStreetMap';
+// Nền bản đồ (MAP_TILES) và tìm địa chỉ (Photon): xem lib/geo.ts.
 const HCM = { lat: 10.7769, lng: 106.7009 };
 
 /** MapPicker: ghim cố định giữa khung, kéo bản đồ để đặt; tìm đường; vị trí của tôi; báo vùng giao cây sống. */
@@ -52,7 +47,7 @@ export function MapPicker({ initial, stores = [], onPick, onClose }: {
     import('leaflet').then((L) => {
       if (!alive || !box.current) return;
       const m = L.map(box.current, { zoomControl: false, attributionControl: true }).setView([center.lat, center.lng], initial ? 17 : 13);
-      L.tileLayer(TILES, { maxZoom: 18, attribution: ATTRIBUTION }).addTo(m);
+      L.tileLayer(MAP_TILES, { maxZoom: 18, attribution: MAP_ATTRIBUTION }).addTo(m);
       L.control.zoom({ position: 'topright' }).addTo(m);
       m.on('moveend', () => {
         const c = m.getCenter();

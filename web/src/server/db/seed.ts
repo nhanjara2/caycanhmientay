@@ -13,11 +13,14 @@ import { tracksLots } from '@/lib/stock';
 import { WELCOME_CODE, WELCOME_DEFAULT } from '@/lib/voucher-labels';
 import * as schema from './schema';
 
-/** Tọa độ ước lượng — cần cập nhật đúng vị trí cửa hàng. */
+/** Q7 / NVL / TD là cửa hàng mẫu (tọa độ ước lượng, không hiện cho khách); SD là cửa hàng thật. Tồn mẫu chỉ chia cho 3 cửa hàng đầu. */
 const STORES = [
   { code: 'Q7', name: 'Vườn ươm Quận 7', address: '169 Phạm Hữu Lầu, Phường Tân Mỹ, TP. Hồ Chí Minh', lat: 10.7162, lng: 106.7338, isDefault: true },
   { code: 'NVL', name: 'Cửa hàng Nguyễn Văn Linh', address: '1487 Nguyễn Văn Linh, Phường Tân Hưng, TP. Hồ Chí Minh', lat: 10.7291, lng: 106.7047 },
   { code: 'TD', name: 'Cửa hàng Thảo Điền', address: '25 Quốc Hương, Phường An Khánh, TP. Hồ Chí Minh', lat: 10.8036, lng: 106.7327 },
+  // Cửa hàng thật duy nhất (chủ shop cung cấp 07/10/2026) — hiện trên trang Hệ thống cửa hàng; giống dòng migration 0029.
+  { code: 'SD', name: 'Vườn ươm Cây Cảnh Miền Tây', address: 'Làng hoa Sa Đéc, Phường Sa Đéc, Tỉnh Đồng Tháp', lat: 10.349176, lng: 105.731775,
+    isPublic: true, phone: '0703005001', contactName: 'Lê Hoài Nhân', open24h: true, services: ['nursery', 'clinic'] },
 ];
 
 type Db = NodePgDatabase<typeof schema>;
@@ -64,7 +67,7 @@ export async function seedIfEmpty(db: Db) {
       });
       for (const [idx, o] of p.options.entries()) {
         await tx.insert(schema.productOptions).values({ productSlug: p.slug, idx, label: o.label, price: o.price, oldPrice: o.oldPrice ?? null, stock: 100 });
-        await tx.insert(schema.stockLots).values(stores.map((s, i) => ({ storeId: s.id, productSlug: p.slug, optionIdx: idx, qty: split[i], ...lot })));
+        await tx.insert(schema.stockLots).values(stores.slice(0, split.length).map((s, i) => ({ storeId: s.id, productSlug: p.slug, optionIdx: idx, qty: split[i], ...lot })));
       }
     }
   });

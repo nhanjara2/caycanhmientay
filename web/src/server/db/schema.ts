@@ -540,6 +540,17 @@ export const stores = pgTable('stores', {
   /** Kho mặc định: nhận hàng nhập và xuất đơn online trước. */
   isDefault: boolean('is_default').notNull().default(false),
   active: boolean('active').notNull().default(true),
+  // Phần hiển thị ở trang khách /he-thong-cua-hang (lib/stores.ts).
+  /** Hiện trên trang Hệ thống cửa hàng. Cửa hàng cũ (mẫu) mặc định không hiện. */
+  isPublic: boolean('is_public').notNull().default(false),
+  phone: text('phone'),
+  contactName: text('contact_name'),
+  /** Mở cửa cả ngày; không thì dùng openFrom – openTo ("HH:MM", giờ Việt Nam, hằng ngày). Cả hai trống = chưa khai giờ. */
+  open24h: boolean('open_24h').notNull().default(false),
+  openFrom: text('open_from'),
+  openTo: text('open_to'),
+  /** Khóa trong STORE_SERVICES (lib/stores.ts): nursery, workshop, parking, clinic. */
+  services: jsonb('services').$type<string[]>().notNull().default([]),
 });
 
 /**

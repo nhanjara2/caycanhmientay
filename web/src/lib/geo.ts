@@ -2,6 +2,12 @@
 // Photon (komoot) — miễn phí, lượng truy cập vừa phải. Chạy thật với lượng khách lớn: đổi sang Goong / Vietmap (xem MapPicker).
 const PHOTON = 'https://photon.komoot.io';
 
+// Nền bản đồ: máy chủ OpenStreetMap Đức (miễn phí, lượng truy cập vừa phải). Không dùng thẳng openstreetmap.org vì một số nhà mạng Việt Nam chặn tên miền này.
+// Chạy thật với lượng khách lớn: đổi sang Goong / Vietmap (có hợp đồng, bản đồ đúng chủ quyền Hoàng Sa – Trường Sa)
+// bằng biến NEXT_PUBLIC_MAP_TILES / NEXT_PUBLIC_MAP_ATTRIBUTION, và thay 2 hàm geocode bên dưới. Dùng chung MapPicker + bản đồ cửa hàng.
+export const MAP_TILES = process.env.NEXT_PUBLIC_MAP_TILES ?? 'https://tile.openstreetmap.de/{z}/{x}/{y}.png';
+export const MAP_ATTRIBUTION = process.env.NEXT_PUBLIC_MAP_ATTRIBUTION ?? '© OpenStreetMap';
+
 type PhotonProps = Partial<Record<'name' | 'housenumber' | 'street' | 'locality' | 'district' | 'city' | 'state' | 'countrycode', string>>;
 type PhotonResult = { features: { properties: PhotonProps; geometry: { coordinates: [number, number] } }[] };
 

@@ -3,13 +3,24 @@
 import { useRouter } from 'next/navigation';
 import { useState, useTransition, type FormEvent } from 'react';
 import { deleteStoreAction, saveStoreAction } from '@/app/actions/stores';
+import { STORE_SERVICE_KEYS, STORE_SERVICES, type StoreService } from '@/lib/stores';
 import type { StoreRow } from '@/server/stores-admin';
 
-type Form = { id?: number; code: string; name: string; address: string; lat: string; lng: string; active: boolean; isDefault: boolean };
-const blank: Form = { code: '', name: '', address: '', lat: '', lng: '', active: true, isDefault: false };
-const toForm = (s: StoreRow): Form => ({ id: s.id, code: s.code, name: s.name, address: s.address, lat: String(s.lat), lng: String(s.lng), active: s.active, isDefault: s.isDefault });
+type Form = {
+  id?: number; code: string; name: string; address: string; lat: string; lng: string; active: boolean; isDefault: boolean;
+  isPublic: boolean; phone: string; contactName: string; open24h: boolean; openFrom: string; openTo: string; services: StoreService[];
+};
+const blank: Form = {
+  code: '', name: '', address: '', lat: '', lng: '', active: true, isDefault: false,
+  isPublic: true, phone: '', contactName: '', open24h: false, openFrom: '', openTo: '', services: [],
+};
+const toForm = (s: StoreRow): Form => ({
+  id: s.id, code: s.code, name: s.name, address: s.address, lat: String(s.lat), lng: String(s.lng), active: s.active, isDefault: s.isDefault,
+  isPublic: s.isPublic, phone: s.phone ?? '', contactName: s.contactName ?? '', open24h: s.open24h, openFrom: s.openFrom ?? '', openTo: s.openTo ?? '',
+  services: STORE_SERVICE_KEYS.filter((k) => s.services.includes(k)),
+});
 
-/** Danh sách cửa hàng + hộp thêm / sửa (tên, địa chỉ, tọa độ dùng tính vùng giao cây sống, mặc định, hoạt động). */
+/** Danh sách cửa hàng + hộp thêm / sửa (tên, địa chỉ, tọa độ, mặc định, hoạt động, và phần hiện cho khách ở trang Hệ thống cửa hàng: điện thoại, giờ mở cửa, dịch vụ). */
 export function StoreAdmin({ stores }: { stores: StoreRow[] }) {
   const router = useRouter();
   const [form, setForm] = useState<Form | null>(null);
@@ -24,7 +35,10 @@ export function StoreAdmin({ stores }: { stores: StoreRow[] }) {
     setError('');
     const lat = Number(form.lat.replace(',', '.')), lng = Number(form.lng.replace(',', '.'));
     start(async () => {
-      const r = await saveStoreAction({ id: form.id, code: form.code, name: form.name, address: form.address, lat, lng, active: form.active, isDefault: form.isDefault })
+      const r = await saveStoreAction({
+        id: form.id, code: form.code, name: form.name, address: form.address, lat, lng, active: form.active, isDefault: form.isDefault,
+        isPublic: form.isPublic, phone: form.phone, contactName: form.contactName, open24h: form.open24h, openFrom: form.openFrom, openTo: form.openTo, services: form.services,
+      })
         .catch(() => ({ ok: false as const, error: 'Có lỗi, vui lòng thử lại' }));
       if (!r.ok) { setError(r.error); return; }
       setForm(null);
@@ -83,6 +97,41 @@ export function StoreAdmin({ stores }: { stores: StoreRow[] }) {
             </span>
             <label className="vx-check"><input type="checkbox" checked={form.isDefault} onChange={(e) => set('isDefault', e.target.checked)} /> Cửa hàng mặc định (nhận hàng nhập, xuất đơn online trước)</label>
             <label className="vx-check"><input type="checkbox" checked={form.active} onChange={(e) => set('active', e.target.checked)} /> Đang hoạt động</label>
+            <div className="ad-card__h" style={{ padding: 0, border: 0, marginTop: 8 }}>Hiển thị cho khách (trang Hệ thống cửa hàng)</div>
+            <label className="vx-check"><input type="checkbox" checked={form.isPublic} onChange={(e) => set('isPublic', e.target.checked)} /> Hiện cửa hàng này trên trang Hệ thống cửa hàng</label>
+            <div className="ad-frow two">
+              <div className="ad-f">
+                <label htmlFor="st-phone">Điện thoại</label>
+                <input id="st-phone" className="vx-input" inputMode="tel" value={form.phone} maxLength={14} onChange={(e) => set('phone', e.target.value)} placeholder="0703005001" />
+              </div>
+              <div className="ad-f">
+                <label htmlFor="st-contact">Người liên hệ (không bắt buộc)</label>
+                <input id="st-contact" className="vx-input" value={form.contactName} maxLength={60} onChange={(e) => set('contactName', e.target.value)} placeholder="Lê Hoài Nhân" />
+              </div>
+            </div>
+            <label className="vx-check"><input type="checkbox" checked={form.open24h} onChange={(e) => set('open24h', e.target.checked)} /> Mở cửa 24/24</label>
+            {!form.open24h && (
+              <div className="ad-frow two">
+                <div className="ad-f">
+                  <label htmlFor="st-from">Giờ mở cửa</label>
+                  <input id="st-from" type="time" className="vx-input" value={form.openFrom} onChange={(e) => set('openFrom', e.target.value)} />
+                </div>
+                <div className="ad-f">
+                  <label htmlFor="st-to">Giờ đóng cửa</label>
+                  <input id="st-to" type="time" className="vx-input" value={form.openTo} onChange={(e) => set('openTo', e.target.value)} />
+                </div>
+              </div>
+            )}
+            <div className="ad-f">
+              <label>Dịch vụ tại cửa hàng</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 20px' }}>
+                {STORE_SERVICE_KEYS.map((k) => (
+                  <label key={k} className="vx-check">
+                    <input type="checkbox" checked={form.services.includes(k)} onChange={(e) => set('services', e.target.checked ? [...form.services, k] : form.services.filter((x) => x !== k))} /> {STORE_SERVICES[k]}
+                  </label>
+                ))}
+              </div>
+            </div>
             {error && <span className="vx-err" role="alert">{error}</span>}
             <span className="acts" style={{ display: 'flex', gap: 8 }}>
               <button className="vx-btn vx-btn--primary" disabled={pending}>{pending ? 'Đang lưu…' : 'Lưu cửa hàng'}</button>
@@ -95,7 +144,7 @@ export function StoreAdmin({ stores }: { stores: StoreRow[] }) {
       <div className="ad-card">
         <div className="ad-tablewrap">
           <table className="ad-table app-mtable">
-            <thead><tr><th>Cửa hàng</th><th>Địa chỉ</th><th>Tọa độ</th><th className="num">Tồn kho</th><th>Trạng thái</th><th /></tr></thead>
+            <thead><tr><th>Cửa hàng</th><th>Địa chỉ</th><th>Tọa độ</th><th className="num">Tồn kho</th><th>Trạng thái</th><th>Hiện trên web</th><th /></tr></thead>
             <tbody>
               {stores.map((s) => (
                 <tr key={s.id}>
@@ -104,6 +153,7 @@ export function StoreAdmin({ stores }: { stores: StoreRow[] }) {
                   <td data-label="Tọa độ">{s.lat.toFixed(4)}, {s.lng.toFixed(4)}</td>
                   <td className="num" data-label="Tồn kho">{s.stock.toLocaleString('vi-VN')}</td>
                   <td data-label="Trạng thái"><span className={`ad-pill ${s.active ? 'done' : 'wait'}`}>{s.active ? 'Hoạt động' : 'Ngừng'}</span></td>
+                  <td data-label="Hiện trên web"><span className={`ad-pill ${s.isPublic ? 'done' : 'wait'}`}>{s.isPublic ? 'Hiện' : 'Ẩn'}</span></td>
                   <td data-label="Thao tác">
                     <span style={{ display: 'flex', gap: 8 }}>
                       <button type="button" className="vx-btn vx-btn--outline vx-btn--sm" onClick={() => { setForm(toForm(s)); setError(''); setListError(''); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Sửa</button>
@@ -112,7 +162,7 @@ export function StoreAdmin({ stores }: { stores: StoreRow[] }) {
                   </td>
                 </tr>
               ))}
-              {!stores.length && <tr><td colSpan={6} style={{ color: 'var(--ink-muted)' }}>Chưa có cửa hàng nào.</td></tr>}
+              {!stores.length && <tr><td colSpan={7} style={{ color: 'var(--ink-muted)' }}>Chưa có cửa hàng nào.</td></tr>}
             </tbody>
           </table>
         </div>

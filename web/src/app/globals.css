@@ -1051,6 +1051,25 @@ button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .ab-tl__tag { font-size: 0.875rem; line-height: 1.25rem; font-weight: 600; padding: 0 0.625rem; border-radius: 999px; background: var(--primary-soft); color: var(--primary-hover); }
 .vx-policy .ab-tl__item p { margin: 0.125rem 0 0; }
 
+/* Hệ thống cửa hàng (components/StoreLocator + StoreMap): tab là <button>, ô tìm là <input>, danh sách bấm chọn được, ghim bản đồ Leaflet */
+.vx-sfind__tabs button { display: flex; justify-content: center; align-items: center; gap: 6px; min-height: 2.75rem; padding: 12px; border: 0; border-bottom: 2px solid transparent; background: none; font: inherit; color: var(--ink-muted); font-weight: 500; cursor: pointer; }
+.vx-sfind__tabs button .vx-ico { width: 16px; height: 16px; }
+.vx-sfind__tabs button[aria-current="true"] { color: var(--primary); font-weight: 700; border-bottom-color: var(--primary); }
+.vx-sfind__search { cursor: text; }
+.vx-sfind__search .app-bare { color: var(--ink); }
+.vx-sres__item { cursor: pointer; }
+.vx-sres__item:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+@media (max-width: 47.9375em) {
+  /* Nút chọn tròn to hơn trên điện thoại (xem khối Dễ dùng) → cột đầu của dòng cửa hàng rộng bằng nó */
+  .app-site .vx-sres__item { grid-template-columns: 1.5rem minmax(0, 1fr); }
+  .app-site .vx-sres__item[aria-checked="true"] .vx-radio { border-width: 7px; }
+}
+.app-store-near { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; font-size: 0.875rem; line-height: 1.4; color: var(--ink-muted); }
+.app-store-pin span { display: grid; place-items: center; width: 36px; height: 36px; box-sizing: border-box; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); background: var(--ink-muted); border: 3px solid var(--surface); box-shadow: var(--shadow-pop); }
+.app-store-pin span i { width: 10px; height: 10px; border-radius: 50%; background: var(--surface); transform: rotate(45deg); }
+.app-store-pin.is-sel span { background: var(--primary); }
+.app-store-me span { display: block; width: 18px; height: 18px; box-sizing: border-box; border-radius: 50%; background: #2563eb; border: 3px solid #fff; box-shadow: 0 0 0 2px rgba(37, 99, 235, .35); }
+
 /* >>> DỄ DÙNG ĐIỆN THOẠI */
 /* ===================== Dễ dùng trên điện thoại cho người lớn tuổi (06/10/2026) =====================
  * Chỉ áp cho trang khách (gốc .app-site trong SiteChrome) — không đụng admin / POS / app nhân viên.

@@ -85,7 +85,7 @@ export const views = [
   // Bệnh cây (/benh-cay) đã viết tay với dữ liệu thật.
 
   // Cửa hàng, chính sách, tin tức
-  site('StoreLocatorView', 'StoreLocatorLayout'),
+  // Hệ thống cửa hàng (/he-thong-cua-hang) đã viết tay (components/StoreLocator) với dữ liệu thật từ bảng stores.
   // Giới thiệu (/chinh-sach/gioi-thieu) đã viết tay (components/AboutView); các trang chính sách khác dựng từ lib/policies.
   // Khuyến mãi (/khuyen-mai) đã viết tay với dữ liệu thật.
 
