@@ -123,12 +123,13 @@ export function PostLinks({ title, posts, extra }: { title: string; posts: { slu
   );
 }
 
-export function EmptyPosts({ text }: { text: string }) {
+/** Khung "chưa có bài". `hint` thay dòng gợi ý mặc định (Góc chăm cây gợi ý thư viện bệnh cây — không hợp với trang tin công ty). */
+export function EmptyPosts({ text, hint }: { text: string; hint?: ReactNode }) {
   return (
     <div className="vx-cblock app-empty-posts">
       <Icon name="leaf" size={32} />
       <b>{text}</b>
-      <span>Quay lại sau nhé — hoặc xem <Link href="/benh-cay">thư viện bệnh cây</Link>.</span>
+      <span>{hint ?? <>Quay lại sau nhé — hoặc xem <Link href="/benh-cay">thư viện bệnh cây</Link>.</>}</span>
     </div>
   );
 }

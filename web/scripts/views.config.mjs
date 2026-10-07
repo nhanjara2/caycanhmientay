@@ -89,7 +89,7 @@ export const views = [
   // Giới thiệu (/chinh-sach/gioi-thieu) đã viết tay (components/AboutView); các trang chính sách khác dựng từ lib/policies.
   // Khuyến mãi (/khuyen-mai) đã viết tay với dữ liệu thật.
 
-  // Flash sale (trang phụ), dịch vụ
+  // Flash sale (trang phụ), cây Tết
   site('FlashSaleView', 'FlashSaleLayout', {
     replace: { 'div.vx-grid': '<FlashSaleGrid />' },
     imports: { '@/components/FlashSaleGrid': ['FlashSaleGrid'] },
@@ -99,17 +99,8 @@ export const views = [
     replace: { 'div.cp-art': '<TetHeroMedia />' },
     imports: { '@/components/TetHeroMedia': ['TetHeroMedia'] },
   }),
-  site('ServicesHubView', 'ServicesHubLayout', { links: { 'Xem chi tiết': ROUTES.service } }),
-  // Trang cho thuê cây văn phòng: nút báo giá mở form Đặt lịch khảo sát chọn sẵn "Cây văn phòng".
-  site('ServiceDetailView', 'ServiceDetailLayout', {
-    buttonLinks: {
-      'Chọn gói này': `${ROUTES.quote}?loai=van-phong`,
-      'Nhận báo giá chính thức': `${ROUTES.quote}?loai=van-phong`,
-      'Yêu cầu báo giá': `${ROUTES.quote}?loai=van-phong`,
-    },
-  }),
+  // Dịch vụ (/dich-vu), Cây văn phòng (/dich-vu/cho-thue-cay-van-phong), Doanh nghiệp (/doanh-nghiep) đã viết tay (components/ServicesHub, OfficePlants, BusinessPage).
   // Đặt lịch khảo sát (/dich-vu/dat-lich-khao-sat) đã viết tay: lưu thật, admin xem ở /admin/dich-vu.
-  site('BusinessView', 'BusinessLayout'),
 
   // Admin — khung AdminShell ở src/app/admin/(shell)/layout.tsx. Tổng quan, báo cáo, đơn hàng, khách hàng, khuyến mãi, đánh giá, yêu cầu dịch vụ, bài viết & video đã viết tay với dữ liệu thật.
   { name: 'AdminPOSView', from: 'AdminPOS' },

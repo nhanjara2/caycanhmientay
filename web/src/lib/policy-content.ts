@@ -588,8 +588,89 @@ const NGUON_ANH: Section[] = [
 // ---- Các trang ngắn chưa viết lại (giữ nguyên nội dung cũ) ---------------------------------------------------
 
 const BVTV_AN_TOAN: Section[] = [
-  { h: 'Trước khi pha', blocks: ['Đọc kỹ nhãn: hoạt chất, liều pha, thời gian cách ly. Đeo găng tay, khẩu trang.'] },
-  { h: 'Sau khi phun', blocks: ['Rửa tay, tắm; cất thuốc xa tầm tay trẻ em và vật nuôi; không đổ thuốc thừa xuống cống.'] },
+  { h: 'Tóm tắt nhanh', blocks: [
+    'Thuốc bảo vệ thực vật (BVTV) giúp cứu cây khi sâu bệnh nặng, nhưng dùng sai có thể làm cây chết, gây hại cho người, thú cưng và môi trường. Trang này tóm tắt những điều cần nhớ khi dùng thuốc cho cây cảnh, rau trồng tại nhà và vườn nhỏ.',
+    { note: '**Nhớ 6 điều:** chỉ dùng thuốc khi biết đúng vấn đề của cây · đọc kỹ nhãn trước khi pha · làm đúng "4 đúng" · đeo găng tay, khẩu trang khi pha và phun · giữ xa trẻ em, thú cưng, thực phẩm · không đổ thuốc thừa xuống nguồn nước. Khi nhãn của thuốc khác với hướng dẫn chung ở đây, **làm theo nhãn**.' },
+  ] },
+  { h: 'Trước khi mua và trước khi dùng', blocks: [
+    { ul: [
+      '**Xác định đúng vấn đề.** Lá vàng, héo, rụng lá thường do tưới sai, thiếu sáng hoặc đất úng, không phải lúc nào cũng là sâu bệnh — phun thuốc trong trường hợp này không giúp ích mà còn hại cây. Xem thư viện [Bắt bệnh cho cây](/benh-cay) hoặc gửi ảnh cho kỹ sư của shop trước khi mua.',
+      '**Làm các việc nhẹ trước:** cắt bỏ lá và cành bệnh, tách cây bệnh ra xa các cây khác, cho cây thoáng gió và thoát nước tốt. Chỉ dùng thuốc khi sâu bệnh còn lan rộng hoặc các cách trên chưa đủ.',
+      '**Chỉ mua thuốc có nguồn gốc rõ ràng** thuộc danh mục thuốc BVTV được phép sử dụng tại Việt Nam: bao bì còn nguyên, có nhãn tiếng Việt, ghi số đăng ký, tên hoạt chất và hạn sử dụng. Không mua thuốc không nhãn, thuốc đã bị chia chai, thuốc hết hạn, và không dùng thuốc nằm ngoài danh mục.',
+      '**Tại Cây Cảnh Miền Tây,** mỗi sản phẩm thuốc ghi sẵn Số đăng ký, Hoạt chất, Liều pha và Thời gian cách ly ngay trên trang sản phẩm; khi trong giỏ hàng có thuốc, bạn được nhắc xác nhận đã đọc hướng dẫn an toàn trước khi đặt hàng. Xem [Tra cứu thuốc BVTV](/danh-muc/thuoc-bvtv).',
+    ] },
+  ] },
+  { h: 'Nguyên tắc "4 đúng"', blocks: [
+    'Đây là nguyên tắc cơ bản mà ngành bảo vệ thực vật hướng dẫn người trồng cây áp dụng mỗi lần dùng thuốc.',
+    { table: { head: ['Nguyên tắc', 'Nghĩa là', 'Lỗi hay gặp'], rows: [
+      ['**Đúng thuốc**', 'Chọn thuốc đúng với sâu bệnh đang gặp và đúng loại cây được ghi trên nhãn.', 'Thấy lá vàng là phun thuốc trị nấm, trong khi cây chỉ bị úng nước hoặc thiếu sáng.'],
+      ['**Đúng lúc**', 'Phun khi sâu bệnh mới xuất hiện hoặc đúng thời điểm nhãn hướng dẫn; phun lúc sáng sớm hoặc chiều mát.', 'Phun giữa trưa nắng gắt (dễ cháy lá), hoặc phun ngay trước cơn mưa (thuốc bị rửa trôi).'],
+      ['**Đúng nồng độ, liều lượng**', 'Đong chính xác thuốc và nước theo nhãn, không tự tăng liều.', 'Tăng liều "cho chắc": cây dễ cháy lá, sâu bệnh nhờn thuốc, tồn dư thuốc nhiều hơn.'],
+      ['**Đúng cách**', 'Dùng bình phun phù hợp, phun đều cả mặt dưới lá, đúng số lần và khoảng cách giữa các lần phun.', 'Phun một lần rồi bỏ, hoặc trộn nhiều loại thuốc vào một bình khi nhãn không cho phép.'],
+    ] } },
+    '**Tránh nhờn thuốc:** dùng đi dùng lại một loại hoạt chất làm sâu bệnh quen thuốc, lần sau thuốc kém tác dụng. Nếu phải phun nhiều đợt, hỏi kỹ sư để luân phiên thuốc khác nhóm hoạt chất.',
+  ] },
+  { h: 'Đọc nhãn thuốc', blocks: [
+    'Trước khi mở nắp, tìm đủ các thông tin sau trên nhãn:',
+    { ul: [
+      '**Tên thuốc và hoạt chất**, hạn sử dụng, số lô.',
+      '**Cây trồng và đối tượng sâu bệnh** mà thuốc được đăng ký (thuốc trị nấm không trị được sâu, và ngược lại).',
+      '**Liều lượng và lượng nước** cho mỗi bình hoặc mỗi diện tích, số lần phun, khoảng cách giữa các lần.',
+      '**Thời gian cách ly:** số ngày tối thiểu từ lần phun cuối đến khi thu hoạch và ăn. Với rau ăn lá, rau gia vị, cây ăn trái trồng tại nhà thì bắt buộc phải đợi đủ số ngày này.',
+      '**Biểu tượng và từ cảnh báo** (ví dụ "Nguy hiểm", "Cảnh báo"), cách sơ cứu khi dính thuốc, cách bảo quản.',
+    ] },
+  ] },
+  { h: 'Chuẩn bị và pha thuốc', blocks: [
+    { ol: [
+      '**Mặc đồ bảo hộ trước khi mở thuốc:** găng tay chống hóa chất, khẩu trang loại dùng cho thuốc BVTV (khẩu trang vải thường không đủ), kính che mắt, áo dài tay, quần dài, ủng hoặc giày kín.',
+      'Pha ở nơi thoáng, xa nguồn nước ăn uống, xa trẻ em và thú cưng. Không ăn, uống, hút thuốc khi đang pha và phun.',
+      'Đong thuốc bằng ống đong hoặc nắp đong riêng, không ước chừng bằng mắt, không dùng chung với đồ ăn uống.',
+      'Cho khoảng một nửa lượng nước vào bình, cho thuốc vào, khuấy bằng que riêng (không dùng tay trần), rồi thêm đủ nước. Không tự trộn nhiều loại thuốc trong một bình nếu nhãn không cho phép — trộn sai có thể cháy lá hoặc mất tác dụng.',
+      'Chỉ pha lượng vừa đủ dùng hết trong ngày.',
+    ] },
+  ] },
+  { h: 'Khi phun', blocks: [
+    { ul: [
+      'Phun lúc sáng sớm hoặc chiều mát; tránh nắng gắt, gió mạnh và lúc trời sắp mưa.',
+      'Đứng xuôi chiều gió, phun đều cả hai mặt lá, không phun quá ướt đến mức thuốc chảy ròng xuống gốc.',
+      '**Cây trong nhà, ban công:** mang cây ra nơi thoáng để phun, để lá khô hẳn rồi mới đưa vào. Không phun trong phòng kín, phòng đang bật điều hòa, hay gần khu bếp và nơi ăn uống.',
+      'Giữ trẻ em và thú cưng ra xa trong lúc phun và cho đến khi cây khô; chuyển bát nước, thức ăn của thú cưng đi chỗ khác.',
+      'Nếu thấy chóng mặt, buồn nôn, cay mắt, rát da thì dừng ngay, ra nơi thoáng và xử lý theo mục "Khi bị dính thuốc hoặc nghi ngộ độc" bên dưới.',
+    ] },
+  ] },
+  { h: 'Sau khi phun', blocks: [
+    { ul: [
+      'Tháo găng tay, khẩu trang rồi rửa tay bằng xà phòng; tắm, gội đầu và thay quần áo. Giặt đồ bảo hộ riêng, không giặt chung với đồ cả nhà.',
+      'Rửa bình phun và dụng cụ ở nơi xa ao, hồ, giếng, kênh rạch. Nước thừa không đổ xuống cống hay nguồn nước; pha vừa đủ ngay từ đầu để không còn nhiều thuốc thừa.',
+      '**Ghi lại ngày phun và tên thuốc** (vào sổ hoặc ghi chú trên điện thoại) để biết khi nào đủ thời gian cách ly và khi nào phun lại.',
+      'Với cây ăn được: đợi đủ thời gian cách ly rồi mới thu hoạch, rửa kỹ trước khi ăn.',
+    ] },
+  ] },
+  { h: 'Bảo quản và xử lý bao bì', blocks: [
+    { ul: [
+      'Giữ thuốc trong chai, gói **nguyên nhãn**; không rót sang chai nước ngọt, chai nước suối hay đồ đựng thực phẩm.',
+      'Cất nơi khô ráo, thoáng mát, tránh nắng, **có khóa hoặc để trên cao**, xa tầm tay trẻ em, thú cưng, thực phẩm và thức ăn chăn nuôi.',
+      'Bao bì thuốc sau khi dùng là chất thải nguy hại: súc rửa vỏ chai ba lần (đổ nước súc vào bình phun để dùng tiếp), rồi bỏ vào nơi thu gom bao bì thuốc BVTV của địa phương. Không đốt, không chôn bừa bãi, không bỏ xuống ao hồ và không dùng lại vỏ chai.',
+      'Thuốc hết hạn hoặc không còn dùng: không đổ đi; hỏi cửa hàng bán thuốc hoặc cán bộ nông nghiệp địa phương nơi tiếp nhận.',
+    ] },
+  ] },
+  { h: 'Khi bị dính thuốc hoặc nghi ngộ độc', blocks: [
+    { ol: [
+      'Đưa người bị nạn ra nơi thoáng, tránh xa chỗ vừa phun; người cứu hộ cũng phải đeo găng tay.',
+      '**Dính vào da:** cởi ngay quần áo dính thuốc, rửa da bằng nhiều nước sạch và xà phòng. **Vào mắt:** rửa mắt bằng nước sạch chảy nhẹ trong ít nhất 15 phút.',
+      '**Hít phải:** để người bệnh nằm nghỉ ở nơi thoáng. **Nuốt phải:** súc miệng; không tự ý gây nôn trừ khi nhãn thuốc hoặc nhân viên y tế hướng dẫn.',
+      'Gọi cấp cứu **115** hoặc đưa ngay đến cơ sở y tế gần nhất, **mang theo nhãn hoặc bao bì thuốc** để bác sĩ biết hoạt chất. Với trẻ em và thú cưng, không đợi có triệu chứng mới đi khám.',
+    ] },
+    { note: 'Trang này tóm tắt nguyên tắc chung để bạn tham khảo, không thay thế nhãn của từng loại thuốc, hướng dẫn của cơ quan chức năng hay chỉ dẫn của bác sĩ.' },
+  ] },
+  { h: 'Cần hỏi thêm?', blocks: [
+    { ul: [
+      'Chưa chắc cây bị gì hoặc nên dùng thuốc nào: nhắn ảnh cho kỹ sư qua Zalo hoặc gọi, ' + HOURS + '.',
+      'Đọc thêm bài hướng dẫn ở [Góc chăm cây · Thuốc & Phân bón](/goc-cham-cay?chuyen-muc=thuoc-phan-bon).',
+      'Đổi trả thuốc, phân bón: xem [Chính sách đổi trả](/chinh-sach/doi-tra).',
+    ] },
+    contact('care'),
+  ] },
 ];
 const HUONG_DAN_MUA: Section[] = [
   { h: 'Các bước', blocks: ['Chọn sản phẩm → Giỏ hàng → Thanh toán: chọn hình thức nhận, địa chỉ, phương thức thanh toán → Đặt hàng.'] },

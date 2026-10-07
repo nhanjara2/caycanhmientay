@@ -1078,6 +1078,117 @@ button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .app-store-pin.is-sel span { background: var(--primary); }
 .app-store-me span { display: block; width: 18px; height: 18px; box-sizing: border-box; border-radius: 50%; background: #2563eb; border: 3px solid #fff; box-shadow: 0 0 0 2px rgba(37, 99, 235, .35); }
 
+/* Tin khuyến mãi (/khuyen-mai): đầu trang + chip chuyển nhanh, thẻ mã giảm giá có nút "Chép mã", 3 bước dùng mã, khung theo dõi Zalo / Facebook */
+.pm-page { max-width: 1200px; margin: 0 auto; width: 100%; padding: var(--space-4) var(--space-6) var(--space-8); display: flex; flex-direction: column; gap: var(--space-6); box-sizing: border-box; }
+.pm-head { display: flex; flex-direction: column; gap: var(--space-2); }
+.pm-head h1 { margin: 0; font-size: 1.875rem; line-height: 2.375rem; }
+.pm-head p { margin: 0; max-width: 46rem; color: var(--ink-muted); font-size: 0.9375rem; line-height: 1.5rem; }
+.pm-jump { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-1); }
+.pm-jump .vx-chip { text-decoration: none; }
+.pm-sec { display: flex; flex-direction: column; gap: var(--space-3); scroll-margin-top: calc(var(--header-h, 96px) + 0.75rem); }
+.pm-vouchers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+.vx-voucher.pm-voucher { grid-template-columns: 3rem minmax(0, 1fr) auto; align-items: start; padding: var(--space-4); gap: var(--space-3); }
+.pm-voucher .vx-btn { align-self: center; white-space: nowrap; }
+.pm-code { color: var(--primary); letter-spacing: 0.02em; }
+.pm-steps { list-style: none; margin: var(--space-2) 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); }
+.pm-steps li { display: flex; gap: var(--space-3); align-items: flex-start; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); font-size: 0.875rem; line-height: 1.375rem; color: var(--ink-muted); }
+.pm-steps li > span:last-child { display: flex; flex-direction: column; gap: 0.125rem; }
+.pm-steps b { color: var(--ink); font-size: 0.9375rem; }
+.pm-steps .n { flex: none; width: 2rem; height: 2rem; border-radius: 50%; background: var(--primary); color: var(--on-primary); display: grid; place-items: center; font-weight: 700; }
+.pm-rules { margin: 0; padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.875rem; line-height: 1.5rem; color: var(--ink-muted); }
+.pm-rules a, .pm-more a { color: var(--primary); font-weight: 600; }
+.pm-more { margin: 0; font-size: 0.875rem; line-height: 1.375rem; color: var(--ink-muted); }
+.pm-news .vx-thumbimg { aspect-ratio: 16 / 9; }
+.pm-follow { display: flex; flex-direction: column; gap: var(--space-2); align-items: flex-start; background: var(--surface); border: 1px dashed var(--border); border-radius: var(--radius-lg); padding: var(--space-6) var(--space-6); font-size: 0.9375rem; line-height: 1.5rem; color: var(--ink-muted); }
+.pm-follow b { color: var(--ink); font-size: 1.0625rem; }
+.pm-follow .acts { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-1); }
+.pm-contact { display: flex; align-items: center; gap: var(--space-4); background: var(--primary); color: var(--on-primary); border-radius: var(--radius-lg); padding: var(--space-6) var(--space-6); }
+.pm-contact b { display: block; font-size: 1.125rem; line-height: 1.625rem; }
+.pm-contact > span { display: flex; flex-direction: column; gap: 0.125rem; font-size: 0.875rem; line-height: 1.375rem; opacity: 0.95; }
+.pm-contact .vx-btn { margin-left: auto; background: var(--surface); color: var(--primary); flex: none; }
+@media (max-width: 63.9375em) {
+  .pm-page { padding-inline: var(--space-4); }
+  .pm-vouchers { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 47.9375em) {
+  .pm-page { padding: var(--space-3) var(--space-3) var(--space-6); gap: var(--space-6); }
+  .pm-head h1 { font-size: 1.5rem; line-height: 2rem; }
+  .vx-voucher.pm-voucher { grid-template-columns: 2.5rem minmax(0, 1fr); padding: var(--space-3); }
+  .vx-voucher.pm-voucher .vx-voucher__ic { width: 2.5rem; height: 2.5rem; }
+  .pm-voucher .vx-btn { grid-column: 1 / -1; width: 100%; justify-content: center; }
+  .pm-steps { grid-template-columns: minmax(0, 1fr); }
+  .pm-contact { flex-direction: column; align-items: flex-start; padding: var(--space-4); }
+  .pm-contact .vx-btn { margin-left: 0; width: 100%; justify-content: center; }
+  .pm-follow { padding: var(--space-4); }
+}
+
+/* Dịch vụ / Cây văn phòng / Doanh nghiệp (components/ServicesHub, OfficePlants, BusinessPage, ServiceParts): phần thêm cho các khối của ServicesHubLayout */
+.sv-sec > p.sub { margin: -0.5rem auto 0; max-width: 46rem; }
+.sv-crumb { padding: var(--space-3) var(--space-6) 0; }
+.sv-title { margin: 0; text-align: center; font-size: 1.75rem; line-height: 2.25rem; }
+.sv-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); max-width: 62rem; margin: 0 auto; width: 100%; }
+.sv-opt { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-6); display: flex; flex-direction: column; gap: var(--space-3); }
+.sv-opt > b { font-size: 1.25rem; line-height: 1.75rem; }
+.sv-opt > p { margin: 0; color: var(--ink-muted); font-size: 0.9375rem; line-height: 1.5rem; }
+.sv-opt .vx-btn { margin-top: auto; }
+.sv-opt__ic { width: 3rem; height: 3rem; border-radius: var(--radius-md); background: var(--primary-soft); color: var(--primary-hover); display: grid; place-items: center; }
+.sv-opt__ic .vx-ico { width: 1.5rem; height: 1.5rem; }
+.sv-check { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.9375rem; line-height: 1.5rem; }
+.sv-check li { display: flex; gap: 0.625rem; align-items: flex-start; }
+.sv-check .vx-ico { width: 1.125rem; height: 1.125rem; margin-top: 0.1875rem; color: var(--primary); }
+.sv-split { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); max-width: 62rem; margin: 0 auto; width: 100%; }
+.sv-panel { background: var(--surface); border-radius: var(--radius-lg); padding: var(--space-6); display: flex; flex-direction: column; gap: var(--space-3); }
+.sv-panel h2 { margin: 0; font-size: 1.125rem; line-height: 1.75rem; text-align: left; }
+.sv-panel > p { margin: 0; color: var(--ink-muted); font-size: 0.9375rem; line-height: 1.5rem; }
+.sv-panel .acts { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.sv-panel--wide { max-width: 62rem; margin: 0 auto; width: 100%; box-sizing: border-box; }
+.sv-note { margin: 0; color: var(--ink-muted); font-size: 0.9375rem; line-height: 1.5rem; }
+.sv-note a { color: var(--primary); font-weight: 600; }
+.sv-faq { max-width: 52rem; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: var(--space-2); }
+.sv-faq details { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); }
+.sv-faq summary { cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); min-height: 2.75rem; padding: 0.625rem var(--space-4); font-weight: 600; font-size: 0.9375rem; line-height: 1.5rem; }
+.sv-faq summary::-webkit-details-marker { display: none; }
+.sv-faq summary::after { content: "+"; flex: none; font-size: 1.375rem; line-height: 1; color: var(--primary); }
+.sv-faq details[open] summary::after { content: "−"; }
+.sv-faq summary:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; border-radius: var(--radius-md); }
+.sv-faq details > div { padding: 0 var(--space-4) var(--space-3); color: var(--ink-muted); font-size: 0.9375rem; line-height: 1.5625rem; }
+.sv-faq details > div a { color: var(--primary); font-weight: 600; }
+.sv-cta a:not(.vx-btn) { color: inherit; font-weight: 700; text-decoration: underline; }
+.sv-step .t { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+@media (max-width: 47.9375em) {
+  .sv-crumb { padding: var(--space-3) var(--space-3) 0; }
+  .sv-title { font-size: 1.375rem; line-height: 1.875rem; }
+  .sv-two, .sv-split { grid-template-columns: minmax(0, 1fr); }
+  .sv-opt, .sv-panel { padding: var(--space-4); }
+  /* Các bước xếp dọc (5 cột trên màn 390px làm chữ quá nhỏ): biểu tượng bên trái, chữ bên phải */
+  .sv-sec .sv-steps { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+  .sv-sec .sv-step { flex-direction: row; align-items: flex-start; text-align: left; gap: var(--space-3); font-size: 0.9375rem; line-height: 1.5; }
+  .sv-sec .sv-step::before { display: none; }
+  .sv-sec .sv-step .t { align-items: flex-start; gap: 2px; }
+  .sv-sec .sv-step b { font-size: 1rem; }
+  .sv-sec .sv-step > span { flex: none; }
+  .sv-cta .vx-btn { margin-left: 0; width: 100%; justify-content: center; }
+}
+
+/* Tra cứu thuốc BVTV (components/PesticideLookup, đầu trang danh mục Thuốc BVTV) */
+.pv-look { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: var(--space-4); background: var(--primary-soft); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-4) var(--space-6); }
+.pv-look__main { display: flex; flex-direction: column; gap: var(--space-2); font-size: 0.9375rem; line-height: 1.5rem; color: var(--ink-muted); }
+.pv-look__main > b { font-size: 1.125rem; line-height: 1.75rem; color: var(--ink); }
+.pv-look__form { display: flex; gap: var(--space-2); }
+.pv-look__form .vx-search { flex: 1; min-width: 0; }
+.pv-look__form .vx-search input { min-width: 0; }
+.pv-look__links { display: flex; flex-direction: column; justify-content: center; gap: 0.25rem; font-size: 0.9375rem; line-height: 1.5rem; }
+.pv-look__links a { display: flex; align-items: center; gap: 0.5rem; min-height: 2.75rem; color: var(--ink); text-decoration: none; }
+.pv-look__links a u { color: var(--primary-hover); font-weight: 600; }
+.pv-look__links .vx-ico { flex: none; color: var(--primary); }
+@media (max-width: 63.9375em) {
+  .pv-look { grid-template-columns: minmax(0, 1fr); padding: var(--space-4); }
+}
+@media (max-width: 29.9375em) {
+  .pv-look__form { flex-direction: column; }
+  .pv-look__form .vx-btn { width: 100%; justify-content: center; }
+}
+
 /* >>> DỄ DÙNG ĐIỆN THOẠI */
 /* ===================== Dễ dùng trên điện thoại cho người lớn tuổi (06/10/2026) =====================
  * Chỉ áp cho trang khách (gốc .app-site trong SiteChrome) — không đụng admin / POS / app nhân viên.

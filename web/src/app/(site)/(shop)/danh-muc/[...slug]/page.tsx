@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Breadcrumb, EmptyState } from '@/components/Blocks';
 import { Icon } from '@/components/Icon';
+import { PesticideLookup } from '@/components/PesticideLookup';
 import { ProductFilters } from '@/components/ProductFilters';
 import { ProductGrid } from '@/components/ProductCard';
 import {
@@ -102,6 +103,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
           ))}
         </div>
       </div>
+      {cat.slug === 'thuoc-bvtv' && <PesticideLookup slug={cat.slug} />}
       {items.length ? (
         <ProductGrid products={items} />
       ) : filtering ? (

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Art, Icon } from '@/components/Icon';
 import { EmptyPosts, iconOf, PostLinks, postDate } from '@/components/PostParts';
-import { SALES_PHONE } from '@/lib/contact';
+import { FACEBOOK_URL, SALES_PHONE } from '@/lib/contact';
 import { CATEGORIES, categoryOf, isCategory, plainText, postPath, SECTIONS, sectionOf } from '@/lib/posts';
 import { publishedPosts, type PostCard } from '@/server/posts';
 
@@ -64,7 +64,7 @@ export default async function NewsPage({ searchParams }: Props) {
           <Link href="/">Trang chủ</Link>/{cat ? <><Link href={BASE}>Truyền thông</Link>/<span>{categoryOf(cat)?.name}</span></> : <span>Truyền thông</span>}
         </div>
         <h1>Truyền thông</h1>
-        <div className="nw-subs">
+        {all.length > 0 && <div className="nw-subs">
           {NEWS.map((c) => (
             <Link key={c.key} href={cat === c.key ? BASE : link({ cat: c.key })} className="nw-sub" aria-current={cat === c.key ? 'true' : undefined}>
               <span><Icon name={c.icon} /></span>
@@ -72,7 +72,7 @@ export default async function NewsPage({ searchParams }: Props) {
               <small>{all.filter((p) => p.category === c.key).length} bài viết</small>
             </Link>
           ))}
-        </div>
+        </div>}
         {hero.length > 0 && (
           <div className={hero.length > 1 ? 'nw-hero' : 'nw-hero app-hero-solo'}>
             <Link href={postPath(hero[0])} className="nw-hero__main">
@@ -95,7 +95,12 @@ export default async function NewsPage({ searchParams }: Props) {
       </div>
       <div className="nw-body">
         <div className="nw-list">
-          {!rows.length && <EmptyPosts text={cat ? 'Chưa có bài trong mục này' : 'Chưa có bài truyền thông nào'} />}
+          {!rows.length && (
+            <EmptyPosts
+              text={cat ? 'Chưa có bài trong mục này' : 'Chưa có bài truyền thông nào'}
+              hint={<>Tin tức, hoạt động cộng đồng và bài báo về shop sẽ đăng ở đây. Theo dõi <a href={FACEBOOK_URL} target="_blank" rel="noreferrer">Facebook của shop</a> để xem tin mới, hoặc xem <Link href="/goc-cham-cay">Góc chăm cây</Link>.</>}
+            />
+          )}
           {list.map((p, i) => (
             <Link key={p.id} href={postPath(p)} className="nw-card">
               <Img p={p} tone={TONES[(i + 1) % 3]} />
