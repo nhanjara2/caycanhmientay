@@ -1039,6 +1039,18 @@ button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .app-big__err { color: var(--danger); font-size: 1rem; line-height: 1.4375rem; font-weight: 600; }
 @media (max-width: 32.5em) { .app-big__pick { grid-template-columns: minmax(0, 1fr); } }
 
+/* Giới thiệu: mục V "Cột mốc hoạt động" (components/AboutView) — đường dọc, mỗi mốc một chấm tròn; mốc dự kiến chấm nét đứt */
+.vx-policy .ab-tl { list-style: none; margin: 0; padding: 0; gap: 0; }
+.ab-tl__item { position: relative; padding: 0 0 var(--space-4) 2rem; }
+.ab-tl__item:last-child { padding-bottom: 0; }
+.ab-tl__item::before { content: ""; position: absolute; left: 0.4375rem; top: 1.25rem; bottom: -0.125rem; width: 2px; background: var(--border); }
+.ab-tl__item:last-child::before { display: none; }
+.ab-tl__item::after { content: ""; position: absolute; left: 0; top: 0.3125rem; width: 1rem; height: 1rem; box-sizing: border-box; border-radius: 50%; background: var(--surface); border: 3px solid var(--primary); }
+.ab-tl__item--next::after { border-style: dashed; }
+.ab-tl__year { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem; font-size: 1.125rem; line-height: 1.75rem; font-weight: 700; color: var(--primary); }
+.ab-tl__tag { font-size: 0.875rem; line-height: 1.25rem; font-weight: 600; padding: 0 0.625rem; border-radius: 999px; background: var(--primary-soft); color: var(--primary-hover); }
+.vx-policy .ab-tl__item p { margin: 0.125rem 0 0; }
+
 /* >>> DỄ DÙNG ĐIỆN THOẠI */
 /* ===================== Dễ dùng trên điện thoại cho người lớn tuổi (06/10/2026) =====================
  * Chỉ áp cho trang khách (gốc .app-site trong SiteChrome) — không đụng admin / POS / app nhân viên.

@@ -86,10 +86,7 @@ export const views = [
 
   // Cửa hàng, chính sách, tin tức
   site('StoreLocatorView', 'StoreLocatorLayout'),
-  site('PolicyView', 'PolicyLayout', {
-    replace: { 'nav.vx-pnav': '<PolicyNav />' },
-    imports: { '@/components/PolicyNav': ['PolicyNav'] },
-  }),
+  // Giới thiệu (/chinh-sach/gioi-thieu) đã viết tay (components/AboutView); các trang chính sách khác dựng từ lib/policies.
   // Khuyến mãi (/khuyen-mai) đã viết tay với dữ liệu thật.
 
   // Flash sale (trang phụ), dịch vụ

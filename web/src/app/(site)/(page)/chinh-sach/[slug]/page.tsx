@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { AboutView } from '@/components/AboutView';
 import { PolicyNav } from '@/components/PolicyNav';
 import { getPolicy, policies } from '@/lib/policies';
 import { SEED_DISEASE_IMAGES } from '@/lib/seed-disease-images';
 import { seedDiseases } from '@/lib/seed-diseases';
-import { PolicyView } from '@/views/PolicyView';
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -32,11 +32,11 @@ function diseaseCredits() {
   };
 }
 
-/** PolicyLayout: trang Giới thiệu dùng nguyên bài của design system, các trang khác dựng từ lib/policies. */
+/** PolicyLayout: trang Giới thiệu viết tay (components/AboutView), các trang khác dựng từ lib/policies. */
 export default async function Page({ params }: Props) {
   const p = getPolicy((await params).slug);
   if (!p) notFound();
-  if (p.slug === 'gioi-thieu') return <PolicyView />;
+  if (p.slug === 'gioi-thieu') return <AboutView />;
 
   return (
     <>
