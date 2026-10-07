@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { FACEBOOK_URL, SALES_PHONE, YOUTUBE_URL, ZALO_QR, ZALO_URL } from '@/lib/contact';
+import { CARE_PHONE, FACEBOOK_URL, formatPhone, SALES_PHONE, SHOP_ADDRESS, SHOP_EMAIL, SUPPORT_PHONE, YOUTUBE_URL, ZALO_QR, ZALO_URL } from '@/lib/contact';
 import { menuCategories } from '@/server/categories';
 import { FooterGroup } from './FooterGroup';
 import { Icon } from './Icon';
@@ -20,8 +20,8 @@ const LEARN: [string, string][] = [
 // [nội dung, số điện thoại, người phụ trách]
 const HOTLINES: [string, string, string?][] = [
   ['Tư vấn mua hàng', SALES_PHONE, 'Nhân'],
-  ['Tư vấn chăm cây, bắt bệnh, dịch vụ sân vườn', '0927291989', 'Thịnh'],
-  ['Góp ý, khiếu nại, bảo hành', '0973806842', 'Trâm'],
+  ['Tư vấn chăm cây, bắt bệnh, dịch vụ sân vườn', CARE_PHONE, 'Thịnh'],
+  ['Góp ý, khiếu nại, bảo hành', SUPPORT_PHONE, 'Trâm'],
 ];
 // Logo trong public/images/pay/
 const PAY: [string, string][] = [
@@ -29,9 +29,6 @@ const PAY: [string, string][] = [
   ['VietQR', 'vietqr.svg'], ['MoMo', 'momo.svg'], ['ZaloPay', 'zalopay.svg'], ['VNPay', 'vnpay.svg'],
   ['Apple Pay', 'applepay.svg'],
 ];
-
-/** 0703005001 → 0703 005 001 */
-const formatPhone = (p: string) => p.replace(/^(\d{4})(\d{3})(\d{3})$/, '$1 $2 $3');
 
 export async function Footer() {
   const categories = await menuCategories();
@@ -109,7 +106,7 @@ export async function Footer() {
       </div>
       <div className="vx-flegal">
         <span>© 2007 - 2026 Cây Cảnh Miền Tây · Số ĐKKD 087096010726 cấp 04/2026 · được quản lý bởi Thuế cơ sở 6 tỉnh Đồng Tháp</span>
-        <span>Địa chỉ: Làng Hoa Sa Đéc, Đồng Tháp · Điện thoại: 0703005001 · Email: nhanjara@gmail.com · Người chịu trách nhiệm nội dung: Lê Hoài Nhân</span>
+        <span>Địa chỉ: {SHOP_ADDRESS} · Điện thoại: {SALES_PHONE} · Email: {SHOP_EMAIL} · Người chịu trách nhiệm nội dung: Lê Hoài Nhân</span>
       </div>
     </footer>
   );

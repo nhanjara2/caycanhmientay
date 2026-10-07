@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { SALES_PHONE } from '@/lib/contact';
+import { formatPhone, SALES_PHONE, SUPPORT_PHONE } from '@/lib/contact';
+import { WARRANTY_DAYS } from '@/lib/warranty-labels';
 import { PolicyNav } from './PolicyNav';
 import { ShareButton } from './PostClient';
 
@@ -82,16 +83,14 @@ export function AboutView() {
             <li><b>Nội dung có kỹ sư kiểm duyệt:</b> bài chăm cây, bắt bệnh và trả lời hỏi đáp; xem <Link href="/chinh-sach/noi-dung">Chính sách nội dung</Link>.</li>
           </ul>
 
-          <h2>IV. Thời gian bảo hành theo loại cây</h2>
+          <h2>IV. Bảo hành cây sống</h2>
           <div className="vx-table-wrap">
             <table className="vx-table">
               <thead>
                 <tr><th>Loại</th><th>Thời gian</th><th>Điều kiện</th></tr>
               </thead>
               <tbody>
-                <tr><td>Cây kiểng lá, cây văn phòng</td><td>7 ngày</td><td>Ảnh cây khi nhận, chăm theo hướng dẫn</td></tr>
-                <tr><td>Lan, cây hoa</td><td>3 ngày</td><td>Không áp dụng rụng hoa tự nhiên</td></tr>
-                <tr><td>Bonsai, cây thế</td><td>14 ngày</td><td>Kèm hướng dẫn chăm riêng</td></tr>
+                <tr><td>Mọi loại cây sống</td><td>{WARRANTY_DAYS} ngày kể từ khi nhận</td><td>Gửi ảnh cây ở Tài khoản → Bảo hành cây; kỹ sư phản hồi trong 24 giờ</td></tr>
               </tbody>
             </table>
           </div>
@@ -102,7 +101,7 @@ export function AboutView() {
             </svg>
             <div>
               Xem đầy đủ điều kiện tại <Link href="/chinh-sach/bao-hanh-cay">Chính sách bảo hành cây</Link>. Mọi thắc mắc vui lòng
-              gọi <a href="tel:0973806842">0973 806 842</a> (8:00 – 21:00).
+              gọi <a href={`tel:${SUPPORT_PHONE}`}>{formatPhone(SUPPORT_PHONE)}</a> (8:00 – 21:00).
             </div>
           </div>
 
@@ -125,7 +124,7 @@ export function AboutView() {
             </svg>
             <div>
               Ghé thăm chúng tôi tại Làng Hoa Sa Đéc, Đồng Tháp, hoặc gọi tư vấn mua hàng{' '}
-              <a href={`tel:${SALES_PHONE}`}>0703 005 001</a>. Xem thêm <Link href="/he-thong-cua-hang">Hệ thống cửa hàng & vườn</Link>.
+              <a href={`tel:${SALES_PHONE}`}>{formatPhone(SALES_PHONE)}</a>. Xem thêm <Link href="/he-thong-cua-hang">Hệ thống cửa hàng & vườn</Link>.
             </div>
           </div>
         </article>

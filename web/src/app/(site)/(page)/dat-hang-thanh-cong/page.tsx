@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { Icon } from '@/components/Icon';
+import { PICKUP_PLACE } from '@/lib/contact';
 import { money } from '@/lib/format';
 import { PAY_LABEL } from '@/lib/order-labels';
 import { getCurrentUser } from '@/server/auth';
@@ -48,7 +49,7 @@ export default async function OrderSuccessPage({ searchParams }: Props) {
           <h3><Icon name="truck" />{order.delivery === 'ship' ? 'Giao hàng' : 'Nhận tại vườn'}</h3>
           <span>
             {order.slot && <><b>{order.slot}</b><br /></>}
-            {order.delivery === 'ship' ? order.address : 'Vườn Cái Mơn – Chợ Lách. Shop nhắn Zalo khi cây sẵn sàng.'}
+            {order.delivery === 'ship' ? order.address : `${PICKUP_PLACE}. Shop nhắn Zalo khi cây sẵn sàng.`}
           </span>
           {hasPlant && (
             <span style={{ color: 'var(--ink-muted)' }}>

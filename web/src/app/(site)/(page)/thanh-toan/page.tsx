@@ -13,6 +13,7 @@ import { Icon, type IconName } from '@/components/Icon';
 import { placeOrderAction } from '@/app/actions/orders';
 import { slotOptionsAction } from '@/app/actions/shipping';
 import { fullAddress, type AddressDTO } from '@/lib/address-labels';
+import { PICKUP_PLACE } from '@/lib/contact';
 import { PAY_LABEL, PAY_LOGO } from '@/lib/order-labels';
 import { useAuth } from '@/lib/auth';
 import { useCart } from '@/lib/cart';
@@ -266,7 +267,7 @@ export default function CheckoutPage() {
                 </>}
               </>
             ) : (
-              <div className="vx-note"><Icon name="pin" /><div><b>Nhận tại vườn Cái Mơn – Chợ Lách.</b> Shop giữ hàng 3 ngày và nhắn Zalo khi cây sẵn sàng.</div></div>
+              <div className="vx-note"><Icon name="pin" /><div><b>Nhận tại {PICKUP_PLACE}.</b> Shop giữ hàng 3 ngày và nhắn Zalo khi cây sẵn sàng.</div></div>
             )}
             <textarea className="vx-input" placeholder="Ghi chú cho shop (không bắt buộc). Ví dụ: Gọi trước 15 phút, cây để ở sảnh." value={note} onChange={(e) => setNote(e.target.value)} />
           </div>

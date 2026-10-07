@@ -11,13 +11,12 @@ import { notifyEvent } from './notify';
 import { newOrderCode } from './orders';
 import { saveImage, type SavedImage } from './uploads';
 import { normalize } from '@/lib/catalog';
-import { SYMPTOMS, WARRANTY_RESOLUTION_LABEL, warrantyCode } from '@/lib/warranty-labels';
+import { SYMPTOMS, WARRANTY_DAYS, WARRANTY_RESOLUTION_LABEL, warrantyCode } from '@/lib/warranty-labels';
 
 const { orders, orderItems, orderEvents, warrantyRequests: W, warrantyPhotos: WP, users, reviews, reviewPhotos } = schema;
 
-export const WARRANTY_DAYS = 7;
 const DAY = 86_400_000;
-export { SYMPTOMS, warrantyCode };
+export { SYMPTOMS, WARRANTY_DAYS, warrantyCode };
 
 
 type Owner = Pick<SessionUser, 'id' | 'phone'>;

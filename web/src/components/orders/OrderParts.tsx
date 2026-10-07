@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { Icon, Thumb } from '@/components/Icon';
+import { PICKUP_PLACE } from '@/lib/contact';
 import { money } from '@/lib/format';
 import { fmtDate, fmtDateTime, PAY_LABEL, PAY_LOGO, STATUS_LABEL, TIMELINE, type Status } from '@/lib/order-labels';
 import type { OrderFull } from '@/server/orders';
@@ -131,7 +132,7 @@ export function OrderDetail({ o }: { o: OrderFull }) {
             </div>
             <div>
               <span className="lab"><Icon name="pin" />{o.delivery === 'ship' ? 'Giao đến' : 'Nhận tại'}</span>
-              <b>{o.delivery === 'ship' ? o.address : 'Vườn Cái Mơn – Chợ Lách'}</b>
+              <b>{o.delivery === 'ship' ? o.address : PICKUP_PLACE}</b>
               {o.slot && <small>Khung giờ: {o.slot}</small>}
             </div>
           </div>
