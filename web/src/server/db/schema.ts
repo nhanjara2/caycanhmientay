@@ -543,6 +543,10 @@ export const stores = pgTable('stores', {
   // Phần hiển thị ở trang khách /he-thong-cua-hang (lib/stores.ts).
   /** Hiện trên trang Hệ thống cửa hàng. Cửa hàng cũ (mẫu) mặc định không hiện. */
   isPublic: boolean('is_public').notNull().default(false),
+  /** 'store' = cửa hàng / vườn của shop (có kho, bán hàng). 'partner' = đối tác cung cấp chỉ hiện trên web: không có kho, luôn active = false nên Kho / POS / nhập hàng / vùng giao không thấy. */
+  kind: text('kind', { enum: ['store', 'partner'] }).notNull().default('store'),
+  /** Ghi chú ngắn hiện cho khách ở trang Hệ thống cửa hàng. */
+  note: text('note'),
   phone: text('phone'),
   contactName: text('contact_name'),
   /** Mở cửa cả ngày; không thì dùng openFrom – openTo ("HH:MM", giờ Việt Nam, hằng ngày). Cả hai trống = chưa khai giờ. */

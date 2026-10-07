@@ -11,7 +11,7 @@ export async function listStoresAdmin() {
   return db.select({
     id: stores.id, code: stores.code, name: stores.name, address: stores.address, lat: stores.lat, lng: stores.lng,
     isDefault: stores.isDefault, active: stores.active,
-    isPublic: stores.isPublic, phone: stores.phone, contactName: stores.contactName,
+    isPublic: stores.isPublic, kind: stores.kind, note: stores.note, phone: stores.phone, contactName: stores.contactName,
     open24h: stores.open24h, openFrom: stores.openFrom, openTo: stores.openTo, services: stores.services,
     stock: sql<number>`coalesce((select sum(l.qty) from stock_lots l where l.store_id = stores.id), 0)`.mapWith(Number),
   }).from(stores).orderBy(desc(stores.isDefault), desc(stores.active), asc(stores.id));
@@ -30,6 +30,8 @@ export const StoreSchema = z.object({
   isDefault: z.boolean(),
   // Phần hiện ở trang khách Hệ thống cửa hàng
   isPublic: z.boolean(),
+  kind: z.enum(['store', 'partner']),
+  note: z.string().trim().max(300, 'Ghi chú tối đa 300 ký tự'),
   phone: z.string().trim().transform((v) => v.replace(/[\s.]/g, '')).pipe(z.string().regex(/^(0\d{9,10})?$/, 'Số điện thoại gồm 10 số, bắt đầu bằng 0')),
   contactName: z.string().trim().max(60),
   open24h: z.boolean(),
@@ -45,14 +47,16 @@ type R = { ok: true } | { ok: false; error: string };
  * Thêm / sửa cửa hàng. Cửa hàng mặc định (nhận hàng nhập, xuất đơn online trước) chỉ có một; không ngừng được cửa hàng mặc định
  * hoặc cửa hàng còn tồn kho. Mã không đổi được sau khi tạo (tồn kho / đơn tham chiếu theo id, nhưng nhân viên quen gọi theo mã).
  */
-export async function saveStore(v: StoreInput): Promise<R> {
+export async function saveStore(input: StoreInput): Promise<R> {
+  // Đối tác cung cấp (chỉ hiện trên web): không có kho nên luôn "ngừng hoạt động" và không làm kho mặc định → Kho / POS / nhập hàng / vùng giao không thấy.
+  const v: StoreInput = input.kind === 'partner' ? { ...input, active: false, isDefault: false } : input;
   if (!v.open24h) {
     if (Boolean(v.openFrom) !== Boolean(v.openTo)) return { ok: false, error: 'Nhập đủ giờ mở và giờ đóng cửa (hoặc để trống cả hai)' };
     if (v.openFrom && v.openFrom === v.openTo) return { ok: false, error: 'Giờ mở và giờ đóng cửa không được trùng nhau' };
   }
   // Phần hiển thị cho khách; mở 24/24 thì bỏ giờ cụ thể, dịch vụ bỏ trùng.
   const shown = {
-    isPublic: v.isPublic, phone: v.phone || null, contactName: v.contactName || null, open24h: v.open24h,
+    isPublic: v.isPublic, kind: v.kind, note: v.note || null, phone: v.phone || null, contactName: v.contactName || null, open24h: v.open24h,
     openFrom: v.open24h ? null : v.openFrom || null, openTo: v.open24h ? null : v.openTo || null,
     services: [...new Set(v.services)],
   };
@@ -75,8 +79,8 @@ export async function saveStore(v: StoreInput): Promise<R> {
       return { ok: true };
     }
     if (v.isDefault) await tx.update(stores).set({ isDefault: false });
-    const [{ n }] = await tx.select({ n: sql<number>`count(*)`.mapWith(Number) }).from(stores);
-    await tx.insert(stores).values({ code: v.code, name: v.name, address: v.address, lat: v.lat, lng: v.lng, active: v.active, isDefault: v.isDefault || n === 0, ...shown });
+    const [{ n }] = await tx.select({ n: sql<number>`count(*)`.mapWith(Number) }).from(stores).where(eq(stores.kind, 'store'));
+    await tx.insert(stores).values({ code: v.code, name: v.name, address: v.address, lat: v.lat, lng: v.lng, active: v.active, isDefault: v.isDefault || (v.kind === 'store' && n === 0), ...shown });
     return { ok: true };
   });
 }

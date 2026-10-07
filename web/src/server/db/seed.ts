@@ -21,6 +21,10 @@ const STORES = [
   // Cửa hàng thật duy nhất (chủ shop cung cấp 07/10/2026) — hiện trên trang Hệ thống cửa hàng; giống dòng migration 0029.
   { code: 'SD', name: 'Vườn ươm Cây Cảnh Miền Tây', address: 'Làng hoa Sa Đéc, Phường Sa Đéc, Tỉnh Đồng Tháp', lat: 10.349176, lng: 105.731775,
     isPublic: true, phone: '0703005001', contactName: 'Lê Hoài Nhân', open24h: true, services: ['nursery', 'clinic'] },
+  // Đối tác cung cấp tro trấu (chỉ hiện trên web, không có kho: active = false) — giống dòng migration 0030.
+  { code: 'PL', name: 'Hoa Kiểng Tro Trấu Phương Linh', address: 'Ngay cầu Sa Nhiên 2, Ấp Khánh Nhơn, Xã Tân Khánh Đông, TP. Sa Đéc, Đồng Tháp', lat: 10.3411553, lng: 105.7344338,
+    active: false, isPublic: true, kind: 'partner' as const, phone: '0707873425', services: ['supply'],
+    note: 'Đối tác cung cấp tro trấu cho Cây Cảnh Miền Tây. Bán sỉ và lẻ tro trấu, sơ dừa, phân rơm, phân bò, cỏ nhung, hoa kiểng, vỏ nhựa các loại.' },
 ];
 
 type Db = NodePgDatabase<typeof schema>;
@@ -52,7 +56,7 @@ export async function seedIfEmpty(db: Db) {
   if (n > 0) return false;
   if (!(await shouldSeed(db, 'seeded:products'))) return false;
   // Tồn mẫu 100 / quy cách chia cho các cửa hàng.
-  const stores = await db.select({ id: schema.stores.id }).from(schema.stores).orderBy(asc(schema.stores.id));
+  const stores = await db.select({ id: schema.stores.id }).from(schema.stores).where(eq(schema.stores.active, true)).orderBy(asc(schema.stores.id));
   const split = [60, 25, 15].slice(0, stores.length);
   split[0] += 100 - split.reduce((a, b) => a + b, 0);
   await db.transaction(async (tx) => {

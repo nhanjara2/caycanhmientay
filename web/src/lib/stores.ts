@@ -1,13 +1,17 @@
 // Cửa hàng hiển thị ở trang khách /he-thong-cua-hang — dùng chung client/server (dữ liệu nhập ở /admin/cua-hang).
 
-export const STORE_SERVICE_KEYS = ['nursery', 'workshop', 'parking', 'clinic'] as const;
+export const STORE_SERVICE_KEYS = ['nursery', 'workshop', 'parking', 'clinic', 'supply'] as const;
 export type StoreService = (typeof STORE_SERVICE_KEYS)[number];
 export const STORE_SERVICES: Record<StoreService, string> = {
   nursery: 'Vườn ươm',
   workshop: 'Workshop',
   parking: 'Bãi đỗ ô tô',
   clinic: 'Khám bệnh cây',
+  supply: 'Tro trấu & giá thể',
 };
+
+/** 'store' = cửa hàng / vườn của shop; 'partner' = đối tác cung cấp (chỉ hiện trên web, không có kho). */
+export type StoreKind = 'store' | 'partner';
 
 export type PublicStore = {
   id: number;
@@ -22,6 +26,8 @@ export type PublicStore = {
   openFrom: string | null;
   openTo: string | null;
   services: StoreService[];
+  kind: StoreKind;
+  note: string | null;
 };
 
 /** "HH:MM", 24 giờ. */

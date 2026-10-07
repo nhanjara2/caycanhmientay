@@ -3,20 +3,20 @@
 import { useRouter } from 'next/navigation';
 import { useState, useTransition, type FormEvent } from 'react';
 import { deleteStoreAction, saveStoreAction } from '@/app/actions/stores';
-import { STORE_SERVICE_KEYS, STORE_SERVICES, type StoreService } from '@/lib/stores';
+import { STORE_SERVICE_KEYS, STORE_SERVICES, type StoreKind, type StoreService } from '@/lib/stores';
 import type { StoreRow } from '@/server/stores-admin';
 
 type Form = {
   id?: number; code: string; name: string; address: string; lat: string; lng: string; active: boolean; isDefault: boolean;
-  isPublic: boolean; phone: string; contactName: string; open24h: boolean; openFrom: string; openTo: string; services: StoreService[];
+  isPublic: boolean; kind: StoreKind; note: string; phone: string; contactName: string; open24h: boolean; openFrom: string; openTo: string; services: StoreService[];
 };
 const blank: Form = {
   code: '', name: '', address: '', lat: '', lng: '', active: true, isDefault: false,
-  isPublic: true, phone: '', contactName: '', open24h: false, openFrom: '', openTo: '', services: [],
+  isPublic: true, kind: 'store', note: '', phone: '', contactName: '', open24h: false, openFrom: '', openTo: '', services: [],
 };
 const toForm = (s: StoreRow): Form => ({
   id: s.id, code: s.code, name: s.name, address: s.address, lat: String(s.lat), lng: String(s.lng), active: s.active, isDefault: s.isDefault,
-  isPublic: s.isPublic, phone: s.phone ?? '', contactName: s.contactName ?? '', open24h: s.open24h, openFrom: s.openFrom ?? '', openTo: s.openTo ?? '',
+  isPublic: s.isPublic, kind: s.kind, note: s.note ?? '', phone: s.phone ?? '', contactName: s.contactName ?? '', open24h: s.open24h, openFrom: s.openFrom ?? '', openTo: s.openTo ?? '',
   services: STORE_SERVICE_KEYS.filter((k) => s.services.includes(k)),
 });
 
@@ -37,7 +37,7 @@ export function StoreAdmin({ stores }: { stores: StoreRow[] }) {
     start(async () => {
       const r = await saveStoreAction({
         id: form.id, code: form.code, name: form.name, address: form.address, lat, lng, active: form.active, isDefault: form.isDefault,
-        isPublic: form.isPublic, phone: form.phone, contactName: form.contactName, open24h: form.open24h, openFrom: form.openFrom, openTo: form.openTo, services: form.services,
+        isPublic: form.isPublic, kind: form.kind, note: form.note, phone: form.phone, contactName: form.contactName, open24h: form.open24h, openFrom: form.openFrom, openTo: form.openTo, services: form.services,
       })
         .catch(() => ({ ok: false as const, error: 'Có lỗi, vui lòng thử lại' }));
       if (!r.ok) { setError(r.error); return; }
@@ -78,6 +78,11 @@ export function StoreAdmin({ stores }: { stores: StoreRow[] }) {
               </div>
             </div>
             <div className="ad-f">
+              <label>Loại</label>
+              <label className="vx-check"><input type="radio" name="st-kind" checked={form.kind === 'store'} onChange={() => set('kind', 'store')} /> Cửa hàng / vườn của shop (có kho, bán hàng)</label>
+              <label className="vx-check"><input type="radio" name="st-kind" checked={form.kind === 'partner'} onChange={() => set('kind', 'partner')} /> Đối tác cung cấp (chỉ hiện cho khách trên web, không có kho)</label>
+            </div>
+            <div className="ad-f">
               <label htmlFor="st-addr">Địa chỉ</label>
               <input id="st-addr" className="vx-input" value={form.address} maxLength={200} onChange={(e) => set('address', e.target.value)} required />
             </div>
@@ -95,8 +100,12 @@ export function StoreAdmin({ stores }: { stores: StoreRow[] }) {
               Tọa độ chỉ dùng khi bật giới hạn vùng giao cây sống ở Cài đặt giao hàng (mặc định đang giao cây sống toàn quốc). Lấy bằng cách mở Google Maps, bấm chuột phải vào đúng vị trí cửa hàng rồi bấm vào cặp số hiện ra để chép.
               {form.lat && form.lng && !Number.isNaN(Number(form.lat.replace(',', '.'))) && <> <a href={`https://www.google.com/maps?q=${form.lat.replace(',', '.')},${form.lng.replace(',', '.')}`} target="_blank" rel="noreferrer" style={{ color: 'var(--primary)' }}>Xem trên bản đồ</a></>}
             </span>
-            <label className="vx-check"><input type="checkbox" checked={form.isDefault} onChange={(e) => set('isDefault', e.target.checked)} /> Cửa hàng mặc định (nhận hàng nhập, xuất đơn online trước)</label>
-            <label className="vx-check"><input type="checkbox" checked={form.active} onChange={(e) => set('active', e.target.checked)} /> Đang hoạt động</label>
+            {form.kind === 'store' && (
+              <>
+                <label className="vx-check"><input type="checkbox" checked={form.isDefault} onChange={(e) => set('isDefault', e.target.checked)} /> Cửa hàng mặc định (nhận hàng nhập, xuất đơn online trước)</label>
+                <label className="vx-check"><input type="checkbox" checked={form.active} onChange={(e) => set('active', e.target.checked)} /> Đang hoạt động</label>
+              </>
+            )}
             <div className="ad-card__h" style={{ padding: 0, border: 0, marginTop: 8 }}>Hiển thị cho khách (trang Hệ thống cửa hàng)</div>
             <label className="vx-check"><input type="checkbox" checked={form.isPublic} onChange={(e) => set('isPublic', e.target.checked)} /> Hiện cửa hàng này trên trang Hệ thống cửa hàng</label>
             <div className="ad-frow two">
@@ -132,6 +141,10 @@ export function StoreAdmin({ stores }: { stores: StoreRow[] }) {
                 ))}
               </div>
             </div>
+            <div className="ad-f">
+              <label htmlFor="st-note">Ghi chú hiện cho khách (không bắt buộc)</label>
+              <textarea id="st-note" className="vx-input" rows={3} maxLength={300} value={form.note} onChange={(e) => set('note', e.target.value)} placeholder="VD: Bán sỉ và lẻ tro trấu, sơ dừa, phân rơm…" />
+            </div>
             {error && <span className="vx-err" role="alert">{error}</span>}
             <span className="acts" style={{ display: 'flex', gap: 8 }}>
               <button className="vx-btn vx-btn--primary" disabled={pending}>{pending ? 'Đang lưu…' : 'Lưu cửa hàng'}</button>
@@ -148,11 +161,11 @@ export function StoreAdmin({ stores }: { stores: StoreRow[] }) {
             <tbody>
               {stores.map((s) => (
                 <tr key={s.id}>
-                  <td><b>{s.name}</b><small>{s.code}{s.isDefault ? ' · Mặc định' : ''}</small></td>
+                  <td><b>{s.name}</b><small>{s.code}{s.isDefault ? ' · Mặc định' : ''}{s.kind === 'partner' ? ' · Đối tác' : ''}</small></td>
                   <td data-label="Địa chỉ" data-wide>{s.address}</td>
                   <td data-label="Tọa độ">{s.lat.toFixed(4)}, {s.lng.toFixed(4)}</td>
-                  <td className="num" data-label="Tồn kho">{s.stock.toLocaleString('vi-VN')}</td>
-                  <td data-label="Trạng thái"><span className={`ad-pill ${s.active ? 'done' : 'wait'}`}>{s.active ? 'Hoạt động' : 'Ngừng'}</span></td>
+                  <td className="num" data-label="Tồn kho">{s.kind === 'partner' ? '—' : s.stock.toLocaleString('vi-VN')}</td>
+                  <td data-label="Trạng thái">{s.kind === 'partner' ? <span className="ad-pill new">Đối tác</span> : <span className={`ad-pill ${s.active ? 'done' : 'wait'}`}>{s.active ? 'Hoạt động' : 'Ngừng'}</span>}</td>
                   <td data-label="Hiện trên web"><span className={`ad-pill ${s.isPublic ? 'done' : 'wait'}`}>{s.isPublic ? 'Hiện' : 'Ẩn'}</span></td>
                   <td data-label="Thao tác">
                     <span style={{ display: 'flex', gap: 8 }}>

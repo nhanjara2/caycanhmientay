@@ -64,6 +64,7 @@ export function StoreLocator({ stores }: { stores: PublicStore[] }) {
     const c: [Filter, string][] = [['all', 'Tất cả']];
     if (stores.some((s) => s.services.includes('nursery'))) c.push(['nursery', STORE_SERVICES.nursery]);
     if (stores.some((s) => s.services.includes('workshop'))) c.push(['workshop', 'Có workshop']);
+    if (stores.some((s) => s.services.includes('supply'))) c.push(['supply', STORE_SERVICES.supply]);
     c.push(['open', 'Đang mở']);
     return c;
   }, [stores]);
@@ -153,6 +154,7 @@ export function StoreLocator({ stores }: { stores: PublicStore[] }) {
                           {km != null && <span style={{ color: 'var(--ink-muted)' }}>{st != null ? '· ' : ''}{fmtKm(km)}</span>}
                           {s.services.includes('nursery') && <span className="vx-badge vx-badge--info">{STORE_SERVICES.nursery}</span>}
                           {s.services.includes('workshop') && <span className="vx-badge vx-badge--info">{STORE_SERVICES.workshop}</span>}
+                          {s.kind === 'partner' && <span className="vx-badge">Đối tác</span>}
                         </span>
                       </span>
                     </div>
@@ -168,12 +170,14 @@ export function StoreLocator({ stores }: { stores: PublicStore[] }) {
                 <h2>
                   {sel.name}{' '}
                   {sel.services.includes('nursery') && <span className="vx-badge vx-badge--info" style={{ verticalAlign: 'middle' }}>{STORE_SERVICES.nursery}</span>}
+                  {sel.kind === 'partner' && <span className="vx-badge" style={{ verticalAlign: 'middle' }}>Đối tác cung cấp</span>}
                 </h2>
                 <div className="vx-sdetail__top">
                   <StoreMap stores={stores} selectedId={sel.id} me={me} onSelect={setSelectedId} />
                   <div className="vx-sinfo">
                     <span className="lab">Địa chỉ</span>
                     <b>{sel.address}</b>
+                    {sel.note && <span>{sel.note}</span>}
                     {(selStatus != null || hoursText(sel)) && (
                       <span>
                         {selStatus === true && <span className="vx-open">Đang mở</span>}
@@ -191,14 +195,14 @@ export function StoreLocator({ stores }: { stores: PublicStore[] }) {
                         {sel.services.map((k) => <span key={k} className="vx-badge vx-badge--info">{STORE_SERVICES[k]}</span>)}
                       </div>
                     )}
-                    <Link href="/chinh-sach/giay-phep-kinh-doanh">Thông tin pháp lý cửa hàng</Link>
+                    {sel.kind === 'store' && <Link href="/chinh-sach/giay-phep-kinh-doanh">Thông tin pháp lý cửa hàng</Link>}
                     <div className="vx-sinfo__cta">
                       <a className="vx-btn vx-btn--primary" href={directionsUrl(sel)} target="_blank" rel="noreferrer">
                         <Ico size={16}><path d="m3 11 18-8-8 18-2-8z" /></Ico>
                         Xem chỉ đường
                       </a>
                       {sel.phone && <a className="vx-btn vx-btn--soft" href={`tel:${sel.phone}`}>Gọi tư vấn</a>}
-                      <Link className="vx-btn vx-btn--outline" href="/dich-vu/dat-lich-khao-sat">Đặt lịch đến xem cây</Link>
+                      {sel.kind === 'store' && <Link className="vx-btn vx-btn--outline" href="/dich-vu/dat-lich-khao-sat">Đặt lịch đến xem cây</Link>}
                     </div>
                   </div>
                 </div>
