@@ -281,6 +281,13 @@
       "when": 1791450193589,
       "tag": "0039_ten_chi_tiet",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1791464526458,
+      "tag": "0040_du_an",
+      "breakpoints": true
     }
   ]
 }

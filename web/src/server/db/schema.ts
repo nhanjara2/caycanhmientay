@@ -4,6 +4,7 @@ import type { FengShui, SpecField } from '../../lib/catalog';
 import type { Disease } from '../../lib/diseases';
 import type { PostBlock } from '../../lib/posts';
 import type { ProductAttrs } from '../../lib/product-filters';
+import type { ProjectImage, ProjectMetric, ProjectQuote, ProjectRole } from '../../lib/projects';
 import type { SavedPlan } from '../../lib/plant-advisor';
 import { STAFF_ROLES } from '../../lib/permissions';
 import { SERVICE_STAGES, SERVICE_TYPES, SOURCES } from '../../lib/service-labels';
@@ -232,6 +233,50 @@ export const postImages = pgTable('post_images', {
   data: bytea('data').notNull(),
   createdAt: createdAt(),
 }, (t) => [index('post_images_post_idx').on(t.postId)]);
+
+/**
+ * Dự án / công trình đã triển khai — hiện ở trang Khách doanh nghiệp (/doanh-nghiep) khi `published`.
+ * Chủ shop tự nhập ở /admin/du-an; tên / logo khách chỉ điền khi khách đồng ý công khai.
+ */
+export const projects = pgTable('projects', {
+  id: serial('id').primaryKey(),
+  /** Sinh từ tên dự án lúc tạo, không đổi (link /doanh-nghiep/du-an/<slug>). */
+  slug: text('slug').notNull().unique(),
+  title: text('title').notNull(),
+  /** Loại công trình (PROJECT_TYPES trong lib/projects.ts). */
+  type: text('type').notNull(),
+  /** Phần việc shop đã làm (PROJECT_ROLES). */
+  roles: jsonb('roles').$type<ProjectRole[]>().notNull().default(sql`'[]'::jsonb`),
+  client: text('client').notNull().default(''),
+  /** Tên file logo khách trong project_images (hiện ở dải "Đơn vị đã hợp tác"). */
+  clientLogo: text('client_logo'),
+  location: text('location').notNull().default(''),
+  year: integer('year').notNull(),
+  duration: text('duration').notNull().default(''),
+  summary: text('summary').notNull().default(''),
+  body: text('body').notNull().default(''),
+  scope: jsonb('scope').$type<string[]>().notNull().default(sql`'[]'::jsonb`),
+  plants: jsonb('plants').$type<string[]>().notNull().default(sql`'[]'::jsonb`),
+  metrics: jsonb('metrics').$type<ProjectMetric[]>().notNull().default(sql`'[]'::jsonb`),
+  quote: jsonb('quote').$type<ProjectQuote>(),
+  /** Ảnh công trình theo thứ tự hiển thị, ảnh đầu = ảnh bìa. */
+  images: jsonb('images').$type<ProjectImage[]>().notNull().default(sql`'[]'::jsonb`),
+  featured: boolean('featured').notNull().default(false),
+  published: boolean('published').notNull().default(false),
+  updatedBy: text('updated_by'),
+  updatedAt: ts('updated_at').notNull().defaultNow(),
+  createdAt: createdAt(),
+}, (t) => [index('projects_published_idx').on(t.published, t.year)]);
+
+/** Ảnh công trình + logo khách (công khai, /api/project-images/[file]). Xóa dự án → xóa ảnh. */
+export const projectImages = pgTable('project_images', {
+  id: serial('id').primaryKey(),
+  projectId: integer('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  file: text('file').notNull().unique(),
+  mime: text('mime').notNull(),
+  data: bytea('data').notNull(),
+  createdAt: createdAt(),
+}, (t) => [index('project_images_project_idx').on(t.projectId)]);
 
 // ---- Khuyến mãi ------------------------------------------------------------------------------
 

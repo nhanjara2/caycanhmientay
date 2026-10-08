@@ -1,82 +1,83 @@
 import Link from 'next/link';
+import { money } from '@/lib/format';
+import { lowestTierPrice, termLabel } from '@/lib/office-rental';
 import { productsIn } from '@/server/catalog';
+import { getRentalConfig } from '@/server/office-rental';
 import { Breadcrumb } from './Blocks';
-import { Icon, type IconName } from './Icon';
+import { Icon } from './Icon';
+import { OfficeRentalPlanner } from './OfficeRentalPlanner';
 import { ProductGrid } from './ProductCard';
 import { QUOTE_URL, ServiceCta, ServiceFaq, ServiceSteps } from './ServiceParts';
 
 const QUOTE_OFFICE = `${QUOTE_URL}?loai=van-phong`;
 const SHOP_OFFICE = '/danh-muc/cay-canh/cay-van-phong';
 
-const OPTIONS: { icon: IconName; title: string; text: string; points: string[]; cta: string; href: string; primary?: boolean }[] = [
-  {
-    icon: 'pot', title: 'Thuê cây',
-    text: 'Cây đặt tại văn phòng, shop chăm theo lịch hai bên thống nhất. Phù hợp khi bạn muốn có cây đẹp mà không phải tự chăm.',
-    points: [
-      'Số cây, loại cây và chậu chọn theo không gian của bạn',
-      'Tần suất chăm sóc và việc thay cây khi cây yếu ghi rõ trong báo giá',
-      'Giá theo số cây và thời hạn thuê, báo cụ thể sau khi khảo sát',
-    ],
-    cta: 'Nhận báo giá thuê cây', href: QUOTE_OFFICE, primary: true,
-  },
-  {
-    icon: 'cart', title: 'Mua cây',
-    text: 'Chọn cây có sẵn của cửa hàng, giao tận nơi và tự chăm theo hướng dẫn của kỹ sư.',
-    points: [
-      'Giá ghi rõ trên từng sản phẩm, mua ngay trên website',
-      'Bảo hành cây sống 7 ngày theo chính sách của shop',
-      'Kỹ sư tư vấn miễn phí qua Zalo cho cây đã mua',
-    ],
-    cta: 'Xem cây văn phòng', href: SHOP_OFFICE,
-  },
-];
-
-const QUOTE_ITEMS = [
-  'Số lượng cây và vị trí đặt (bàn làm việc, sảnh, phòng họp, hành lang…)',
-  'Loại cây hợp ánh sáng và điều hòa của từng vị trí',
-  'Chậu, đĩa lót và phụ kiện đi kèm',
-  'Tần suất chăm sóc: tưới, bón, lau lá, xử lý sâu bệnh',
-  'Việc thay cây khi cây yếu hoặc hư',
-  'Thời hạn thuê và cách thanh toán',
-];
-
-/** Trang Cây văn phòng (/dich-vu/cho-thue-cay-van-phong): viết tay — không bảng giá, máy tính chi phí hay thẻ sản phẩm giả; cây đang bán lấy từ nhóm "Cây văn phòng". */
+/**
+ * Trang Cho thuê cây văn phòng (/dich-vu/cho-thue-cay-van-phong) theo ServiceDetailLayout: gói thuê + tự chọn số cây (giá ở /admin/thue-cay),
+ * so sánh với mua cây, các bước, cây văn phòng đang bán (nhóm "Cây văn phòng"), câu hỏi thường gặp.
+ */
 export async function OfficePlants() {
-  const plants = (await productsIn('cay-canh', 'cay-van-phong')).slice(0, 8);
+  const [cfg, all] = await Promise.all([getRentalConfig(), productsIn('cay-canh', 'cay-van-phong')]);
+  const plants = all.slice(0, 8);
+  const low = cfg.showPrices ? lowestTierPrice(cfg) : 0;
+  const best = cfg.terms.reduce((m, t) => (t.discount > m.discount ? t : m), cfg.terms[0]);
+  const first = cfg.terms[0];
+
+  const facts: { icon: 'tag' | 'plant' | 'clock' | 'pin'; b: string; text: string }[] = [
+    low > 0
+      ? { icon: 'tag', b: `Từ ${money(low)}`, text: 'mỗi cây / tháng, đã gồm chăm sóc' }
+      : { icon: 'tag', b: 'Báo giá rõ từng khoản', text: 'sau khi khảo sát' },
+    { icon: 'plant', b: `Từ ${cfg.minPlants} cây`, text: `thuê tối thiểu ${termLabel(first)}` },
+    cfg.showPrices && best.discount > 0
+      ? { icon: 'clock', b: `Giảm ${best.discount}%`, text: `khi thuê ${termLabel(best)}` }
+      : { icon: 'clock', b: 'Chăm theo lịch', text: '2 tuần / lần hoặc hằng tuần' },
+    { icon: 'pin', b: 'Khảo sát miễn phí', text: 'kỹ sư gọi lại trong 2 giờ làm việc' },
+  ];
+
+  const priceFaq = cfg.showPrices && low > 0
+    ? <>
+        Theo cỡ cây và số cây: {cfg.tiers.filter((t) => t.price > 0).map((t) => `${t.name.toLowerCase()} ${money(t.price)}`).join(', ')} mỗi cây / tháng, đã gồm chậu và công chăm 2 tuần / lần.
+        {cfg.weeklyExtra > 0 && <> Chăm hằng tuần cộng thêm {cfg.weeklyExtra}%.</>}
+        {cfg.terms.filter((t) => t.discount > 0).length > 0 && <> Thuê dài được giảm: {cfg.terms.filter((t) => t.discount > 0).map((t) => `${termLabel(t)} giảm ${t.discount}%`).join(', ')}.</>}
+        {' '}Đây là giá tham khảo — giá chính thức báo sau khảo sát vì còn tùy loại cây, chậu và vị trí đặt.
+      </>
+    : 'Theo số cây, cỡ cây và chậu, tần suất chăm sóc và thời hạn thuê. Shop báo cụ thể sau khi khảo sát.';
 
   return (
     <div style={{ background: 'var(--surface-page)' }}>
       <div className="sv-crumb">
-        <Breadcrumb items={[{ label: 'Trang chủ', href: '/' }, { label: 'Dịch vụ', href: '/dich-vu' }, { label: 'Cây văn phòng' }]} />
+        <Breadcrumb items={[{ label: 'Trang chủ', href: '/' }, { label: 'Dịch vụ', href: '/dich-vu' }, { label: 'Cho thuê cây văn phòng' }]} />
       </div>
 
-      <section className="sv-sec" style={{ paddingTop: 0 }}>
-        <h1 className="sv-title">Cây văn phòng: thuê hoặc mua</h1>
-        <p className="sub">Cây xanh cho bàn làm việc, sảnh và phòng họp. Kỹ sư tư vấn loại cây hợp ánh sáng, bạn chọn thuê có người chăm hoặc mua về tự chăm.</p>
-        <div className="sv-two">
-          {OPTIONS.map((o) => (
-            <div key={o.title} className="sv-opt">
-              <span className="sv-opt__ic"><Icon name={o.icon} /></span>
-              <b>{o.title}</b>
-              <p>{o.text}</p>
-              <ul className="sv-check">
-                {o.points.map((t) => <li key={t}><Icon name="check" />{t}</li>)}
-              </ul>
-              <Link href={o.href} className={o.primary ? 'vx-btn vx-btn--primary vx-btn--block' : 'vx-btn vx-btn--outline vx-btn--block'}>{o.cta}</Link>
-            </div>
+      <section className="sv-sec ort-head">
+        <h1 className="sv-title">Cho thuê cây văn phòng</h1>
+        <p className="sub">Cây xanh đặt tận nơi, kỹ sư đến chăm theo lịch — bạn không phải tưới, bón hay lo cây chết. Chọn gói có sẵn hoặc tự chọn số lượng cây để xem chi phí ngay.</p>
+        <div className="ort-facts">
+          {facts.map((f) => (
+            <span key={f.b}><Icon name={f.icon} /><span><b>{f.b}</b>{f.text}</span></span>
           ))}
+        </div>
+        <div className="ort-jump">
+          <a href="#goi-thue" className="vx-btn vx-btn--primary vx-btn--lg">Xem các gói thuê</a>
+          <a href="#tinh-chi-phi" className="vx-btn vx-btn--outline vx-btn--lg">Tự chọn số lượng cây</a>
         </div>
       </section>
 
-      <section className="sv-sec" style={{ paddingTop: 0 }}>
+      <OfficeRentalPlanner cfg={cfg} />
+
+      <ServiceSteps
+        title="Cách thuê cây"
+        steps={[
+          { icon: 'receipt', b: 'Chọn gói hoặc số cây', text: 'Xem chi phí ước tính ngay trên trang' },
+          { icon: 'phone', b: 'Gửi yêu cầu', text: 'Kỹ sư gọi lại trong 2 giờ làm việc' },
+          { icon: 'pin', b: 'Khảo sát miễn phí', text: 'Xem ánh sáng, chọn cây cho từng vị trí' },
+          { icon: 'chat', b: 'Báo giá chính thức', text: 'Gửi qua Zalo sau 48 giờ kể từ khảo sát' },
+          { icon: 'truck', b: 'Đặt cây, chăm theo lịch', text: 'Giao, đặt cây và chăm định kỳ' },
+        ]}
+      />
+
+      <section className="sv-sec">
         <div className="sv-split">
-          <div className="sv-panel">
-            <h2>Báo giá thuê cây gồm những gì</h2>
-            <p>Mỗi khoản được ghi riêng trong bảng báo giá để bạn đối chiếu và thống nhất trước khi bắt đầu:</p>
-            <ul className="sv-check">
-              {QUOTE_ITEMS.map((t) => <li key={t}><Icon name="check" />{t}</li>)}
-            </ul>
-          </div>
           <div className="sv-panel">
             <h2>Chuẩn bị để được báo giá nhanh</h2>
             <p>Bạn không cần biết trước tên cây. Chỉ cần cho kỹ sư biết:</p>
@@ -84,29 +85,31 @@ export async function OfficePlants() {
               <li><Icon name="camera" />Ảnh không gian cần đặt cây (form nhận tối đa 3 ảnh)</li>
               <li><Icon name="pin" />Địa chỉ và số vị trí cần đặt</li>
               <li><Icon name="spark" />Hướng nắng, có cửa sổ hay chỉ có đèn, có bật điều hòa không</li>
-              <li><Icon name="plant" />Số cây dự kiến — chưa chắc thì để kỹ sư tư vấn</li>
+              <li><Icon name="plant" />Gói hoặc số cây dự kiến — chưa chắc thì để kỹ sư tư vấn</li>
               <li><Icon name="clock" />Thời hạn thuê mong muốn</li>
             </ul>
+          </div>
+          <div className="sv-panel">
+            <h2>Chỉ cần vài chậu? Mua về tự chăm</h2>
+            <p>Dưới {cfg.minPlants} cây, hoặc muốn tự chăm, bạn mua cây có sẵn của cửa hàng:</p>
+            <ul className="sv-check">
+              <li><Icon name="check" />Giá ghi rõ trên từng sản phẩm, mua ngay trên website</li>
+              <li><Icon name="check" />Giao toàn quốc, bảo hành cây sống 7 ngày</li>
+              <li><Icon name="check" />Kỹ sư tư vấn chăm cây miễn phí qua Zalo</li>
+            </ul>
+            <div className="acts">
+              <Link href={SHOP_OFFICE} className="vx-btn vx-btn--outline"><Icon name="cart" size={16} />Xem cây văn phòng</Link>
+            </div>
           </div>
         </div>
       </section>
 
-      <ServiceSteps
-        title="Cách thuê cây"
-        steps={[
-          { icon: 'phone', b: 'Gửi yêu cầu', text: 'Điền form, chọn sẵn "Cây văn phòng"' },
-          { icon: 'clock', b: 'Kỹ sư gọi lại', text: 'Trong 2 giờ làm việc, hẹn lịch khảo sát' },
-          { icon: 'pin', b: 'Khảo sát', text: 'Xem không gian, đánh giá ánh sáng, chọn vị trí' },
-          { icon: 'receipt', b: 'Báo giá', text: 'Gửi qua Zalo sau 48 giờ kể từ khảo sát' },
-          { icon: 'truck', b: 'Đặt cây', text: 'Giao và đặt cây tại văn phòng theo lịch đã chốt' },
-        ]}
-      />
-
       <section className="sv-sec">
         <div className="vx-sect">
-          <h2 style={{ fontSize: '1.125rem' }}>Cây văn phòng đang bán</h2>
+          <h2 style={{ fontSize: '1.125rem' }}>Cây văn phòng shop đang có</h2>
           <Link className="vx-link" href={SHOP_OFFICE}>Xem tất cả <Icon name="chevron" size={16} /></Link>
         </div>
+        <p className="sv-note" style={{ marginTop: -8 }}>Thích cây nào, ghi tên vào ô ghi chú khi gửi yêu cầu thuê — kỹ sư ưu tiên đưa vào phương án.</p>
         {plants.length > 0 ? (
           <ProductGrid products={plants} />
         ) : (
@@ -116,16 +119,18 @@ export async function OfficePlants() {
 
       <ServiceFaq
         items={[
-          { q: 'Giá thuê cây tính thế nào?', a: 'Theo số cây, loại cây và chậu, tần suất chăm sóc và thời hạn thuê. Shop báo cụ thể sau khi khảo sát, không có bảng giá chung vì mỗi văn phòng một khác.' },
-          { q: 'Cây yếu hoặc chết thì sao?', a: 'Việc thay cây được ghi rõ trong báo giá để hai bên thống nhất trước khi bắt đầu.' },
-          { q: 'Văn phòng ít nắng có đặt cây được không?', a: 'Được. Có nhiều loại cây chịu bóng râm; kỹ sư đánh giá ánh sáng khi khảo sát và chọn loại cây phù hợp cho từng vị trí.' },
+          { q: 'Giá thuê cây tính thế nào?', a: priceFaq },
+          { q: 'Thuê tối thiểu bao nhiêu cây, bao lâu?', a: `Từ ${cfg.minPlants} cây, thời hạn từ ${termLabel(first)}${cfg.terms.length > 1 ? `; có thể chọn ${cfg.terms.slice(1).map(termLabel).join(' hoặc ')}` : ''}.` },
+          { q: 'Gói có đổi được không?', a: <>Được. Gói chỉ là số cây gợi ý — bạn tăng, giảm từng cỡ cây ở phần <a href="#tinh-chi-phi">Tự chọn số lượng cây</a>, hoặc nói với kỹ sư khi khảo sát. Cần thêm hay bớt cây giữa chừng thì báo shop để cập nhật hợp đồng.</> },
+          { q: 'Cây yếu hoặc chết thì sao?', a: 'Kỹ sư kiểm tra cây mỗi lần đến chăm. Cây yếu hoặc hư được thay theo điều khoản ghi trong báo giá và hợp đồng.' },
+          { q: 'Văn phòng ít nắng có đặt cây được không?', a: 'Được. Có nhiều loại cây chịu bóng râm và sống tốt dưới đèn; kỹ sư đánh giá ánh sáng khi khảo sát và chọn cây phù hợp cho từng vị trí.' },
           { q: 'Tôi chỉ cần mua vài chậu thì sao?', a: <>Bạn mua trực tiếp ở nhóm <Link href={SHOP_OFFICE}>Cây văn phòng</Link>, giao toàn quốc và được bảo hành cây sống. Xem <Link href="/chinh-sach/bao-hanh-cay">Chính sách bảo hành cây</Link>.</> },
         ]}
       />
 
       <ServiceCta
-        title="Nhận báo giá cây văn phòng"
-        text="Gửi ảnh không gian, kỹ sư sẽ gọi lại để hẹn khảo sát"
+        title="Nhận báo giá thuê cây văn phòng"
+        text="Gửi ảnh không gian, kỹ sư sẽ gọi lại để hẹn khảo sát miễn phí"
         label="Nhận báo giá"
         href={QUOTE_OFFICE}
       />

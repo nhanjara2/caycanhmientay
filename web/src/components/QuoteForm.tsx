@@ -7,6 +7,7 @@ import { isPhone } from '@/lib/auth';
 import { compressImage } from '@/lib/compress-image';
 import { money } from '@/lib/format';
 import { ADVISOR_URL, KINDS, PLAN_STORE_KEY, type SavedPlan } from '@/lib/plant-advisor';
+import { RENTAL_STORE_KEY, RENTAL_URL } from '@/lib/office-rental';
 import {
   BUDGETS, SERVICE_INFO, SERVICE_TYPES, SLOT_TIMES, SPACES, STYLES, SUNS, fmtSlot, fmtSlotDay, type ServiceType, type SlotTime,
 } from '@/lib/service-labels';
@@ -32,7 +33,11 @@ type Draft = {
 };
 
 /** QuoteRequestForm: 5 phần trên một trang — dịch vụ → không gian → ngân sách → lịch khảo sát → liên hệ. */
-export function QuoteForm({ defaults, slots, fromAdvisor = false }: { defaults: QuoteDefaults; slots: QuoteSlot[]; /** Mở từ nút "Gửi phương án" của trang Tư vấn chọn cây. */ fromAdvisor?: boolean }) {
+export function QuoteForm({ defaults, slots, fromAdvisor = false, fromRental = false }: {
+  defaults: QuoteDefaults; slots: QuoteSlot[];
+  /** Mở từ nút "Gửi phương án" của trang Tư vấn chọn cây. */ fromAdvisor?: boolean;
+  /** Mở từ nút "Gửi yêu cầu kèm ước tính" của trang Cho thuê cây văn phòng. */ fromRental?: boolean;
+}) {
   const [v, setV] = useState<Draft>({
     service: defaults.service ?? null, space: '', area: '', sun: '', styles: [], budget: '',
     slot: '', name: defaults.name, phone: defaults.phone, address: defaults.address, note: '',
@@ -43,6 +48,7 @@ export function QuoteForm({ defaults, slots, fromAdvisor = false }: { defaults: 
   const [info, setInfo] = useState('');
   const [done, setDone] = useState<{ code: string; slot: string } | null>(null);
   const [plan, setPlan] = useState<SavedPlan | null>(null);
+  const [rental, setRental] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const fileInput = useRef<HTMLInputElement>(null);
   const honeypot = useRef<HTMLInputElement>(null);
@@ -85,6 +91,28 @@ export function QuoteForm({ defaults, slots, fromAdvisor = false }: { defaults: 
       }));
     } catch { /* bỏ qua */ }
   }, [fromAdvisor]);
+  // Ước tính từ trang Cho thuê cây văn phòng: đính kèm vào ghi chú khi gửi + ghi sẵn loại không gian, diện tích
+  useEffect(() => {
+    if (!fromRental) return;
+    try {
+      const raw = sessionStorage.getItem(RENTAL_STORE_KEY);
+      if (!raw) return;
+      const d = JSON.parse(raw) as { note?: string; area?: number };
+      if (typeof d.note !== 'string' || !d.note) return;
+      setRental(d.note.slice(0, 600));
+      setV((x) => ({
+        ...x,
+        service: 'office',
+        space: 'Văn phòng',
+        area: d.area && d.area >= 1 ? String(Math.min(100_000, Math.round(d.area))) : x.area,
+      }));
+    } catch { /* bỏ qua */ }
+  }, [fromRental]);
+  const dropRental = () => {
+    setRental(null);
+    try { sessionStorage.removeItem(RENTAL_STORE_KEY); } catch { /* bỏ qua */ }
+  };
+
   const dropPlan = () => {
     setPlan(null);
     try { sessionStorage.removeItem(PLAN_STORE_KEY); } catch { /* bỏ qua */ }
@@ -147,14 +175,15 @@ export function QuoteForm({ defaults, slots, fromAdvisor = false }: { defaults: 
     fd.set('name', v.name);
     fd.set('phone', v.phone);
     fd.set('address', v.address);
-    if (v.note.trim()) fd.set('note', v.note);
+    const note = [rental, v.note.trim()].filter(Boolean).join('\n').slice(0, 1000);
+    if (note) fd.set('note', note);
     fd.set('website', honeypot.current?.value ?? '');
     if (plan) fd.set('plan', JSON.stringify(plan));
     photos.forEach((p) => fd.append('photos', p.file));
     start(async () => {
       const r = await createServiceRequestAction(fd).catch(() => ({ ok: false as const, error: 'Không gửi được. Vui lòng kiểm tra mạng và thử lại.' }));
       if (!r.ok) { setError(r.error); return; }
-      try { localStorage.removeItem(DRAFT_KEY); sessionStorage.removeItem(PLAN_STORE_KEY); } catch { /* bỏ qua */ }
+      try { localStorage.removeItem(DRAFT_KEY); sessionStorage.removeItem(PLAN_STORE_KEY); sessionStorage.removeItem(RENTAL_STORE_KEY); } catch { /* bỏ qua */ }
       const s = slots.find((x) => x.key === v.slot);
       setDone({ code: r.code, slot: s ? fmtSlot(s.date, s.time) : '' });
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -199,6 +228,20 @@ export function QuoteForm({ defaults, slots, fromAdvisor = false }: { defaults: 
         </div>
         {err('service')}
       </div>
+
+      {rental && (
+        <div className="qf-plan">
+          <div className="qf-plan__h">
+            <b><Icon name="receipt" size={18} />Gói / số cây thuê bạn đã chọn</b>
+            <span className="qf-plan__acts">
+              <Link href={`${RENTAL_URL}#tinh-chi-phi`}>Chọn lại</Link>
+              <button type="button" onClick={dropRental}>Bỏ đính kèm</button>
+            </span>
+          </div>
+          <span>{rental.replace(/^Thuê cây văn phòng \(tính trên web\): /, '')}</span>
+          <span className="qf-plan__total">Gửi kèm yêu cầu này; kỹ sư báo giá chính thức sau khảo sát.</span>
+        </div>
+      )}
 
       {plan && (
         <div className="qf-plan">

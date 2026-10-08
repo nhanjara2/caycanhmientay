@@ -41,10 +41,10 @@ export const AREA_INFO: Record<Area, { name: string; levels: readonly [Level, Le
   products: { name: 'Sản phẩm & danh mục', levels: [F, V, V, V, N] },
   inventory: { name: 'Kho & nhập hàng', levels: [F, N, F, N, N] },
   expenses: { name: 'Chi phí & lãi lỗ', levels: [F, N, N, N, N] },
-  content: { name: 'Bài viết & bệnh cây', levels: [F, N, N, F, N] },
+  content: { name: 'Bài viết, bệnh cây & dự án', levels: [F, N, N, F, N] },
   qna: { name: 'Hỏi đáp & đánh giá', levels: [F, F, N, F, N] },
   reports: { name: 'Báo cáo', levels: [F, N, N, N, N] },
-  settings: { name: 'Cài đặt (giao hàng, mẫu tin, phân quyền)', levels: [F, N, N, N, N] },
+  settings: { name: 'Cài đặt (giao hàng, mẫu tin, phân quyền, giá thuê cây)', levels: [F, N, N, N, N] },
 };
 
 /** Trang admin ↔ chức năng (menu trái ẩn mục không có quyền xem). */
@@ -65,10 +65,12 @@ export const NAV_AREA: Record<string, Area> = {
   '/admin/chi-phi': 'expenses',
   '/admin/noi-dung': 'content',
   '/admin/benh-cay': 'content',
+  '/admin/du-an': 'content',
   '/admin/danh-gia': 'qna',
   '/admin/mau-tin-nhan': 'settings',
   '/admin/cua-hang': 'settings',
   '/admin/cai-dat-giao-hang': 'settings',
+  '/admin/thue-cay': 'settings',
   '/admin/phan-quyen': 'settings',
 };
 

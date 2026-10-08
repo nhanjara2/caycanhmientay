@@ -13,8 +13,8 @@ const SERVICES: { type: ServiceType; icon: IconName; title: string; text: string
   },
   {
     type: 'office', icon: 'pot', title: 'Cây văn phòng',
-    text: 'Thuê hoặc mua cây đặt tận nơi, kỹ sư tư vấn loại cây hợp ánh sáng và hướng dẫn chăm sóc.',
-    href: '/dich-vu/cho-thue-cay-van-phong', cta: 'Xem chi tiết',
+    text: 'Thuê theo gói hoặc theo số lượng cây, đã gồm chậu và kỹ sư chăm định kỳ. Tính chi phí ngay trên trang.',
+    href: '/dich-vu/cho-thue-cay-van-phong', cta: 'Xem gói & giá thuê',
   },
   {
     type: 'care', icon: 'drop', title: 'Chăm sóc định kỳ',

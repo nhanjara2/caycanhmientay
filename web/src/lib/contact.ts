@@ -15,3 +15,12 @@ export const SHOP_ADDRESS = 'Làng Hoa Sa Đéc, Đồng Tháp';
 export const PICKUP_PLACE = `Vườn ươm Cây Cảnh Miền Tây, ${SHOP_ADDRESS}`;
 /** 0703005001 → 0703 005 001 */
 export const formatPhone = (p: string) => p.replace(/^(\d{4})(\d{3})(\d{3})$/, '$1 $2 $3');
+
+/** Thông tin đăng ký kinh doanh (trùng chân trang + trang Giấy phép kinh doanh) — trang Khách doanh nghiệp đọc từ đây. */
+export const LEGAL = {
+  name: 'Cây Cảnh Miền Tây',
+  owner: 'Lê Hoài Nhân',
+  regNo: '087096010726',
+  regIssued: '04/2026',
+  taxOffice: 'Thuế cơ sở 6 tỉnh Đồng Tháp',
+};
