@@ -92,6 +92,8 @@ export const products = pgTable('products', {
   slug: text('slug').primaryKey(),
   sku: text('sku').notNull().unique(),
   name: text('name').notNull(),
+  /** Tên chi tiết (SEO) cho <title>, H1, JSON-LD — null = tạo tự động theo công thức (lib/seo-name.ts). */
+  seoName: text('seo_name'),
   category: text('category').notNull(),
   sub: text('sub').notNull(),
   /** Nhóm con phụ (cùng danh mục): sản phẩm hiện thêm ở các nhóm này, vd. Kim tiền vừa là cây văn phòng vừa là cây ban công. */

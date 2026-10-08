@@ -7,9 +7,10 @@ import { GalleryCol, ProductGallery } from '@/components/ProductGallery';
 import { ProductGrid } from '@/components/ProductCard';
 import { ProductQnA } from '@/components/ProductQnA';
 import { ProductReviews } from '@/components/ProductReviews';
-import { categoryLabel, elementName, type Product } from '@/lib/catalog';
+import { categoryLabel, elementName, isQuote, type Product } from '@/lib/catalog';
 import { YOUTUBE_URL } from '@/lib/contact';
 import { reviewStats } from '@/lib/reviews';
+import { seoNameOf } from '@/lib/seo-name';
 import { boughtTogether, getProduct } from '@/server/catalog';
 import { getCurrentUser } from '@/server/auth';
 import { getCategories } from '@/server/categories';
@@ -22,7 +23,36 @@ type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const p = await getProduct((await params).slug);
-  return p ? { title: p.name, description: p.lead } : { title: 'Không tìm thấy' };
+  if (!p) return { title: 'Không tìm thấy' };
+  // tên chi tiết đã đủ dài, không nối thêm "| Cây Cảnh Miền Tây" (Google cắt phần đuôi)
+  const title = seoNameOf(p);
+  return {
+    title: { absolute: title }, description: p.lead,
+    alternates: { canonical: `/san-pham/${p.slug}` },
+    openGraph: { type: 'website', title, description: p.lead, images: p.images?.length ? [p.images[0]] : undefined },
+  };
+}
+
+const site = () => (process.env.SITE_URL ?? '').replace(/\/$/, '');
+
+/** Schema Product (JSON-LD) để Google hiểu tên chi tiết, ảnh, giá, còn hàng; đánh giá chỉ ghi khi có đánh giá thật. */
+function productJsonLd(p: Product, rating: { avg: number; count: number }) {
+  const prices = p.options.filter((o) => !isQuote(o)).map((o) => o.price);
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: seoNameOf(p),
+    alternateName: p.name,
+    sku: p.sku,
+    description: p.lead,
+    image: p.images?.length ? p.images.map((src) => `${site()}${src}`) : undefined,
+    brand: { '@type': 'Brand', name: 'Cây Cảnh Miền Tây' },
+    offers: prices.length ? {
+      '@type': 'AggregateOffer', priceCurrency: 'VND', lowPrice: Math.min(...prices), highPrice: Math.max(...prices), offerCount: prices.length,
+      availability: p.inStock === false ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
+    } : undefined,
+    aggregateRating: rating.count > 0 ? { '@type': 'AggregateRating', ratingValue: rating.avg.toFixed(1), reviewCount: rating.count } : undefined,
+  };
 }
 
 function FengShuiBlock({ f }: { f: NonNullable<Product['fengshui']> }) {
@@ -127,6 +157,7 @@ export default async function ProductPage({ params }: Props) {
 
   return (
     <div className="vx-pdpage app-page">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd(p, rs)).replace(/</g, '\\u003c') }} />
       <Breadcrumb
         items={[
           { label: 'Trang chủ', href: '/' },

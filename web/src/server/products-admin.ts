@@ -4,6 +4,7 @@ import * as z from 'zod';
 import { ELEMENTS, findCategory, MAX_PRODUCT_IMAGES, normalize, parseYoutubeId, PRODUCT_ICONS, productImageUrl, specTemplate, type FengShui } from '@/lib/catalog';
 import { advisorKeys } from '@/lib/plant-advisor';
 import { attrKeys, type ProductAttrs } from '@/lib/product-filters';
+import { SEO_NAME_MAX } from '@/lib/seo-name';
 import { nextSku, skuPrefix } from '@/lib/sku';
 import { tracksLots } from '@/lib/stock';
 import { mainImageOf } from './catalog';
@@ -23,6 +24,8 @@ const money = z.number().int().min(0).max(1_000_000_000);
 export const ProductInputSchema = z.object({
   slug: z.string().max(120).optional(), // có = sửa, không có = tạo mới
   name: z.string().trim().min(5, 'Tên sản phẩm cần ít nhất 5 ký tự').max(120, 'Tên tối đa 120 ký tự'),
+  // Tên chi tiết (SEO): trống = web tự tạo theo công thức (lib/seo-name.ts)
+  seoName: z.string().trim().max(SEO_NAME_MAX, `Tên chi tiết tối đa ${SEO_NAME_MAX} ký tự`).optional().transform((v) => v || null),
   // danh mục / nhóm con có thật + thông số bắt buộc: kiểm tra trong saveProduct (danh mục nằm trong database)
   category: z.string().min(1, 'Chọn danh mục').max(60),
   sub: z.string().min(1, 'Chọn nhóm con').max(60),
@@ -189,7 +192,7 @@ export async function saveProduct(input: ProductInput, actor: string): Promise<S
   const subsOfCat = findCategory(await getCategories(), input.category)?.subs.map((s) => s.slug) ?? [];
   const extraSubs = [...new Set(input.extraSubs)].filter((s) => s !== input.sub && subsOfCat.includes(s));
   const values = {
-    name: input.name, category: input.category, sub: input.sub, extraSubs, icon: input.icon, origin: input.origin, ship: input.ship,
+    name: input.name, seoName: input.seoName, category: input.category, sub: input.sub, extraSubs, icon: input.icon, origin: input.origin, ship: input.ship,
     pesticide: input.pesticide, unit: input.unit, spec: input.spec, lead: input.lead, specs: input.specs, active: input.active,
     youtubeId: input.video, keywords: input.keywords,
     fengshui: input.fengshui,

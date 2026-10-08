@@ -8,6 +8,7 @@ import { useCart } from '@/lib/cart';
 import { SALES_PHONE, ZALO_URL } from '@/lib/contact';
 import { compact, money } from '@/lib/format';
 import { starsText } from '@/lib/reviews';
+import { seoNameOf } from '@/lib/seo-name';
 import { DeliverToNote } from './DeliverTo';
 import { Icon } from './Icon';
 import { WishlistHeart } from './WishlistHeart';
@@ -52,7 +53,7 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
         <span className="vx-badge vx-badge--origin">{p.origin}</span>
         <span>Thương hiệu: <a>Cây Cảnh Miền Tây</a></span>
       </div>
-      <h1 className="vx-buy__title">{p.name}</h1>
+      <h1 className="vx-buy__title">{seoNameOf(p)}</h1>
       <div className="vx-buy__meta">
         <span>{p.sku}</span>·
         {p.reviews > 0 ? (

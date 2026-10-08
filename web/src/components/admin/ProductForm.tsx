@@ -8,6 +8,7 @@ import { Art, type IconName } from '@/components/Icon';
 import { applySpecTemplate, ELEMENTS, ICON_LABELS, parseYoutubeId, PRODUCT_ICONS, specTemplate, type Category, type FengShui } from '@/lib/catalog';
 import { KICH_THUOC, MAU_SAC, VI_TRI } from '@/lib/product-filters';
 import { CARE_LEVELS, LIGHTS, PET_SAFETY, ROLES } from '@/lib/plant-advisor';
+import { autoSeoName, SEO_NAME_MAX, SEO_TITLE_VISIBLE } from '@/lib/seo-name';
 import { tracksLots } from '@/lib/stock';
 import { ProductDeleteButton } from './ProductDeleteButton';
 import { ProductImages, type AdminImage } from './ProductImages';
@@ -17,6 +18,8 @@ export type ProductFormValue = {
   slug?: string;
   sku?: string;
   name: string;
+  /** Tên chi tiết (SEO), trống = web tự tạo theo công thức (lib/seo-name.ts). */
+  seoName: string;
   category: string;
   sub: string;
   /** Nhóm con phụ cùng danh mục: sản phẩm hiện thêm ở các nhóm này. */
@@ -91,6 +94,8 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
   const setFs = (patch: Partial<FengShui>) => set('fengshui', { ...v.fengshui, ...patch });
   const setAttrs = (patch: Partial<ProductFormValue['attrs']>) => set('attrs', { ...v.attrs, ...patch });
   const toggle = (list: string[], key: string, all: { key: string }[]) => all.map((o) => o.key).filter((k) => (k === key ? !list.includes(k) : list.includes(k)));
+  // tên chi tiết theo công thức, tính từ dữ liệu đang nhập trên form (chưa cần Lưu)
+  const autoName = autoSeoName({ ...v, keywords: v.keywords.split(/[,;\n]/).map((k) => k.trim()).filter(Boolean) });
   const cat = findCat(v.category);
   const template = specTemplate(cat, v.sub);
   // gợi ý tên thông số khi gõ: mọi thông số trong các danh mục / nhóm con
@@ -167,6 +172,20 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
                   <label htmlFor="pf-name">Tên sản phẩm <i>*</i></label>
                   <input id="pf-name" className="vx-input" value={v.name} onChange={(e) => set('name', e.target.value)} maxLength={120} required />
                   <span className="hint">Loại + tên + đặc điểm + quy cách. {v.name.length}/120 ký tự.</span>
+                </div>
+                <div className="ad-f">
+                  <label htmlFor="pf-seoname">Tên chi tiết (SEO Google)</label>
+                  <div className="app-seoname">
+                    <textarea id="pf-seoname" className="vx-input" rows={2} value={v.seoName} onChange={(e) => set('seoName', e.target.value.replace(/\s*\n\s*/g, ' '))}
+                      maxLength={SEO_NAME_MAX} placeholder={autoName} />
+                    <button type="button" className="vx-btn vx-btn--outline vx-btn--sm" disabled={!autoName || v.seoName === autoName} onClick={() => set('seoName', autoName)}>Tạo tự động</button>
+                  </div>
+                  <span className="hint">
+                    Hiện ở tiêu đề trang sản phẩm và tên trên Google; thẻ sản phẩm, giỏ hàng vẫn dùng tên ngắn. Bấm <b>Tạo tự động</b> để ghép theo công thức
+                    {' '}<i>Tên cây (tên gọi khác) + vị trí đặt – công dụng, phong thủy, hợp mệnh</i> từ các mục bên dưới, rồi sửa lại cho tự nhiên.
+                    Để trống thì web tự dùng tên tạo tự động (chữ mờ trong ô). {v.seoName.length}/{SEO_NAME_MAX} ký tự
+                    {v.seoName.length > SEO_TITLE_VISIBLE && <> — Google chỉ hiện khoảng {SEO_TITLE_VISIBLE} ký tự đầu, giữ tên cây và ý chính ở đầu</>}.
+                  </span>
                 </div>
                 <div className="ad-f">
                   <label htmlFor="pf-keywords">Tên gọi khác</label>

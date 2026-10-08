@@ -40,6 +40,8 @@ export type Product = {
   slug: string;
   sku: string;
   name: string;
+  /** Tên chi tiết (SEO) admin tự nhập; không có thì tạo tự động — đọc qua `seoNameOf` (lib/seo-name.ts). */
+  seoName?: string;
   category: string;
   sub: string;
   /** Nhóm con phụ cùng danh mục — sản phẩm hiện ở cả `sub` lẫn các nhóm này. */

@@ -16,7 +16,7 @@ const NO_FENGSHUI = { elements: [], ages: '', meaning: '', placement: '' };
 const NO_ATTRS = { viTri: [], kichThuoc: null, mau: [], anhSang: [], vaiTro: [], cham: null, thuCung: null, chiuGio: false };
 
 const EMPTY: ProductFormValue = {
-  name: '', category: 'cay-canh', sub: '', extraSubs: [], icon: 'plant', origin: 'Việt Nam', ship: 'plant', pesticide: false,
+  name: '', seoName: '', category: 'cay-canh', sub: '', extraSubs: [], icon: 'plant', origin: 'Việt Nam', ship: 'plant', pesticide: false,
   unit: 'Chậu', spec: '', lead: '', keywords: '', active: true, flash: false, video: '', images: [], fengshui: NO_FENGSHUI, attrs: NO_ATTRS,
   specs: [], // form tự điền bộ thông số của danh mục + nhóm con
   options: [{ label: '', price: 0, oldPrice: null, stock: 0 }],
@@ -31,7 +31,7 @@ export default async function AdminProductPage({ params }: Props) {
     const p = await getProductAdmin(slug);
     if (!p) notFound();
     initial = {
-      slug: p.slug, sku: p.sku, name: p.name, category: p.category, sub: p.sub, extraSubs: p.extraSubs, icon: p.icon as IconName, origin: p.origin,
+      slug: p.slug, sku: p.sku, name: p.name, seoName: p.seoName ?? '', category: p.category, sub: p.sub, extraSubs: p.extraSubs, icon: p.icon as IconName, origin: p.origin,
       ship: p.ship, pesticide: p.pesticide, unit: p.unit, spec: p.spec, lead: p.lead, keywords: p.keywords.join(', '), specs: p.specs, active: p.active,
       flash: p.flashTotal !== null,
       video: p.youtubeId ? `https://youtu.be/${p.youtubeId}` : '', images: p.images,
