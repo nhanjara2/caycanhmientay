@@ -1,37 +1,18 @@
 import Link from 'next/link';
 import { ADVISOR_URL, KINDS, SPACE_KINDS } from '@/lib/plant-advisor';
-import { SERVICE_INFO, type ServiceType } from '@/lib/service-labels';
-import { Icon, type IconName } from './Icon';
-import { phoneText, QUOTE_URL, SERVICE_PHONE, ServiceCta, ServiceFaq, ServiceHero, ServiceSteps } from './ServiceParts';
-
-/** 4 dịch vụ khớp với 4 lựa chọn trong form Đặt lịch khảo sát (lib/service-labels). */
-const SERVICES: { type: ServiceType; icon: IconName; title: string; text: string; href?: string; cta: string }[] = [
-  {
-    type: 'garden', icon: 'home', title: 'Thiết kế & thi công sân vườn',
-    text: 'Sân vườn, ban công, sân thượng, tiểu cảnh. Kỹ sư khảo sát, đề xuất cây hợp ánh sáng và gửi phối cảnh trước khi thi công.',
-    cta: 'Đặt lịch khảo sát',
-  },
-  {
-    type: 'office', icon: 'pot', title: 'Cây văn phòng',
-    text: 'Thuê theo gói hoặc theo số lượng cây, đã gồm chậu và kỹ sư chăm định kỳ. Tính chi phí ngay trên trang.',
-    href: '/dich-vu/cho-thue-cay-van-phong', cta: 'Xem gói & giá thuê',
-  },
-  {
-    type: 'care', icon: 'drop', title: 'Chăm sóc định kỳ',
-    text: 'Tưới, bón, cắt tỉa, trị bệnh tại nhà hoặc văn phòng theo lịch hai bên thống nhất.',
-    cta: 'Đặt lịch khảo sát',
-  },
-  {
-    type: 'clinic', icon: 'bug', title: 'Chữa cây tại nhà',
-    text: 'Kỹ sư đến tận nơi xem cây bệnh, xử lý và hướng dẫn cách chăm lại cho cây hồi phục.',
-    cta: 'Đặt lịch khảo sát',
-  },
-];
+import { SERVICES_HUB_IMAGE } from '@/lib/services';
+import { Breadcrumb } from './Blocks';
+import { Icon } from './Icon';
+import { phoneText, QUOTE_URL, SERVICE_PHONE, ServiceCards, ServiceCta, ServiceFaq, ServiceHero, ServiceSteps, ServiceTabs } from './ServiceParts';
 
 /** Trang Dịch vụ sân vườn (/dich-vu): viết tay, chỉ ghi những gì shop cam kết trong form khảo sát — không số liệu, giá, đánh giá mẫu. */
 export function ServicesHub() {
   return (
     <div style={{ background: 'var(--surface-page)' }}>
+      <div className="sv-crumb">
+        <Breadcrumb items={[{ label: 'Trang chủ', href: '/' }, { label: 'Dịch vụ' }]} />
+      </div>
+      <ServiceTabs />
       <ServiceHero
         badge="Dịch vụ Cây Cảnh Miền Tây"
         title="Không gian xanh, không lo chăm sóc"
@@ -40,28 +21,14 @@ export function ServicesHub() {
         call={{ phone: SERVICE_PHONE, label: phoneText(SERVICE_PHONE) }}
         proof={[{ b: 'Từ 2019', text: 'làm cây cảnh công trình' }, { b: 'Gần 200', text: 'nhà vườn cùng hợp tác' }, { b: 'Miễn phí', text: 'khảo sát tại chỗ' }]}
         art="home"
+        image={{ src: SERVICES_HUB_IMAGE, alt: 'Sân hiên nhiều cây xanh nhiệt đới trồng chậu' }}
         tag={{ b: 'Kỹ sư gọi lại trong 2 giờ làm việc', text: 'Báo giá gửi qua Zalo sau 48 giờ kể từ khảo sát' }}
       />
 
       <section className="sv-sec">
         <h2>Dịch vụ của chúng tôi</h2>
-        <p className="sub">Giá tính theo hiện trạng và nhu cầu của bạn, báo cụ thể sau khi khảo sát — không có bảng giá chung.</p>
-        <div className="sv-cards">
-          {SERVICES.map((s) => (
-            <div key={s.type} className="sv-card">
-              <span className="img"><Icon name={s.icon} /></span>
-              <span className="b">
-                <b>{s.title}</b>
-                {s.text}
-                <span className="from">Khảo sát miễn phí · báo giá sau khảo sát</span>
-                <Link href={s.href ?? `${QUOTE_URL}?loai=${SERVICE_INFO[s.type].param}`}>
-                  {s.cta}
-                  <Icon name="chevron" size={14} />
-                </Link>
-              </span>
-            </div>
-          ))}
-        </div>
+        <p className="sub">Mỗi dịch vụ có trang riêng: phạm vi công việc, các bước, cách tính giá và câu hỏi thường gặp. Khảo sát tại chỗ miễn phí.</p>
+        <ServiceCards />
       </section>
 
       <section className="sv-sec">

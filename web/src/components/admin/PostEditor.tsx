@@ -13,6 +13,7 @@ import {
   type BlockType, type PostBlock, type PostKind, type PostStatus,
 } from '@/lib/posts';
 import { Icon, Thumb } from '../Icon';
+import { Select } from '@/components/Select';
 
 export type EditorPost = {
   id?: number; slug: string; status: PostStatus; publishedAt: string | null; updatedAt?: string; updatedBy?: string | null;
@@ -369,13 +370,13 @@ export function PostEditor({ initial, role, products, diseases, people, stats }:
               </div>
               <div className="ad-f">
                 <label htmlFor="pe-cat">Chuyên mục <i>*</i></label>
-                <select id="pe-cat" className="vx-input" value={v.category} onChange={(e) => set('category', e.target.value)}>
+                <Select id="pe-cat" className="vx-input" value={v.category} onChange={(e) => set('category', e.target.value)}>
                   {(['blog', 'news'] as const).map((s) => (
                     <optgroup key={s} label={SECTIONS[s].name}>
                       {CATEGORIES.filter((c) => c.section === s).map((c) => <option key={c.key} value={c.key}>{c.name}</option>)}
                     </optgroup>
                   ))}
-                </select>
+                </Select>
                 <span className="hint">Hiện ở trang {SECTIONS[section].name} ({SECTIONS[section].path}).</span>
               </div>
               <div className="ad-f">
@@ -433,10 +434,10 @@ export function PostEditor({ initial, role, products, diseases, people, stats }:
                 </span>
               )}
               {v.diseases.length < 10 && (
-                <select className="vx-input" value="" aria-label="Gắn bệnh" onChange={(e) => e.target.value && set('diseases', [...v.diseases, e.target.value])}>
+                <Select className="vx-input" value="" aria-label="Gắn bệnh" onChange={(e) => e.target.value && set('diseases', [...v.diseases, e.target.value])}>
                   <option value="">+ Chọn bệnh…</option>
                   {diseases.filter((d) => !v.diseases.includes(d.slug)).map((d) => <option key={d.slug} value={d.slug}>{d.name}</option>)}
-                </select>
+                </Select>
               )}
               <span className="hint">Bài hiện link sang trang bệnh, và trang bệnh hiện link về bài này.</span>
             </Card>

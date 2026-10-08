@@ -40,11 +40,11 @@ export default async function ProjectPage(props: Props) {
   if (!p) notFound();
   const all = await publishedProjects();
   // Dự án khác: cùng loại công trình trước.
-  const others = all.filter((x) => x.id !== p.id).sort((a, b) => Number(b.type === p.type) - Number(a.type === p.type)).slice(0, 3);
+  const others = all.filter((x) => x.id !== p.id && x.images.length).sort((a, b) => Number(b.type === p.type) - Number(a.type === p.type)).slice(0, 3);
   const facts: [string, string][] = [
     ['Khách hàng', p.client],
     ['Địa điểm', p.location],
-    ['Năm thực hiện', String(p.year)],
+    ['Năm thực hiện', p.year ? String(p.year) : ''],
     ['Thời gian', p.duration],
     ['Loại công trình', projectTypeOf(p.type).name],
   ].filter((f): f is [string, string] => !!f[1]);
@@ -69,7 +69,7 @@ export default async function ProjectPage(props: Props) {
         </div>
       </header>
 
-      <div className="dn-wrap dn-ptop">
+      <div className={p.images.length ? 'dn-wrap dn-ptop' : 'dn-wrap dn-ptop dn-ptop--noimg'}>
         <ProjectGallery images={p.images} title={p.title} />
         <aside className="dn-pinfo">
           <dl>

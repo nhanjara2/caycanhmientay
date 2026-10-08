@@ -7,6 +7,7 @@ import { saveDiseaseAction, uploadDiseaseImageAction } from '@/app/actions/disea
 import { normalize } from '@/lib/catalog';
 import { compressImage } from '@/lib/compress-image';
 import { CAUSES, diseaseImageUrl, PARTS, PLANTS, SEVERITY, type Disease, type PartKey } from '@/lib/diseases';
+import { Select } from '@/components/Select';
 
 type ProductPick = { slug: string; name: string; sku: string; active: boolean };
 type DiseasePick = { slug: string; name: string };
@@ -174,9 +175,9 @@ export function DiseaseForm({ initial, canEdit, products, diseases }: {
               render={(s, upd) => (
                 <>
                   <div className="ad-frow app-symrow">
-                    <select className="vx-input" value={s.part} onChange={(e) => upd({ part: e.target.value as PartKey })} aria-label="Bộ phận">
+                    <Select className="vx-input" value={s.part} onChange={(e) => upd({ part: e.target.value as PartKey })} aria-label="Bộ phận">
                       {PARTS.map((p) => <option key={p.key} value={p.key}>{p.name}</option>)}
-                    </select>
+                    </Select>
                     <input className="vx-input" value={s.text} onChange={(e) => upd({ text: e.target.value })} maxLength={200} placeholder="Lá dưới vàng, mềm, rũ…" aria-label="Triệu chứng" />
                   </div>
                   {v.slug && <SymptomPhoto slug={v.slug} file={s.image} onChange={(image) => upd({ image })} />}
@@ -189,10 +190,10 @@ export function DiseaseForm({ initial, canEdit, products, diseases }: {
                 <>
                   <div className="ad-frow app-pair">
                     <input className="vx-input" value={c.name} onChange={(e) => upd({ name: e.target.value })} maxLength={60} placeholder="Tên bệnh dễ nhầm" aria-label="Tên bệnh dễ nhầm" />
-                    <select className="vx-input" value={c.slug ?? ''} onChange={(e) => upd({ slug: e.target.value, name: c.name || diseases.find((d) => d.slug === e.target.value)?.name || '' })} aria-label="Liên kết tới bài">
+                    <Select className="vx-input" value={c.slug ?? ''} onChange={(e) => upd({ slug: e.target.value, name: c.name || diseases.find((d) => d.slug === e.target.value)?.name || '' })} aria-label="Liên kết tới bài">
                       <option value="">Không liên kết</option>
                       {diseases.map((d) => <option key={d.slug} value={d.slug}>{d.name}</option>)}
-                    </select>
+                    </Select>
                   </div>
                   <input className="vx-input" value={c.text} onChange={(e) => upd({ text: e.target.value })} maxLength={300} placeholder="Cách phân biệt: thiếu nước lá giòn, đất khô; thối rễ lá mềm, đất ẩm." aria-label="Cách phân biệt" />
                 </>
@@ -238,9 +239,9 @@ export function DiseaseForm({ initial, canEdit, products, diseases }: {
               <div className="ad-card__b">
                 <div className="ad-f">
                   <label htmlFor="df-cause">Nguyên nhân <i>*</i></label>
-                  <select id="df-cause" className="vx-input" value={v.cause} onChange={(e) => set('cause', e.target.value as Disease['cause'])}>
+                  <Select id="df-cause" className="vx-input" value={v.cause} onChange={(e) => set('cause', e.target.value as Disease['cause'])}>
                     {CAUSES.map((c) => <option key={c.key} value={c.key}>{c.name}</option>)}
-                  </select>
+                  </Select>
                 </div>
                 <div className="ad-f">
                   <label>Bộ phận bị bệnh <i>*</i></label>

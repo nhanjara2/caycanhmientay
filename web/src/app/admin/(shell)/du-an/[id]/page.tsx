@@ -13,7 +13,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 const EMPTY: ProjectFormValue = {
-  title: '', type: 'van-phong', roles: ['cung-cap'], client: '', clientLogo: null, location: '', year: new Date().getFullYear(), duration: '',
+  title: '', type: 'van-phong', roles: ['cung-cap'], client: '', clientLogo: null, location: '', year: null, duration: '',
   summary: '', body: '', scope: [''], plants: [], metrics: [], quote: null, images: [], featured: false, published: false,
 };
 

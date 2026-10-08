@@ -12,6 +12,7 @@ import { seoNameOf } from '@/lib/seo-name';
 import { DeliverToNote } from './DeliverTo';
 import { Icon, Thumb } from './Icon';
 import { WishlistHeart } from './WishlistHeart';
+import { Select } from './Select';
 
 /** Khối mua bên phải trang chi tiết: tên → meta → giá → chọn đơn vị/số lượng → CTA → khuyến mãi → mô tả ngắn → SpecTable. */
 export function BuyBox({ product: p, category, wishlisted = false }: {
@@ -130,9 +131,9 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
         {p.options.length > 1 && (
           <label className="app-buybar__opt">
             <span className="app-sr">Chọn quy cách</span>
-            <select value={opt} onChange={(e) => setOpt(Number(e.target.value))}>
+            <Select value={opt} onChange={(e) => setOpt(Number(e.target.value))}>
               {p.options.map((o, i) => <option key={o.label} value={i}>{o.label}</option>)}
-            </select>
+            </Select>
           </label>
         )}
         {!quote && (

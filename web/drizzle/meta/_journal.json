@@ -288,6 +288,13 @@
       "when": 1791464526458,
       "tag": "0040_du_an",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1791468743934,
+      "tag": "0041_du_an_cong_trinh",
+      "breakpoints": true
     }
   ]
 }

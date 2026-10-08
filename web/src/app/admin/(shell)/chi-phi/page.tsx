@@ -14,6 +14,7 @@ import {
 } from '@/server/expenses';
 import { listStores } from '@/server/inventory';
 import { listSupplierNames } from '@/server/receipts';
+import { Select } from '@/components/Select';
 
 export const metadata: Metadata = { title: 'Chi phí' };
 
@@ -111,15 +112,15 @@ export default async function AdminExpensesPage({ searchParams }: Props) {
       <div className="ad-card">
         <form className="ad-filters" action="/admin/chi-phi">
           {range !== DEFAULT_EXPENSE_RANGE && <input type="hidden" name="ky" value={range} />}
-          <select className="vx-input" name="nhom" defaultValue={category ?? ''} aria-label="Nhóm chi" style={{ width: 'auto' }}>
+          <Select className="vx-input" name="nhom" defaultValue={category ?? ''} aria-label="Nhóm chi" style={{ width: 'auto' }}>
             <option value="">Tất cả nhóm</option>
             {cats.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
-          </select>
-          <select className="vx-input" name="kho" defaultValue={store ? String(store) : ''} aria-label="Cửa hàng" style={{ width: 'auto' }}>
+          </Select>
+          <Select className="vx-input" name="kho" defaultValue={store ? String(store) : ''} aria-label="Cửa hàng" style={{ width: 'auto' }}>
             <option value="">Tất cả cửa hàng</option>
             <option value="chung">Chi chung</option>
             {stores.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-          </select>
+          </Select>
           <label className="vx-sfind__search">
             <Icon name="search" />
             <input className="app-bare" name="q" defaultValue={q} placeholder="Nội dung, nhà cung cấp, nhóm" aria-label="Tìm khoản chi" />

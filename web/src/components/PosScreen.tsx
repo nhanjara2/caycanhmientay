@@ -8,6 +8,7 @@ import { Icon, Thumb, type IconName } from '@/components/Icon';
 import { normalize } from '@/lib/catalog';
 import { money } from '@/lib/format';
 import type { PosItem } from '@/server/pos';
+import { Select } from './Select';
 
 type Store = { id: number; name: string };
 type Customer = { phone: string; name: string | null; points: number; member: boolean; orders: number; spend: number };
@@ -147,9 +148,9 @@ export function PosScreen({ stores, storeId, items, categories, cashier }: {
               <input ref={searchRef} className="app-bare" value={query} placeholder="Quét mã vạch hoặc gõ tên sản phẩm (F2)" aria-label="Tìm sản phẩm"
                 onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); onSearchEnter(); } }} autoFocus />
             </label>
-            <select className="vx-input ad-sel" value={storeId} onChange={(e) => switchStore(Number(e.target.value))} aria-label="Cửa hàng bán">
+            <Select className="vx-input ad-sel" value={storeId} onChange={(e) => switchStore(Number(e.target.value))} aria-label="Cửa hàng bán">
               {stores.map((s) => <option key={s.id} value={s.id}>Cửa hàng: {s.name}</option>)}
-            </select>
+            </Select>
             <span className="ad-me"><span className="vx-avatar vx-avatar--sm">{cashier.split(/\s+/).map((w) => w[0]).slice(-2).join('').toUpperCase()}</span>{cashier}</span>
             <Link href="/admin" className="vx-btn vx-btn--ghost vx-btn--sm">Thoát</Link>
           </div>

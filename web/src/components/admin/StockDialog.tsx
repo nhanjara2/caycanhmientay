@@ -5,6 +5,7 @@ import { useEffect, useState, useTransition, type FormEvent } from 'react';
 import { adjustStockAction, deleteLotAction, stockHistoryAction } from '@/app/actions/admin';
 import { Icon } from '@/components/Icon';
 import { expiryLevel, fmtYmd } from '@/lib/stock';
+import { Select } from '@/components/Select';
 
 const REASON = { import: 'Nhập hàng', adjust: 'Kiểm kê', order: 'Bán', cancel: 'Hủy đơn', transfer: 'Chuyển kho', warranty: 'Bảo hành', discard: 'Xóa lô' } as const;
 type Move = Awaited<ReturnType<typeof stockHistoryAction>>[number];
@@ -99,9 +100,9 @@ export function StockDialog({ slug, idx, name, label, stock, lotTracked, stores,
   const storeSelect = (id: string, value: number, onChange: (v: number) => void, labelText: string) => (
     <div className="vx-fl">
       <label htmlFor={id}>{labelText}</label>
-      <select id={id} value={value} onChange={(e) => onChange(Number(e.target.value))}>
+      <Select id={id} value={value} onChange={(e) => onChange(Number(e.target.value))}>
         {stores.map((s) => <option key={s.id} value={s.id}>{s.name} (còn {inStore(s.id)})</option>)}
-      </select>
+      </Select>
     </div>
   );
 
@@ -147,13 +148,13 @@ export function StockDialog({ slug, idx, name, label, stock, lotTracked, stores,
               {mode === 'count' && (
                 <div className="vx-fl">
                   <label htmlFor="sd-lotsel">Lô cần kiểm kê</label>
-                  <select id="sd-lotsel" value={lotId} onChange={(e) => setLotId(Number(e.target.value))}>
+                  <Select id="sd-lotsel" value={lotId} onChange={(e) => setLotId(Number(e.target.value))}>
                     {lots.map((l) => (
                       <option key={l.id} value={l.id}>
                         {storeCode(l.storeId)} · {lotText(l)} · đang {l.qty}{expiryLevel(l.expiry) === 'expired' ? ' · ĐÃ HẾT HẠN' : ''}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
               )}
 

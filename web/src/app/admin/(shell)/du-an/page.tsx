@@ -28,8 +28,8 @@ export default async function AdminProjectsPage() {
         <svg className="vx-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8v.5" /></svg>
         <div>
           Mỗi dự án là một công trình shop <b>đã thật sự làm</b> (cung cấp cây, thi công, chăm sóc…), kèm ảnh chụp tại công trình. Dự án đang hiện
-          nằm ở mục <b>“Dự án đã triển khai”</b> trang <Link href="/doanh-nghiep" target="_blank">Khách doanh nghiệp</Link>; dự án <b>Nổi bật</b> lên
-          đầu trang. Tên và logo của khách hàng <b>chỉ điền khi khách đồng ý công khai</b> — không thì ghi chung, ví dụ “Một khu nghỉ dưỡng tại Phú Quốc”.
+          nằm ở mục <b>“Dự án đã triển khai”</b> trang <Link href="/doanh-nghiep" target="_blank">Khách doanh nghiệp</Link>: có ảnh thì thành thẻ ảnh,
+          chưa có ảnh thì là một dòng trong bảng công trình; dự án <b>Nổi bật</b> (cần ảnh) lên đầu trang. Tên và logo của khách hàng <b>chỉ điền khi khách đồng ý công khai</b> — không thì ghi chung, ví dụ “Một khu nghỉ dưỡng tại Phú Quốc”.
         </div>
       </div>
       <div className="ad-card">
@@ -52,7 +52,7 @@ export default async function AdminProjectsPage() {
                   <td data-label="Loại công trình">{projectTypeOf(p.type).name}</td>
                   <td data-label="Khách hàng">{p.client || <span style={{ color: 'var(--ink-muted)' }}>Không ghi tên</span>}</td>
                   <td data-label="Địa điểm">{p.location || '—'}</td>
-                  <td className="num" data-label="Năm">{p.year}</td>
+                  <td className="num" data-label="Năm">{p.year ?? '—'}</td>
                   <td className="num" data-label="Ảnh">{p.images.length}</td>
                   <td data-label="Trên web">
                     {canEdit

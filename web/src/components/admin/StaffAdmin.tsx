@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { inviteStaffAction, removeStaffAction, setStaffRoleAction } from '@/app/actions/staff';
 import { ASSIGNABLE_ROLES, STAFF_ROLE_INFO, type StaffRole } from '@/lib/permissions';
+import { Select } from '@/components/Select';
 
 const ROLE_OPTIONS: StaffRole[] = ['manager', ...ASSIGNABLE_ROLES];
 
@@ -51,9 +52,9 @@ export function StaffInvite() {
               </div>
               <div className="vx-field">
                 <label htmlFor="si-role">Vai trò</label>
-                <select id="si-role" className="vx-input" value={role} onChange={(e) => setRole(e.target.value as StaffRole)}>
+                <Select id="si-role" className="vx-input" value={role} onChange={(e) => setRole(e.target.value as StaffRole)}>
                   {ROLE_OPTIONS.map((r) => <option key={r} value={r}>{STAFF_ROLE_INFO[r].name}</option>)}
-                </select>
+                </Select>
               </div>
             </div>
             <p className="vx-help" style={{ margin: 0 }}>{STAFF_ROLE_INFO[role].hint}. Nhân viên đăng nhập bằng đúng số điện thoại này (mã OTP gửi về số đó).</p>
@@ -100,9 +101,9 @@ export function StaffRowActions({ id, name, role, locked, lockReason }: { id: nu
 
   return (
     <span className="app-staff-act">
-      <select className="vx-input" value={value} disabled={pending} aria-label={`Vai trò của ${name}`} onChange={(e) => change(e.target.value as StaffRole)}>
+      <Select className="vx-input" value={value} disabled={pending} aria-label={`Vai trò của ${name}`} onChange={(e) => change(e.target.value as StaffRole)}>
         {ROLE_OPTIONS.map((r) => <option key={r} value={r}>{STAFF_ROLE_INFO[r].name}</option>)}
-      </select>
+      </Select>
       <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" disabled={pending} onClick={remove}>Gỡ quyền</button>
       {error && <span className="vx-err" role="alert">{error}</span>}
     </span>

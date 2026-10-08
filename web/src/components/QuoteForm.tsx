@@ -12,6 +12,7 @@ import {
   BUDGETS, SERVICE_INFO, SERVICE_TYPES, SLOT_TIMES, SPACES, STYLES, SUNS, fmtSlot, fmtSlotDay, type ServiceType, type SlotTime,
 } from '@/lib/service-labels';
 import { Icon } from './Icon';
+import { Select } from './Select';
 
 export type QuoteSlot = { key: string; date: string; time: SlotTime; full: boolean };
 export type QuoteDefaults = { service?: ServiceType; name: string; phone: string; address: string };
@@ -267,10 +268,10 @@ export function QuoteForm({ defaults, slots, fromAdvisor = false, fromRental = f
         <div className="ad-frow">
           <div className="ad-f">
             <label htmlFor="qf-space">Loại không gian</label>
-            <select id="qf-space" className="vx-input" value={v.space} onChange={(e) => set('space', e.target.value)}>
+            <Select id="qf-space" className="vx-input" value={v.space} onChange={(e) => set('space', e.target.value)}>
               <option value="">Chọn…</option>
               {SPACES.map((s) => <option key={s}>{s}</option>)}
-            </select>
+            </Select>
           </div>
           <div className="ad-f">
             <label htmlFor="qf-area">Diện tích (m²)</label>
@@ -280,10 +281,10 @@ export function QuoteForm({ defaults, slots, fromAdvisor = false, fromRental = f
           </div>
           <div className="ad-f">
             <label htmlFor="qf-sun">Hướng / nắng</label>
-            <select id="qf-sun" className="vx-input" value={v.sun} onChange={(e) => set('sun', e.target.value)}>
+            <Select id="qf-sun" className="vx-input" value={v.sun} onChange={(e) => set('sun', e.target.value)}>
               <option value="">Chọn…</option>
               {SUNS.map((s) => <option key={s}>{s}</option>)}
-            </select>
+            </Select>
           </div>
         </div>
         <div className="ad-f">

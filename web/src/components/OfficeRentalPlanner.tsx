@@ -11,7 +11,7 @@ import {
 } from '@/lib/office-rental';
 import { ADVISOR_URL } from '@/lib/plant-advisor';
 import { Icon } from './Icon';
-import { QUOTE_URL } from './ServiceParts';
+import { QUOTE_URL } from '@/lib/services';
 
 const QUOTE_OFFICE = `${QUOTE_URL}?loai=van-phong`;
 const SHOP_OFFICE = '/danh-muc/cay-canh/cay-van-phong';

@@ -251,7 +251,8 @@ export const projects = pgTable('projects', {
   /** Tên file logo khách trong project_images (hiện ở dải "Đơn vị đã hợp tác"). */
   clientLogo: text('client_logo'),
   location: text('location').notNull().default(''),
-  year: integer('year').notNull(),
+  /** Năm thực hiện; null = chưa rõ (công trình nạp từ danh sách của chủ shop chưa ghi năm). */
+  year: integer('year'),
   duration: text('duration').notNull().default(''),
   summary: text('summary').notNull().default(''),
   body: text('body').notNull().default(''),

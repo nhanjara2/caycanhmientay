@@ -9,6 +9,7 @@ import {
 } from '@/app/actions/categories';
 import { Art, type IconName } from '@/components/Icon';
 import { CATEGORY_ICONS, ICON_LABELS, toSlug, type SpecField } from '@/lib/catalog';
+import { Select } from '@/components/Select';
 
 const FAIL = { ok: false as const, error: 'Có lỗi, vui lòng thử lại' };
 
@@ -281,9 +282,9 @@ function SubDelete({ category, sub, others, onDone }: { category: string; sub: A
         others.length ? (
           <div className="ad-f">
             <label>Nhóm con “{sub.name}” còn {sub.products} sản phẩm. Chuyển các sản phẩm này sang:</label>
-            <select className="vx-input" value={moveTo} onChange={(e) => setMoveTo(e.target.value)}>
+            <Select className="vx-input" value={moveTo} onChange={(e) => setMoveTo(e.target.value)}>
               {others.map((o) => <option key={o.slug} value={o.slug}>{o.name}</option>)}
-            </select>
+            </Select>
           </div>
         ) : <span>Nhóm con “{sub.name}” còn {sub.products} sản phẩm và là nhóm con duy nhất — thêm nhóm con khác để chuyển sản phẩm sang trước.</span>
       ) : <span>Xóa nhóm con “{sub.name}”? Không thể hoàn tác.</span>}

@@ -9,6 +9,7 @@ import { DEFAULT_CAPACITY, loadLabel, VEHICLE_LABEL, type VehicleKey } from '@/l
 import { money } from '@/lib/format';
 import { PAY_LABEL, STATUS_LABEL } from '@/lib/order-labels';
 import type { StopOrder, TripView } from '@/server/delivery';
+import { Select } from '@/components/Select';
 
 type Driver = { id: number; name: string; delivery: boolean };
 type Slot = { key: string; time: string };
@@ -66,13 +67,13 @@ export function DeliveryBoard({ date, slots, trips, unassigned, drivers, canEdit
                 {o.paymentMethod === 'cod' && !o.paid && o.total > 0 && <span className="vx-badge vx-badge--outline">COD {money(o.total)}</span>}
               </span>
               {canEdit && (
-                <select className="vx-input app-dboard__assign" aria-label={`Xếp đơn ${o.code} vào chuyến`} value="" disabled={pending}
+                <Select className="vx-input app-dboard__assign" aria-label={`Xếp đơn ${o.code} vào chuyến`} value="" disabled={pending}
                   onChange={(e) => e.target.value && assign(o.id, Number(e.target.value))}>
                   <option value="">Xếp vào chuyến…</option>
                   {trips.filter((t) => !o.slotKey || t.slotKey === o.slotKey).map((t) => (
                     <option key={t.id} value={t.id}>{t.name} · {slots.find((s) => s.key === t.slotKey)?.time}</option>
                   ))}
-                </select>
+                </Select>
               )}
             </div>
           ))}
@@ -107,13 +108,13 @@ function NewTrip({ date, slotKey, drivers, onDone, run }: {
   return (
     <div className="ad-trip app-dboard__form">
       <span className="t">Chuyến mới</span>
-      <select className="vx-input" aria-label="Loại xe" value={vehicle} onChange={(e) => setVehicle(e.target.value as VehicleKey)}>
+      <Select className="vx-input" aria-label="Loại xe" value={vehicle} onChange={(e) => setVehicle(e.target.value as VehicleKey)}>
         {VEHICLES.map((v) => <option key={v} value={v}>{VEHICLE_LABEL[v]} (tải {DEFAULT_CAPACITY[v]})</option>)}
-      </select>
-      <select className="vx-input" aria-label="Tài xế" value={driverId} onChange={(e) => setDriverId(e.target.value)}>
+      </Select>
+      <Select className="vx-input" aria-label="Tài xế" value={driverId} onChange={(e) => setDriverId(e.target.value)}>
         <option value="">Chưa chọn tài xế</option>
         {drivers.map((d) => <option key={d.id} value={d.id}>{d.name}{d.delivery ? '' : ' (không phải tài xế)'}</option>)}
-      </select>
+      </Select>
       <input className="vx-input" placeholder="Phụ xe (không bắt buộc)" value={helper} maxLength={60} onChange={(e) => setHelper(e.target.value)} />
       <span className="acts" style={{ display: 'flex', gap: 6 }}>
         <button type="button" className="vx-btn vx-btn--primary vx-btn--sm" onClick={() => { run(() => createTripAction({ date, slotKey, vehicle, driverId: driverId ? Number(driverId) : null, helper })); onDone(); }}>Tạo chuyến</button>
@@ -172,13 +173,13 @@ function TripCard({ t, drivers, canEdit, pending, over, dnd, run }: {
       {canEdit && edit && (
         <div className="app-dboard__form">
           <input className="vx-input" aria-label="Tên chuyến" value={name} maxLength={40} onChange={(e) => setName(e.target.value)} />
-          <select className="vx-input" aria-label="Loại xe" value={vehicle} onChange={(e) => { setVehicle(e.target.value as VehicleKey); setCapacity(String(DEFAULT_CAPACITY[e.target.value as VehicleKey])); }}>
+          <Select className="vx-input" aria-label="Loại xe" value={vehicle} onChange={(e) => { setVehicle(e.target.value as VehicleKey); setCapacity(String(DEFAULT_CAPACITY[e.target.value as VehicleKey])); }}>
             {VEHICLES.map((v) => <option key={v} value={v}>{VEHICLE_LABEL[v]}</option>)}
-          </select>
-          <select className="vx-input" aria-label="Tài xế" value={driverId} onChange={(e) => setDriverId(e.target.value)}>
+          </Select>
+          <Select className="vx-input" aria-label="Tài xế" value={driverId} onChange={(e) => setDriverId(e.target.value)}>
             <option value="">Chưa chọn tài xế</option>
             {drivers.map((d) => <option key={d.id} value={d.id}>{d.name}{d.delivery ? '' : ' (không phải tài xế)'}</option>)}
-          </select>
+          </Select>
           <input className="vx-input" aria-label="Phụ xe" placeholder="Phụ xe" value={helper} maxLength={60} onChange={(e) => setHelper(e.target.value)} />
           <label style={{ fontSize: '0.75rem' }}>Tải tối đa (điểm)
             <input className="vx-input" inputMode="numeric" value={capacity} onChange={(e) => setCapacity(e.target.value.replace(/\D/g, '').slice(0, 3))} />

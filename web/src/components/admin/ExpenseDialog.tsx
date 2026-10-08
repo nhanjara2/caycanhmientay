@@ -6,6 +6,7 @@ import { deleteExpenseAction, removeExpensePhotoAction, saveExpenseAction, uploa
 import { Icon } from '@/components/Icon';
 import { compressImage } from '@/lib/compress-image';
 import { EXPENSE_MAX, MAX_EXPENSE_NOTE, MAX_EXPENSE_SUPPLIER } from '@/lib/expense-labels';
+import { Select } from '@/components/Select';
 
 export type ExpenseCategoryOpt = { slug: string; name: string; active: boolean };
 export type ExpenseStoreOpt = { id: number; name: string };
@@ -118,9 +119,9 @@ export function ExpenseDialog({ initial, categories, stores, today, label, prima
               {Number(digits(amountText) || 0) > EXPENSE_MAX && <span className="vx-err">Tối đa 1 tỷ đồng cho mỗi khoản</span>}
               <div className="vx-fl">
                 <label htmlFor="ex-cat">Nhóm chi</label>
-                <select id="ex-cat" value={v.category} onChange={(e) => set('category', e.target.value)} required>
+                <Select id="ex-cat" value={v.category} onChange={(e) => set('category', e.target.value)} required>
                   {options.map((c) => <option key={c.slug} value={c.slug}>{c.name}{c.active ? '' : ' (đang ẩn)'}</option>)}
-                </select>
+                </Select>
               </div>
               <div className="vx-fl">
                 <label htmlFor="ex-note">Nội dung (mua gì, trả cho ai…)</label>
@@ -129,10 +130,10 @@ export function ExpenseDialog({ initial, categories, stores, today, label, prima
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
                 <div className="vx-fl">
                   <label htmlFor="ex-store">Cửa hàng</label>
-                  <select id="ex-store" value={v.storeId ?? ''} onChange={(e) => set('storeId', e.target.value ? Number(e.target.value) : null)}>
+                  <Select id="ex-store" value={v.storeId ?? ''} onChange={(e) => set('storeId', e.target.value ? Number(e.target.value) : null)}>
                     <option value="">Chi chung</option>
                     {stores.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-                  </select>
+                  </Select>
                 </div>
                 <div className="vx-fl">
                   <label htmlFor="ex-sup">Nhà cung cấp / người nhận</label>

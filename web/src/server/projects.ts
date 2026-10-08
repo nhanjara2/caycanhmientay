@@ -1,7 +1,7 @@
 import 'server-only';
 import { connection } from 'next/server';
 import { cache } from 'react';
-import { and, desc, eq, lt, notInArray, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, lt, notInArray, sql } from 'drizzle-orm';
 import * as z from 'zod';
 import { normalize } from '@/lib/catalog';
 import {
@@ -19,8 +19,8 @@ const MAX_STORED_IMAGES = 40;
 type Row = typeof PJ.$inferSelect;
 const toProject = ({ updatedAt: _u, createdAt: _c, updatedBy: _b, ...r }: Row): Project => r as Project;
 
-// Dự án nổi bật lên trước, rồi năm mới nhất.
-const ORDER = [desc(PJ.featured), desc(PJ.year), desc(PJ.id)];
+// Dự án nổi bật lên trước, rồi năm mới nhất (chưa rõ năm xếp sau), cùng năm thì theo thứ tự nhập.
+const ORDER = [desc(PJ.featured), sql`${PJ.year} desc nulls last`, asc(PJ.id)];
 
 // ---- Trang khách ----------------------------------------------------------------------------
 
@@ -63,7 +63,7 @@ export const ProjectInputSchema = z.object({
   client: line(120),
   clientLogo: z.string().regex(PROJECT_IMAGE_FILE).nullable(),
   location: line(120),
-  year: z.number({ error: 'Nhập năm thực hiện' }).int().min(1990, 'Năm không hợp lệ').refine((y) => y <= thisYear() + 1, 'Năm không hợp lệ'),
+  year: z.number().int().min(1990, 'Năm không hợp lệ').refine((y) => y <= thisYear() + 1, 'Năm không hợp lệ').nullable(),
   duration: line(60),
   summary: line(400).min(20, 'Tóm tắt cần ít nhất 20 ký tự (hiện trên thẻ dự án)'),
   body: line(6000),
@@ -84,7 +84,7 @@ export async function saveProject(v: ProjectInput, user: SessionUser) {
   const { id, ...data } = v;
   // Bỏ tên cây gõ trùng (không phân biệt dấu, hoa / thường).
   data.plants = [...new Map(data.plants.map((p) => [normalize(p), p])).values()];
-  if (data.published && !data.images.length) return { ok: false as const, error: 'Cần ít nhất 1 ảnh công trình trước khi hiện trên web' };
+  // Chưa có ảnh vẫn hiện được (một dòng trong bảng công trình); Nổi bật thì cần ảnh vì lên khung ảnh lớn.
   if (data.featured && !data.published) data.featured = false;
 
   if (id) {
@@ -92,7 +92,7 @@ export async function saveProject(v: ProjectInput, user: SessionUser) {
     const mine = new Set((await db.select({ file: PI.file }).from(PI).where(eq(PI.projectId, id))).map((r) => r.file));
     data.images = data.images.filter((im) => mine.has(im.file));
     if (data.clientLogo && !mine.has(data.clientLogo)) data.clientLogo = null;
-    if (data.published && !data.images.length) return { ok: false as const, error: 'Cần ít nhất 1 ảnh công trình trước khi hiện trên web' };
+    if (data.featured && !data.images.length) return { ok: false as const, error: 'Dự án nổi bật cần có ít nhất 1 ảnh công trình' };
     const r = await db.update(PJ).set({ ...data, updatedBy: staffName(user), updatedAt: new Date() }).where(eq(PJ.id, id)).returning({ id: PJ.id, slug: PJ.slug });
     if (!r.length) return { ok: false as const, error: 'Không tìm thấy dự án' };
     // Ảnh đã bỏ khỏi dự án quá 1 ngày → xóa cho nhẹ database (ảnh mới tải chưa lưu thì giữ).
@@ -100,7 +100,7 @@ export async function saveProject(v: ProjectInput, user: SessionUser) {
     await db.delete(PI).where(and(eq(PI.projectId, id), lt(PI.createdAt, new Date(Date.now() - 86_400_000)), used.length ? notInArray(PI.file, used) : undefined));
     return { ok: true as const, id, slug: r[0].slug };
   }
-  // Dự án mới: chưa có ảnh nào (phải lưu trước rồi mới tải ảnh) → luôn lưu ở trạng thái ẩn.
+  // Dự án mới: chưa có ảnh nào (phải lưu trước rồi mới tải ảnh) → lưu ở trạng thái ẩn.
   const base = slugify(v.title) || 'du-an';
   for (let i = 0; i < 20; i++) {
     const slug = i ? `${base}-${i + 1}` : base;
@@ -112,9 +112,8 @@ export async function saveProject(v: ProjectInput, user: SessionUser) {
 }
 
 export async function setProjectPublished(id: number, published: boolean) {
-  const [p] = await db.select({ images: PJ.images, slug: PJ.slug }).from(PJ).where(eq(PJ.id, id));
+  const [p] = await db.select({ slug: PJ.slug }).from(PJ).where(eq(PJ.id, id));
   if (!p) return { ok: false as const, error: 'Không tìm thấy dự án' };
-  if (published && !p.images.length) return { ok: false as const, error: 'Thêm ít nhất 1 ảnh công trình trước khi hiện trên web' };
   await db.update(PJ).set({ published, ...(published ? {} : { featured: false }), updatedAt: new Date() }).where(eq(PJ.id, id));
   return { ok: true as const, slug: p.slug };
 }

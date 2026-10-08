@@ -5,6 +5,7 @@ import path from 'node:path';
 import { and, asc, count, eq, inArray, isNull, sql } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { SEED_DISEASE_IMAGES } from '@/lib/seed-disease-images';
+import { SEED_POST_COVERS } from '@/lib/seed-post-covers';
 import { SEED_PRODUCT_IMAGES } from '@/lib/seed-product-images';
 import { seedDiseases } from '@/lib/seed-diseases';
 import { readMinutes } from '@/lib/posts';
@@ -179,6 +180,34 @@ export async function seedProductImages(db: Db) {
     }
     await tx.insert(schema.appSettings).values({ key: KEY, value: true, updatedBy: 'db-setup' }).onConflictDoNothing({ target: schema.appSettings.key });
     return todo.length;
+  });
+}
+
+/**
+ * Ảnh bìa cho bài Góc chăm cây mẫu chưa có ảnh bìa (lib/seed-post-covers.ts, file ở seed/bai-viet/) — chạy MỘT lần (dấu
+ * `seeded:post-covers`), kể cả database đã dùng. Bài đã xóa / đã có ảnh bìa thì bỏ qua. Trả về số ảnh đã gắn.
+ */
+export async function seedPostCovers(db: Db) {
+  const KEY = 'seeded:post-covers';
+  const dir = path.join(process.cwd(), 'seed', 'bai-viet');
+  if (SEED_POST_COVERS.some((x) => !fs.existsSync(path.join(dir, x.source)))) {
+    console.warn(`[db] Thiếu ảnh bìa bài viết trong ${dir} — bỏ qua, lần deploy sau thử lại`);
+    return 0;
+  }
+  return db.transaction(async (tx) => {
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${KEY}))`);
+    const [done] = await tx.select({ key: schema.appSettings.key }).from(schema.appSettings).where(eq(schema.appSettings.key, KEY));
+    if (done) return 0;
+    const rows = await tx.select({ id: schema.posts.id, slug: schema.posts.slug }).from(schema.posts)
+      .where(and(inArray(schema.posts.slug, SEED_POST_COVERS.map((x) => x.post)), isNull(schema.posts.coverFile))).for('update');
+    for (const r of rows) {
+      const c = SEED_POST_COVERS.find((x) => x.post === r.slug)!;
+      await tx.insert(schema.postImages).values({ postId: r.id, file: c.file, mime: 'image/jpeg', data: fs.readFileSync(path.join(dir, c.source)) })
+        .onConflictDoNothing({ target: schema.postImages.file });
+      await tx.update(schema.posts).set({ coverFile: c.file }).where(eq(schema.posts.id, r.id));
+    }
+    await tx.insert(schema.appSettings).values({ key: KEY, value: true, updatedBy: 'db-setup' }).onConflictDoNothing({ target: schema.appSettings.key });
+    return rows.length;
   });
 }
 

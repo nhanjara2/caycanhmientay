@@ -9,6 +9,7 @@ import { requireAccess } from '@/server/auth';
 import { countFaqs, FAQ_FILTERS, listFaqsAdmin, type FaqFilter } from '@/server/faqs';
 import { countQuestions, listQuestionsAdmin, QUESTION_FILTERS, type QuestionFilter } from '@/server/questions';
 import { countReviewsByStatus, listReviewsAdmin, REVIEW_TABS, reviewKpis, type ReviewTab } from '@/server/reviews';
+import { Select } from '@/components/Select';
 
 export const metadata: Metadata = { title: 'Hỏi đáp & đánh giá' };
 
@@ -120,10 +121,10 @@ export default async function AdminReviewsPage({ searchParams }: Props) {
           </label>
           {!isQ && !isFaq && (
             <>
-              <select name="sao" defaultValue={stars ?? ''} className="vx-input" style={{ width: 'auto' }} aria-label="Số sao">
+              <Select name="sao" defaultValue={stars ?? ''} className="vx-input" style={{ width: 'auto' }} aria-label="Số sao">
                 <option value="">Mọi số sao</option>
                 {[5, 4, 3, 2, 1].map((s) => <option key={s} value={s}>{s} sao</option>)}
-              </select>
+              </Select>
               <label className="vx-check" style={{ fontSize: '0.8125rem' }}>
                 <input type="checkbox" name="anh" value="1" defaultChecked={photo} /> Có ảnh
               </label>

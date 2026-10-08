@@ -6,6 +6,7 @@ import { useEffect, useState, useTransition } from 'react';
 import { updateServiceRequestAction } from '@/app/actions/service-requests';
 import { BOARD_STAGES, SERVICE_INFO, SERVICE_TYPES, STAGE_LABEL, type ServiceStage } from '@/lib/service-labels';
 import type { BoardCard } from '@/server/service-requests';
+import { Select } from '@/components/Select';
 
 export type ServiceFilterValue = { loai: string; ks: string; thua: boolean };
 
@@ -22,14 +23,14 @@ export function ServiceFilters({ staff, value }: { staff: { id: number; name: st
   };
   return (
     <>
-      <select className="ad-sel" aria-label="Lọc theo dịch vụ" value={value.loai} onChange={(e) => go({ loai: e.target.value })}>
+      <Select className="ad-sel" aria-label="Lọc theo dịch vụ" value={value.loai} onChange={(e) => go({ loai: e.target.value })}>
         <option value="">Tất cả dịch vụ</option>
         {SERVICE_TYPES.map((s) => <option key={s} value={s}>{SERVICE_INFO[s].label}</option>)}
-      </select>
-      <select className="ad-sel" aria-label="Lọc theo người phụ trách" value={value.ks} onChange={(e) => go({ ks: e.target.value })}>
+      </Select>
+      <Select className="ad-sel" aria-label="Lọc theo người phụ trách" value={value.ks} onChange={(e) => go({ ks: e.target.value })}>
         <option value="">Phụ trách: Tất cả</option>
         {staff.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-      </select>
+      </Select>
       <label className="ad-sel app-sb-lost">
         <input type="checkbox" checked={value.thua} onChange={(e) => go({ thua: e.target.checked })} />
         Hiện cột Thua

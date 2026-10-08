@@ -7,7 +7,7 @@ import { Breadcrumb } from './Blocks';
 import { Icon } from './Icon';
 import { OfficeRentalPlanner } from './OfficeRentalPlanner';
 import { ProductGrid } from './ProductCard';
-import { QUOTE_URL, ServiceCta, ServiceFaq, ServiceSteps } from './ServiceParts';
+import { QUOTE_URL, ServiceCards, ServiceCta, ServiceFaq, ServiceSteps, ServiceTabs } from './ServiceParts';
 
 const QUOTE_OFFICE = `${QUOTE_URL}?loai=van-phong`;
 const SHOP_OFFICE = '/danh-muc/cay-canh/cay-van-phong';
@@ -48,6 +48,7 @@ export async function OfficePlants() {
       <div className="sv-crumb">
         <Breadcrumb items={[{ label: 'Trang chủ', href: '/' }, { label: 'Dịch vụ', href: '/dich-vu' }, { label: 'Cho thuê cây văn phòng' }]} />
       </div>
+      <ServiceTabs current="office" />
 
       <section className="sv-sec ort-head">
         <h1 className="sv-title">Cho thuê cây văn phòng</h1>
@@ -127,6 +128,11 @@ export async function OfficePlants() {
           { q: 'Tôi chỉ cần mua vài chậu thì sao?', a: <>Bạn mua trực tiếp ở nhóm <Link href={SHOP_OFFICE}>Cây văn phòng</Link>, giao toàn quốc và được bảo hành cây sống. Xem <Link href="/chinh-sach/bao-hanh-cay">Chính sách bảo hành cây</Link>.</> },
         ]}
       />
+
+      <section className="sv-sec">
+        <h2>Dịch vụ khác</h2>
+        <ServiceCards except="office" />
+      </section>
 
       <ServiceCta
         title="Nhận báo giá thuê cây văn phòng"

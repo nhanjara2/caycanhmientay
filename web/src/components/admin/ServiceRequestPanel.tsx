@@ -5,6 +5,7 @@ import { useState, useTransition } from 'react';
 import { addServiceNoteAction, updateServiceRequestAction } from '@/app/actions/service-requests';
 import { money } from '@/lib/format';
 import { SERVICE_STAGES, STAGE_LABEL, type ServiceStage } from '@/lib/service-labels';
+import { Select } from '@/components/Select';
 
 export type PanelValue = {
   id: number;
@@ -50,9 +51,9 @@ export function ServiceRequestPanel({ init, staff }: { init: PanelValue; staff: 
       <div className="ad-card__b app-sr-form">
         <div className="ad-f">
           <label htmlFor="sr-stage">Giai đoạn</label>
-          <select id="sr-stage" className="vx-input" value={v.stage} onChange={(e) => set('stage', e.target.value as ServiceStage)}>
+          <Select id="sr-stage" className="vx-input" value={v.stage} onChange={(e) => set('stage', e.target.value as ServiceStage)}>
             {SERVICE_STAGES.map((s) => <option key={s} value={s}>{STAGE_LABEL[s]}</option>)}
-          </select>
+          </Select>
         </div>
         {v.stage === 'lost' && (
           <div className="ad-f">
@@ -63,10 +64,10 @@ export function ServiceRequestPanel({ init, staff }: { init: PanelValue; staff: 
         )}
         <div className="ad-f">
           <label htmlFor="sr-who">Kỹ sư / nhân viên phụ trách</label>
-          <select id="sr-who" className="vx-input" value={v.assigneeId ?? ''} onChange={(e) => set('assigneeId', e.target.value ? Number(e.target.value) : null)}>
+          <Select id="sr-who" className="vx-input" value={v.assigneeId ?? ''} onChange={(e) => set('assigneeId', e.target.value ? Number(e.target.value) : null)}>
             <option value="">Chưa giao</option>
             {staff.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-          </select>
+          </Select>
         </div>
         <div className="ad-f">
           <label htmlFor="sr-survey">Lịch khảo sát đã chốt</label>

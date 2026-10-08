@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { createServiceByStaffAction } from '@/app/actions/service-requests';
 import { BUDGETS, SERVICE_INFO, SERVICE_TYPES, SOURCE_LABEL, SOURCES, type ServiceSource, type ServiceType } from '@/lib/service-labels';
+import { Select } from '@/components/Select';
 
 /** Nhân viên tạo yêu cầu khi khách gọi hotline / nhắn Zalo / đến cửa hàng. Người tạo tự thành người phụ trách. */
 export function ServiceRequestNew() {
@@ -34,16 +35,16 @@ export function ServiceRequestNew() {
         <div className="ad-frow two">
           <div className="ad-f">
             <label htmlFor="nr-service">Dịch vụ</label>
-            <select id="nr-service" className="vx-input" value={v.service} onChange={(e) => set('service', e.target.value)}>
+            <Select id="nr-service" className="vx-input" value={v.service} onChange={(e) => set('service', e.target.value)}>
               <option value="">Chọn dịch vụ…</option>
               {SERVICE_TYPES.map((s) => <option key={s} value={s}>{SERVICE_INFO[s].label}</option>)}
-            </select>
+            </Select>
           </div>
           <div className="ad-f">
             <label htmlFor="nr-source">Khách liên hệ qua</label>
-            <select id="nr-source" className="vx-input" value={v.source} onChange={(e) => set('source', e.target.value)}>
+            <Select id="nr-source" className="vx-input" value={v.source} onChange={(e) => set('source', e.target.value)}>
               {SOURCES.filter((s) => s !== 'web').map((s) => <option key={s} value={s}>{SOURCE_LABEL[s]}</option>)}
-            </select>
+            </Select>
           </div>
         </div>
         <div className="ad-frow two">
@@ -63,10 +64,10 @@ export function ServiceRequestNew() {
         <div className="ad-frow two">
           <div className="ad-f">
             <label htmlFor="nr-budget">Ngân sách</label>
-            <select id="nr-budget" className="vx-input" value={v.budget} onChange={(e) => set('budget', e.target.value)}>
+            <Select id="nr-budget" className="vx-input" value={v.budget} onChange={(e) => set('budget', e.target.value)}>
               <option value="">Chưa nói</option>
               {BUDGETS.map((b) => <option key={b}>{b}</option>)}
-            </select>
+            </Select>
           </div>
           <div className="ad-f">
             <label htmlFor="nr-area">Diện tích (m²)</label>

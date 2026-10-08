@@ -6,6 +6,7 @@ import { useState, useTransition } from 'react';
 import { deleteFaqAction, moveFaqAction, saveFaqAction, setFaqActiveAction } from '@/app/actions/faqs';
 import { Thumb } from '@/components/Icon';
 import { FAQ_ANSWER_MAX_CHARS, FAQ_QUESTION_MAX_CHARS, FAQ_SCOPES, type FaqScope } from '@/lib/reviews';
+import { Select } from '@/components/Select';
 
 export type FaqValues = { question: string; answer: string; scope: FaqScope; active: boolean };
 
@@ -44,9 +45,9 @@ export function FaqForm({ initial, productName, submitLabel, onSubmit, onCancel 
         <textarea className="vx-input" value={v.answer} maxLength={FAQ_ANSWER_MAX_CHARS} onChange={(e) => setV({ ...v, answer: e.target.value })} />
       </label>
       <div className="row">
-        <select className="vx-input" style={{ width: 'auto' }} value={v.scope} onChange={(e) => setV({ ...v, scope: e.target.value as FaqScope })} aria-label="Hiện ở">
+        <Select className="vx-input" style={{ width: 'auto' }} value={v.scope} onChange={(e) => setV({ ...v, scope: e.target.value as FaqScope })} aria-label="Hiện ở">
           {scopes.map((s) => <option key={s} value={s}>{s === 'product' ? `Chỉ ${productName}` : FAQ_SCOPES[s]}</option>)}
-        </select>
+        </Select>
         <label className="vx-check" style={{ flexDirection: 'row', fontWeight: 400 }}>
           <input type="checkbox" checked={v.active} onChange={(e) => setV({ ...v, active: e.target.checked })} /> Hiện trên web
         </label>

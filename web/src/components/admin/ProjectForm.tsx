@@ -9,10 +9,11 @@ import {
   MAX_PROJECT_IMAGES, MAX_PROJECT_METRICS, MAX_PROJECT_PLANTS, MAX_PROJECT_SCOPE, PROJECT_ROLES, PROJECT_TYPES, projectImageUrl, projectPath,
   type ProjectImage, type ProjectMetric, type ProjectQuote, type ProjectRole, type ProjectType,
 } from '@/lib/projects';
+import { Select } from '@/components/Select';
 
 export type ProjectFormValue = {
   id?: number; slug?: string; title: string; type: ProjectType; roles: ProjectRole[]; client: string; clientLogo: string | null;
-  location: string; year: number; duration: string; summary: string; body: string; scope: string[]; plants: string[];
+  location: string; year: number | null; duration: string; summary: string; body: string; scope: string[]; plants: string[];
   metrics: ProjectMetric[]; quote: ProjectQuote | null; images: ProjectImage[]; featured: boolean; published: boolean;
 };
 
@@ -153,9 +154,9 @@ export function ProjectForm({ initial, canEdit }: { initial: ProjectFormValue; c
               <div className="ad-frow app-pair">
                 <div className="ad-f">
                   <label htmlFor="pj-type">Loại công trình <i>*</i></label>
-                  <select id="pj-type" className="vx-input" value={v.type} onChange={(e) => set('type', e.target.value as ProjectType)}>
+                  <Select id="pj-type" className="vx-input" value={v.type} onChange={(e) => set('type', e.target.value as ProjectType)}>
                     {PROJECT_TYPES.map((t) => <option key={t.key} value={t.key}>{t.name}</option>)}
-                  </select>
+                  </Select>
                 </div>
                 <div className="ad-f">
                   <label htmlFor="pj-loc">Địa điểm</label>
@@ -164,9 +165,9 @@ export function ProjectForm({ initial, canEdit }: { initial: ProjectFormValue; c
               </div>
               <div className="ad-frow app-pair">
                 <div className="ad-f">
-                  <label htmlFor="pj-year">Năm thực hiện <i>*</i></label>
-                  <input id="pj-year" className="vx-input" type="number" inputMode="numeric" min={1990} max={2100} value={v.year || ''} required
-                    onChange={(e) => set('year', Number(e.target.value))} />
+                  <label htmlFor="pj-year">Năm thực hiện</label>
+                  <input id="pj-year" className="vx-input" type="number" inputMode="numeric" min={1990} max={2100} value={v.year ?? ''} placeholder="Để trống nếu chưa rõ"
+                    onChange={(e) => set('year', e.target.value ? Number(e.target.value) : null)} />
                 </div>
                 <div className="ad-f">
                   <label htmlFor="pj-dur">Thời gian thực hiện</label>
@@ -307,11 +308,15 @@ export function ProjectForm({ initial, canEdit }: { initial: ProjectFormValue; c
                 Hiện trên trang Khách doanh nghiệp
               </label>
               <label className="vx-check" style={{ alignItems: 'center' }}>
-                <input type="checkbox" checked={v.featured} disabled={!v.published} onChange={(e) => set('featured', e.target.checked)} />
+                <input type="checkbox" checked={v.featured} disabled={!v.published || !v.images.length} onChange={(e) => set('featured', e.target.checked)} />
                 Nổi bật (lên đầu trang, ảnh bìa ở khung lớn)
               </label>
               <span className="hint" style={hintStyle}>
-                {!v.id ? 'Dự án mới lưu ở trạng thái ẩn; thêm ảnh xong mới bật hiện được.' : 'Cần ít nhất 1 ảnh công trình để hiện trên web.'}
+                {!v.id
+                  ? 'Dự án mới lưu ở trạng thái ẩn; lưu xong mới bật hiện và tải ảnh được.'
+                  : v.images.length
+                    ? 'Có ảnh: hiện thành thẻ ảnh trong mục “Dự án đã triển khai”.'
+                    : 'Chưa có ảnh: chỉ hiện một dòng trong bảng “Danh sách công trình”. Thêm ảnh để thành thẻ ảnh và chọn được Nổi bật.'}
               </span>
             </Card>
 

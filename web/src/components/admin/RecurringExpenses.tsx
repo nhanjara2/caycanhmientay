@@ -7,6 +7,7 @@ import type { ExpenseCategoryOpt, ExpenseStoreOpt } from '@/components/admin/Exp
 import { MAX_EXPENSE_NOTE, MAX_EXPENSE_SUPPLIER, RECURRING_BACKFILL_MONTHS } from '@/lib/expense-labels';
 import { money } from '@/lib/format';
 import type { RecurringRow } from '@/server/expenses';
+import { Select } from '@/components/Select';
 
 type Form = { id?: number; category: string; amount: string; day: string; startMonth: string; endMonth: string; storeId: number | null; supplier: string; note: string; active: boolean };
 
@@ -68,9 +69,9 @@ export function RecurringExpenses({ rows, categories, stores, month }: { rows: R
           <div className="ad-frow">
             <div className="ad-f">
               <label htmlFor="rc-cat">Nhóm chi</label>
-              <select id="rc-cat" className="vx-input" value={form.category} onChange={(e) => set('category', e.target.value)} required>
+              <Select id="rc-cat" className="vx-input" value={form.category} onChange={(e) => set('category', e.target.value)} required>
                 {options.map((c) => <option key={c.slug} value={c.slug}>{c.name}{c.active ? '' : ' (đang ẩn)'}</option>)}
-              </select>
+              </Select>
             </div>
             <div className="ad-f">
               <label htmlFor="rc-amount">Số tiền mỗi tháng (đồng)</label>
@@ -94,10 +95,10 @@ export function RecurringExpenses({ rows, categories, stores, month }: { rows: R
           <div className="ad-frow two">
             <div className="ad-f">
               <label htmlFor="rc-store">Cửa hàng</label>
-              <select id="rc-store" className="vx-input" value={form.storeId ?? ''} onChange={(e) => set('storeId', e.target.value ? Number(e.target.value) : null)}>
+              <Select id="rc-store" className="vx-input" value={form.storeId ?? ''} onChange={(e) => set('storeId', e.target.value ? Number(e.target.value) : null)}>
                 <option value="">Chi chung</option>
                 {stores.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
+              </Select>
             </div>
             <div className="ad-f">
               <label htmlFor="rc-sup">Nhà cung cấp / người nhận</label>

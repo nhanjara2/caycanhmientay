@@ -7,7 +7,8 @@ import type { IconName } from '@/components/Icon';
 export const PROJECT_TYPES = [
   { key: 'van-phong', name: 'Văn phòng & tòa nhà', icon: 'home' },
   { key: 'khu-do-thi', name: 'Khu đô thị & bất động sản', icon: 'trees' },
-  { key: 'khach-san', name: 'Khách sạn, resort, nhà hàng', icon: 'palm' },
+  { key: 'khach-san', name: 'Khách sạn, resort, nhà hàng', icon: 'star' },
+  { key: 'du-lich', name: 'Khu du lịch sinh thái', icon: 'palm' },
   { key: 'nha-may', name: 'Nhà máy & khu công nghiệp', icon: 'box' },
   { key: 'cong-cong', name: 'Trường học, bệnh viện, công trình công cộng', icon: 'shield' },
   { key: 'canh-quan', name: 'Công viên, đường phố, cảnh quan', icon: 'tree' },
@@ -52,7 +53,8 @@ export type Project = {
   client: string;
   clientLogo: string | null;
   location: string;
-  year: number;
+  /** null = chưa rõ năm. */
+  year: number | null;
   duration: string;
   summary: string;
   body: string;
@@ -67,3 +69,13 @@ export type Project = {
 
 /** Đoạn văn mô tả: cách nhau bằng dòng trống (hoặc xuống dòng). */
 export const paragraphs = (s: string) => s.split(/\n\s*\n|\r?\n/).map((p) => p.trim()).filter(Boolean);
+
+/** Có nội dung riêng đáng mở trang chi tiết (ảnh, mô tả, hạng mục, ý kiến khách) — không thì chỉ hiện một dòng trong bảng công trình. */
+export const hasProjectDetail = (p: Pick<Project, 'images' | 'body' | 'scope' | 'quote'>) => p.images.length > 0 || !!p.body || p.scope.length > 0 || !!p.quote;
+
+/** Khu vực (tỉnh / thành) theo thứ tự xuất hiện, kèm số công trình. */
+export function regionsOf(projects: Pick<Project, 'location'>[]) {
+  const m = new Map<string, number>();
+  for (const p of projects) if (p.location) m.set(p.location, (m.get(p.location) ?? 0) + 1);
+  return [...m].map(([name, n]) => ({ name, n }));
+}

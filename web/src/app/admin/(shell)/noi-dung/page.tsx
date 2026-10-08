@@ -5,6 +5,7 @@ import { normalize } from '@/lib/catalog';
 import { categoryOf, postPath, postState, SECTIONS, sectionOf, STATE_LABELS, type PostState } from '@/lib/posts';
 import { requireAccess } from '@/server/auth';
 import { listPostsAdmin } from '@/server/posts';
+import { Select } from '@/components/Select';
 
 export const metadata: Metadata = { title: 'Bài viết & video' };
 
@@ -59,16 +60,16 @@ export default async function AdminPostsPage({ searchParams }: Props) {
             <Icon name="search" />
             <input className="app-bare" name="q" defaultValue={q} placeholder="Tiêu đề, thẻ chủ đề, tác giả" aria-label="Tìm bài" />
           </label>
-          <select className="vx-input" name="muc" defaultValue={muc} aria-label="Mục">
+          <Select className="vx-input" name="muc" defaultValue={muc} aria-label="Mục">
             <option value="">Mọi mục</option>
             <option value="blog">{SECTIONS.blog.name}</option>
             <option value="news">{SECTIONS.news.name}</option>
-          </select>
-          <select className="vx-input" name="loai" defaultValue={loai} aria-label="Loại">
+          </Select>
+          <Select className="vx-input" name="loai" defaultValue={loai} aria-label="Loại">
             <option value="">Bài viết & video</option>
             <option value="article">Chỉ bài viết</option>
             <option value="video">Chỉ video</option>
-          </select>
+          </Select>
           <button className="vx-btn vx-btn--outline vx-btn--sm">Lọc</button>
         </form>
         <div className="ad-tablewrap">

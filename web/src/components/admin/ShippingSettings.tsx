@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition, type FormEvent } from 'react';
 import { saveShippingAction } from '@/app/actions/shipping';
 import { MAX_SLOTS, WEEKDAYS, type ShippingConfig } from '@/lib/shipping';
+import { Select } from '@/components/Select';
 
 type Form = {
   plantFee: string; plantFree: string; supplyFee: string; supplyFree: string; zoneKm: string; zoneOn: boolean; slotsOn: boolean; daysAhead: string;
@@ -132,9 +133,9 @@ export function ShippingSettings({ initial }: { initial: ShippingConfig }) {
           <div className="ad-frow two">
             <div className="ad-f">
               <label htmlFor="sh-days">Khách được chọn giao trong</label>
-              <select id="sh-days" className="vx-input" value={f.daysAhead} onChange={(e) => edit((x) => ({ ...x, daysAhead: e.target.value }))}>
+              <Select id="sh-days" className="vx-input" value={f.daysAhead} onChange={(e) => edit((x) => ({ ...x, daysAhead: e.target.value }))}>
                 {Array.from({ length: 14 }, (_, i) => i + 1).map((n) => <option key={n} value={n}>{n === 1 ? 'Chỉ hôm nay' : `${n} ngày (hôm nay + ${n - 1} ngày tới)`}</option>)}
-              </select>
+              </Select>
             </div>
           </div>
           <div className="app-slot-table">

@@ -6,6 +6,7 @@ import type { StorePoint } from '@/lib/stock';
 import { OTHER_PROVINCE, PROVINCES, splitArea, type AddrParts } from '@/lib/vn-provinces';
 import { Icon } from './Icon';
 import { MapPicker } from './MapPicker';
+import { Select } from './Select';
 
 /** Địa chỉ đang nhập: các phần chữ + vị trí ghim bản đồ (nếu khách chọn bằng định vị / bản đồ). */
 export type AddrValue = AddrParts & { lat: number | null; lng: number | null };
@@ -84,11 +85,11 @@ export function AddressFields({ value, onChange, stores, idPrefix = 'af' }: { va
       </div>
       <div className="app-big__f">
         <label htmlFor={`${idPrefix}-prov`}>3. Tỉnh / Thành phố</label>
-        <select id={`${idPrefix}-prov`} value={value.province} onChange={(e) => set('province', e.target.value)}>
+        <Select id={`${idPrefix}-prov`} value={value.province} onChange={(e) => set('province', e.target.value)}>
           <option value="">— Bấm để chọn —</option>
           {PROVINCES.map((p) => <option key={p.name} value={p.name}>{p.name}</option>)}
           <option value={OTHER_PROVINCE}>Nơi khác (tôi tự gõ tên)</option>
-        </select>
+        </Select>
       </div>
       {value.province === OTHER_PROVINCE && (
         <div className="app-big__f">

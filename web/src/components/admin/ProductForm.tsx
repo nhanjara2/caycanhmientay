@@ -12,6 +12,7 @@ import { autoSeoName, SEO_NAME_MAX, SEO_TITLE_VISIBLE } from '@/lib/seo-name';
 import { tracksLots } from '@/lib/stock';
 import { ProductDeleteButton } from './ProductDeleteButton';
 import { ProductImages, type AdminImage } from './ProductImages';
+import { Select } from '@/components/Select';
 
 type Option = { label: string; price: string; oldPrice: string; stock: string; existingStock?: number };
 export type ProductFormValue = {
@@ -465,19 +466,19 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
               <div className="ad-card__b">
                 <div className="ad-f">
                   <label htmlFor="pf-cat">Danh mục <i>*</i></label>
-                  <select id="pf-cat" className="vx-input" value={v.category} onChange={(e) => moveTo(e.target.value, v.sub)}>
+                  <Select id="pf-cat" className="vx-input" value={v.category} onChange={(e) => moveTo(e.target.value, v.sub)}>
                     {categories.map((c) => (
                       <option key={c.slug} value={c.slug} disabled={!c.subs.length}>
                         {c.name}{!c.subs.length ? ' (chưa có nhóm con)' : !c.active ? ' (đang ẩn)' : ''}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
                 <div className="ad-f">
                   <label htmlFor="pf-sub">Nhóm con <i>*</i></label>
-                  <select id="pf-sub" className="vx-input" value={v.sub} onChange={(e) => moveTo(v.category, e.target.value)}>
+                  <Select id="pf-sub" className="vx-input" value={v.sub} onChange={(e) => moveTo(v.category, e.target.value)}>
                     {cat?.subs.map((s) => <option key={s.slug} value={s.slug}>{s.name}{!s.active ? ' (đang ẩn)' : ''}</option>)}
-                  </select>
+                  </Select>
                   {canEdit && <span className="hint"><Link href={`/admin/danh-muc/${v.category}`}>Sửa danh mục, nhóm con, bộ thông số</Link></span>}
                 </div>
                 {cat && cat.subs.length > 1 && (

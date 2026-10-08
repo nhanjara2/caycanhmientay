@@ -1,8 +1,10 @@
 import Link from 'next/link';
 import { CARE_PHONE, formatPhone, LEGAL, SALES_PHONE, SHOP_ADDRESS, SHOP_EMAIL, ZALO_URL } from '@/lib/contact';
-import { projectImageUrl, projectPath, type Project } from '@/lib/projects';
+import { projectImageUrl, projectPath, regionsOf, type Project } from '@/lib/projects';
+import { BUSINESS_IMAGE } from '@/lib/services';
 import { WARRANTY_DAYS } from '@/lib/warranty-labels';
 import { Icon, type IconName } from './Icon';
+import { ProjectList } from './ProjectList';
 import { ProjectShowcase } from './ProjectShowcase';
 import { QUOTE_URL, ServiceCta, ServiceFaq } from './ServiceParts';
 
@@ -71,6 +73,13 @@ const MAILTO = `mailto:${SHOP_EMAIL}?subject=${encodeURIComponent(MAIL_SUBJECT)}
 
 export function BusinessPage({ projects }: { projects: Project[] }) {
   const featured = projects.find((p) => p.featured && p.images.length) ?? projects.find((p) => p.images.length);
+  const withPhotos = projects.filter((p) => p.images.length);
+  const listOnly = projects.filter((p) => !p.images.length);
+  const regions = regionsOf(projects);
+  // Từ 3 công trình trở lên mới đưa số công trình lên đầu trang.
+  const facts = projects.length >= 3
+    ? [{ b: String(projects.length), text: `công trình tiêu biểu tại ${regions.length} tỉnh, thành` }, ...FACTS]
+    : FACTS;
   const logos = [...new Map(projects.filter((p) => p.clientLogo).map((p) => [p.clientLogo!, p])).values()];
   const quotes = projects.filter((p) => p.quote).slice(0, 3);
 
@@ -91,7 +100,7 @@ export function BusinessPage({ projects }: { projects: Project[] }) {
               : <a href={`tel:${SALES_PHONE}`} className="vx-btn vx-btn--lg vx-btn--line"><Icon name="phone" size={16} />{formatPhone(SALES_PHONE)}</a>}
           </div>
           <ul className="dn-hero__facts">
-            {FACTS.map((f) => <li key={f.b}><b>{f.b}</b>{f.text}</li>)}
+            {facts.map((f) => <li key={f.b}><b>{f.b}</b>{f.text}</li>)}
           </ul>
         </div>
         {featured ? (
@@ -100,8 +109,8 @@ export function BusinessPage({ projects }: { projects: Project[] }) {
             <span className="dn-hero__tag"><b>Dự án tiêu biểu</b>{featured.title}{featured.location && ` · ${featured.location}`}</span>
           </Link>
         ) : (
-          <div className="sv-art dn-hero__art">
-            <Icon name="trees" />
+          <div className="sv-art sv-art--img dn-hero__art">
+            <img src={BUSINESS_IMAGE} alt="Khuôn viên trồng hàng cau vua, thảm cỏ và bồn cây cảnh quan" width={960} height={720} fetchPriority="high" />
             <span className="tag"><b>Kỹ sư gọi lại trong 2 giờ làm việc</b>Khảo sát miễn phí tại công trình</span>
           </div>
         )}
@@ -133,9 +142,24 @@ export function BusinessPage({ projects }: { projects: Project[] }) {
         <header className="dn-head">
           <p className="dn-eyebrow">Hồ sơ năng lực</p>
           <h2>Dự án đã triển khai</h2>
-          <p>Hình ảnh chụp tại công trình. Tên chủ đầu tư chỉ được ghi khi khách hàng đồng ý công khai.</p>
+          <p>
+            {projects.length > 0 && <>{projects.length} công trình tại {regions.length} tỉnh, thành phố. </>}
+            {withPhotos.length > 0 && 'Hình ảnh chụp tại công trình. '}
+            Tên chủ đầu tư chỉ được ghi khi khách hàng đồng ý công khai.
+          </p>
         </header>
-        {projects.length > 0 ? <ProjectShowcase projects={projects} /> : (
+        {withPhotos.length > 0 && <ProjectShowcase projects={withPhotos} />}
+        {listOnly.length > 0 && (
+          <div className="dn-listbox">
+            {withPhotos.length > 0 && <h3>Các công trình khác đã tham gia</h3>}
+            <ProjectList projects={listOnly} />
+            <p className="dn-note">
+              Cần hình ảnh thực tế hoặc thông tin tham khảo của một công trình cụ thể (cho hồ sơ mời thầu, trình duyệt nội bộ)?{' '}
+              <a href={ZALO_URL} target="_blank" rel="noopener noreferrer">Nhắn Zalo</a> hoặc <a href={MAILTO}>gửi email</a> để được gửi trực tiếp.
+            </p>
+          </div>
+        )}
+        {!projects.length && (
           <div className="dn-empty">
             <span className="dn-empty__ic"><Icon name="camera" /></span>
             <b>Hồ sơ dự án đang được cập nhật lên website</b>
