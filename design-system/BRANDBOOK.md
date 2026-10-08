@@ -141,7 +141,7 @@ Hai trang tin dùng chung khuôn, học theo trang tin của chuỗi nhà thuố
 
 ## Hình ảnh và biểu tượng
 
-Ảnh sản phẩm là thứ quyết định độ chuyên nghiệp: nền trơn sáng, cùng góc chụp, cùng tỉ lệ vuông. Cây chụp cả chậu; thuốc, phân chụp chính diện bao bì. Biểu tượng dùng kiểu nét (outline) 1.8px, bo đầu nét tròn, màu `primary`, đặt trong ô `primary-soft`. Logo tạm: chữ "Cây Cảnh Miền Tây" 22px/700 kèm biểu tượng lá, cho đến khi có logo chính thức theo LogoBrief. Chi tiết chụp ảnh xem PhotoGuide.
+Ảnh sản phẩm là thứ quyết định độ chuyên nghiệp: nền trơn sáng, cùng góc chụp, cùng tỉ lệ vuông. Cây chụp cả chậu; thuốc, phân chụp chính diện bao bì. Biểu tượng dùng kiểu nét (outline) 1.8px, bo đầu nét tròn, màu `primary`, đặt trong ô `primary-soft`. Nguồn hình (từ 08/10/2026): bộ **Lucide** (lucide.dev), hình Lucide không có thì lấy **Tabler** / **Iconoir** hoặc vẽ riêng theo cùng khung 24px, nét tròn; web gom tất cả trong `web/src/components/Icon.tsx`. Logo tạm: chữ "Cây Cảnh Miền Tây" 22px/700 kèm biểu tượng lá, cho đến khi có logo chính thức theo LogoBrief. Chi tiết chụp ảnh xem PhotoGuide.
 
 ## Mobile
 

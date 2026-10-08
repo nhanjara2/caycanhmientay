@@ -1,7 +1,7 @@
 import 'server-only';
 import { and, asc, count, desc, eq, ilike, like, or, sql } from 'drizzle-orm';
 import * as z from 'zod';
-import { ELEMENTS, findCategory, MAX_PRODUCT_IMAGES, normalize, parseYoutubeId, productImageUrl, specTemplate, type FengShui } from '@/lib/catalog';
+import { ELEMENTS, findCategory, MAX_PRODUCT_IMAGES, normalize, parseYoutubeId, PRODUCT_ICONS, productImageUrl, specTemplate, type FengShui } from '@/lib/catalog';
 import { attrKeys, type ProductAttrs } from '@/lib/product-filters';
 import { nextSku, skuPrefix } from '@/lib/sku';
 import { tracksLots } from '@/lib/stock';
@@ -16,7 +16,6 @@ const { products, productOptions, productImages, orderItems, stockLots, stockMov
 /** Thông số bắt buộc với thuốc BVTV (BRANDBOOK + AdminProductForm). */
 export const PESTICIDE_REQUIRED = ['Số đăng ký', 'Hoạt chất', 'Liều pha', 'Thời gian cách ly'] as const;
 
-export const PRODUCT_ICONS = ['plant', 'leaf', 'flower', 'sprout', 'bottle', 'flask', 'drop', 'pot', 'box', 'tool', 'gauge'] as const;
 
 const money = z.number().int().min(0).max(1_000_000_000);
 

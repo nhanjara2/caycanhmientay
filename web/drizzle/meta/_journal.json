@@ -218,6 +218,13 @@
       "when": 1791346083518,
       "tag": "0030_store_partner",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1791422033621,
+      "tag": "0031_icon_set",
+      "breakpoints": true
     }
   ]
 }

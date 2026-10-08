@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { CauseIcon, PartIcon, PlantMap } from '@/components/DiseaseArt';
+import { Icon } from '@/components/Icon';
 import { CAUSES, PARTS, PLANTS, causeOf, isCause, isPart, isPlant, diseaseScore, partName } from '@/lib/diseases';
 import { allDiseases } from '@/server/diseases';
 
@@ -61,7 +62,7 @@ export default async function DiseaseLibraryPage({ searchParams }: Props) {
         <label className="vx-search" style={{ border: '1px solid var(--border)' }}>
           <input name="q" defaultValue={q} maxLength={80} placeholder="Nhập triệu chứng, ví dụ: lá vàng mép, đốm nâu…" aria-label="Tìm bệnh theo triệu chứng" />
           <button className="vx-btn vx-btn--primary" aria-label="Tìm">
-            <svg className="vx-ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+            <Icon name="search" />
           </button>
         </label>
       </form>

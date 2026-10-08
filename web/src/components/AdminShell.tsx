@@ -134,7 +134,7 @@ export function AdminShell({ children, me, badges = {} }: { children: ReactNode;
             Quản trị
           </Link>
           <div className="vx-sfind__search app-admin-search">
-            <svg className="vx-ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+            <Icon name="search" />
             <input className="app-bare" placeholder="Tìm đơn, sản phẩm, khách hàng… (Ctrl K)" aria-label="Tìm trong admin" />
           </div>
           <div className="sp">

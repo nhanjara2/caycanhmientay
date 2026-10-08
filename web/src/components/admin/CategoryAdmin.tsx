@@ -8,7 +8,7 @@ import {
   saveSubcategoryAction, setCategoryActiveAction, setSubcategoryActiveAction,
 } from '@/app/actions/categories';
 import { Art, type IconName } from '@/components/Icon';
-import { CATEGORY_ICONS, toSlug, type SpecField } from '@/lib/catalog';
+import { CATEGORY_ICONS, ICON_LABELS, toSlug, type SpecField } from '@/lib/catalog';
 
 const FAIL = { ok: false as const, error: 'Có lỗi, vui lòng thử lại' };
 
@@ -158,7 +158,7 @@ export function CategoryForm({ initial, system, productCount, canEdit }: {
               <label>Biểu tượng (menu trái, trang chủ)</label>
               <span className="vx-seg" style={{ flexWrap: 'wrap' }}>
                 {CATEGORY_ICONS.map((i) => (
-                  <button key={i} type="button" className="vx-chip" aria-pressed={icon === i} aria-label={i} onClick={() => { setIcon(i); dirty(); }}
+                  <button key={i} type="button" className="vx-chip" aria-pressed={icon === i} aria-label={ICON_LABELS[i]} title={ICON_LABELS[i]} onClick={() => { setIcon(i); dirty(); }}
                     style={{ padding: 4, width: 36, height: 36, display: 'grid', placeItems: 'center', color: 'var(--primary)' }}>
                     <Art name={i} />
                   </button>

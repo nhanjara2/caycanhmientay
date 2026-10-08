@@ -60,7 +60,7 @@ export function YouTube({ id, title, vertical }: { id: string; title: string; ve
   );
 }
 
-const NOTE_ICON = <svg className="vx-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 20h20z" /><path d="M12 10v4M12 17v.5" /></svg>;
+const NOTE_ICON = <Icon name="alert" />;
 
 /** Nội dung bài. `products`: sản phẩm đang bán, theo slug (ẩn/ngừng bán thì tự bỏ khỏi khối). */
 export function PostBody({ body, products }: { body: PostBlock[]; products: Map<string, Product> }) {

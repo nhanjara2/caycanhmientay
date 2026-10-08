@@ -67,8 +67,23 @@ export type Product = {
   isNew?: boolean;
 };
 
-/** Biểu tượng chọn được cho danh mục / sản phẩm (có trong cả Icon và Art). */
-export const CATEGORY_ICONS = ['plant', 'leaf', 'flower', 'sprout', 'bottle', 'flask', 'drop', 'pot', 'box', 'tool', 'gauge', 'home', 'gift', 'spark'] as const satisfies readonly IconName[];
+/** Biểu tượng chọn được cho sản phẩm (hiện thay ảnh khi chưa có ảnh). Tên cũ đã lưu trong database phải giữ trong danh sách. */
+export const PRODUCT_ICONS = [
+  'plant', 'bonsai', 'leaf', 'flower', 'rose', 'cactus', 'tree', 'trees', 'palm', 'citrus', 'veggie', 'sprout',
+  'spray', 'pest', 'bottle', 'flask', 'fertilizer', 'drop', 'pot', 'soil', 'terrarium', 'shovel', 'tool', 'autowater', 'gauge', 'box',
+] as const satisfies readonly IconName[];
+
+/** Biểu tượng chọn được cho danh mục (menu trái, trang chủ). */
+export const CATEGORY_ICONS = [...PRODUCT_ICONS, 'home', 'gift', 'spark'] as const satisfies readonly IconName[];
+
+/** Tên tiếng Việt của biểu tượng, hiện khi rê chuột / đọc màn hình ở ô chọn biểu tượng (admin). */
+export const ICON_LABELS: Record<(typeof CATEGORY_ICONS)[number], string> = {
+  plant: 'Chậu cây', bonsai: 'Bonsai', leaf: 'Lá', flower: 'Hoa – Lan', rose: 'Hoa hồng', cactus: 'Xương rồng – Sen đá',
+  tree: 'Cây bóng mát', trees: 'Cây sân vườn', palm: 'Dừa – Cau', citrus: 'Cây ăn trái', veggie: 'Rau ăn lá', sprout: 'Mầm – Hạt giống',
+  spray: 'Bình xịt thuốc', pest: 'Trừ sâu', bottle: 'Chai', flask: 'Bình thuốc', fertilizer: 'Bao phân', drop: 'Giọt nước',
+  pot: 'Chậu', soil: 'Đất trồng', terrarium: 'Tiểu cảnh', shovel: 'Xẻng', tool: 'Dụng cụ', autowater: 'Tưới tự động',
+  gauge: 'Đồng hồ đo', box: 'Thùng hàng', home: 'Nhà', gift: 'Quà', spark: 'Lấp lánh',
+};
 
 /**
  * Danh mục mà code dựa vào slug — đổi tên, biểu tượng, thứ tự, ẩn được nhưng không xóa được.

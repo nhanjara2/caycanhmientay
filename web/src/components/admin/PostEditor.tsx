@@ -12,7 +12,7 @@ import {
   postPath, postState, PRODUCTS_TITLE, safeHref, SECTIONS, sectionOf, SEO_MAX, STATE_LABELS, youtubeThumb,
   type BlockType, type PostBlock, type PostKind, type PostStatus,
 } from '@/lib/posts';
-import { Thumb } from '../Icon';
+import { Icon, Thumb } from '../Icon';
 
 export type EditorPost = {
   id?: number; slug: string; status: PostStatus; publishedAt: string | null; updatedAt?: string; updatedBy?: string | null;
@@ -74,8 +74,8 @@ function Card({ title, children, right }: { title: ReactNode; children: ReactNod
   );
 }
 
-const ICON_OK = <svg className="vx-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10" /></svg>;
-const ICON_NO = <svg className="vx-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 20h20z" /><path d="M12 10v4M12 17v.5" /></svg>;
+const ICON_OK = <Icon name="check" />;
+const ICON_NO = <Icon name="alert" />;
 
 export function PostEditor({ initial, role, products, diseases, people, stats }: {
   initial: EditorPost; role: 'staff' | 'admin';

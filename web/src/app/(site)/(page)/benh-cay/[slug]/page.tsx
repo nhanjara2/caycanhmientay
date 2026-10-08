@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Breadcrumb, SectionHeader } from '@/components/Blocks';
 import { PartIcon } from '@/components/DiseaseArt';
+import { Icon } from '@/components/Icon';
 import { ProductGrid } from '@/components/ProductCard';
 import { SEVERITY, causeOf, diseaseImageUrl, partName, plantName } from '@/lib/diseases';
 import { diseaseImageCredit } from '@/lib/seed-disease-images';
@@ -116,7 +117,7 @@ export default async function DiseaseDetailPage({ params }: Props) {
       </div>
       {d.safety && (
         <div className="vx-note">
-          <svg className="vx-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 20h20z" /><path d="M12 10v4M12 17v.5" /></svg>
+          <Icon name="alert" />
           <div><b>Lưu ý an toàn:</b> {d.safety}</div>
         </div>
       )}

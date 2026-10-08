@@ -64,7 +64,7 @@ export const seedProducts: Product[] = [
   {
     attrs: { viTri: ['van-phong', 'ban-cong'], kichThuoc: 'mini', mau: ['loang', 'tim', 'xanh'] },
     slug: 'sen-da-mix-6-chau', sku: 'MT-30020', name: 'Combo sen đá mix 6 chậu mini',
-    category: 'cay-canh', sub: 'sen-da-xuong-rong', icon: 'flower', origin: 'Đà Lạt', ship: 'plant', unit: 'Combo',
+    category: 'cay-canh', sub: 'sen-da-xuong-rong', icon: 'cactus', origin: 'Đà Lạt', ship: 'plant', unit: 'Combo',
     options: [{ label: '6 chậu', price: 135000, oldPrice: 160000 }], spec: 'Chậu nhựa Ø7',
     lead: 'Sáu cây sen đá khác màu, hợp làm quà, trang trí bàn.',
     specs: plantSpecs('5–8cm', 'Nhựa Ø7', 'Nắng sáng 4 giờ/ngày', '1 lần/tuần', 'Đà Lạt', 'Có'),
@@ -104,7 +104,7 @@ export const seedProducts: Product[] = [
   },
   {
     slug: 'phan-tan-cham-npk-14-14-14', sku: 'VT-60022', name: 'Phân tan chậm NPK 14-14-14 cho kiểng lá',
-    category: 'phan-bon', sub: 'phan-tan-cham', icon: 'drop', origin: 'Việt Nam', ship: 'supply', unit: 'Hộp',
+    category: 'phan-bon', sub: 'phan-tan-cham', icon: 'fertilizer', origin: 'Việt Nam', ship: 'supply', unit: 'Hộp',
     options: [{ label: 'Hộp 300g', price: 117000, oldPrice: 130000 }], spec: 'Hộp 300g',
     lead: 'Rải một lần, cây ăn dần 2–3 tháng. Không lo cháy rễ.',
     specs: [['Thành phần', 'NPK 14-14-14'], ['Liều dùng', '1 muỗng / chậu Ø25, 2 tháng/lần'], ['Quy cách', 'Hộp 300g']],
@@ -112,7 +112,7 @@ export const seedProducts: Product[] = [
   },
   {
     slug: 'phan-trun-que', sku: 'VT-60040', name: 'Phân trùn quế nguyên chất',
-    category: 'phan-bon', sub: 'huu-co', icon: 'box', origin: 'Việt Nam', ship: 'supply', unit: 'Bao',
+    category: 'phan-bon', sub: 'huu-co', icon: 'fertilizer', origin: 'Việt Nam', ship: 'supply', unit: 'Bao',
     options: [{ label: 'Bao 2kg', price: 35000 }, { label: 'Bao 10kg', price: 145000 }], spec: 'Bao 2kg',
     lead: 'Phân hữu cơ tơi xốp, bón lót hoặc trộn giá thể cho mọi loại cây.',
     specs: [['Thành phần', 'Phân trùn quế 100%'], ['Liều dùng', 'Trộn 20–30% vào giá thể'], ['Quy cách', 'Bao 2kg']],
@@ -120,7 +120,7 @@ export const seedProducts: Product[] = [
   },
   {
     slug: 'dat-tron-san-kieng-la', sku: 'VT-70011', name: 'Đất trộn sẵn chuyên kiểng lá, thoát nước tốt',
-    category: 'dat-gia-the', sub: 'dat-tron-san', icon: 'pot', origin: 'Việt Nam', ship: 'supply', unit: 'Bao',
+    category: 'dat-gia-the', sub: 'dat-tron-san', icon: 'soil', origin: 'Việt Nam', ship: 'supply', unit: 'Bao',
     options: [{ label: 'Bao 5dm³', price: 42500, oldPrice: 50000 }, { label: 'Bao 20dm³', price: 150000 }], spec: 'Bao 5dm³ · Xơ dừa, perlite, trấu',
     lead: 'Giá thể trộn sẵn xơ dừa, perlite, trấu hun và phân trùn, dùng ngay không cần xử lý.',
     specs: [['Thành phần', 'Xơ dừa, perlite, trấu hun, phân trùn'], ['pH', '5,8–6,5'], ['Quy cách', 'Bao 5dm³']],
@@ -128,7 +128,7 @@ export const seedProducts: Product[] = [
   },
   {
     slug: 'vien-nen-xo-dua-uom-hat', sku: 'VT-70030', name: 'Viên nén xơ dừa ươm hạt (100 viên)',
-    category: 'dat-gia-the', sub: 'gia-the', icon: 'box', origin: 'Việt Nam', ship: 'supply', unit: 'Túi',
+    category: 'dat-gia-the', sub: 'gia-the', icon: 'soil', origin: 'Việt Nam', ship: 'supply', unit: 'Túi',
     options: [{ label: 'Túi 100 viên', price: 58000, oldPrice: 89000 }], spec: 'Viên Ø30mm',
     lead: 'Ngâm nước 5 phút là nở, gieo hạt rau, hoa tiện lợi.',
     specs: [['Kích thước', 'Ø30mm, nở cao 35mm'], ['Quy cách', 'Túi 100 viên']],

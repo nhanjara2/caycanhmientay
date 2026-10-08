@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition, type FormEvent } from 'react';
 import { saveProductAction } from '@/app/actions/admin';
 import { Art, type IconName } from '@/components/Icon';
-import { applySpecTemplate, ELEMENTS, parseYoutubeId, specTemplate, type Category, type FengShui } from '@/lib/catalog';
+import { applySpecTemplate, ELEMENTS, ICON_LABELS, parseYoutubeId, PRODUCT_ICONS, specTemplate, type Category, type FengShui } from '@/lib/catalog';
 import { KICH_THUOC, MAU_SAC, VI_TRI } from '@/lib/product-filters';
 import { tracksLots } from '@/lib/stock';
 import { ProductDeleteButton } from './ProductDeleteButton';
@@ -45,15 +45,14 @@ export type ProductFormValue = {
  */
 const KINDS = {
   plant: { label: 'Cây sống', ship: 'plant', pesticide: false, category: 'cay-canh', icon: 'plant' },
-  pesticide: { label: 'Thuốc BVTV', ship: 'supply', pesticide: true, category: 'thuoc-bvtv', icon: 'bottle' },
-  fertilizer: { label: 'Phân bón', ship: 'supply', pesticide: false, category: 'phan-bon', icon: 'drop' },
+  pesticide: { label: 'Thuốc BVTV', ship: 'supply', pesticide: true, category: 'thuoc-bvtv', icon: 'spray' },
+  fertilizer: { label: 'Phân bón', ship: 'supply', pesticide: false, category: 'phan-bon', icon: 'fertilizer' },
   supply: { label: 'Chậu – Vật tư', ship: 'supply', pesticide: false, category: 'chau', icon: 'pot' },
 } as const;
 const PESTICIDE_SPECS = ['Số đăng ký', 'Hoạt chất', 'Liều pha', 'Thời gian cách ly'];
 type Kind = keyof typeof KINDS;
 const kindOf = (v: ProductFormValue): Kind => (v.pesticide ? 'pesticide' : v.ship === 'plant' ? 'plant' : v.category === 'phan-bon' ? 'fertilizer' : 'supply');
 
-const ICONS: IconName[] = ['plant', 'leaf', 'flower', 'sprout', 'bottle', 'flask', 'drop', 'pot', 'box', 'tool', 'gauge'];
 const digits = (s: string) => s.replace(/\D/g, '');
 const fmt = (s: string) => (digits(s) ? Number(digits(s)).toLocaleString('vi-VN') : '');
 
@@ -184,8 +183,8 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
                 <div className="ad-f">
                   <label>Biểu tượng (hiện khi chưa có ảnh)</label>
                   <span className="vx-seg" style={{ flexWrap: 'wrap' }}>
-                    {ICONS.map((i) => (
-                      <button key={i} type="button" className="vx-chip" aria-pressed={v.icon === i} aria-label={i} onClick={() => set('icon', i)} style={{ padding: 4, width: 36, height: 36, display: 'grid', placeItems: 'center', color: 'var(--primary)' }}>
+                    {PRODUCT_ICONS.map((i) => (
+                      <button key={i} type="button" className="vx-chip" aria-pressed={v.icon === i} aria-label={ICON_LABELS[i]} title={ICON_LABELS[i]} onClick={() => set('icon', i)} style={{ padding: 4, width: 36, height: 36, display: 'grid', placeItems: 'center', color: 'var(--primary)' }}>
                         <Art name={i} />
                       </button>
                     ))}
