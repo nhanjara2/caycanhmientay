@@ -260,6 +260,13 @@
       "when": 1791429409253,
       "tag": "0036_quy_cach_cay_bo_chau",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1791441927848,
+      "tag": "0037_thong_tin_cay",
+      "breakpoints": true
     }
   ]
 }
