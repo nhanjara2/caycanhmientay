@@ -154,6 +154,7 @@ export async function seedDiseaseImages(db: Db) {
  */
 export async function seedProductImages(db: Db) {
   const KEY = 'seeded:product-images';
+  if (!SEED_PRODUCT_IMAGES.length) return 0;
   const dir = path.join(process.cwd(), 'seed', 'san-pham');
   const missing = SEED_PRODUCT_IMAGES.filter((x) => !fs.existsSync(path.join(dir, x.source)));
   if (missing.length) {
