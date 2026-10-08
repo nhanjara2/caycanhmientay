@@ -367,7 +367,7 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
                       const upd = (k: keyof Option, val: string) => { setOpts((x) => x.map((y, j) => (j === i ? { ...y, [k]: val } : y))); setSaved(false); };
                       return (
                         <tr key={i}>
-                          <td data-label="Quy cách"><input className="vx-input" value={o.label} onChange={(e) => upd('label', e.target.value)} placeholder="Chậu sứ Ø25" aria-label="Tên quy cách" /></td>
+                          <td data-label="Quy cách"><input className="vx-input" value={o.label} onChange={(e) => upd('label', e.target.value)} placeholder={kind === 'plant' ? 'Cao 40–60cm' : v.category === 'chau' ? '25x22cm' : 'Chai 500ml'} aria-label="Tên quy cách" /></td>
                           <td data-label="Giá bán"><input className="vx-input" inputMode="numeric" value={o.price} onChange={(e) => upd('price', fmt(e.target.value))} placeholder="289.000" aria-label="Giá bán" /></td>
                           <td data-label="Giá gốc"><input className="vx-input" inputMode="numeric" value={o.oldPrice} onChange={(e) => upd('oldPrice', fmt(e.target.value))} placeholder="Không giảm" aria-label="Giá gốc" /></td>
                           <td className="num" data-label={o.existingStock !== undefined ? 'Tồn' : 'Tồn đầu kỳ'}>
@@ -388,7 +388,9 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
                 <small className="vx-help">
                   {lotted
                     ? <>Hàng theo lô (thuốc BVTV, phân bón, hạt giống) không điền Tồn đầu kỳ ở đây. Lưu sản phẩm xong, vào <Link href="/admin/nhap-hang" style={{ color: 'var(--primary)', fontWeight: 600 }}>Nhập hàng</Link> để ghi số lượng kèm Số lô và Hạn dùng.</>
-                    : <>Giá bán để <b>0</b> = web hiện “Liên hệ báo giá” (khách gọi / Zalo hỏi giá, không đặt online). Tồn đầu kỳ là số đang có sẵn. Hàng nhập thêm sau này làm ở <Link href="/admin/nhap-hang" style={{ color: 'var(--primary)', fontWeight: 600 }}>Nhập hàng</Link> (Excel) hoặc nút “Nhập / Kiểm kê” ở trang Kho.</>}
+                    : <>{kind === 'plant' && <><b>Cây:</b> quy cách ghi kích thước của cây (Cao 40–60cm, 3 tầng, 15–20 lá…), không ghi chậu — chậu bán riêng ở danh mục Chậu (kích thước dài × cao, vd. 8x8cm). </>}
+                      {v.category === 'chau' && <><b>Chậu:</b> quy cách ghi kích thước dài × cao (vd. 8x8cm, 25x22cm). </>}
+                      Giá bán để <b>0</b> = web hiện “Liên hệ báo giá” (khách gọi / Zalo hỏi giá, không đặt online). Tồn đầu kỳ là số đang có sẵn. Hàng nhập thêm sau này làm ở <Link href="/admin/nhap-hang" style={{ color: 'var(--primary)', fontWeight: 600 }}>Nhập hàng</Link> (Excel) hoặc nút “Nhập / Kiểm kê” ở trang Kho.</>}
                 </small>
               </div>
             </div>

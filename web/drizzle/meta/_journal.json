@@ -253,6 +253,13 @@
       "when": 1791427142184,
       "tag": "0035_cay_canh_gia_ton",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1791429409253,
+      "tag": "0036_quy_cach_cay_bo_chau",
+      "breakpoints": true
     }
   ]
 }
