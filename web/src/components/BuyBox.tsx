@@ -3,14 +3,14 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { isQuote, QUOTE_TEXT, type Product } from '@/lib/catalog';
+import { discountPct, isQuote, QUOTE_TEXT, type Product } from '@/lib/catalog';
 import { useCart } from '@/lib/cart';
 import { SALES_PHONE, ZALO_URL } from '@/lib/contact';
 import { compact, money } from '@/lib/format';
 import { starsText } from '@/lib/reviews';
 import { seoNameOf } from '@/lib/seo-name';
 import { DeliverToNote } from './DeliverTo';
-import { Icon } from './Icon';
+import { Icon, Thumb } from './Icon';
 import { WishlistHeart } from './WishlistHeart';
 
 /** Khối mua bên phải trang chi tiết: tên → meta → giá → chọn đơn vị/số lượng → CTA → khuyến mãi → mô tả ngắn → SpecTable. */
@@ -27,14 +27,17 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
   const [qty, setQty] = useState(1);
   const u = p.options[opt];
   const quote = isQuote(u);
+  const pct = discountPct(u);
 
-  // Điện thoại: khi nút "Mua ngay" đã cuộn khỏi màn hình thì hiện thanh Gọi / Mua ngay dính ở đáy (trang sản phẩm dài ~6 màn hình).
+  // Khi nút "Mua ngay" đã cuộn khỏi màn hình (kể cả khuất sau đầu trang dính) thì hiện thanh mua dính ở đáy — mọi cỡ màn (trang sản phẩm dài ~6 màn hình).
   const ctaRef = useRef<HTMLDivElement>(null);
   const [bar, setBar] = useState(false);
   useEffect(() => {
     const el = ctaRef.current;
     if (!el) return;
-    const io = new IntersectionObserver(([e]) => setBar(!e.isIntersecting && e.boundingClientRect.top < 0));
+    const head = document.querySelector<HTMLElement>('.app-header');
+    const top = head && getComputedStyle(head).position !== 'static' ? head.offsetHeight : 0;
+    const io = new IntersectionObserver(([e]) => setBar(!e.isIntersecting && e.boundingClientRect.top < top), { rootMargin: `-${top}px 0px 0px 0px` });
     io.observe(el);
     return () => io.disconnect();
   }, []);
@@ -111,20 +114,51 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
           </button>
         </div>
       )}
-      {quote ? (
-        <div className="app-buybar" data-show={bar || undefined} aria-hidden={!bar}>
-          <a href={`tel:${SALES_PHONE}`} className="vx-btn vx-btn--outline vx-btn--lg app-buybar__call" tabIndex={bar ? 0 : -1}><Icon name="phone" />Gọi</a>
-          <a href={ZALO_URL} target="_blank" rel="noreferrer" className="vx-btn vx-btn--primary vx-btn--lg app-buybar__buy" tabIndex={bar ? 0 : -1}>Hỏi giá qua Zalo</a>
+      {/* Thanh mua dính đáy: điện thoại = ảnh + tên + giá trên, Gọi / Thêm vào giỏ / Mua ngay dưới; máy tính = một hàng nổi giữa màn hình có chọn quy cách + số lượng */}
+      <div className="app-buybar" data-show={bar || undefined} inert={!bar}>
+        <div className="app-buybar__prod">
+          <span className="app-buybar__img"><Thumb src={p.images?.[0]} icon={p.icon} /></span>
+          <span className="app-buybar__info">
+            <b className="app-buybar__name" title={seoNameOf(p)}>{p.name}</b>
+            <small className="app-buybar__meta">{p.options.length > 1 ? u.label : p.unit}{!quote && qty > 1 && ` · SL ${qty}`}</small>
+          </span>
+          <span className="app-buybar__price">
+            {quote ? <b className="app-quote">{QUOTE_TEXT}</b> : <b>{money(u.price)}</b>}
+            {u.oldPrice && !quote && <span><s>{money(u.oldPrice)}</s>{pct > 0 && <em className="vx-badge vx-badge--sale">-{pct}%</em>}</span>}
+          </span>
         </div>
-      ) : <div className="app-buybar" data-show={bar || undefined} aria-hidden={!bar}>
-        <a href={`tel:${SALES_PHONE}`} className="vx-btn vx-btn--outline vx-btn--lg app-buybar__call"><Icon name="phone" />Gọi</a>
-        <button type="button" className="vx-btn vx-btn--outline vx-btn--lg" onClick={() => add(p, opt, qty)} tabIndex={bar ? 0 : -1}>
-          Thêm vào giỏ
-        </button>
-        <button type="button" className="vx-btn vx-btn--primary vx-btn--lg app-buybar__buy" onClick={buyNow} tabIndex={bar ? 0 : -1}>
-          <span>Mua ngay</span><small>{money(u.price * qty)}</small>
-        </button>
-      </div>}
+        {p.options.length > 1 && (
+          <label className="app-buybar__opt">
+            <span className="app-sr">Chọn quy cách</span>
+            <select value={opt} onChange={(e) => setOpt(Number(e.target.value))}>
+              {p.options.map((o, i) => <option key={o.label} value={i}>{o.label}</option>)}
+            </select>
+          </label>
+        )}
+        {!quote && (
+          <span className="vx-stepper app-buybar__qty">
+            <button type="button" aria-label="Giảm" onClick={() => setQty((q) => Math.max(1, q - 1))}>−</button>
+            <span>{qty}</span>
+            <button type="button" aria-label="Tăng" onClick={() => setQty((q) => q + 1)}>+</button>
+          </span>
+        )}
+        {quote ? (
+          <div className="app-buybar__acts">
+            <a href={`tel:${SALES_PHONE}`} className="vx-btn vx-btn--outline vx-btn--lg app-buybar__call"><Icon name="phone" />Gọi</a>
+            <a href={ZALO_URL} target="_blank" rel="noreferrer" className="vx-btn vx-btn--primary vx-btn--lg app-buybar__buy">Hỏi giá qua Zalo</a>
+          </div>
+        ) : (
+          <div className="app-buybar__acts">
+            <a href={`tel:${SALES_PHONE}`} className="vx-btn vx-btn--outline vx-btn--lg app-buybar__call"><Icon name="phone" />Gọi</a>
+            <button type="button" className="vx-btn vx-btn--outline vx-btn--lg app-buybar__add" onClick={() => add(p, opt, qty)}>
+              <Icon name="cart" />Thêm vào giỏ
+            </button>
+            <button type="button" className="vx-btn vx-btn--primary vx-btn--lg app-buybar__buy" onClick={buyNow}>
+              <span>Mua ngay</span><small>{money(u.price * qty)}</small>
+            </button>
+          </div>
+        )}
+      </div>
       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
         <WishlistHeart slug={p.slug} active={wishlisted} className="vx-btn vx-btn--ghost vx-btn--sm" labels={{ on: 'Đã lưu vào yêu thích', off: 'Lưu vào yêu thích' }} />
       </div>
