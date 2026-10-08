@@ -32,6 +32,10 @@ export type FengShui = {
 
 export type Unit = { label: string; price: number; oldPrice?: number };
 
+/** Giá 0 = chưa có giá: hiện "Liên hệ báo giá", khách gọi / Zalo hỏi giá, không cho vào giỏ hay đặt online. */
+export const isQuote = (u: Pick<Unit, 'price'>) => u.price <= 0;
+export const QUOTE_TEXT = 'Liên hệ báo giá';
+
 export type Product = {
   slug: string;
   sku: string;

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import type { Product } from '@/lib/catalog';
+import { isQuote, QUOTE_TEXT, type Product } from '@/lib/catalog';
 import { useCart } from '@/lib/cart';
 import { SALES_PHONE, ZALO_URL } from '@/lib/contact';
 import { compact, money } from '@/lib/format';
@@ -25,6 +25,7 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
   const [opt, setOpt] = useState(0);
   const [qty, setQty] = useState(1);
   const u = p.options[opt];
+  const quote = isQuote(u);
 
   // Điện thoại: khi nút "Mua ngay" đã cuộn khỏi màn hình thì hiện thanh Gọi / Mua ngay dính ở đáy (trang sản phẩm dài ~6 màn hình).
   const ctaRef = useRef<HTMLDivElement>(null);
@@ -64,10 +65,9 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
         ·<span>Đã bán {compact(p.sold)}</span>
       </div>
       <div className="vx-buy__price">
-        <b>{money(u.price)}</b>
-        <span>/ {p.unit}</span>
+        {quote ? <b className="app-quote">{QUOTE_TEXT}</b> : <><b>{money(u.price)}</b><span>/ {p.unit}</span></>}
       </div>
-      {u.oldPrice && (
+      {u.oldPrice && !quote && (
         <div className="vx-buy__old">
           <s>{money(u.oldPrice)}</s>
           <span className="vx-badge vx-badge--sale">-{money(u.oldPrice - u.price)}</span>
@@ -85,25 +85,37 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
           </span>
         </div>
       )}
-      <div className="vx-opt">
+      {!quote && <div className="vx-opt">
         <span>Chọn số lượng</span>
         <span className="vx-stepper" style={{ justifySelf: 'start' }}>
           <button type="button" aria-label="Giảm" onClick={() => setQty((q) => Math.max(1, q - 1))}>−</button>
           <span>{qty}</span>
           <button type="button" aria-label="Tăng" onClick={() => setQty((q) => q + 1)}>+</button>
         </span>
-      </div>
+      </div>}
       <DeliverToNote ship={p.ship} />
-      <div className="vx-buy__cta" ref={ctaRef}>
-        <button type="button" className="vx-btn vx-btn--primary vx-btn--lg" onClick={buyNow}>
-          Mua ngay
-        </button>
-        <button type="button" className="vx-btn vx-btn--soft vx-btn--lg" onClick={() => add(p, opt, qty)}>
-          <Icon name="cart" />
-          Thêm vào giỏ
-        </button>
-      </div>
-      <div className="app-buybar" data-show={bar || undefined} aria-hidden={!bar}>
+      {quote ? (
+        <div className="vx-buy__cta" ref={ctaRef}>
+          <a href={`tel:${SALES_PHONE}`} className="vx-btn vx-btn--primary vx-btn--lg"><Icon name="phone" />Gọi báo giá</a>
+          <a href={ZALO_URL} target="_blank" rel="noreferrer" className="vx-btn vx-btn--soft vx-btn--lg"><Icon name="chat" />Hỏi giá qua Zalo</a>
+        </div>
+      ) : (
+        <div className="vx-buy__cta" ref={ctaRef}>
+          <button type="button" className="vx-btn vx-btn--primary vx-btn--lg" onClick={buyNow}>
+            Mua ngay
+          </button>
+          <button type="button" className="vx-btn vx-btn--soft vx-btn--lg" onClick={() => add(p, opt, qty)}>
+            <Icon name="cart" />
+            Thêm vào giỏ
+          </button>
+        </div>
+      )}
+      {quote ? (
+        <div className="app-buybar" data-show={bar || undefined} aria-hidden={!bar}>
+          <a href={`tel:${SALES_PHONE}`} className="vx-btn vx-btn--outline vx-btn--lg app-buybar__call" tabIndex={bar ? 0 : -1}><Icon name="phone" />Gọi</a>
+          <a href={ZALO_URL} target="_blank" rel="noreferrer" className="vx-btn vx-btn--primary vx-btn--lg app-buybar__buy" tabIndex={bar ? 0 : -1}>Hỏi giá qua Zalo</a>
+        </div>
+      ) : <div className="app-buybar" data-show={bar || undefined} aria-hidden={!bar}>
         <a href={`tel:${SALES_PHONE}`} className="vx-btn vx-btn--outline vx-btn--lg app-buybar__call"><Icon name="phone" />Gọi</a>
         <button type="button" className="vx-btn vx-btn--outline vx-btn--lg" onClick={() => add(p, opt, qty)} tabIndex={bar ? 0 : -1}>
           Thêm vào giỏ
@@ -111,7 +123,7 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
         <button type="button" className="vx-btn vx-btn--primary vx-btn--lg app-buybar__buy" onClick={buyNow} tabIndex={bar ? 0 : -1}>
           <span>Mua ngay</span><small>{money(u.price * qty)}</small>
         </button>
-      </div>
+      </div>}
       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
         <WishlistHeart slug={p.slug} active={wishlisted} className="vx-btn vx-btn--ghost vx-btn--sm" labels={{ on: 'Đã lưu vào yêu thích', off: 'Lưu vào yêu thích' }} />
       </div>

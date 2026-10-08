@@ -12,11 +12,14 @@ export type SortKey = (typeof SORTS)[number]['key'];
 
 export function sortProducts(list: Product[], key: string | undefined): Product[] {
   const out = [...list];
-  const price = (p: Product) => p.options[0].price;
+  // giá thấp nhất có giá; sản phẩm chỉ "Liên hệ báo giá" xếp cuối cả hai chiều
+  const prices = (p: Product) => p.options.map((o) => o.price).filter((v) => v > 0);
+  const low = (p: Product) => (prices(p).length ? Math.min(...prices(p)) : Number.MAX_SAFE_INTEGER);
+  const high = (p: Product) => (prices(p).length ? Math.max(...prices(p)) : -1);
   switch (key) {
     case 'ban-chay': return out.sort((a, b) => b.sold - a.sold);
-    case 'gia-tang': return out.sort((a, b) => price(a) - price(b));
-    case 'gia-giam': return out.sort((a, b) => price(b) - price(a));
+    case 'gia-tang': return out.sort((a, b) => low(a) - low(b));
+    case 'gia-giam': return out.sort((a, b) => high(b) - high(a));
     case 'giam-nhieu': return out.sort((a, b) => discountPct(b.options[0]) - discountPct(a.options[0]));
     default: return out.sort((a, b) => b.rating * b.reviews - a.rating * a.reviews);
   }

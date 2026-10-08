@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { votePostAction } from '@/app/actions/posts';
-import type { Product } from '@/lib/catalog';
+import { isQuote, QUOTE_TEXT, type Product } from '@/lib/catalog';
 import { useCart } from '@/lib/cart';
 import { money } from '@/lib/format';
 import { Thumb } from './Icon';
@@ -20,8 +20,10 @@ export function ArticleProducts({ title, products }: { title: string; products: 
           <div key={p.slug} className="ar-mini">
             <Link href={`/san-pham/${p.slug}`} className="ad-thumb" aria-label={p.name}><Thumb src={p.images?.[0]} icon={p.icon} alt={p.name} /></Link>
             <Link href={`/san-pham/${p.slug}`} className="app-plain">{p.name}</Link>
-            {o && <b className="pr">{money(o.price)}{p.options.length > 1 && <small> · {o.label}</small>}</b>}
-            {o && <button type="button" className="vx-btn vx-btn--primary" onClick={() => add(p, 0)}>Thêm vào giỏ</button>}
+            {o && <b className="pr">{isQuote(o) ? QUOTE_TEXT : money(o.price)}{p.options.length > 1 && <small> · {o.label}</small>}</b>}
+            {o && (isQuote(o)
+              ? <Link href={`/san-pham/${p.slug}`} className="vx-btn vx-btn--outline">Xem & hỏi giá</Link>
+              : <button type="button" className="vx-btn vx-btn--primary" onClick={() => add(p, 0)}>Thêm vào giỏ</button>)}
           </div>
         );
       })}

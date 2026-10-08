@@ -388,7 +388,7 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
                 <small className="vx-help">
                   {lotted
                     ? <>Hàng theo lô (thuốc BVTV, phân bón, hạt giống) không điền Tồn đầu kỳ ở đây. Lưu sản phẩm xong, vào <Link href="/admin/nhap-hang" style={{ color: 'var(--primary)', fontWeight: 600 }}>Nhập hàng</Link> để ghi số lượng kèm Số lô và Hạn dùng.</>
-                    : <>Tồn đầu kỳ là số đang có sẵn. Hàng nhập thêm sau này làm ở <Link href="/admin/nhap-hang" style={{ color: 'var(--primary)', fontWeight: 600 }}>Nhập hàng</Link> (Excel) hoặc nút “Nhập / Kiểm kê” ở trang Kho.</>}
+                    : <>Giá bán để <b>0</b> = web hiện “Liên hệ báo giá” (khách gọi / Zalo hỏi giá, không đặt online). Tồn đầu kỳ là số đang có sẵn. Hàng nhập thêm sau này làm ở <Link href="/admin/nhap-hang" style={{ color: 'var(--primary)', fontWeight: 600 }}>Nhập hàng</Link> (Excel) hoặc nút “Nhập / Kiểm kê” ở trang Kho.</>}
                 </small>
               </div>
             </div>

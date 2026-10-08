@@ -660,7 +660,7 @@ export function pickFor(slot: Slot, ctx: Ctx, plants: AdvisorPlant[], used: Set<
     if (used.has(p.slug)) score -= 3;
 
     // Quy cách hợp chiều cao; chưa đọc được chiều cao thì vẫn nhận nhưng xếp sau
-    const fits = p.options.map((o, i) => ({ o, i })).filter(({ o }) => !slot.h || !o.h || overlap(o.h, slot.h));
+    const fits = p.options.map((o, i) => ({ o, i })).filter(({ o }) => o.price > 0 && (!slot.h || !o.h || overlap(o.h, slot.h)));
     if (!fits.length) continue;
     if (slot.h && fits.every(({ o }) => !o.h)) { score -= 2; notes.push('Chưa ghi chiều cao, hỏi kỹ sư cỡ cây'); }
     fits.sort((x, y) => x.o.price - y.o.price);

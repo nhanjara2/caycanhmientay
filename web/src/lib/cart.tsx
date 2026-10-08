@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import type { Product } from './catalog';
+import { isQuote, type Product } from './catalog';
 import { snapOf, type CartLine } from './cart-snap';
 import { computeTotals, type Totals } from './pricing';
 import { useShipping } from './shipping-client';
@@ -55,6 +55,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [toast]);
 
   const add = useCallback((p: Product, option = 0, qty = 1) => {
+    if (!p.options[option] || isQuote(p.options[option])) return; // chưa có giá: chỉ hỏi giá, không vào giỏ
     setLines((prev) => {
       const i = prev.findIndex((l) => l.slug === p.slug && l.option === option);
       if (i < 0) return [...prev, { slug: p.slug, option, qty, snap: snapOf(p, option) }];

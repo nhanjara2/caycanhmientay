@@ -64,7 +64,7 @@ export default async function AdminProductsPage({ searchParams }: Props) {
                       </Link>
                     </td>
                     <td data-label="Danh mục">{label.cat}<small>{label.sub}</small></td>
-                    <td className="num" data-label="Giá từ">{money(r.minPrice ?? 0)}<small>/ {r.unit}</small></td>
+                    <td className="num" data-label="Giá từ">{r.minPrice ? <>{money(r.minPrice)}<small>/ {r.unit}</small></> : 'Liên hệ'}</td>
                     <td className="num" data-label="Tồn">{(r.stock ?? 0) < MIN_STOCK ? <b style={{ color: 'var(--sale)' }}>{r.stock ?? 0}</b> : r.stock}</td>
                     <td className="num" data-label="Đã bán">{r.sold}</td>
                     <td data-label="Trạng thái">{isAdmin ? <ProductActiveToggle slug={r.slug} active={r.active} /> : <span className={`ad-pill ${r.active ? 'done' : 'wait'}`}>{r.active ? 'Đang bán' : 'Ẩn'}</span>}</td>

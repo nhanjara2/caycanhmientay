@@ -83,13 +83,15 @@ export const ProductInputSchema = z.object({
   }),
   options: z.array(z.object({
     label: z.string().trim().min(1, 'Nhập tên quy cách').max(40),
-    price: money.min(1000, 'Giá bán tối thiểu 1.000đ'),
+    // 0 = chưa có giá → web hiện "Liên hệ báo giá", khách không đặt online được
+    price: money.refine((v) => v === 0 || v >= 1000, 'Giá bán tối thiểu 1.000đ (hoặc 0 = Liên hệ báo giá)'),
     oldPrice: money.nullable(),
     stock: z.number().int().min(0).max(100_000).optional(), // chỉ dùng khi tạo quy cách mới
   })).min(1, 'Cần ít nhất 1 quy cách').max(10),
 }).superRefine((v, ctx) => {
   v.options.forEach((o, i) => {
-    if (o.oldPrice !== null && o.oldPrice <= o.price) ctx.addIssue({ code: 'custom', path: ['options', i, 'oldPrice'], message: `Quy cách “${o.label}”: giá gốc phải lớn hơn giá bán` });
+    if (o.oldPrice !== null && o.price === 0) ctx.addIssue({ code: 'custom', path: ['options', i, 'oldPrice'], message: `Quy cách “${o.label}”: chưa có giá (Liên hệ báo giá) thì bỏ trống giá gốc` });
+    else if (o.oldPrice !== null && o.oldPrice <= o.price) ctx.addIssue({ code: 'custom', path: ['options', i, 'oldPrice'], message: `Quy cách “${o.label}”: giá gốc phải lớn hơn giá bán` });
   });
   if (v.pesticide) {
     const have = new Set(v.specs.map(([k]) => k));
@@ -106,7 +108,7 @@ export async function listProductsAdmin({ q, category }: { q?: string; category?
   const rows = await db.select({
     slug: products.slug, sku: products.sku, name: products.name, icon: products.icon, image: mainImageOf(products.slug), category: products.category, sub: products.sub,
     unit: products.unit, active: products.active, pesticide: products.pesticide, ship: products.ship, sold: products.sold,
-    minPrice: sql`min(${productOptions.price})`.mapWith(Number), stock: sql`coalesce(sum(${productOptions.stock}), 0)`.mapWith(Number), variants: count(productOptions.idx),
+    minPrice: sql`min(nullif(${productOptions.price}, 0))`.mapWith(Number), stock: sql`coalesce(sum(${productOptions.stock}), 0)`.mapWith(Number), variants: count(productOptions.idx),
   })
     .from(products).leftJoin(productOptions, eq(productOptions.productSlug, products.slug))
     .where(and(category ? eq(products.category, category) : undefined, term ? or(ilike(products.name, term), ilike(products.sku, term)) : undefined))

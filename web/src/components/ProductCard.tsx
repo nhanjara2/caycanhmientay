@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { discountPct, type Product } from '@/lib/catalog';
+import { discountPct, isQuote, QUOTE_TEXT, type Product } from '@/lib/catalog';
+import { ZALO_URL } from '@/lib/contact';
 import { useCart } from '@/lib/cart';
 import { money } from '@/lib/format';
 import { Art } from './Icon';
@@ -48,7 +49,7 @@ export function ProductCard({ product: p, showFlash = false, onRemoveFromWishlis
         ))}
       </div>
       <div className="vx-price">
-        {money(u.price)} <small>/ {p.unit}</small>
+        {isQuote(u) ? <span className="app-quote">{QUOTE_TEXT}</span> : <>{money(u.price)} <small>/ {p.unit}</small></>}
       </div>
       <div className="vx-strike" style={u.oldPrice ? undefined : { visibility: 'hidden' }}>
         {u.oldPrice ? money(u.oldPrice) : '.'}
@@ -64,9 +65,13 @@ export function ProductCard({ product: p, showFlash = false, onRemoveFromWishlis
         )}
       </div>
       <div className="vx-pcard__foot">
-        <button type="button" className="vx-btn vx-btn--primary vx-btn--block" onClick={() => add(p, opt)}>
-          Thêm vào giỏ
-        </button>
+        {isQuote(u) ? (
+          <a href={ZALO_URL} target="_blank" rel="noreferrer" className="vx-btn vx-btn--outline vx-btn--block">Hỏi giá qua Zalo</a>
+        ) : (
+          <button type="button" className="vx-btn vx-btn--primary vx-btn--block" onClick={() => add(p, opt)}>
+            Thêm vào giỏ
+          </button>
+        )}
       </div>
     </article>
   );

@@ -246,6 +246,13 @@
       "when": 1791426123859,
       "tag": "0034_cay_canh_catalog",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1791427142184,
+      "tag": "0035_cay_canh_gia_ton",
+      "breakpoints": true
     }
   ]
 }

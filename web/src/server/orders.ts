@@ -55,6 +55,7 @@ export async function createOrder(input: PlaceOrderInput, user: SessionUser | nu
     const p = products.get(it.slug);
     const u = p?.options[it.option];
     if (!p || !u) return { ok: false, error: 'Có sản phẩm trong giỏ không còn bán. Vui lòng xem lại giỏ hàng.' };
+    if (u.price <= 0) return { ok: false, error: `“${p.name}” chưa có giá bán online — vui lòng liên hệ shop để báo giá rồi bỏ khỏi giỏ.` };
     lines.push({ p, u, it });
   }
   const hasFlash = lines.some((l) => l.p.flash);

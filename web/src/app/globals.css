@@ -1326,6 +1326,10 @@ button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
   .pa-promo__kinds { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
+/* "Liên hệ báo giá" — quy cách chưa có giá (giá 0): thay số tiền ở thẻ sản phẩm, trang sản phẩm */
+.app-quote { font-size: 1.0625rem; font-weight: 700; color: var(--primary-hover); }
+.vx-buy__price .app-quote { font-size: 1.5rem; }
+
 /* >>> DỄ DÙNG ĐIỆN THOẠI */
 /* ===================== Dễ dùng trên điện thoại cho người lớn tuổi (06/10/2026) =====================
  * Chỉ áp cho trang khách (gốc .app-site trong SiteChrome) — không đụng admin / POS / app nhân viên.

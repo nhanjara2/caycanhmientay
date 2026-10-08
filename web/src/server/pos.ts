@@ -29,11 +29,12 @@ export async function posCatalog(storeId: number): Promise<PosItem[]> {
       .groupBy(stockLots.productSlug, stockLots.optionIdx),
   ]);
   const stock = new Map(lots.map((l) => [`${l.slug}|${l.idx}`, l.n]));
-  return products.flatMap((p) => p.options.map((o, idx): PosItem => ({
+  // quy cách chưa có giá (Liên hệ báo giá) không bán ở quầy
+  return products.flatMap((p) => p.options.flatMap((o, idx): PosItem[] => o.price <= 0 ? [] : [{
     slug: p.slug, idx, sku: `${p.sku}-${idx + 1}`, name: p.name, label: p.options.length > 1 ? o.label : null, price: o.price, oldPrice: o.oldPrice ?? null,
     category: p.category, icon: p.icon, image: p.images?.[0] ?? null, stock: stock.get(`${p.slug}|${idx}`) ?? 0,
     pesticide: !!p.pesticide, ship: p.ship,
-  })));
+  }]));
 }
 
 /** Nhận ra khách theo SĐT đã xác thực: tên, điểm, số đơn. */
@@ -77,6 +78,7 @@ export async function createPosOrder(input: PosOrderInput, staff: SessionUser): 
     const p = products.get(it.slug);
     const u = p?.options[it.option];
     if (!p || !u) return { ok: false, error: 'Có sản phẩm không còn bán — tải lại trang bán hàng' };
+    if (u.price <= 0) return { ok: false, error: `“${p.name}” chưa có giá — điền giá ở trang Sản phẩm trước khi bán` };
     lines.push({ p, u, it });
   }
   if (lines.some((l) => l.p.pesticide) && !input.safetyAck) return { ok: false, error: 'Bán thuốc BVTV: xác nhận đã dặn khách đọc hướng dẫn an toàn' };
