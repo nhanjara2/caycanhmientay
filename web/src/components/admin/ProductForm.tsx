@@ -7,6 +7,7 @@ import { saveProductAction } from '@/app/actions/admin';
 import { Art, type IconName } from '@/components/Icon';
 import { applySpecTemplate, ELEMENTS, ICON_LABELS, parseYoutubeId, PRODUCT_ICONS, specTemplate, type Category, type FengShui } from '@/lib/catalog';
 import { KICH_THUOC, MAU_SAC, VI_TRI } from '@/lib/product-filters';
+import { CARE_LEVELS, LIGHTS, PET_SAFETY, ROLES } from '@/lib/plant-advisor';
 import { tracksLots } from '@/lib/stock';
 import { ProductDeleteButton } from './ProductDeleteButton';
 import { ProductImages, type AdminImage } from './ProductImages';
@@ -35,7 +36,11 @@ export type ProductFormValue = {
   images: AdminImage[];
   fengshui: FengShui;
   /** Đặc điểm cây cho bộ lọc (chỉ cây sống). */
-  attrs: { viTri: string[]; kichThuoc: string | null; mau: string[] };
+  attrs: {
+    viTri: string[]; kichThuoc: string | null; mau: string[];
+    /** Tư vấn chọn cây (lib/plant-advisor.ts). */
+    anhSang: string[]; vaiTro: string[]; cham: string | null; thuCung: string | null; chiuGio: boolean;
+  };
   options: { label: string; price: number; oldPrice: number | null; stock: number }[];
 };
 
@@ -228,6 +233,58 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
                     <span className="hint">Màu lá và màu hoa nổi bật; chọn được nhiều.</span>
                   </div>
                   <span className="hint">Khách lọc theo các mục này ở trang danh mục. Mục nào để trống thì cây không hiện khi khách lọc theo mục đó. “Hợp mệnh” lấy từ khung Phong thủy bên dưới.</span>
+                </div>
+              </div>
+            )}
+
+            {kind === 'plant' && (
+              <div className="ad-card">
+                <div className="ad-card__h">Tư vấn chọn cây</div>
+                <div className="ad-card__b">
+                  <div className="ad-f">
+                    <label>Ánh sáng chịu được</label>
+                    <span className="vx-seg" style={{ flexWrap: 'wrap' }}>
+                      {LIGHTS.map((o) => (
+                        <button key={o.key} type="button" className="vx-chip" aria-pressed={v.attrs.anhSang.includes(o.key)} title={o.hint}
+                          onClick={() => setAttrs({ anhSang: toggle(v.attrs.anhSang, o.key, [...LIGHTS]) })}>{o.name}</button>
+                      ))}
+                    </span>
+                    <span className="hint">Chọn mọi mức cây sống khỏe được. Cây chịu “Ít sáng” thì cũng được gợi ý cho chỗ chỉ có đèn.</span>
+                  </div>
+                  <div className="ad-f">
+                    <label>Dùng làm</label>
+                    <span className="vx-seg" style={{ flexWrap: 'wrap' }}>
+                      {ROLES.map((o) => (
+                        <button key={o.key} type="button" className="vx-chip" aria-pressed={v.attrs.vaiTro.includes(o.key)}
+                          onClick={() => setAttrs({ vaiTro: toggle(v.attrs.vaiTro, o.key, [...ROLES]) })}>{o.name}</button>
+                      ))}
+                    </span>
+                    <span className="hint">Vị trí cây hợp khi bố trí (để bàn, góc phòng, hàng rào…); chọn được nhiều.</span>
+                  </div>
+                  <div className="ad-f">
+                    <label>Độ dễ chăm</label>
+                    <span className="vx-seg" style={{ flexWrap: 'wrap' }}>
+                      {CARE_LEVELS.map((o) => (
+                        <button key={o.key} type="button" className="vx-chip" aria-pressed={v.attrs.cham === o.key}
+                          onClick={() => setAttrs({ cham: v.attrs.cham === o.key ? null : o.key })}>{o.name}</button>
+                      ))}
+                    </span>
+                  </div>
+                  <div className="ad-f">
+                    <label>Với trẻ nhỏ, chó mèo</label>
+                    <span className="vx-seg" style={{ flexWrap: 'wrap' }}>
+                      {PET_SAFETY.map((o) => (
+                        <button key={o.key} type="button" className="vx-chip" aria-pressed={v.attrs.thuCung === o.key}
+                          onClick={() => setAttrs({ thuCung: v.attrs.thuCung === o.key ? null : o.key })}>{o.name}</button>
+                      ))}
+                      <button type="button" className="vx-chip" aria-pressed={v.attrs.chiuGio} onClick={() => setAttrs({ chiuGio: !v.attrs.chiuGio })}>Chịu gió mạnh (ban công tầng cao)</button>
+                    </span>
+                  </div>
+                  <span className="hint">
+                    Dùng cho trang <a href="/tu-van-chon-cay" target="_blank" rel="noreferrer">Tư vấn chọn cây</a>. Mục nào để trống, trang tự đoán từ thông số
+                    “Ánh sáng”, “Chiều cao”, “Mức độ dễ chăm”, “An toàn thú cưng” và tên quy cách (ví dụ “Cao 1m2”) — chọn ở đây thì gợi ý chính xác hơn.
+                    Chiều cao từng cỡ lấy từ tên quy cách, không có thì lấy thông số Chiều cao.
+                  </span>
                 </div>
               </div>
             )}

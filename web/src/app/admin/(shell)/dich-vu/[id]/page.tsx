@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { ServiceNoteBox, ServiceRequestPanel } from '@/components/admin/ServiceRequestPanel';
 import { money } from '@/lib/format';
 import { fmtDateTime } from '@/lib/order-labels';
+import { KINDS, TIERS } from '@/lib/plant-advisor';
 import { SERVICE_INFO, SOURCE_LABEL, STAGE_LABEL, STAGE_PILL, fmtSlot, serviceCode } from '@/lib/service-labels';
 import { requireAccess } from '@/server/auth';
 import { getServiceRequest, staffOptions } from '@/server/service-requests';
@@ -60,6 +61,38 @@ export default async function AdminServiceRequestPage({ params }: Props) {
               )}
             </div>
           </div>
+          {r.plan && (
+            <div className="ad-card">
+              <div className="ad-card__h">Phương án khách tự chọn · {KINDS[r.plan.kind]?.name ?? r.plan.kind}</div>
+              <div className="ad-card__b">
+                <p className="hint" style={{ margin: '0 0 8px' }}>
+                  Khách tạo ở trang Tư vấn chọn cây · ngân sách “{TIERS.find((t) => t.key === r.plan!.tier)?.name ?? r.plan.tier}”.
+                  Giá là giá lúc khách xem, chỉ để tham khảo; số lượng tính theo quy tắc chung — chỉnh lại khi khảo sát.
+                </p>
+                <table className="ad-table app-mtable">
+                  <thead><tr><th>Vị trí</th><th>SL</th><th>Cao</th><th>Cây đề xuất</th><th>Tạm tính</th></tr></thead>
+                  <tbody>
+                    {r.plan.lines.map((l, i) => (
+                      <tr key={i}>
+                        <td><b>{l.title}</b><br /><span className="hint">{l.zone}</span></td>
+                        <td data-label="Số lượng">{l.qty.toLocaleString('vi-VN')} {l.unit}</td>
+                        <td data-label="Cao">{l.height ?? '—'}</td>
+                        <td data-label="Cây đề xuất">
+                          {l.slug ? <Link href={`/san-pham/${l.slug}`} target="_blank" style={{ color: 'var(--primary)' }}>{l.product}</Link> : <i>Chưa có trên web — kỹ sư chọn</i>}
+                          {l.option && <><br /><span className="hint">{l.option}</span></>}
+                        </td>
+                        <td data-label="Tạm tính">{l.price != null ? money(l.price * l.qty) : '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <div className="ad-kv" style={{ marginTop: 8 }}>
+                  <span>Tạm tính cây có sẵn</span><span><b>{money(r.plan.total)}</b></span>
+                  <span>Khách trả lời</span><span style={{ whiteSpace: 'pre-line' }}>{r.plan.summary.join('\n')}</span>
+                </div>
+              </div>
+            </div>
+          )}
           <div className="ad-card">
             <div className="ad-card__h">Lịch sử liên hệ</div>
             <div className="ad-card__b">

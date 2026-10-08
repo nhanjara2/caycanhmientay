@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { AdvisorBanner } from '@/components/AdvisorBanner';
 import { Breadcrumb, EmptyState } from '@/components/Blocks';
 import { Icon } from '@/components/Icon';
 import { PesticideLookup } from '@/components/PesticideLookup';
@@ -104,6 +105,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
         </div>
       </div>
       {cat.slug === 'thuoc-bvtv' && <PesticideLookup slug={cat.slug} />}
+      {cat.slug === 'cay-canh' && <AdvisorBanner sub={sub?.slug} />}
       {items.length ? (
         <ProductGrid products={items} />
       ) : filtering ? (

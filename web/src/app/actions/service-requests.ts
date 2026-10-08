@@ -7,6 +7,10 @@ import {
 } from '@/server/service-requests';
 
 const str = (v: FormDataEntryValue | null) => (typeof v === 'string' && v.trim() ? v : undefined);
+const jsonOf = (v: FormDataEntryValue | null) => {
+  if (typeof v !== 'string' || !v || v.length > 50_000) return undefined;
+  try { return JSON.parse(v) as unknown; } catch { return undefined; }
+};
 
 /** Khách gửi form Đặt lịch khảo sát — không bắt buộc đăng nhập (FormData, có ảnh). */
 export async function createServiceRequestAction(fd: FormData) {
@@ -24,6 +28,7 @@ export async function createServiceRequestAction(fd: FormData) {
     phone: fd.get('phone') ?? '',
     address: fd.get('address') ?? '',
     note: str(fd.get('note')),
+    plan: jsonOf(fd.get('plan')),
   });
   if (!p.success) return { ok: false as const, error: p.error.issues[0].message };
   const files = fd.getAll('photos').filter((f): f is File => f instanceof File && f.size > 0);

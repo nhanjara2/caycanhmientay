@@ -5,6 +5,8 @@ import { useEffect, useRef, useState, useTransition } from 'react';
 import { createServiceRequestAction } from '@/app/actions/service-requests';
 import { isPhone } from '@/lib/auth';
 import { compressImage } from '@/lib/compress-image';
+import { money } from '@/lib/format';
+import { ADVISOR_URL, KINDS, PLAN_STORE_KEY, type SavedPlan } from '@/lib/plant-advisor';
 import {
   BUDGETS, SERVICE_INFO, SERVICE_TYPES, SLOT_TIMES, SPACES, STYLES, SUNS, fmtSlot, fmtSlotDay, type ServiceType, type SlotTime,
 } from '@/lib/service-labels';
@@ -30,7 +32,7 @@ type Draft = {
 };
 
 /** QuoteRequestForm: 5 phần trên một trang — dịch vụ → không gian → ngân sách → lịch khảo sát → liên hệ. */
-export function QuoteForm({ defaults, slots }: { defaults: QuoteDefaults; slots: QuoteSlot[] }) {
+export function QuoteForm({ defaults, slots, fromAdvisor = false }: { defaults: QuoteDefaults; slots: QuoteSlot[]; /** Mở từ nút "Gửi phương án" của trang Tư vấn chọn cây. */ fromAdvisor?: boolean }) {
   const [v, setV] = useState<Draft>({
     service: defaults.service ?? null, space: '', area: '', sun: '', styles: [], budget: '',
     slot: '', name: defaults.name, phone: defaults.phone, address: defaults.address, note: '',
@@ -40,6 +42,7 @@ export function QuoteForm({ defaults, slots }: { defaults: QuoteDefaults; slots:
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
   const [done, setDone] = useState<{ code: string; slot: string } | null>(null);
+  const [plan, setPlan] = useState<SavedPlan | null>(null);
   const [pending, start] = useTransition();
   const fileInput = useRef<HTMLInputElement>(null);
   const honeypot = useRef<HTMLInputElement>(null);
@@ -62,6 +65,30 @@ export function QuoteForm({ defaults, slots }: { defaults: QuoteDefaults; slots:
       setInfo('Đã mở lại bản nháp bạn lưu trước đó.');
     } catch { /* trình duyệt chặn lưu trữ: bỏ qua */ }
   }, [defaults.service, slots]);
+
+  // Phương án từ trang Tư vấn chọn cây: đính kèm + ghi sẵn loại không gian, diện tích, hướng nắng
+  useEffect(() => {
+    if (!fromAdvisor) return;
+    try {
+      const raw = sessionStorage.getItem(PLAN_STORE_KEY);
+      if (!raw) return;
+      const d = JSON.parse(raw) as { plan: SavedPlan; prefill: { service?: ServiceType; space?: string; area?: number; sun?: string } };
+      if (!d.plan?.lines?.length || !KINDS[d.plan.kind]) return;
+      setPlan(d.plan);
+      const f = d.prefill ?? {};
+      setV((x) => ({
+        ...x,
+        service: f.service && SERVICE_TYPES.includes(f.service) ? f.service : x.service,
+        space: f.space && (SPACES as readonly string[]).includes(f.space) ? f.space : x.space,
+        area: f.area && f.area >= 1 ? String(Math.min(100_000, Math.round(f.area))) : x.area,
+        sun: f.sun && (SUNS as readonly string[]).includes(f.sun) ? f.sun : x.sun,
+      }));
+    } catch { /* bỏ qua */ }
+  }, [fromAdvisor]);
+  const dropPlan = () => {
+    setPlan(null);
+    try { sessionStorage.removeItem(PLAN_STORE_KEY); } catch { /* bỏ qua */ }
+  };
 
   const saveDraft = () => {
     try {
@@ -122,11 +149,12 @@ export function QuoteForm({ defaults, slots }: { defaults: QuoteDefaults; slots:
     fd.set('address', v.address);
     if (v.note.trim()) fd.set('note', v.note);
     fd.set('website', honeypot.current?.value ?? '');
+    if (plan) fd.set('plan', JSON.stringify(plan));
     photos.forEach((p) => fd.append('photos', p.file));
     start(async () => {
       const r = await createServiceRequestAction(fd).catch(() => ({ ok: false as const, error: 'Không gửi được. Vui lòng kiểm tra mạng và thử lại.' }));
       if (!r.ok) { setError(r.error); return; }
-      try { localStorage.removeItem(DRAFT_KEY); } catch { /* bỏ qua */ }
+      try { localStorage.removeItem(DRAFT_KEY); sessionStorage.removeItem(PLAN_STORE_KEY); } catch { /* bỏ qua */ }
       const s = slots.find((x) => x.key === v.slot);
       setDone({ code: r.code, slot: s ? fmtSlot(s.date, s.time) : '' });
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -171,6 +199,25 @@ export function QuoteForm({ defaults, slots }: { defaults: QuoteDefaults; slots:
         </div>
         {err('service')}
       </div>
+
+      {plan && (
+        <div className="qf-plan">
+          <div className="qf-plan__h">
+            <b><Icon name="receipt" size={18} />Phương án chọn cây đính kèm · {KINDS[plan.kind].name}</b>
+            <span className="qf-plan__acts">
+              <Link href={`${ADVISOR_URL}?loai=${plan.kind}`}>Sửa phương án</Link>
+              <button type="button" onClick={dropPlan}>Bỏ đính kèm</button>
+            </span>
+          </div>
+          <ul>
+            {plan.lines.slice(0, 8).map((l, i) => (
+              <li key={i}>{l.title}: <b>{l.qty.toLocaleString('vi-VN')} {l.unit}</b>{l.height ? `, cao ${l.height}` : ''}{l.product ? ` — ${l.product}` : ' — nhờ kỹ sư chọn'}</li>
+            ))}
+            {plan.lines.length > 8 && <li>… và {plan.lines.length - 8} mục khác</li>}
+          </ul>
+          {plan.total > 0 && <span className="qf-plan__total">Tạm tính cây có sẵn: <b>{money(plan.total)}</b> (kỹ sư báo giá chính thức sau khảo sát)</span>}
+        </div>
+      )}
 
       <div className="qf-sec">
         <h3><b>2</b>Không gian của bạn</h3>

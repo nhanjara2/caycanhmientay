@@ -7,8 +7,12 @@ import { ELEMENTS, normalize, type Product } from './catalog';
 
 export type FilterOption = { key: string; name: string; /** Chấm màu cạnh chữ (nhóm Màu sắc). */ swatch?: string };
 
-/** Đặc điểm cây do admin chọn (cột products.attrs). Giá trị là `key` trong các danh sách bên dưới. */
-export type ProductAttrs = { viTri?: string[]; kichThuoc?: string; mau?: string[] };
+/** Đặc điểm cây do admin chọn (cột products.attrs). Giá trị là `key` trong các danh sách bên dưới.
+ *  anhSang / vaiTro / cham / thuCung / chiuGio dùng cho trang Tư vấn chọn cây (danh sách ở lib/plant-advisor.ts). */
+export type ProductAttrs = {
+  viTri?: string[]; kichThuoc?: string; mau?: string[];
+  anhSang?: string[]; vaiTro?: string[]; cham?: string; thuCung?: string; chiuGio?: boolean;
+};
 
 export const VI_TRI: FilterOption[] = [
   { key: 'trong-nha', name: 'Trong nhà' },

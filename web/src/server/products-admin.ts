@@ -2,6 +2,7 @@ import 'server-only';
 import { and, asc, count, desc, eq, ilike, like, or, sql } from 'drizzle-orm';
 import * as z from 'zod';
 import { ELEMENTS, findCategory, MAX_PRODUCT_IMAGES, normalize, parseYoutubeId, PRODUCT_ICONS, productImageUrl, specTemplate, type FengShui } from '@/lib/catalog';
+import { advisorKeys } from '@/lib/plant-advisor';
 import { attrKeys, type ProductAttrs } from '@/lib/product-filters';
 import { nextSku, skuPrefix } from '@/lib/sku';
 import { tracksLots } from '@/lib/stock';
@@ -65,9 +66,19 @@ export const ProductInputSchema = z.object({
     viTri: z.array(z.enum(attrKeys.viTri as [string, ...string[]])).max(5),
     kichThuoc: z.enum(attrKeys.kichThuoc as [string, ...string[]]).nullable(),
     mau: z.array(z.enum(attrKeys.mau as [string, ...string[]])).max(8),
+    // Tư vấn chọn cây (lib/plant-advisor.ts); bỏ trống thì trang tư vấn tự đoán từ thông số chữ
+    anhSang: z.array(z.enum(advisorKeys.anhSang)).max(5).default([]),
+    vaiTro: z.array(z.enum(advisorKeys.vaiTro)).max(10).default([]),
+    cham: z.enum(advisorKeys.cham).nullable().default(null),
+    thuCung: z.enum(advisorKeys.thuCung).nullable().default(null),
+    chiuGio: z.boolean().default(false),
   }).optional().transform((a): ProductAttrs | null => {
-    if (!a || !(a.viTri.length || a.kichThuoc || a.mau.length)) return null;
-    return { viTri: a.viTri, ...(a.kichThuoc ? { kichThuoc: a.kichThuoc } : {}), mau: a.mau };
+    if (!a || !(a.viTri.length || a.kichThuoc || a.mau.length || a.anhSang.length || a.vaiTro.length || a.cham || a.thuCung || a.chiuGio)) return null;
+    return {
+      viTri: a.viTri, ...(a.kichThuoc ? { kichThuoc: a.kichThuoc } : {}), mau: a.mau,
+      ...(a.anhSang.length ? { anhSang: a.anhSang } : {}), ...(a.vaiTro.length ? { vaiTro: a.vaiTro } : {}),
+      ...(a.cham ? { cham: a.cham } : {}), ...(a.thuCung ? { thuCung: a.thuCung } : {}), ...(a.chiuGio ? { chiuGio: true } : {}),
+    };
   }),
   options: z.array(z.object({
     label: z.string().trim().min(1, 'Nhập tên quy cách').max(40),

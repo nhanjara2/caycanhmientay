@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   description: 'Khảo sát miễn phí sân vườn, ban công, cây văn phòng, chăm sóc định kỳ và chữa cây tại nhà. Kỹ sư gọi xác nhận trong 2 giờ làm việc.',
 };
 
-type Props = { searchParams: Promise<{ loai?: string }> };
+type Props = { searchParams: Promise<{ loai?: string; 'phuong-an'?: string }> };
 
 const WHY: [React.ReactNode, string][] = [
   [<path key="p" d="M4 20h4L19 9l-4-4L4 16z" />, 'Phối cảnh 3D không gian'],
@@ -21,13 +21,14 @@ const WHY: [React.ReactNode, string][] = [
 
 /** QuoteRequestForm: form bên trái (điền sẵn nếu đã đăng nhập, ?loai= chọn sẵn dịch vụ), cam kết bên phải. */
 export default async function Page({ searchParams }: Props) {
-  const [{ loai }, user, slots] = await Promise.all([searchParams, getCurrentUser(), surveySlots()]);
+  const [{ loai, 'phuong-an': fromAdvisor }, user, slots] = await Promise.all([searchParams, getCurrentUser(), surveySlots()]);
   const addr = user ? (await listAddresses(user.id))[0] : undefined;
 
   return (
     <div className="qf">
       <QuoteForm
         slots={slots}
+        fromAdvisor={fromAdvisor === '1'}
         defaults={{
           service: serviceFromParam(loai),
           name: user?.name ?? '',

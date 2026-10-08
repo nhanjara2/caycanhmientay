@@ -4,6 +4,7 @@ import type { FengShui, SpecField } from '../../lib/catalog';
 import type { Disease } from '../../lib/diseases';
 import type { PostBlock } from '../../lib/posts';
 import type { ProductAttrs } from '../../lib/product-filters';
+import type { SavedPlan } from '../../lib/plant-advisor';
 import { STAFF_ROLES } from '../../lib/permissions';
 import { SERVICE_STAGES, SERVICE_TYPES, SOURCES } from '../../lib/service-labels';
 import { boolean, customType, doublePrecision, index, integer, jsonb, pgTable, primaryKey, serial, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
@@ -851,6 +852,8 @@ export const serviceRequests = pgTable('service_requests', {
   phone: text('phone').notNull(),
   address: text('address').notNull(),
   note: text('note'),
+  /** Phương án khách tự chọn ở trang Tư vấn chọn cây rồi gửi kèm (giá lúc khách xem, chỉ để tham khảo). Null = không có. */
+  plan: jsonb('plan').$type<SavedPlan>(),
   /** Tài khoản gửi (nếu đang đăng nhập). */
   userId: integer('user_id').references(() => users.id, { onDelete: 'set null' }),
   source: text('source', { enum: SOURCES }).notNull().default('web'),

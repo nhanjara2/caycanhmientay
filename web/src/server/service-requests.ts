@@ -10,6 +10,7 @@ import {
   STAGE_LABEL, STYLES, SUNS, fmtSlot, serviceCode, shortMoney, slotDates, todayVN, type SlotTime,
 } from '@/lib/service-labels';
 import { fmtDate, fmtDateTime } from '@/lib/order-labels';
+import { SPACE_KINDS } from '@/lib/plant-advisor';
 import { money } from '@/lib/format';
 
 const { serviceRequests: S, serviceRequestPhotos: SP, serviceRequestEvents: SE, users } = schema;
@@ -43,6 +44,18 @@ export const ServiceInputSchema = z.object({
   phone,
   address: z.string().trim().min(5, 'Nhập địa chỉ khảo sát').max(200),
   note: z.string().trim().max(1000).optional(),
+  /** Phương án từ trang Tư vấn chọn cây; sai định dạng thì bỏ qua, không chặn khách gửi. */
+  plan: z.object({
+    kind: z.enum(SPACE_KINDS),
+    tier: z.enum(['tiet-kiem', 'can-bang', 'cao-cap']),
+    summary: z.array(z.string().max(200)).max(30),
+    lines: z.array(z.object({
+      zone: z.string().max(80), title: z.string().max(80), qty: z.number().int().min(1).max(1_000_000), unit: z.string().max(10),
+      height: z.string().max(20).optional(), slug: z.string().max(120).optional(), product: z.string().max(200).optional(),
+      option: z.string().max(40).optional(), price: z.number().int().min(0).max(1_000_000_000).optional(),
+    })).min(1).max(60),
+    total: z.number().int().min(0).max(1_000_000_000_000),
+  }).optional().catch(undefined),
 });
 export type ServiceInput = z.infer<typeof ServiceInputSchema>;
 
@@ -99,13 +112,13 @@ export async function createServiceRequest(input: ServiceInput, files: File[], u
       const [row] = await tx.insert(S).values({
         service: input.service, space: input.space ?? null, area: input.area ?? null, sun: input.sun ?? null,
         styles: input.styles, budget: input.budget ?? null, slotDate: slot?.date ?? null, slotTime: slot?.time ?? null,
-        name: input.name, phone: input.phone, address: input.address, note: input.note || null,
+        name: input.name, phone: input.phone, address: input.address, note: input.note || null, plan: input.plan ?? null,
         userId: user?.id ?? null, source: 'web',
       }).returning({ id: S.id });
       if (saved.length) await tx.insert(SP).values(saved.map((s) => ({ requestId: row.id, file: s.file, mime: s.mime, data: s.data })));
       await tx.insert(SE).values({
         requestId: row.id, kind: 'created', actor: input.name,
-        text: `Khách gửi yêu cầu trên web${slot ? ` · muốn khảo sát ${fmtSlot(slot.date, slot.time)}` : ' · chờ gọi hẹn lịch'}${saved.length ? ` · ${saved.length} ảnh` : ''}`,
+        text: `Khách gửi yêu cầu trên web${slot ? ` · muốn khảo sát ${fmtSlot(slot.date, slot.time)}` : ' · chờ gọi hẹn lịch'}${saved.length ? ` · ${saved.length} ảnh` : ''}${input.plan ? ` · kèm phương án chọn cây (${input.plan.lines.length} mục)` : ''}`,
       });
       return row.id;
     });

@@ -14,7 +14,7 @@ const ABOUT: [string, string][] = [
 ];
 const LEARN: [string, string][] = [
   ['Góc chăm cây', '/goc-cham-cay'], ['Bắt bệnh cho cây', '/benh-cay'], ['Tra cứu thuốc BVTV', '/danh-muc/thuoc-bvtv'],
-  ['Hướng dẫn dùng thuốc an toàn', '/chinh-sach/thuoc-bvtv-an-toan'], ['Dịch vụ sân vườn', '/dich-vu'],
+  ['Hướng dẫn dùng thuốc an toàn', '/chinh-sach/thuoc-bvtv-an-toan'], ['Dịch vụ sân vườn', '/dich-vu'], ['Tư vấn chọn cây', '/tu-van-chon-cay'],
   ['Khách doanh nghiệp', '/doanh-nghiep'], ['Tin khuyến mãi', '/khuyen-mai'], ['Truyền thông', '/tin-tuc'],
 ];
 // [nội dung, số điện thoại, người phụ trách]

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ADVISOR_URL, KINDS, SPACE_KINDS } from '@/lib/plant-advisor';
 import { SERVICE_INFO, type ServiceType } from '@/lib/service-labels';
 import { Icon, type IconName } from './Icon';
 import { phoneText, QUOTE_URL, SERVICE_PHONE, ServiceCta, ServiceFaq, ServiceHero, ServiceSteps } from './ServiceParts';
@@ -60,6 +61,21 @@ export function ServicesHub() {
               </span>
             </div>
           ))}
+        </div>
+      </section>
+
+      <section className="sv-sec">
+        <div className="sv-panel sv-panel--wide pa-promo">
+          <h2>Chưa biết nên trồng cây gì?</h2>
+          <p>
+            Dùng <b>Tư vấn chọn cây</b>: chọn loại không gian, trả lời vài câu hỏi (kích thước, ánh sáng, thời gian chăm, ngân sách),
+            web gợi ý loại cây, số lượng và chiều cao cho từng vị trí. Có thể thêm cả bộ vào giỏ hoặc gửi phương án cho kỹ sư khảo sát.
+          </p>
+          <div className="pa-promo__kinds">
+            {SPACE_KINDS.map((k) => (
+              <Link key={k} href={`${ADVISOR_URL}?loai=${k}`}><Icon name={KINDS[k].icon} />{KINDS[k].name}</Link>
+            ))}
+          </div>
         </div>
       </section>
 
