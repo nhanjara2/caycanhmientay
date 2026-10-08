@@ -1350,6 +1350,49 @@ button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .app-pcard__optbox select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 1rem; appearance: none; border: 0; }
 .app-pcard__optbox:focus-within { outline: 2px solid var(--primary); outline-offset: 2px; }
 
+/* Trang chi tiết sản phẩm: cột ảnh dính, kính lúp phóng to ảnh, thu gọn thông tin dài */
+@media (min-width: 48em) {
+  /* Cột ảnh dính dưới đầu trang tới hết khối sản phẩm. Cột cao hơn màn hình (--gal-h do GalleryCol đo)
+     thì dính theo mép dưới — top âm — để dải ảnh nhỏ + cam kết vẫn thấy được. */
+  .vx-pd > .vx-gal { position: sticky; top: min(calc(var(--header-h) + 1rem), calc(100vh - var(--gal-h, 0px) - 1rem)); align-self: start; z-index: 3; }
+  /* Màn thấp (laptop 768px): ảnh lớn thu nhỏ cho cả cột ảnh vừa một màn hình (chừa ~15rem cho dải ảnh nhỏ + ghi chú + cam kết) */
+  .vx-pd > .vx-gal > .vx-gal__main { width: min(100%, max(18rem, calc(100vh - var(--header-h) - 15rem))); align-self: center; }
+}
+.vx-gal__main[data-zoom] { cursor: crosshair; }
+.app-zoom-lens { position: absolute; z-index: 2; pointer-events: none; border: 1px solid rgba(12, 24, 16, .35); border-radius: var(--radius-sm); background: rgba(255, 255, 255, .35); box-shadow: 0 0 0 9999px rgba(255, 255, 255, .25); }
+.vx-gal__main:has(.app-zoom-lens) { overflow: hidden; }
+/* Khung phóng to phủ lên cột thông tin bên phải, cùng cỡ ảnh lớn */
+.app-zoom-pane { position: absolute; top: 0; left: calc(100% + var(--space-6)); width: 100%; aspect-ratio: 1 / 1; z-index: 5; pointer-events: none; background-color: var(--surface); background-repeat: no-repeat; border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: 0 8px 28px rgba(12, 24, 16, .18); }
+@media (min-width: 48em) and (max-width: 63.9375em) { .app-zoom-pane { left: calc(100% + var(--space-4)); } }
+.app-more { display: flex; flex-direction: column; scroll-margin-top: calc(var(--header-h) + 1rem); }
+.app-more__body > div { display: flex; flex-direction: column; gap: var(--space-3); }
+.app-more[data-long]:not([data-open]) .app-more__body { max-height: 24rem; overflow: hidden; -webkit-mask-image: linear-gradient(#000 calc(100% - 4.5rem), transparent); mask-image: linear-gradient(#000 calc(100% - 4.5rem), transparent); }
+.app-more__btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.375rem; align-self: center; min-height: 2.75rem; margin-top: 0.25rem; padding: 0 1rem; border: 0; border-radius: var(--radius-pill); background: none; color: var(--primary-hover); font: inherit; font-size: 0.9375rem; font-weight: 600; cursor: pointer; }
+.app-more__btn:hover { background: var(--primary-soft); }
+@media (min-width: 48em) { .app-more[data-long]:not([data-open]) .app-more__body { max-height: 18rem; } }
+.app-more__btn .vx-ico { width: 1.125rem; height: 1.125rem; transform: rotate(90deg); }
+.app-more__btn[aria-expanded="true"] .vx-ico { transform: rotate(-90deg); }
+/* Chữ trang sản phẩm trên máy tính / tablet: design system để 12–14px (khó đọc với khách lớn tuổi) →
+   chữ phụ ≥ 14px, mô tả + thông số 15–16px. Điện thoại đã nâng riêng trong khối DỄ DÙNG ĐIỆN THOẠI. */
+@media (min-width: 48em) {
+  .vx-pdpage .vx-buy__title { font-size: 1.5rem; line-height: 1.3; }
+  .vx-pdpage .vx-buy__brand, .vx-pdpage .vx-buy__meta, .vx-pdpage .vx-promo__head, .vx-pdpage .vx-promo__row, .vx-pdpage .vx-gal__note, .vx-pdpage .vx-note, .vx-pdpage .vx-expert p { font-size: 0.875rem; line-height: 1.45; }
+  .vx-pdpage .vx-opt { font-size: 0.9375rem; }
+  .vx-pdpage .vx-stepper button { width: 2.25rem; height: 2.25rem; font-size: 1.125rem; }
+  .vx-pdpage .vx-lead { font-size: 1rem; line-height: 1.6; }
+  .vx-pdpage .vx-spec-t { font-size: 0.9375rem; line-height: 1.5; }
+  .vx-pdpage .vx-spec-t dd a { font-size: 0.9375rem; }
+  .vx-pdpage .vx-trust div { font-size: 0.8125rem; line-height: 1.35; }
+  .vx-pdpage .vx-trust b { font-size: 0.875rem; }
+  .vx-pdpage .vx-trust small { font-size: 0.8125rem; }
+  .vx-pdpage .vx-crumb, .vx-pdpage .vx-badge, .vx-pdpage .vx-btn--sm, .vx-pdpage .vx-bars, .vx-pdpage .app-fs__el, .vx-pdpage .app-qa__bar small { font-size: 0.875rem; }
+  .vx-pdpage .vx-toc { font-size: 0.9375rem; }
+  .vx-pdpage .vx-article { font-size: 1rem; line-height: 1.65; }
+  .vx-pdpage .vx-article h2 { font-size: 1.375rem; line-height: 1.35; }
+  .vx-pdpage .vx-article h3 { font-size: 1.125rem; line-height: 1.4; }
+  .vx-pdpage .vx-expert b { font-size: 0.9375rem; }
+}
+
 /* >>> DỄ DÙNG ĐIỆN THOẠI */
 /* ===================== Dễ dùng trên điện thoại cho người lớn tuổi (06/10/2026) =====================
  * Chỉ áp cho trang khách (gốc .app-site trong SiteChrome) — không đụng admin / POS / app nhân viên.

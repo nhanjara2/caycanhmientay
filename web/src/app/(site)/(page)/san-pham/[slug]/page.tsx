@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { Breadcrumb, SectionHeader } from '@/components/Blocks';
 import { BuyBox } from '@/components/BuyBox';
 import { Icon } from '@/components/Icon';
-import { ProductGallery } from '@/components/ProductGallery';
+import { GalleryCol, ProductGallery } from '@/components/ProductGallery';
 import { ProductGrid } from '@/components/ProductCard';
 import { ProductQnA } from '@/components/ProductQnA';
 import { ProductReviews } from '@/components/ProductReviews';
@@ -136,7 +136,7 @@ export default async function ProductPage({ params }: Props) {
         ]}
       />
       <section className="vx-pd">
-        <div className="vx-gal">
+        <GalleryCol>
           <ProductGallery p={p} />
           <p className="vx-gal__note">
             {p.ship === 'plant' ? 'Mỗi cây là một cá thể, dáng lá có thể khác đôi chút so với ảnh.' : 'Bao bì có thể thay đổi theo lô sản xuất.'}
@@ -146,7 +146,7 @@ export default async function ProductPage({ params }: Props) {
             <div><Icon name="shield" /><span><b>{p.ship === 'plant' ? 'Bảo hành 7 ngày' : 'Hàng chính hãng'}</b><small>{p.ship === 'plant' ? 'đổi cây nếu héo, bệnh' : 'có hóa đơn'}</small></span></div>
             <div><Icon name="chat" /><span><b>Kỹ sư tư vấn</b><small>miễn phí qua Zalo</small></span></div>
           </div>
-        </div>
+        </GalleryCol>
         <BuyBox product={{ ...p, rating: rs.avg, reviews: rs.count }} category={{ ...label, extra }} wishlisted={wishlisted} />
       </section>
 

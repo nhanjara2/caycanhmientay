@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { isQuote, QUOTE_TEXT, type Product } from '@/lib/catalog';
 import { useCart } from '@/lib/cart';
 import { SALES_PHONE, ZALO_URL } from '@/lib/contact';
@@ -131,6 +131,7 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
         <div className="vx-promo__head"><Icon name="gift" />Tặng 1 gói phân tan chậm 100g khi mua kèm đất trộn</div>
         <div className="vx-promo__row"><Icon name="chat" />Cần tư vấn? <a href={ZALO_URL} target="_blank" rel="noreferrer" className="vx-link">Chat Zalo với kỹ sư</a></div>
       </div>
+      <MoreInfo>
       <p className="vx-lead">{p.lead}</p>
       <dl className="vx-spec-t">
         {p.specs.map(([k, v]) => (
@@ -144,6 +145,43 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
           ))}
         </dd>
       </dl>
+      </MoreInfo>
+    </div>
+  );
+}
+
+/** Mô tả + bảng thông số dài (cây có 15–17 thông số) thì thu gọn, nút "Xem tất cả thông tin" mở ra. */
+function MoreInfo({ children }: { children: ReactNode }) {
+  const box = useRef<HTMLDivElement>(null);
+  const inner = useRef<HTMLDivElement>(null);
+  const [long, setLong] = useState(false);
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    const el = inner.current;
+    if (!el) return;
+    // Thu gọn còn 18rem (điện thoại 24rem); chỉ thu khi dài hơn hẳn (> 30rem) để không giấu đi vài dòng lẻ
+    const check = () => setLong(el.offsetHeight > 30 * parseFloat(getComputedStyle(document.documentElement).fontSize));
+    check();
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const toggle = () => {
+    setOpen((o) => !o);
+    // Thu gọn khi đã cuộn xuống dưới: đưa đầu khối về lại màn hình, khỏi bị hụt mất chỗ đang đọc
+    const el = box.current;
+    if (open && el && el.getBoundingClientRect().top < 0) el.scrollIntoView({ block: 'start' });
+  };
+  return (
+    <div className="app-more" ref={box} data-long={long || undefined} data-open={open || undefined}>
+      <div className="app-more__body" id="thong-tin-sp" onFocusCapture={() => long && setOpen(true)}>
+        <div ref={inner}>{children}</div>
+      </div>
+      {long && (
+        <button type="button" className="app-more__btn" aria-expanded={open} aria-controls="thong-tin-sp" onClick={toggle}>
+          <Icon name="chevron" />{open ? 'Thu gọn' : 'Xem tất cả thông tin'}
+        </button>
+      )}
     </div>
   );
 }
