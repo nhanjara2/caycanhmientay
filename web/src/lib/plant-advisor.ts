@@ -6,7 +6,7 @@
 // kỹ sư chỉnh lại khi khảo sát. Muốn đổi thì sửa trong KINDS bên dưới.
 import { snapOf, type CartSnap } from './cart-snap';
 import type { IconName } from '@/components/Icon';
-import { ELEMENTS, normalize, type ElementKey, type Product } from './catalog';
+import { ELEMENTS, inSub, normalize, type ElementKey, type Product } from './catalog';
 import { SUNS, type ServiceType } from './service-labels';
 
 // ---- Danh sách giá trị (cũng là lựa chọn trong form sản phẩm admin, lưu ở products.attrs) ------------------
@@ -121,7 +121,7 @@ function guessRoles(p: Product, hMax: number | null, outdoor: boolean): RoleKey[
   // "Cỏ nhật" và "Cọ Nhật" bỏ dấu giống nhau: chỉ coi là cỏ khi bán theo m², tấm, cuộn
   if (/^(co|tham co)\b/.test(name) && /m2|m²|tam|cuon/.test(normalize(p.unit))) return ['co'];
   if (p.attrs?.viTri?.includes('treo') || /chau treo|\btreo\b/.test(name)) out.add('treo');
-  if (p.sub === 'cay-de-ban') out.add('de-ban');
+  if (inSub(p, 'cay-de-ban')) out.add('de-ban');
   if (hMax != null) {
     if (hMax <= 45) out.add(outdoor ? 'bon-hoa' : 'de-ban');
     if (hMax <= 60 && (outdoor || p.attrs?.mau?.includes('co-hoa'))) out.add('bon-hoa');
@@ -168,7 +168,7 @@ export function toAdvisorPlant(p: Product): AdvisorPlant {
     if (!light.length) {
       if (outdoor) light = ['nang-gat', 'nang-nhe'];
       else if (a.viTri?.includes('ban-cong')) light = ['nang-nhe', 'sang'];
-      else if (a.viTri?.some((v) => v === 'trong-nha' || v === 'van-phong') || ['cay-trong-nha', 'cay-van-phong', 'cay-de-ban'].includes(p.sub)) light = ['sang'];
+      else if (a.viTri?.some((v) => v === 'trong-nha' || v === 'van-phong') || ['cay-trong-nha', 'cay-van-phong', 'cay-de-ban'].some((s) => inSub(p, s))) light = ['sang'];
     }
   }
   const setRoles = (a.vaiTro ?? []).filter((x): x is RoleKey => advisorKeys.vaiTro.includes(x as RoleKey));

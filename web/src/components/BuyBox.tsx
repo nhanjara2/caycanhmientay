@@ -16,7 +16,8 @@ import { WishlistHeart } from './WishlistHeart';
 export function BuyBox({ product: p, category, wishlisted = false }: {
   product: Product;
   /** Tên danh mục / nhóm con (đọc từ database ở trang). */
-  category: { cat: string; sub?: string };
+  /** `extra` = nhóm con phụ (sản phẩm hiện ở nhiều nhóm). */
+  category: { cat: string; sub?: string; extra?: { slug: string; name: string }[] };
   wishlisted?: boolean;
 }) {
   const { add } = useCart();
@@ -126,6 +127,9 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
         <dt>Danh mục</dt>
         <dd>
           <Link href={`/danh-muc/${p.category}/${p.sub}`} style={{ display: 'inline' }}>{category.sub ?? category.cat}</Link>
+          {category.extra?.map((s) => (
+            <span key={s.slug}>, <Link href={`/danh-muc/${p.category}/${s.slug}`} style={{ display: 'inline' }}>{s.name}</Link></span>
+          ))}
         </dd>
       </dl>
     </div>

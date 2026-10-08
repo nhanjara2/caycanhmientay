@@ -94,6 +94,8 @@ export const products = pgTable('products', {
   name: text('name').notNull(),
   category: text('category').notNull(),
   sub: text('sub').notNull(),
+  /** Nhóm con phụ (cùng danh mục): sản phẩm hiện thêm ở các nhóm này, vd. Kim tiền vừa là cây văn phòng vừa là cây ban công. */
+  extraSubs: jsonb('extra_subs').$type<string[]>().notNull().default(sql`'[]'::jsonb`),
   icon: text('icon').notNull(),
   origin: text('origin').notNull(),
   ship: text('ship', { enum: ['plant', 'supply'] }).notNull(),

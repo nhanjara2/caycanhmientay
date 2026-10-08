@@ -38,6 +38,8 @@ export type Product = {
   name: string;
   category: string;
   sub: string;
+  /** Nhóm con phụ cùng danh mục — sản phẩm hiện ở cả `sub` lẫn các nhóm này. */
+  extraSubs?: string[];
   icon: IconName;
   origin: string;
   ship: ShipGroup;
@@ -96,6 +98,9 @@ export const SYSTEM_CATEGORIES: Record<string, string> = {
   'hat-giong': 'Nhập kho theo số lô + hạn dùng.',
   'chau': 'Danh mục mặc định của loại “Chậu – Vật tư”.',
 };
+
+/** Sản phẩm thuộc nhóm con (nhóm chính hoặc nhóm phụ). */
+export const inSub = (p: Pick<Product, 'sub' | 'extraSubs'>, sub: string) => p.sub === sub || Boolean(p.extraSubs?.includes(sub));
 
 export const findCategory = (list: Category[], slug: string) => list.find((c) => c.slug === slug);
 

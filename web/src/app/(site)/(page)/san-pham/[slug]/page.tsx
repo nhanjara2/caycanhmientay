@@ -118,7 +118,12 @@ export default async function ProductPage({ params }: Props) {
   ]);
   // Số sao ở BuyBox tính từ đánh giá thật (products.rating/reviews là số mẫu, không dùng để hiển thị)
   const rs = reviewStats(reviews);
-  const label = categoryLabel(await getCategories(), p.category, p.sub);
+  const categories = await getCategories();
+  const label = categoryLabel(categories, p.category, p.sub);
+  const extra = (p.extraSubs ?? []).flatMap((s) => {
+    const sub = categories.find((c) => c.slug === p.category)?.subs.find((x) => x.slug === s && x.active);
+    return sub ? [{ slug: sub.slug, name: sub.name }] : [];
+  });
 
   return (
     <div className="vx-pdpage app-page">
@@ -142,7 +147,7 @@ export default async function ProductPage({ params }: Props) {
             <div><Icon name="chat" /><span><b>Kỹ sư tư vấn</b><small>miễn phí qua Zalo</small></span></div>
           </div>
         </div>
-        <BuyBox product={{ ...p, rating: rs.avg, reviews: rs.count }} category={label} wishlisted={wishlisted} />
+        <BuyBox product={{ ...p, rating: rs.avg, reviews: rs.count }} category={{ ...label, extra }} wishlisted={wishlisted} />
       </section>
 
       <Content p={p} faq={faq.length > 0} />

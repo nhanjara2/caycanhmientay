@@ -26,6 +26,7 @@ export const ProductInputSchema = z.object({
   // danh mục / nhóm con có thật + thông số bắt buộc: kiểm tra trong saveProduct (danh mục nằm trong database)
   category: z.string().min(1, 'Chọn danh mục').max(60),
   sub: z.string().min(1, 'Chọn nhóm con').max(60),
+  extraSubs: z.array(z.string().max(60)).max(20).default([]),
   icon: z.enum(PRODUCT_ICONS),
   origin: z.string().trim().min(1, 'Nhập xuất xứ').max(60),
   ship: z.enum(['plant', 'supply']),
@@ -182,8 +183,11 @@ function lotStockError(input: ProductInput, firstNew: number): string | null {
 export async function saveProduct(input: ProductInput, actor: string): Promise<SaveResult> {
   const bad = await checkCategory(input);
   if (bad) return { ok: false, error: bad };
+  // Nhóm phụ: chỉ giữ nhóm con có thật của cùng danh mục, khác nhóm chính
+  const subsOfCat = findCategory(await getCategories(), input.category)?.subs.map((s) => s.slug) ?? [];
+  const extraSubs = [...new Set(input.extraSubs)].filter((s) => s !== input.sub && subsOfCat.includes(s));
   const values = {
-    name: input.name, category: input.category, sub: input.sub, icon: input.icon, origin: input.origin, ship: input.ship,
+    name: input.name, category: input.category, sub: input.sub, extraSubs, icon: input.icon, origin: input.origin, ship: input.ship,
     pesticide: input.pesticide, unit: input.unit, spec: input.spec, lead: input.lead, specs: input.specs, active: input.active,
     youtubeId: input.video, keywords: input.keywords,
     fengshui: input.fengshui,

@@ -1,7 +1,7 @@
 import 'server-only';
 import { connection } from 'next/server';
 import { cache } from 'react';
-import { and, asc, eq, getTableName, inArray, isNotNull, sql } from 'drizzle-orm';
+import { and, asc, eq, getTableName, inArray, isNotNull, or, sql } from 'drizzle-orm';
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import type { IconName } from '@/components/Icon';
 import { isNewProduct, normalize, productImageUrl, type Product } from '@/lib/catalog';
@@ -19,7 +19,7 @@ async function hydrate(rows: Row[]): Promise<Product[]> {
     db.select({ slug: I.productSlug, file: I.file }).from(I).where(inArray(I.productSlug, slugs)).orderBy(asc(I.idx), asc(I.id)),
   ]);
   return rows.map((r) => ({
-    slug: r.slug, sku: r.sku, name: r.name, category: r.category, sub: r.sub, icon: r.icon as IconName,
+    slug: r.slug, sku: r.sku, name: r.name, category: r.category, sub: r.sub, extraSubs: r.extraSubs.length ? r.extraSubs : undefined, icon: r.icon as IconName,
     origin: r.origin, ship: r.ship, pesticide: r.pesticide || undefined, unit: r.unit, spec: r.spec, lead: r.lead,
     specs: r.specs, keywords: r.keywords, rating: r.rating / 10, reviews: r.reviews, sold: r.sold,
     flash: r.flashTotal ? { sold: r.flashSold ?? 0, total: r.flashTotal } : undefined,
@@ -63,7 +63,7 @@ export async function getProducts(slugs: string[]) {
 
 export async function productsIn(category: string, sub?: string) {
   await connection();
-  return hydrate(await db.select().from(P).where(and(active, eq(P.category, category), sub ? eq(P.sub, sub) : undefined)).orderBy(asc(P.createdAt), asc(P.slug)));
+  return hydrate(await db.select().from(P).where(and(active, eq(P.category, category), sub ? or(eq(P.sub, sub), sql`${P.extraSubs} ? ${sub}`) : undefined)).orderBy(asc(P.createdAt), asc(P.slug)));
 }
 
 export async function flashProducts() {
@@ -75,9 +75,9 @@ export async function flashProducts() {
 export async function categoryCounts(): Promise<Record<string, number>> {
   await connection();
   const out: Record<string, number> = {};
-  for (const r of await db.select({ c: P.category, s: P.sub }).from(P).where(active)) {
+  for (const r of await db.select({ c: P.category, s: P.sub, x: P.extraSubs }).from(P).where(active)) {
     out[r.c] = (out[r.c] ?? 0) + 1;
-    out[`${r.c}/${r.s}`] = (out[`${r.c}/${r.s}`] ?? 0) + 1;
+    for (const s of new Set([r.s, ...r.x])) out[`${r.c}/${s}`] = (out[`${r.c}/${s}`] ?? 0) + 1;
   }
   return out;
 }

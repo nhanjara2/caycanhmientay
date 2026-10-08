@@ -1,0 +1,2 @@
+-- Nhóm con phụ của sản phẩm (08/10/2026): một cây hiện ở nhiều nhóm con cùng danh mục (Kim tiền: văn phòng + ban công).
+ALTER TABLE "products" ADD COLUMN "extra_subs" jsonb DEFAULT '[]'::jsonb NOT NULL;

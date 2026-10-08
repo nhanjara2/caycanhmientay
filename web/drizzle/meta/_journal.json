@@ -232,6 +232,20 @@
       "when": 1791424511091,
       "tag": "0032_service_plan",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1791426074744,
+      "tag": "0033_product_extra_subs",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1791426123859,
+      "tag": "0034_cay_canh_catalog",
+      "breakpoints": true
     }
   ]
 }

@@ -39,9 +39,9 @@ export async function getCategory(slug: string) {
 /** Số sản phẩm (kể cả đang ẩn) theo "danh mục" và "danh mục/nhóm con". */
 export async function categoryProductCounts(): Promise<Record<string, number>> {
   const out: Record<string, number> = {};
-  for (const r of await db.select({ c: P.category, s: P.sub, n: count() }).from(P).groupBy(P.category, P.sub)) {
-    out[r.c] = (out[r.c] ?? 0) + r.n;
-    out[`${r.c}/${r.s}`] = r.n;
+  for (const r of await db.select({ c: P.category, s: P.sub, x: P.extraSubs }).from(P)) {
+    out[r.c] = (out[r.c] ?? 0) + 1;
+    for (const s of new Set([r.s, ...r.x])) out[`${r.c}/${s}`] = (out[`${r.c}/${s}`] ?? 0) + 1;
   }
   return out;
 }
@@ -186,6 +186,8 @@ export async function deleteSubcategory(category: string, slug: string, moveTo?:
       if (moveTo === slug || !subs.includes(moveTo)) return { ok: false as const, error: 'Nhóm con nhận sản phẩm không hợp lệ' };
       await tx.update(P).set({ sub: moveTo }).where(and(eq(P.category, category), eq(P.sub, slug)));
     }
+    // Bỏ nhóm bị xóa khỏi danh sách nhóm phụ (và nhóm phụ trùng nhóm chính sau khi chuyển)
+    await tx.update(P).set({ extraSubs: sql`${P.extraSubs} - ${slug}::text - ${P.sub}` }).where(and(eq(P.category, category), sql`${P.extraSubs} ? ${slug}`));
     await tx.delete(S).where(and(eq(S.categorySlug, category), eq(S.slug, slug)));
     return { ok: true as const };
   });

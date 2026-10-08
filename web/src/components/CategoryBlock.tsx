@@ -1,15 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import type { Category, Product } from '@/lib/catalog';
+import { inSub, type Category, type Product } from '@/lib/catalog';
 import { SectionHeader } from './Blocks';
 import { ProductGrid } from './ProductCard';
 
 /** Khối một nhóm hàng lớn trên trang chủ: SectionHeader + chip nhóm con + lưới ProductCard. */
 export function CategoryBlock({ category: c, products }: { category: Category; products: Product[] }) {
-  const subs = c.subs.filter((s) => products.some((p) => p.sub === s.slug));
+  const subs = c.subs.filter((s) => products.some((p) => inSub(p, s.slug)));
   const [sub, setSub] = useState<string | undefined>(undefined);
-  const items = products.filter((p) => !sub || p.sub === sub).slice(0, 8);
+  const items = products.filter((p) => !sub || inSub(p, sub)).slice(0, 8);
   if (!products.length) return null;
 
   return (

@@ -19,6 +19,8 @@ export type ProductFormValue = {
   name: string;
   category: string;
   sub: string;
+  /** Nhóm con phụ cùng danh mục: sản phẩm hiện thêm ở các nhóm này. */
+  extraSubs: string[];
   icon: IconName;
   origin: string;
   ship: 'plant' | 'supply';
@@ -98,7 +100,11 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
   const moveTo = (category: string, sub: string, patch: Partial<ProductFormValue> = {}) => {
     const c = findCat(category);
     const s = pickSub(c, sub);
-    setV((x) => ({ ...x, ...patch, category: c ? category : x.category, sub: c ? s : x.sub, specs: applySpecTemplate(x.specs, specTemplate(c ?? findCat(x.category), c ? s : x.sub)) }));
+    setV((x) => ({
+      ...x, ...patch, category: c ? category : x.category, sub: c ? s : x.sub,
+      extraSubs: c && category !== x.category ? [] : x.extraSubs.filter((e) => e !== (c ? s : x.sub)),
+      specs: applySpecTemplate(x.specs, specTemplate(c ?? findCat(x.category), c ? s : x.sub)),
+    }));
     setSaved(false);
   };
 
@@ -453,6 +459,20 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
                   </select>
                   {canEdit && <span className="hint"><Link href={`/admin/danh-muc/${v.category}`}>Sửa danh mục, nhóm con, bộ thông số</Link></span>}
                 </div>
+                {cat && cat.subs.length > 1 && (
+                  <div className="ad-f">
+                    <label>Hiện thêm ở nhóm</label>
+                    <span className="vx-seg" style={{ flexWrap: 'wrap' }}>
+                      {cat.subs.filter((s) => s.slug !== v.sub).map((s) => (
+                        <button key={s.slug} type="button" className="vx-chip" aria-pressed={v.extraSubs.includes(s.slug)}
+                          onClick={() => set('extraSubs', cat.subs.map((x) => x.slug).filter((k) => (k === s.slug ? !v.extraSubs.includes(k) : v.extraSubs.includes(k))))}>
+                          {s.name}{!s.active ? ' (đang ẩn)' : ''}
+                        </button>
+                      ))}
+                    </span>
+                    <span className="hint">Một cây có thể thuộc nhiều nhóm (vd. Kim tiền: cây văn phòng và cây ban công). Chọn được nhiều.</span>
+                  </div>
+                )}
                 <div className="ad-f">
                   <label>Cách giao</label>
                   <span style={{ fontSize: '0.75rem' }}>{v.ship === 'plant' ? 'Cây sống — đóng khung chống dập, giao toàn quốc' : 'Vật tư — giao nhanh 2h'}</span>
