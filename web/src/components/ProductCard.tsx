@@ -7,6 +7,7 @@ import { ZALO_URL } from '@/lib/contact';
 import { useCart } from '@/lib/cart';
 import { useWishlist } from '@/lib/wishlist';
 import { money } from '@/lib/format';
+import { seoNameOf } from '@/lib/seo-name';
 import { Art } from './Icon';
 import { WishlistHeart } from './WishlistHeart';
 
@@ -21,13 +22,15 @@ export function ProductCard({ product: p, showFlash = false, onRemoveFromWishlis
   const u = p.options[opt];
   const pct = discountPct(u);
   const href = `/san-pham/${p.slug}`;
+  // tên chi tiết (SEO), CSS cắt còn 2 dòng + "…"; rê chuột xem đủ
+  const fullName = seoNameOf(p);
   // Nhãn ngắn, ít quy cách (Chậu men / Chỉ cây) → chip; nhãn dài như "Chậu 20–25cm, cao 50–70cm" hay nhiều quy cách → ô chọn rộng hết thẻ
   const chips = p.options.length <= 3 && p.options.every((o) => o.label.length <= 14);
   return (
     <article className={p.flash ? 'vx-pcard vx-pcard--flash' : 'vx-pcard'}>
       <div className="app-pcard__mediawrap">
-        <Link href={href} className="vx-pcard__media" aria-label={p.name}>
-          {p.images?.[0] ? <img src={p.images[0]} alt={p.name} loading="lazy" /> : <Art name={p.icon} />}
+        <Link href={href} className="vx-pcard__media" aria-label={fullName}>
+          {p.images?.[0] ? <img src={p.images[0]} alt={fullName} loading="lazy" /> : <Art name={p.icon} />}
           {p.isNew && <span className="app-pcard__new">Mới</span>}
         </Link>
         {/* Tim yêu thích góc dưới phải khung ảnh (trên trái là xuất xứ, trên phải -%, dưới trái nhãn Mới). Trang Yêu thích: bỏ tim thì gỡ thẻ khỏi lưới. */}
@@ -43,7 +46,7 @@ export function ProductCard({ product: p, showFlash = false, onRemoveFromWishlis
         {pct > 0 ? <span className="vx-badge vx-badge--sale">-{pct}%</span> : <span />}
       </div>
       <h3 className="vx-pcard__name">
-        <Link href={href} className="app-plain">{p.name}</Link>
+        <Link href={href} className="app-plain" title={fullName}>{fullName}</Link>
       </h3>
       {chips ? (
         <div className="vx-seg app-pcard__chips">
