@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useState, type FormEvent } from 'react';
+import { Suspense, useState, type FormEvent, type ReactNode } from 'react';
 import { useCart } from '@/lib/cart';
 import { AccountMenu } from './AccountMenu';
 import { DeliverToButton } from './DeliverTo';
@@ -42,7 +42,8 @@ function SearchForm({ initial, placeholder }: { initial: string; placeholder: st
   );
 }
 
-export function Header() {
+/** `nav`: thanh danh mục ngang (CategoryNav) — SiteChrome đọc danh mục trên server rồi truyền vào. */
+export function Header({ nav }: { nav?: ReactNode }) {
   const { totals, ready } = useCart();
   const count = ready ? totals.count : 0;
 
@@ -81,6 +82,7 @@ export function Header() {
           </Link>
         ))}
       </nav>
+      {nav}
     </header>
   );
 }
