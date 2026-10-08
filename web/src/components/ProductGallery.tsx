@@ -1,7 +1,9 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
 import type { Product } from '@/lib/catalog';
+import { productImageCredit } from '@/lib/seed-product-images';
 import { Art } from './Icon';
 
 /** Độ phóng khi rê chuột lên ảnh lớn (kính lúp = 1/ZOOM khung phóng to). */
@@ -23,7 +25,8 @@ export function GalleryCol({ children }: { children: ReactNode }) {
   return <div className="vx-gal" ref={ref}>{children}</div>;
 }
 
-/** ProductGallery: ảnh lớn + dải ảnh nhỏ. Chưa có ảnh thật thì hiện biểu tượng.
+/** ProductGallery: ảnh lớn + dải ảnh nhỏ. Chưa có ảnh thật thì hiện biểu tượng. Ảnh minh họa nạp sẵn (Wikimedia Commons)
+ *  thì thay dấu "Ảnh thật" bằng nhãn "Ảnh minh họa" + dòng ghi công tác giả.
  *  Máy có chuột: rê lên ảnh lớn hiện kính lúp, khung phóng to phủ lên cột thông tin bên phải. */
 export function ProductGallery({ p }: { p: Product }) {
   const images = p.images ?? [];
@@ -31,6 +34,7 @@ export function ProductGallery({ p }: { p: Product }) {
   const mainRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const [lens, setLens] = useState<Lens | null>(null);
+  const credit = productImageCredit(images[cur]?.split('/').pop());
 
   const move = (e: MouseEvent) => {
     const box = mainRef.current;
@@ -64,8 +68,12 @@ export function ProductGallery({ p }: { p: Product }) {
         onMouseLeave={() => setLens(null)}
       >
         {images.length ? <img ref={imgRef} src={images[cur]} alt={p.name} /> : <Art name={p.icon} />}
-        <div className="vx-gal__stamp"><span>ẢNH<br />THẬT</span></div>
-        {p.ship === 'plant' && <span className="vx-gal__tag vx-badge vx-badge--origin">Ảnh chụp tại vườn</span>}
+        {credit ? <span className="vx-gal__tag vx-badge">Ảnh minh họa</span> : (
+          <>
+            <div className="vx-gal__stamp"><span>ẢNH<br />THẬT</span></div>
+            {p.ship === 'plant' && <span className="vx-gal__tag vx-badge vx-badge--origin">Ảnh chụp tại vườn</span>}
+          </>
+        )}
         {lens && <span className="app-zoom-lens" style={{ left: lens.x, top: lens.y, width: lens.w, height: lens.h }} aria-hidden />}
       </div>
       {lens && (
@@ -74,6 +82,12 @@ export function ProductGallery({ p }: { p: Product }) {
           style={{ backgroundImage: `url("${images[cur]}")`, backgroundSize: lens.size, backgroundPosition: lens.pos }}
           aria-hidden
         />
+      )}
+      {credit && (
+        <p className="vx-gal__note">
+          Ảnh minh họa từ Wikimedia Commons, không phải ảnh cây của shop — ảnh: {credit.author} · {credit.license}.{' '}
+          <Link href="/chinh-sach/nguon-anh#anh-san-pham">Xem nguồn</Link>
+        </p>
       )}
       {images.length > 1 && (
         <div className="vx-thumbs">

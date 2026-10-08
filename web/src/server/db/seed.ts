@@ -5,6 +5,7 @@ import path from 'node:path';
 import { and, asc, count, eq, inArray, isNull, sql } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { SEED_DISEASE_IMAGES } from '@/lib/seed-disease-images';
+import { SEED_PRODUCT_IMAGES } from '@/lib/seed-product-images';
 import { seedDiseases } from '@/lib/seed-diseases';
 import { readMinutes } from '@/lib/posts';
 import { seedPosts } from '@/lib/seed-posts';
@@ -143,6 +144,40 @@ export async function seedDiseaseImages(db: Db) {
     }
     await tx.insert(schema.appSettings).values({ key: KEY, value: true, updatedBy: 'db-setup' }).onConflictDoNothing({ target: schema.appSettings.key });
     return n;
+  });
+}
+
+/**
+ * Ảnh minh họa cho sản phẩm chưa có ảnh (lib/seed-product-images.ts, file ở seed/san-pham/) — chạy MỘT lần (dấu
+ * `seeded:product-images`), kể cả database đã dùng. Sản phẩm đã có ảnh / đã xóa thì bỏ qua; admin xóa ảnh minh họa để thay
+ * ảnh thật thì không nạp lại. Ảnh vào `idx` 0 (ảnh đại diện). Trả về số ảnh đã gắn.
+ */
+export async function seedProductImages(db: Db) {
+  const KEY = 'seeded:product-images';
+  const dir = path.join(process.cwd(), 'seed', 'san-pham');
+  const missing = SEED_PRODUCT_IMAGES.filter((x) => !fs.existsSync(path.join(dir, x.source)));
+  if (missing.length) {
+    console.warn(`[db] Thiếu ${missing.length} ảnh sản phẩm trong ${dir} — bỏ qua, lần deploy sau thử lại`);
+    return 0;
+  }
+  return db.transaction(async (tx) => {
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${KEY}))`);
+    const [done] = await tx.select({ key: schema.appSettings.key }).from(schema.appSettings).where(eq(schema.appSettings.key, KEY));
+    if (done) return 0;
+    const slugs = SEED_PRODUCT_IMAGES.map((x) => x.product);
+    const exists = new Set((await tx.select({ slug: schema.products.slug }).from(schema.products)
+      .where(inArray(schema.products.slug, slugs)).for('update')).map((r) => r.slug));
+    const hasImage = new Set((await tx.selectDistinct({ slug: schema.productImages.productSlug }).from(schema.productImages)
+      .where(inArray(schema.productImages.productSlug, slugs))).map((r) => r.slug));
+    const todo = SEED_PRODUCT_IMAGES.filter((x) => exists.has(x.product) && !hasImage.has(x.product));
+    // Mỗi ảnh ~150KB → chia nhỏ câu lệnh
+    for (let i = 0; i < todo.length; i += 20) {
+      await tx.insert(schema.productImages).values(todo.slice(i, i + 20).map((x) => ({
+        productSlug: x.product, idx: 0, file: x.file, mime: 'image/jpeg', data: fs.readFileSync(path.join(dir, x.source)),
+      }))).onConflictDoNothing({ target: schema.productImages.file });
+    }
+    await tx.insert(schema.appSettings).values({ key: KEY, value: true, updatedBy: 'db-setup' }).onConflictDoNothing({ target: schema.appSettings.key });
+    return todo.length;
   });
 }
 

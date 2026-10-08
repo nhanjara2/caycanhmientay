@@ -19,13 +19,16 @@ export function ProductCard({ product: p, showFlash = false, onRemoveFromWishlis
   const { add } = useCart();
   const wish = useWishlist();
   const [opt, setOpt] = useState(0);
-  const u = p.options[opt];
+  // Nhãn ngắn, ít quy cách (Chậu men / Chỉ cây) → chip chọn ngay trên thẻ. Nhãn dài hoặc nhiều quy cách → không chọn trên thẻ:
+  // hiện "N quy cách", giá "Từ …" (quy cách rẻ nhất có giá), nút "Chọn quy cách" mở trang sản phẩm
+  const chips = p.options.length <= 3 && p.options.every((o) => o.label.length <= 14);
+  const many = !chips && p.options.length > 1;
+  const cheapest = p.options.reduce((b, o, i) => (!isQuote(o) && (isQuote(p.options[b]) || o.price < p.options[b].price) ? i : b), 0);
+  const u = p.options[many ? cheapest : opt];
   const pct = discountPct(u);
   const href = `/san-pham/${p.slug}`;
   // tên chi tiết (SEO), CSS cắt còn 2 dòng + "…"; rê chuột xem đủ
   const fullName = seoNameOf(p);
-  // Nhãn ngắn, ít quy cách (Chậu men / Chỉ cây) → chip; nhãn dài như "Chậu 20–25cm, cao 50–70cm" hay nhiều quy cách → ô chọn rộng hết thẻ
-  const chips = p.options.length <= 3 && p.options.every((o) => o.label.length <= 14);
   return (
     <article className={p.flash ? 'vx-pcard vx-pcard--flash' : 'vx-pcard'}>
       <div className="app-pcard__mediawrap">
@@ -59,19 +62,10 @@ export function ProductCard({ product: p, showFlash = false, onRemoveFromWishlis
       ) : p.options.length === 1 ? (
         <div className="app-pcard__one">{u.label}</div>
       ) : (
-        <label className="app-pcard__opt">
-          <span className="app-pcard__optn">{p.options.length} quy cách</span>
-          {/* Ô hiện đủ chữ (xuống dòng được); select thật phủ trong suốt lên trên để vẫn là ô chọn gốc của máy */}
-          <span className="app-pcard__optbox">
-            <span aria-hidden>{u.label}</span>
-            <select value={opt} onChange={(e) => setOpt(Number(e.target.value))} aria-label={`Chọn quy cách ${p.name}`}>
-              {p.options.map((o, i) => <option key={o.label} value={i}>{o.label}</option>)}
-            </select>
-          </span>
-        </label>
+        <div className="app-pcard__optn">{p.options.length} quy cách</div>
       )}
       <div className="vx-price">
-        {isQuote(u) ? <span className="app-quote">{QUOTE_TEXT}</span> : <>{money(u.price)} <small>/ {p.unit}</small></>}
+        {isQuote(u) ? <span className="app-quote">{QUOTE_TEXT}</span> : <>{many && <small>Từ </small>}{money(u.price)} <small>/ {p.unit}</small></>}
       </div>
       <div className="vx-strike" style={u.oldPrice ? undefined : { visibility: 'hidden' }}>
         {u.oldPrice ? money(u.oldPrice) : '.'}
@@ -87,7 +81,9 @@ export function ProductCard({ product: p, showFlash = false, onRemoveFromWishlis
         )}
       </div>
       <div className="vx-pcard__foot">
-        {isQuote(u) ? (
+        {many ? (
+          <Link href={href} className="vx-btn vx-btn--primary vx-btn--block">Chọn quy cách</Link>
+        ) : isQuote(u) ? (
           <a href={ZALO_URL} target="_blank" rel="noreferrer" className="vx-btn vx-btn--outline vx-btn--block">Hỏi giá qua Zalo</a>
         ) : (
           <button type="button" className="vx-btn vx-btn--primary vx-btn--block" onClick={() => add(p, opt)}>
