@@ -6,10 +6,11 @@ import { useEffect, useState, useTransition } from 'react';
 import { toggleWishlistAction } from '@/app/actions/wishlist';
 import { saveAfterLogin, takeAfterLogin } from '@/lib/after-login';
 import { useAuth } from '@/lib/auth';
+import { useWishlist } from '@/lib/wishlist';
 import { Icon } from './Icon';
 
 /**
- * Nút tim lưu/bỏ sản phẩm yêu thích — dùng ở BuyBox và trang Yêu thích.
+ * Nút tim lưu/bỏ sản phẩm yêu thích — dùng ở BuyBox và mọi thẻ sản phẩm (ProductCard).
  * Khách chưa đăng nhập bấm thì mở hộp đăng nhập, đăng nhập xong tự lưu (lib/after-login.ts).
  */
 export function WishlistHeart({ slug, active, onChange, className, style, labels }: {
@@ -21,6 +22,7 @@ export function WishlistHeart({ slug, active, onChange, className, style, labels
   const router = useRouter();
   const [on, setOn] = useState(active);
   const [pending, start] = useTransition();
+  const wish = useWishlist();
 
   // Trang tải lại dữ liệu (vd. vừa đăng nhập: sản phẩm đã lưu từ trước) → theo trạng thái mới của server.
   useEffect(() => setOn(active), [active]);
@@ -30,6 +32,7 @@ export function WishlistHeart({ slug, active, onChange, className, style, labels
     const r = await toggleWishlistAction(slug, addOnly || undefined).catch(() => ({ ok: false as const, error: '' }));
     if (!r.ok) return;
     setOn(r.wishlisted);
+    wish.set(slug, r.wishlisted);
     onChange?.(r.wishlisted);
     if (addOnly) router.refresh(); // lần tải lại lúc đăng nhập có thể về sau lượt lưu này — lấy lại trạng thái đúng
   });

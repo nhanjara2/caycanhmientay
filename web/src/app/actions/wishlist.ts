@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import * as z from 'zod';
 import { getCurrentUser } from '@/server/auth';
-import { toggleWishlist } from '@/server/wishlist';
+import { toggleWishlist, wishlistSlugs } from '@/server/wishlist';
 
 /** Lưu / bỏ yêu thích. addOnly: chỉ lưu (lưu tiếp sau khi đăng nhập). */
 export async function toggleWishlistAction(slug: unknown, addOnly?: unknown) {
@@ -14,4 +14,10 @@ export async function toggleWishlistAction(slug: unknown, addOnly?: unknown) {
   const r = await toggleWishlist(user.id, p.data.slug, p.data.addOnly);
   revalidatePath('/tai-khoan/yeu-thich');
   return { ok: true as const, ...r };
+}
+
+/** Đường dẫn các sản phẩm đã lưu của người đang đăng nhập (tim trên thẻ sản phẩm). Chưa đăng nhập → rỗng. */
+export async function wishlistSlugsAction(): Promise<string[]> {
+  const user = await getCurrentUser();
+  return user ? wishlistSlugs(user.id) : [];
 }

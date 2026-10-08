@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { discountPct, isQuote, QUOTE_TEXT, type Product } from '@/lib/catalog';
 import { ZALO_URL } from '@/lib/contact';
 import { useCart } from '@/lib/cart';
+import { useWishlist } from '@/lib/wishlist';
 import { money } from '@/lib/format';
 import { Art } from './Icon';
 import { WishlistHeart } from './WishlistHeart';
@@ -15,6 +16,7 @@ export function ProductCard({ product: p, showFlash = false, onRemoveFromWishlis
   onRemoveFromWishlist?: () => void;
 }) {
   const { add } = useCart();
+  const wish = useWishlist();
   const [opt, setOpt] = useState(0);
   const u = p.options[opt];
   const pct = discountPct(u);
@@ -23,19 +25,19 @@ export function ProductCard({ product: p, showFlash = false, onRemoveFromWishlis
   const chips = p.options.length <= 3 && p.options.every((o) => o.label.length <= 14);
   return (
     <article className={p.flash ? 'vx-pcard vx-pcard--flash' : 'vx-pcard'}>
-      <Link href={href} className="vx-pcard__media" aria-label={p.name}>
-        {p.images?.[0] ? <img src={p.images[0]} alt={p.name} loading="lazy" /> : <Art name={p.icon} />}
-        {p.isNew && <span className="app-pcard__new">Mới</span>}
-      </Link>
-      {onRemoveFromWishlist && (
+      <div className="app-pcard__mediawrap">
+        <Link href={href} className="vx-pcard__media" aria-label={p.name}>
+          {p.images?.[0] ? <img src={p.images[0]} alt={p.name} loading="lazy" /> : <Art name={p.icon} />}
+          {p.isNew && <span className="app-pcard__new">Mới</span>}
+        </Link>
+        {/* Tim yêu thích góc dưới phải khung ảnh (trên trái là xuất xứ, trên phải -%, dưới trái nhãn Mới). Trang Yêu thích: bỏ tim thì gỡ thẻ khỏi lưới. */}
         <WishlistHeart
           slug={p.slug}
-          active
-          onChange={(active) => { if (!active) onRemoveFromWishlist(); }}
-          className="wl-heart"
-          style={{ top: 12, right: 12 }}
+          active={onRemoveFromWishlist ? true : wish.has(p.slug)}
+          onChange={(active) => { if (!active) onRemoveFromWishlist?.(); }}
+          className="wl-heart app-pcard__heart"
         />
-      )}
+      </div>
       <div className="vx-pcard__tags">
         <span className="vx-badge vx-badge--origin">{p.origin}</span>
         {pct > 0 ? <span className="vx-badge vx-badge--sale">-{pct}%</span> : <span />}

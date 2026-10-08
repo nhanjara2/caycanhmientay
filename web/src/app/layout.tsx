@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Be_Vietnam_Pro } from 'next/font/google';
 import { AuthProvider } from '@/lib/auth';
 import { CartProvider } from '@/lib/cart';
+import { WishlistProvider } from '@/lib/wishlist';
 import { DeliverToProvider } from '@/lib/deliver-to';
 import { ShippingProvider } from '@/lib/shipping-client';
 import '@/styles/ds/tokens.css';
@@ -32,7 +33,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AuthProvider>
           <ShippingProvider>
             <DeliverToProvider>
-              <CartProvider>{children}</CartProvider>
+              <CartProvider><WishlistProvider>{children}</WishlistProvider></CartProvider>
             </DeliverToProvider>
           </ShippingProvider>
         </AuthProvider>

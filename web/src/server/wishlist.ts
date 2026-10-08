@@ -19,6 +19,10 @@ export async function toggleWishlist(userId: number, slug: string, addOnly = fal
   return { wishlisted: addOnly || !on };
 }
 
+export async function wishlistSlugs(userId: number) {
+  return (await db.select({ slug: wishlists.productSlug }).from(wishlists).where(eq(wishlists.userId, userId))).map((r) => r.slug);
+}
+
 /** Sản phẩm đã lưu, mới nhất trước; sản phẩm đã ẩn/ngừng bán thì tự bỏ khỏi danh sách (getProducts chỉ lấy hàng đang bán). */
 export async function listWishlist(userId: number) {
   const rows = await db.select({ slug: wishlists.productSlug }).from(wishlists)

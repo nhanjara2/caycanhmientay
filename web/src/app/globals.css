@@ -1330,6 +1330,12 @@ button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .app-quote { font-size: 1.0625rem; font-weight: 700; color: var(--primary-hover); }
 .vx-buy__price .app-quote { font-size: 1.5rem; }
 /* Bộ chọn quy cách trên thẻ sản phẩm (ProductCard): chip cho nhãn ngắn; nhãn dài → 1 dòng chữ (1 quy cách) hoặc ô chọn rộng hết thẻ */
+/* Tim yêu thích trên thẻ sản phẩm: góc dưới phải khung ảnh (khung ảnh vuông = rộng thẻ − 2 lề) */
+.app-pcard__mediawrap { position: relative; }
+.vx-pcard .app-pcard__heart { top: auto; right: 0.5rem; bottom: 0.5rem; width: 2.5rem; height: 2.5rem; color: var(--ink-muted); border: 0; cursor: pointer; }
+.vx-pcard .app-pcard__heart svg { width: 1.125rem; height: 1.125rem; fill: none; }
+.vx-pcard .app-pcard__heart[aria-pressed="true"] { color: var(--sale); }
+.vx-pcard .app-pcard__heart[aria-pressed="true"] svg { fill: currentColor; }
 .vx-pcard .app-pcard__chips { display: flex; flex-wrap: wrap; gap: 0.375rem; min-width: 0; }   /* nhiều chip thì xuống hàng, không tràn khỏi thẻ */
 .vx-pcard .app-pcard__chips .vx-chip { white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .app-pcard__one { font-size: 0.875rem; line-height: 1.35; font-weight: 600; color: var(--primary-hover); background: var(--primary-soft); border-radius: var(--radius-md); padding: 0.375rem 0.625rem; }
