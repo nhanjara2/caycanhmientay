@@ -19,6 +19,8 @@ export function ProductCard({ product: p, showFlash = false, onRemoveFromWishlis
   const u = p.options[opt];
   const pct = discountPct(u);
   const href = `/san-pham/${p.slug}`;
+  // Nhãn ngắn, ít quy cách (Chậu men / Chỉ cây) → chip; nhãn dài như "Chậu 20–25cm, cao 50–70cm" hay nhiều quy cách → ô chọn rộng hết thẻ
+  const chips = p.options.length <= 3 && p.options.every((o) => o.label.length <= 14);
   return (
     <article className={p.flash ? 'vx-pcard vx-pcard--flash' : 'vx-pcard'}>
       <Link href={href} className="vx-pcard__media" aria-label={p.name}>
@@ -41,13 +43,28 @@ export function ProductCard({ product: p, showFlash = false, onRemoveFromWishlis
       <h3 className="vx-pcard__name">
         <Link href={href} className="app-plain">{p.name}</Link>
       </h3>
-      <div className="vx-seg">
-        {p.options.map((o, i) => (
-          <button key={o.label} type="button" className="vx-chip" aria-pressed={i === opt} onClick={() => setOpt(i)}>
-            {o.label}
-          </button>
-        ))}
-      </div>
+      {chips ? (
+        <div className="vx-seg app-pcard__chips">
+          {p.options.map((o, i) => (
+            <button key={o.label} type="button" className="vx-chip" aria-pressed={i === opt} onClick={() => setOpt(i)}>
+              {o.label}
+            </button>
+          ))}
+        </div>
+      ) : p.options.length === 1 ? (
+        <div className="app-pcard__one">{u.label}</div>
+      ) : (
+        <label className="app-pcard__opt">
+          <span className="app-pcard__optn">{p.options.length} quy cách</span>
+          {/* Ô hiện đủ chữ (xuống dòng được); select thật phủ trong suốt lên trên để vẫn là ô chọn gốc của máy */}
+          <span className="app-pcard__optbox">
+            <span aria-hidden>{u.label}</span>
+            <select value={opt} onChange={(e) => setOpt(Number(e.target.value))} aria-label={`Chọn quy cách ${p.name}`}>
+              {p.options.map((o, i) => <option key={o.label} value={i}>{o.label}</option>)}
+            </select>
+          </span>
+        </label>
+      )}
       <div className="vx-price">
         {isQuote(u) ? <span className="app-quote">{QUOTE_TEXT}</span> : <>{money(u.price)} <small>/ {p.unit}</small></>}
       </div>
