@@ -59,7 +59,7 @@ export default async function AdminCustomersPage({ searchParams }: Props) {
                 return (
                   <tr key={c.id}>
                     <td>
-                      <Link href={`/admin/khach-hang/${c.id}`} className="ad-prod" style={{ textDecoration: 'none', color: 'inherit' }}>
+                      <Link href={`/admin/khach-hang/${c.id}`} className="ad-prod app-rowlink" style={{ textDecoration: 'none', color: 'inherit' }}>
                         <span className="vx-avatar vx-avatar--sm">{customerInitials(c.name)}</span>
                         <span>{c.name ?? 'Chưa đặt tên'}<small>{c.phone ?? c.contactPhone ? maskPhone((c.phone ?? c.contactPhone)!) : c.email ?? '—'}</small></span>
                       </Link>
@@ -73,9 +73,9 @@ export default async function AdminCustomersPage({ searchParams }: Props) {
                       {c.company && <small style={{ display: 'block', color: 'var(--ink-muted)' }}>{c.company}</small>}
                     </td>
                     <td data-label="Hạng"><span className="vx-tier" style={tier.gold ? undefined : { background: 'var(--surface-sunken)', color: 'var(--ink-muted)' }}>{tier.label}</span></td>
-                    <td className="num" data-label="Đơn">{c.orderCount}</td>
+                    <td className="num" data-label="Đơn" data-m="third">{c.orderCount}</td>
                     <td className="num" data-label="Chi tiêu"><b>{money(c.spend)}</b></td>
-                    <td className="num" data-label="Điểm">{c.points}</td>
+                    <td className="num" data-label="Điểm" data-m="third">{c.points}</td>
                     <td data-label="Tham gia">{fmtDate(c.createdAt)}</td>
                   </tr>
                 );

@@ -38,11 +38,11 @@ export default async function AdminWarrantyListPage({ searchParams }: Props) {
             <tbody>
               {rows.map((r) => (
                 <tr key={r.w.id}>
-                  <td><Link className="code" href={`/admin/bao-hanh/${r.w.id}`}>{r.code}</Link><small>{fmtDateTime(r.w.createdAt)}</small></td>
-                  <td data-label="Cây" data-wide><span className="ad-prod"><span className="ad-thumb"><Thumb src={r.itemImage} icon={r.itemIcon} /></span><span>{r.itemName}<small>Đơn {r.orderCode} · {r.photos.length} ảnh{r.w.createdBy ? ' · Tạo từ đánh giá' : ''}</small></span></span></td>
-                  <td data-label="Khách">{r.customer ?? 'Khách hàng'}<small>{r.customerPhone ? maskPhone(r.customerPhone) : ''}</small></td>
+                  <td><Link className="code app-rowlink" href={`/admin/bao-hanh/${r.w.id}`}>{r.code}</Link><small>{fmtDateTime(r.w.createdAt)}</small></td>
+                  <td data-label="Cây" data-wide data-m="early nolabel"><span className="ad-prod"><span className="ad-thumb"><Thumb src={r.itemImage} icon={r.itemIcon} /></span><span>{r.itemName}<small>Đơn {r.orderCode} · {r.photos.length} ảnh{r.w.createdBy ? ' · Tạo từ đánh giá' : ''}</small></span></span></td>
+                  <td data-label="Khách" data-m="nolabel">{r.customer ?? 'Khách hàng'}<small>{r.customerPhone ? maskPhone(r.customerPhone) : ''}</small></td>
                   <td data-label="Triệu chứng">{r.w.symptoms.join(', ')}</td>
-                  <td data-label="Trạng thái">
+                  <td data-label="Trạng thái" data-m="aside">
                     <span className={`ad-pill ${PILL[r.w.status]}`}>{WARRANTY_STATUS_LABEL[r.w.status]}</span>
                     {r.w.resolution && <small>{WARRANTY_RESOLUTION_LABEL[r.w.resolution]}</small>}
                   </td>

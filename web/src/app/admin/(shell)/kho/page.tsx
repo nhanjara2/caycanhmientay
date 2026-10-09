@@ -80,12 +80,12 @@ export default async function AdminInventoryPage({ searchParams }: Props) {
                 return (
                   <tr key={`${r.slug}-${r.idx}`}>
                     <td>
-                      <Link href={`/admin/san-pham/${r.slug}`} className="ad-prod" style={{ color: 'inherit' }}>
+                      <Link href={`/admin/san-pham/${r.slug}`} className="ad-prod app-rowlink" style={{ color: 'inherit' }}>
                         <span className="ad-thumb"><Thumb src={r.image} icon={r.icon} /></span>
                         <span>{r.name} · {r.label}<small>{r.sku}-{r.idx + 1}{r.active ? '' : ' · Đang ẩn'}</small></span>
                       </Link>
                     </td>
-                    <td data-label="Loại">{r.pesticide ? 'Thuốc BVTV' : r.ship === 'plant' ? 'Cây sống' : r.category === 'phan-bon' ? 'Phân bón' : 'Vật tư'}</td>
+                    <td data-label="Loại" data-m="note early">{r.pesticide ? 'Thuốc BVTV' : r.ship === 'plant' ? 'Cây sống' : r.category === 'phan-bon' ? 'Phân bón' : 'Vật tư'}</td>
                     <td data-label={store ? `Tồn tại ${store.code}` : 'Tồn'}>
                       <span className="ad-stock">
                         <b>{r.stock}</b>
@@ -93,8 +93,8 @@ export default async function AdminInventoryPage({ searchParams }: Props) {
                       </span>
                     </td>
                     {!store && (
-                      <td data-label="Theo cửa hàng" data-wide style={{ fontSize: '0.75rem', color: 'var(--ink-muted)', whiteSpace: 'nowrap' }}>
-                        {stores.map((s) => <span key={s.id} style={{ marginRight: 8 }}>{s.code} <b style={{ color: 'var(--ink)' }}>{r.byStore[s.id] ?? 0}</b></span>)}
+                      <td data-label="Theo cửa hàng" data-wide data-m="late nolabel" className="app-bystore">
+                        {stores.map((s) => <span key={s.id}>{s.code} <b>{r.byStore[s.id] ?? 0}</b></span>)}
                       </td>
                     )}
                     <td data-label="Hạn gần nhất" style={{ whiteSpace: 'nowrap' }}>
@@ -104,12 +104,12 @@ export default async function AdminInventoryPage({ searchParams }: Props) {
                         </span>
                       ) : <span style={{ color: 'var(--ink-muted)' }}>—</span>}
                     </td>
-                    <td data-label="Tình trạng">
+                    <td data-label="Tình trạng" data-m="aside">
                       {level === 'out' ? <span className="ad-pill cancel">Hết hàng</span>
                         : level === 'low' ? <span className="ad-pill new">Dưới mức</span>
                         : <span className="ad-pill done">Đủ hàng</span>}
                     </td>
-                    <td className="num" data-wide>
+                    <td className="num" data-wide data-m="foot">
                       <StockDialog slug={r.slug} idx={r.idx} name={r.name} label={r.label} stock={all.find((x) => x.slug === r.slug && x.idx === r.idx)?.stock ?? r.stock}
                         lotTracked={tracksLots(r)} stores={storeOpts}
                         lots={(all.find((x) => x.slug === r.slug && x.idx === r.idx)?.lots ?? []).map(({ id, storeId, lotCode, expiry, qty }) => ({ id, storeId, lotCode, expiry, qty }))} />

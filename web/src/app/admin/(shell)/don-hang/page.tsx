@@ -61,9 +61,9 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
                 const first = o.items[0];
                 return (
                   <tr key={o.id}>
-                    <td><Link className="code" href={`/admin/don-hang/${o.code}`}>{o.code}</Link>{o.kind === 'warranty' && <span className="vx-badge vx-badge--info" style={{ marginLeft: 6 }}>Bảo hành 0đ</span>}{o.channel === 'pos' && <span className="vx-badge vx-badge--outline" style={{ marginLeft: 6 }}>Tại cửa hàng</span>}<small>{fmtDateTime(o.createdAt)}</small></td>
-                    <td data-label="Khách hàng">{o.customerName}<small>{maskPhone(o.phone) || 'Không để SĐT'}</small></td>
-                    <td data-label="Sản phẩm" data-wide>
+                    <td><Link className="code app-rowlink" href={`/admin/don-hang/${o.code}`}>{o.code}</Link>{o.kind === 'warranty' && <span className="vx-badge vx-badge--info" style={{ marginLeft: 6 }}>Bảo hành 0đ</span>}{o.channel === 'pos' && <span className="vx-badge vx-badge--outline" style={{ marginLeft: 6 }}>Tại cửa hàng</span>}<small>{fmtDateTime(o.createdAt)}</small></td>
+                    <td data-label="Khách hàng" data-m="nolabel">{o.customerName}<small>{maskPhone(o.phone) || 'Không để SĐT'}</small></td>
+                    <td data-label="Sản phẩm" data-wide data-m="early nolabel">
                       <span className="ad-prod">
                         <span className="ad-thumb"><Thumb src={first.image} icon={first.icon} /></span>
                         <span>
@@ -75,9 +75,9 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
                         </span>
                       </span>
                     </td>
-                    <td className="num" data-label="Tổng tiền"><b>{money(o.total)}</b><small>{PAY_LABEL[o.paymentMethod]} · {o.paid ? 'Đã trả' : 'Chưa trả'}</small></td>
-                    <td data-label="Giao nhận">{o.delivery === 'ship' ? 'Giao tận nơi' : 'Nhận tại vườn'}{o.slot && <small>{o.slot}</small>}</td>
-                    <td data-label="Trạng thái"><OrderPill status={o.status} /></td>
+                    <td className="num" data-label="Tổng tiền" data-m="nolabel right"><b>{money(o.total)}</b><small>{PAY_LABEL[o.paymentMethod]} · {o.paid ? 'Đã trả' : 'Chưa trả'}</small></td>
+                    <td data-label="Giao nhận" data-m="note">{o.delivery === 'ship' ? 'Giao tận nơi' : 'Nhận tại vườn'}{o.slot && <small>{o.slot}</small>}</td>
+                    <td data-label="Trạng thái" data-m="aside"><OrderPill status={o.status} /></td>
                   </tr>
                 );
               })}

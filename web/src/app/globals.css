@@ -388,6 +388,10 @@ a.vx-chip[aria-current="true"] { background: var(--primary-soft); border-color: 
 .app-seoname { display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; }
 .app-seoname > textarea { flex: 1 1 260px; min-width: 0; min-height: 3.5rem; resize: vertical; }
 .app-seoname > button { flex: none; }
+/* Kho: tồn theo từng cửa hàng trong một ô */
+.app-bystore { font-size: 0.75rem; color: var(--ink-muted); white-space: nowrap; }
+.app-bystore > span { margin-right: 8px; }
+.app-bystore b { color: var(--ink); }
 
 @media (max-width: 63.9375em) {
   .app-admin { grid-template-columns: minmax(0, 1fr); }
@@ -425,16 +429,45 @@ a.vx-chip[aria-current="true"] { background: var(--primary-soft); border-color: 
   .app-admin-logout .vx-ico { display: block; width: 20px; height: 20px; }
   .app-admin-logout > span { display: none; }
 
-  /* Bảng danh sách -> thẻ */
+  /* Bảng danh sách -> thẻ (09/10/2026: flex thay grid để có "ô cạnh tiêu đề" và "hàng cuối").
+     Mỗi dòng là một thẻ, các thẻ cách nhau dải nền trang 8px. Ô đầu (hoặc ô data-m="title") là tiêu đề;
+     ô còn lại 2 cột, nhãn lấy từ data-label. Gắn thêm trên <td> (nhiều từ cách nhau dấu cách):
+       data-m="aside"   — nằm cùng hàng tiêu đề, sát phải (ô trạng thái)
+       data-m="early"   — xếp ngay dưới tiêu đề;  data-m="late" — xếp sau các ô thường (trước hàng cuối)
+       data-m="third"   — rộng 1/3 (số ngắn: tồn, đã bán…);  data-wide — chiếm cả hàng
+       data-m="nolabel" — bỏ nhãn (nội dung tự hiểu: tên khách, ảnh sản phẩm, số tiền…);  data-m="right" — canh phải
+       data-m="note"    — dòng chữ phụ cả hàng, không nhãn
+       data-m="foot"    — hàng cuối thẻ, không nhãn (công tắc, nút); "foot end" đẩy sát phải
+     Link tiêu đề có class app-rowlink → bấm chỗ nào trên thẻ cũng mở (nút/công tắc trong thẻ vẫn bấm riêng được). */
   .app-mtable thead { display: none; }
-  .app-mtable, .app-mtable tbody { display: block; width: 100%; }
-  .app-mtable tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-flow: row dense; gap: 10px var(--space-3); padding: var(--space-3); border-bottom: 1px solid var(--border); }
-  .app-mtable td, .app-mtable td.num { display: block; min-width: 0; padding: 0; border: 0; text-align: left; }
+  .app-mtable, .app-mtable tbody, .app-mtable tfoot { display: block; width: 100%; }
+  .app-mtable tr { position: relative; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 0 14px; padding: 4px var(--space-3) 14px; border-bottom: 8px solid var(--surface-page); }
+  .app-mtable tbody tr:last-child, .app-mtable tfoot tr { border-bottom: 0; }
+  .app-mtable tfoot tr { border-top: 1px solid var(--border); background: var(--surface-sunken); }
+  .app-mtable td, .app-mtable td.num { display: block; flex: 1 1 calc(50% - 14px); min-width: 0; margin-top: 10px; padding: 0; border: 0; text-align: left; white-space: normal; order: 3; }
   .app-mtable td:nth-child(n) { width: auto; } /* bỏ độ rộng % của cột bảng (.ad-vtable) */
-  .app-mtable td:first-child, .app-mtable td[data-wide], .app-mtable td[colspan] { grid-column: 1 / -1; }
-  .app-mtable td[data-label]::before { content: attr(data-label); display: block; margin-bottom: 2px; font-size: 0.6875rem; line-height: 0.9375rem; font-weight: 400; color: var(--ink-muted); }
+  .app-mtable :is(td:first-child, td[data-m~="title"]) { order: 0; flex: 1 1 0; }
+  /* Ngắt hàng sau tiêu đề (+ ô aside): ô thường không được leo lên cạnh tiêu đề. Khoảng cách hàng dùng margin-top của ô
+     (không dùng row-gap: hàng ngắt cao 0 vẫn bị cộng thêm một khoảng). */
+  .app-mtable tr::after { content: ""; order: 1; flex: 1 1 100%; height: 0; }
+  .app-mtable td[data-m~="aside"] { order: 1; flex: 0 1 auto; max-width: 48%; margin-left: auto; text-align: right; }
+  .app-mtable td[data-m~="early"] { order: 2; }
+  .app-mtable td[data-m~="late"] { order: 4; }
+  .app-mtable td[data-m~="third"] { flex-basis: calc(33.333% - 14px); }
+  .app-mtable td[data-wide], .app-mtable td[colspan], .app-mtable td[data-m~="note"] { flex-basis: 100%; }
+  .app-mtable td[data-m~="right"] { text-align: right; }
+  .app-mtable td[data-m~="note"] { color: var(--ink-muted); font-size: 0.875rem; }
+  .app-mtable td[data-m~="note"] small { display: inline; margin-left: 4px; }
+  .app-mtable td[data-m~="note"] small::before { content: "· "; }
+  .app-mtable td[data-m~="foot"] { order: 5; flex: 1 1 60%; display: flex; flex-wrap: wrap; align-items: center; align-self: center; gap: 8px; }
+  .app-mtable td[data-m~="end"] { flex: none; margin-left: auto; justify-content: flex-end; }
+  .app-mtable td:is([data-m~="foot"], [data-m~="aside"], [data-m~="nolabel"], [data-m~="note"])::before { display: none !important; }
+  .app-mtable td[data-label]::before { content: attr(data-label); display: block; margin-bottom: 2px; font-size: 0.8125rem; line-height: 1.25; font-weight: 500; color: var(--ink-muted); }
   .app-mtable td:empty { display: none; }
   .app-mtable tr:hover td { background: none; }
+  .app-mtable a.app-rowlink::after { content: ""; position: absolute; inset: 0; }
+  .app-mtable tr:has(.app-rowlink) :is(a:not(.app-rowlink), button, input, label, select, .app-select, [role="switch"]) { position: relative; z-index: 1; }
+  .app-mtable tr:has(.app-rowlink):active { background: var(--surface-sunken); }
   /* Ảnh nhỏ luôn nằm cạnh tên (responsive.css cho .ad-prod xuống dòng nên ảnh bị đẩy lên trên tên dài) */
   .ad-prod { flex-wrap: nowrap; }
   .ad-prod > span:last-child { min-width: 0; }
@@ -457,8 +490,145 @@ a.vx-chip[aria-current="true"] { background: var(--primary-soft); border-color: 
   .ad-mini { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .ad-kpis.k5 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .ad-grid3 { grid-template-columns: minmax(0, 1fr); } /* thẻ có thanh tỉ lệ (.ad-bars) cần đủ bề ngang */
-  .ao-steps span { padding: 8px 6px; font-size: 0.6875rem; line-height: 0.875rem; }
+  .ao-steps span { padding: 8px 4px; font-size: 0.8125rem; line-height: 1.2; justify-content: center; text-align: center; }
   .ad .app-modal .vx-modal { max-height: calc(100dvh - 32px); }
+}
+
+/* >>> ADMIN ĐIỆN THOẠI DỄ NHÌN (09/10/2026) — chỉ < 768px, mọi luật có tiền tố .app-admin (không đụng web khách / POS).
+ * Design system viết admin cho máy tính: chữ nền 13px, chữ phụ 10–12px → trên điện thoại quá nhỏ.
+ * Quy ước: chữ nền 15px, chữ phụ / nhãn ≥ 13px, nút cao ≥ 40px. Thẻ danh sách: xem "Bảng danh sách -> thẻ" ở trên.
+ */
+@media (max-width: 47.9375em) {
+  .app-admin { font-size: 0.9375rem; line-height: 1.4; }
+  .app-admin .ad-body { padding: var(--space-3) 12px var(--space-4); gap: 14px; }
+  .app-admin .ad-body .ad-sticky[style] { margin-left: -12px !important; margin-right: -12px !important; } /* form ghi margin -16px theo lề cũ */
+  .app-admin .ad-sticky .note { font-size: 0.8125rem; line-height: 1.3; }
+
+  /* Trình soạn bài viết: thanh công cụ, nút chèn khối, ô kiểm tra trước khi đăng */
+  .app-admin .ad-tools { gap: 4px; }
+  .app-admin .ad-tools :is(button, span) { font-size: 0.875rem; min-width: 2.5rem; min-height: 2.5rem; }
+  .app-admin .pe-add :is(button, span) { font-size: 0.875rem; }
+  .app-admin .pe-add button { min-height: 2.5rem; }
+  .app-admin .ad-check { font-size: 0.875rem; gap: 8px; }
+  .app-admin .ad-check .vx-ico { width: 16px; height: 16px; flex: none; }
+
+  /* Tiêu đề trang: chữ to; nút hành động thành một hàng chia đều, không còn dạt phải để lại khoảng trống bên trái */
+  .app-admin .ad-title { gap: 10px; }
+  .app-admin .ad-title h1 { font-size: 1.375rem; line-height: 1.3; }
+  .app-admin .ad-title .acts { margin-left: 0; flex: 1 1 100%; flex-wrap: wrap; }
+  .app-admin .ad-title .acts > .vx-btn { flex: 1 1 auto; justify-content: center; }
+  .app-admin .ad-title h1 + .acts:not(:has(> :nth-child(2))) { flex: 0 1 auto; margin-left: auto; } /* chỉ 1 nút: giữ cạnh tiêu đề */
+
+  /* Nút, chip, ô nhập */
+  .app-admin .vx-btn { font-size: 0.9375rem; min-height: 2.75rem; padding: 8px 14px; }
+  .app-admin .vx-btn--sm { font-size: 0.875rem; min-height: 2.5rem; padding: 6px 12px; }
+  .app-admin .ad-top .vx-btn { min-height: 2.5rem; }
+  .app-admin .vx-chip { font-size: 0.875rem; min-height: 2.5rem; padding: 8px 14px; }
+  .app-admin .ad-filters { gap: 10px; padding: 12px; }
+  .app-admin .ad-filters .vx-sfind__search { padding: 9px 12px; }
+  .app-admin .ad-f label, .app-admin .vx-fl > label { font-size: 0.875rem; }
+  .app-admin .ad-f .hint, .app-admin .vx-help, .app-admin .ad-card__b > .hint { font-size: 0.8125rem; line-height: 1.4; }
+  .app-admin .vx-crumb { font-size: 0.875rem; }
+
+  /* Tab trạng thái: chữ to, vùng chạm cao; bóng mờ hai mép báo còn kéo ngang được (nền "local" chạy theo nội dung che bóng khi đã tới mép) */
+  .app-admin .ad-stabs {
+    padding: 0 4px; scrollbar-width: none; scroll-padding-inline: 32px;
+    background:
+      linear-gradient(to right, var(--surface) 40%, rgba(255, 255, 255, 0)) left center / 28px 100% no-repeat local,
+      linear-gradient(to left, var(--surface) 40%, rgba(255, 255, 255, 0)) right center / 28px 100% no-repeat local,
+      radial-gradient(farthest-side at 0 50%, rgba(15, 74, 36, .22), transparent) left center / 14px 100% no-repeat scroll,
+      radial-gradient(farthest-side at 100% 50%, rgba(15, 74, 36, .22), transparent) right center / 14px 100% no-repeat scroll,
+      var(--surface);
+  }
+  .app-admin .ad-stabs::-webkit-scrollbar, .app-admin .ad-filters .vx-seg::-webkit-scrollbar { display: none; }
+  /* Chip lọc trong khung lọc (vd. cửa hàng ở trang Kho): một hàng kéo ngang (chip cuối bị mép màn hình cắt = còn kéo được)
+     thay vì 4–5 hàng chồng nhau */
+  .app-admin .ad-filters .vx-seg { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -12px; padding: 0 12px; gap: 8px; }
+  .app-admin .ad-filters .vx-seg .vx-chip { flex: none; }
+  .app-admin .ad-stabs a { font-size: 0.9375rem; padding: 13px 12px; min-height: 2.875rem; }
+  .app-admin .ad-stabs a em { font-size: 0.8125rem; padding: 1px 7px; }
+
+  /* Ô chỉ số: gọn hơn (2 ô một hàng chiếm ít chiều cao), chữ phụ ≥ 13px */
+  .app-admin .ad-kpis { gap: 10px; }
+  .app-admin .ad-kpi { padding: 12px; gap: 2px; }
+  .app-admin .ad-kpi span { font-size: 0.8125rem; line-height: 1.3; flex-wrap: nowrap; align-items: flex-start; }
+  .app-admin .ad-kpi span .vx-ico { flex: none; margin-top: 1px; }
+  .app-admin .ad-kpi b { font-size: 1.375rem; line-height: 1.3; }
+  .app-admin .ad-kpi small { font-size: 0.8125rem; line-height: 1.35; }
+
+  /* Khung thẻ */
+  .app-admin .ad-card__h { font-size: 1rem; padding: 12px; }
+  .app-admin .ad-card__h a, .app-admin .ad-card__h span { font-size: 0.875rem; }
+  .app-admin .ad-card__b { padding: 12px; }
+  .app-admin .ad-pager { font-size: 0.875rem; padding: 12px; }
+  .app-admin .ad-kv { font-size: 0.9375rem; grid-template-columns: 104px minmax(0, 1fr); gap: 8px 10px; }
+  .app-admin .ad-task { font-size: 0.9375rem; padding: 10px 0; }
+  .app-admin .ad-task a { font-size: 0.875rem; padding: 6px 0; }
+  .app-admin .ad-task .n { font-size: 0.8125rem; }
+  .app-admin .ad-legend, .app-admin .ad-legend2 { font-size: 0.8125rem; flex-wrap: wrap; }
+  .app-admin .ad-chart div { font-size: 0.75rem; }
+  .app-admin .ad-bars div { font-size: 0.875rem; }
+
+  /* Bảng / thẻ danh sách: chữ 15px, chữ phụ 13px, tiêu đề thẻ đậm hơn, ảnh nhỏ to hơn */
+  .app-admin .ad-table { font-size: 0.9375rem; }
+  .app-admin .ad-table small, .app-admin .ad-prod > span > small { font-size: 0.8125rem; line-height: 1.35; margin-top: 1px; }
+  .app-admin .ad-flag { font-size: 0.8125rem; }
+  .app-admin .ad-flag .vx-ico { width: 15px; height: 15px; }
+  .app-admin .ad-pill { font-size: 0.8125rem; padding: 3px 10px; }
+  .app-admin .ad-pill::before { width: 7px; height: 7px; }
+  .app-admin .vx-badge { font-size: 0.8125rem; }
+  .app-admin .app-mtable :is(td:first-child:not([data-m~="aside"]), td[data-m~="title"]) { font-size: 1rem; line-height: 1.35; }
+  .app-admin .app-mtable :is(td:first-child, td[data-m~="title"]) .code { font-size: 1.0625rem; }
+  .app-admin .app-mtable :is(td:first-child, td[data-m~="title"]) .ad-prod > span > b { font-weight: 700; }
+  .app-admin .app-mtable .ad-thumb { width: 52px; height: 52px; border-radius: 10px; }
+  .app-admin .app-mtable td[data-m~="aside"] .ad-pill { margin-top: 1px; }
+  .app-admin .app-mtable td.num b { font-size: 1rem; }
+  .app-admin .app-bystore { font-size: 0.9375rem; white-space: normal; display: flex; flex-wrap: wrap; gap: 4px 6px; }
+  .app-admin .app-bystore::before { flex-basis: 100%; }
+  .app-admin .app-bystore > span { margin: 0; padding: 2px 8px; border-radius: var(--radius-pill); background: var(--surface-sunken); }
+
+  .app-admin .app-catsubs > span { font-size: 0.875rem; line-height: 1.5rem; padding: 1px 10px; }
+  .app-admin .app-mtoggle small { font-size: 0.875rem; }
+
+  /* Mẫu tin nhắn: danh sách mẫu + nhãn kênh + biến chèn */
+  .app-admin .mt-list h4 { font-size: 0.8125rem; padding: 10px 12px; }
+  .app-admin .mt-list a { font-size: 0.9375rem; padding: 12px; min-height: 2.875rem; gap: 8px; }
+  .app-admin .mt-list a small { font-size: 0.75rem; padding: 1px 6px; flex: none; }
+  .app-admin .mt-vars span { font-size: 0.8125rem; padding: 4px 8px; }
+  .app-admin .mt-edit { scroll-margin-top: 72px; }
+  .app-admin .mt-edit textarea.mt-body { font-size: 1rem; line-height: 1.5; }
+
+  /* Tiến trình đơn (chi tiết đơn) */
+  .app-admin .ao-steps span { min-height: 3rem; }
+
+  /* Bảng Phân quyền (ma trận) và bảng còn cuộn ngang: cột đầu đứng yên khi kéo, bóng mờ mép phải báo còn cột */
+  .app-admin .ad-matrix { font-size: 0.875rem; }
+  .app-admin .ad-matrix th { font-size: 0.8125rem; padding: 10px 8px; }
+  .app-admin .ad-matrix td { padding: 10px 8px; }
+  .app-admin .ad-matrix :is(td, th):first-child { position: sticky; left: 0; z-index: 1; min-width: 7.5rem; max-width: 8.5rem; background: var(--surface); box-shadow: 1px 0 0 var(--border); }
+  .app-admin .ad-matrix th:first-child { background: var(--surface-sunken); }
+  .app-admin .ad-matrix .ad-perm { width: 28px; height: 28px; font-size: 0.875rem; }
+  .app-admin .ad-tablewrap:has(> .ad-table:not(.app-mtable)) {
+    background:
+      linear-gradient(to left, var(--surface) 40%, rgba(255, 255, 255, 0)) right center / 28px 100% no-repeat local,
+      radial-gradient(farthest-side at 100% 50%, rgba(15, 74, 36, .22), transparent) right center / 14px 100% no-repeat scroll;
+  }
+
+  /* Bảng kéo thả (Giao hàng, Yêu cầu báo giá sỉ): mỗi cột gần hết màn hình, vuốt là sang đúng cột kế */
+  .app-admin .ad-board.app-dboard { grid-template-columns: none !important; grid-auto-flow: column; grid-auto-columns: 84vw; scroll-snap-type: x mandatory; padding-bottom: 6px; }
+  .app-admin .app-dboard > .ad-col { scroll-snap-align: start; }
+  .app-admin .kb.app-kb { grid-template-columns: repeat(var(--kb-cols, 5), 84vw); }
+  .app-admin :is(.ad-col__h, .kb-col__h) { font-size: 1rem; }
+  .app-admin :is(.ad-col__h, .kb-col__h, .ad-trip .t) small { font-size: 0.8125rem; }
+  .app-admin .app-kb-empty { font-size: 0.875rem; }
+  .app-admin .app-dboard__assign, .app-admin .app-dboard__form .vx-input { font-size: 1rem; padding: 10px; }
+  .app-admin .app-dboard__stopacts .vx-btn { min-height: 2.25rem; padding: 0 10px; }
+
+  /* Menu trái (bảng trượt): chữ nhóm và số đếm dễ đọc */
+  .app-admin .ad-group { font-size: 0.75rem; }
+  .app-admin .ad-side a { font-size: 0.9375rem; }
+  .app-admin .ad-side a em { font-size: 0.8125rem; line-height: 1.25rem; padding: 0 8px; }
+  .app-admin .ad-store small { font-size: 0.75rem; }
 }
 
 /* Quà tài khoản mới ở trang thanh toán (VoucherInput): thẻ .vx-voucher có nút "Dùng" thay cho ô chép 24px */

@@ -58,17 +58,17 @@ export default async function AdminProductsPage({ searchParams }: Props) {
                 return (
                   <tr key={r.slug}>
                     <td>
-                      <Link href={`/admin/san-pham/${r.slug}`} className="ad-prod" style={{ color: 'inherit' }}>
+                      <Link href={`/admin/san-pham/${r.slug}`} className="ad-prod app-rowlink" style={{ color: 'inherit' }}>
                         <span className="ad-thumb"><Thumb src={r.image} icon={r.icon} /></span>
                         <span><b>{r.name}</b><small>{r.sku} · {r.variants} quy cách{r.pesticide ? ' · Thuốc BVTV' : ''}</small></span>
                       </Link>
                     </td>
-                    <td data-label="Danh mục">{label.cat}<small>{label.sub}</small></td>
-                    <td className="num" data-label="Giá từ">{r.minPrice ? <>{money(r.minPrice)}<small>/ {r.unit}</small></> : 'Liên hệ'}</td>
-                    <td className="num" data-label="Tồn">{(r.stock ?? 0) < MIN_STOCK ? <b style={{ color: 'var(--sale)' }}>{r.stock ?? 0}</b> : r.stock}</td>
-                    <td className="num" data-label="Đã bán">{r.sold}</td>
-                    <td data-label="Trạng thái">{isAdmin ? <ProductActiveToggle slug={r.slug} active={r.active} /> : <span className={`ad-pill ${r.active ? 'done' : 'wait'}`}>{r.active ? 'Đang bán' : 'Ẩn'}</span>}</td>
-                    {isAdmin && <td data-label="Thao tác"><ProductDeleteButton slug={r.slug} name={r.name} /></td>}
+                    <td data-label="Danh mục" data-m="note early">{label.cat}<small>{label.sub}</small></td>
+                    <td className="num" data-label="Giá từ" data-m="third">{r.minPrice ? <>{money(r.minPrice)}<small>/ {r.unit}</small></> : 'Liên hệ'}</td>
+                    <td className="num" data-label="Tồn" data-m="third">{(r.stock ?? 0) < MIN_STOCK ? <b style={{ color: 'var(--sale)' }}>{r.stock ?? 0}</b> : r.stock}</td>
+                    <td className="num" data-label="Đã bán" data-m="third">{r.sold}</td>
+                    <td data-label="Trạng thái" data-m="foot">{isAdmin ? <ProductActiveToggle slug={r.slug} active={r.active} /> : <span className={`ad-pill ${r.active ? 'done' : 'wait'}`}>{r.active ? 'Đang bán' : 'Ẩn'}</span>}</td>
+                    {isAdmin && <td data-label="Thao tác" data-m="foot end"><ProductDeleteButton slug={r.slug} name={r.name} /></td>}
                   </tr>
                 );
               })}

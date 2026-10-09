@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Avatar } from '@/components/Avatar';
 import { Icon } from '@/components/Icon';
@@ -95,6 +95,17 @@ export function AdminShell({ children, me, badges = {} }: { children: ReactNode;
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [menu]);
+
+  // Thanh tab trạng thái cuộn ngang trên điện thoại: đưa tab đang chọn vào giữa (tab cuối như "Đã hủy" không bị khuất)
+  const search = useSearchParams().toString();
+  useEffect(() => {
+    for (const tabs of document.querySelectorAll<HTMLElement>('.ad-stabs')) {
+      const cur = tabs.querySelector<HTMLElement>('[aria-current="true"]');
+      if (!cur || tabs.scrollWidth <= tabs.clientWidth) continue;
+      const left = cur.getBoundingClientRect().left - tabs.getBoundingClientRect().left + tabs.scrollLeft;
+      tabs.scrollLeft = left - (tabs.clientWidth - cur.offsetWidth) / 2;
+    }
+  }, [pathname, search]);
 
   return (
     <div className="ad app-admin" data-menu={menu ? 'open' : undefined}>

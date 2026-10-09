@@ -44,7 +44,7 @@ export default async function AdminCategoriesPage() {
                 return (
                   <tr key={c.slug}>
                     <td>
-                      <Link href={`/admin/danh-muc/${c.slug}`} className="ad-prod" style={{ color: 'inherit' }}>
+                      <Link href={`/admin/danh-muc/${c.slug}`} className="ad-prod app-rowlink" style={{ color: 'inherit' }}>
                         <span className="ad-thumb" style={{ color: 'var(--primary)' }}><Icon name={c.icon} /></span>
                         <span>
                           <b>{c.name}</b>
@@ -52,23 +52,23 @@ export default async function AdminCategoriesPage() {
                         </span>
                       </Link>
                     </td>
-                    <td data-label="Nhóm con">
+                    <td data-label="Nhóm con" data-wide data-m="late">
                       {c.subs.length
                         ? <span className="app-catsubs">{c.subs.map((s) => <span key={s.slug} data-off={!s.active || undefined}>{s.name}</span>)}</span>
                         : <span style={{ color: 'var(--danger)' }}>Chưa có nhóm con</span>}
                     </td>
-                    <td data-label="Bộ thông số">
+                    <td data-label="Bộ thông số" data-m="third">
                       {c.specs.length ? `${c.specs.length} thông số` : 'Chưa có'}
                       {required > 0 && <small>{required} bắt buộc</small>}
                     </td>
-                    <td className="num" data-label="Sản phẩm">
+                    <td className="num" data-label="Sản phẩm" data-m="third">
                       {counts[c.slug] ? <Link href={`/admin/san-pham?danh_muc=${c.slug}`}>{counts[c.slug]}</Link> : 0}
                     </td>
-                    <td data-label="Trên menu">
+                    <td data-label="Trên menu" data-m="third">
                       {isAdmin ? <MenuToggle category={c.slug} active={c.active} /> : <span className={`ad-pill ${c.active ? 'done' : 'wait'}`}>{c.active ? 'Đang hiện' : 'Ẩn'}</span>}
                     </td>
-                    {isAdmin && <td data-label="Thứ tự"><MoveButtons category={c.slug} first={i === 0} last={i === cats.length - 1} /></td>}
-                    <td data-label="Thao tác"><Link href={`/admin/danh-muc/${c.slug}`} className="vx-btn vx-btn--outline vx-btn--sm">{isAdmin ? 'Sửa' : 'Xem'}</Link></td>
+                    {isAdmin && <td data-label="Thứ tự" data-m="foot"><MoveButtons category={c.slug} first={i === 0} last={i === cats.length - 1} /></td>}
+                    <td data-label="Thao tác" data-m="foot end"><Link href={`/admin/danh-muc/${c.slug}`} className="vx-btn vx-btn--outline vx-btn--sm">{isAdmin ? 'Sửa' : 'Xem'}</Link></td>
                   </tr>
                 );
               })}

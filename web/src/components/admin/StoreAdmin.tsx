@@ -162,12 +162,12 @@ export function StoreAdmin({ stores }: { stores: StoreRow[] }) {
               {stores.map((s) => (
                 <tr key={s.id}>
                   <td><b>{s.name}</b><small>{s.code}{s.isDefault ? ' · Mặc định' : ''}{s.kind === 'partner' ? ' · Đối tác' : ''}</small></td>
-                  <td data-label="Địa chỉ" data-wide>{s.address}</td>
+                  <td data-label="Địa chỉ" data-wide data-m="note early">{s.address}</td>
                   <td data-label="Tọa độ">{s.lat.toFixed(4)}, {s.lng.toFixed(4)}</td>
                   <td className="num" data-label="Tồn kho">{s.kind === 'partner' ? '—' : s.stock.toLocaleString('vi-VN')}</td>
-                  <td data-label="Trạng thái">{s.kind === 'partner' ? <span className="ad-pill new">Đối tác</span> : <span className={`ad-pill ${s.active ? 'done' : 'wait'}`}>{s.active ? 'Hoạt động' : 'Ngừng'}</span>}</td>
+                  <td data-label="Trạng thái" data-m="aside">{s.kind === 'partner' ? <span className="ad-pill new">Đối tác</span> : <span className={`ad-pill ${s.active ? 'done' : 'wait'}`}>{s.active ? 'Hoạt động' : 'Ngừng'}</span>}</td>
                   <td data-label="Hiện trên web"><span className={`ad-pill ${s.isPublic ? 'done' : 'wait'}`}>{s.isPublic ? 'Hiện' : 'Ẩn'}</span></td>
-                  <td data-label="Thao tác">
+                  <td data-label="Thao tác" data-m="foot">
                     <span style={{ display: 'flex', gap: 8 }}>
                       <button type="button" className="vx-btn vx-btn--outline vx-btn--sm" onClick={() => { setForm(toForm(s)); setError(''); setListError(''); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Sửa</button>
                       {!s.isDefault && <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" style={{ color: 'var(--danger)' }} disabled={pending} onClick={() => remove(s)}>Xóa</button>}

@@ -42,7 +42,7 @@ export default async function AdminProjectsPage() {
               {rows.map((p) => (
                 <tr key={p.id}>
                   <td>
-                    <Link href={`/admin/du-an/${p.id}`} style={{ color: 'inherit', display: 'flex', gap: 10, alignItems: 'center' }}>
+                    <Link href={`/admin/du-an/${p.id}`} className="app-rowlink" style={{ color: 'inherit', display: 'flex', gap: 10, alignItems: 'center' }}>
                       {p.images[0]
                         ? <img src={projectImageUrl(p.images[0].file)} alt="" width={64} height={48} style={{ width: 64, height: 48, objectFit: 'cover', borderRadius: 6, flex: 'none' }} />
                         : <span style={{ width: 64, height: 48, borderRadius: 6, border: '1px dashed var(--border)', flex: 'none', display: 'grid', placeItems: 'center', fontSize: '0.6875rem', color: 'var(--ink-muted)' }}>Chưa ảnh</span>}
@@ -52,9 +52,9 @@ export default async function AdminProjectsPage() {
                   <td data-label="Loại công trình">{projectTypeOf(p.type).name}</td>
                   <td data-label="Khách hàng">{p.client || <span style={{ color: 'var(--ink-muted)' }}>Không ghi tên</span>}</td>
                   <td data-label="Địa điểm">{p.location || '—'}</td>
-                  <td className="num" data-label="Năm">{p.year ?? '—'}</td>
-                  <td className="num" data-label="Ảnh">{p.images.length}</td>
-                  <td data-label="Trên web">
+                  <td className="num" data-label="Năm" data-m="third">{p.year ?? '—'}</td>
+                  <td className="num" data-label="Ảnh" data-m="third">{p.images.length}</td>
+                  <td data-label="Trên web" data-m="foot">
                     {canEdit
                       ? <ProjectPublishToggle id={p.id} published={p.published} />
                       : <span className={`ad-pill ${p.published ? 'done' : 'wait'}`}>{p.published ? 'Đang hiện' : 'Ẩn'}</span>}

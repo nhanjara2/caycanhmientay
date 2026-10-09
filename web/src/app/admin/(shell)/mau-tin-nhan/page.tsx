@@ -60,7 +60,7 @@ export default async function AdminMessageTemplatesPage({ searchParams }: Props)
                     <td data-label="Kênh">{r.channel === 'zalo' ? 'Zalo' : 'Email'}</td>
                     <td data-label="Gửi tới">{r.channel === 'zalo' ? maskPhone(r.to) : r.to}</td>
                     <td data-label="Nội dung" data-wide>{r.body.length > 90 ? `${r.body.slice(0, 90)}…` : r.body}</td>
-                    <td data-label="Kết quả"><span className={`ad-pill ${STATUS[r.status].pill}`}>{STATUS[r.status].label}</span>{r.error && <small>{r.error}</small>}</td>
+                    <td data-label="Kết quả" data-m="aside"><span className={`ad-pill ${STATUS[r.status].pill}`}>{STATUS[r.status].label}</span>{r.error && <small>{r.error}</small>}</td>
                   </tr>
                 ))}
                 {!rows.length && <tr><td colSpan={5} style={{ color: 'var(--ink-muted)' }}>Chưa có tin nào gửi ra ngoài (Zalo / email).</td></tr>}

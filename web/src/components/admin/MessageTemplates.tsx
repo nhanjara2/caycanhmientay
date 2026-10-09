@@ -20,6 +20,12 @@ export function MessageTemplates({ templates, zaloReady, emailReady }: { templat
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, start] = useTransition();
   const area = useRef<HTMLTextAreaElement>(null);
+  const editor = useRef<HTMLDivElement>(null);
+  // Điện thoại: danh sách mẫu nằm trên khung sửa → chọn mẫu xong cuộn xuống khung sửa luôn
+  const pick = (k: string) => {
+    setKey(k); setMsg(null);
+    if (window.matchMedia('(max-width: 47.9375em)').matches) requestAnimationFrame(() => editor.current?.scrollIntoView({ block: 'start', behavior: 'smooth' }));
+  };
   const set = (p: Partial<typeof v>) => { setEdits((e) => ({ ...e, [cur.def.key]: { ...v, ...p } })); setMsg(null); };
   const dirty = v.text !== cur.text || v.inApp !== cur.inApp || v.external !== cur.external;
 
@@ -52,7 +58,7 @@ export function MessageTemplates({ templates, zaloReady, emailReady }: { templat
             <h4>{g.toUpperCase()}</h4>
             {templates.filter((t) => t.def.group === g).map((t) => (
               <a key={t.def.key} role="button" tabIndex={0} aria-current={t.def.key === cur.def.key ? 'true' : undefined} style={{ cursor: 'pointer' }}
-                onClick={() => { setKey(t.def.key); setMsg(null); }} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setKey(t.def.key); setMsg(null); } }}>
+                onClick={() => pick(t.def.key)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(t.def.key); } }}>
                 {t.def.title}
                 <small className={(edits[t.def.key]?.external ?? t.external) ? 'z' : 'e'}>{(edits[t.def.key]?.external ?? t.external) ? 'ZALO' : 'CHUÔNG'}</small>
               </a>
@@ -61,7 +67,7 @@ export function MessageTemplates({ templates, zaloReady, emailReady }: { templat
         ))}
       </div>
 
-      <div className="mt-edit">
+      <div className="mt-edit" ref={editor}>
         <div className="vx-label-row">
           <b style={{ fontSize: '0.9375rem' }}>{cur.def.title}</b>
           <span className={`vx-badge ${cur.custom ? 'vx-badge--success' : 'vx-badge--outline'}`}>{cur.custom ? 'Đã chỉnh sửa' : 'Mặc định'}</span>

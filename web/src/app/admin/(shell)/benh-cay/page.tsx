@@ -52,13 +52,13 @@ export default async function AdminDiseasesPage({ searchParams }: Props) {
             <tbody>
               {rows.map((d) => (
                 <tr key={d.slug}>
-                  <td><Link href={`/admin/benh-cay/${d.slug}`} style={{ color: 'inherit' }}><b>{d.name}</b><small>/benh-cay/{d.slug}</small></Link></td>
+                  <td><Link href={`/admin/benh-cay/${d.slug}`} className="app-rowlink" style={{ color: 'inherit' }}><b>{d.name}</b><small>/benh-cay/{d.slug}</small></Link></td>
                   <td data-label="Nguyên nhân">{causeOf(d.cause)?.name}</td>
                   <td data-label="Bộ phận">{d.parts.map(partName).join(', ')}</td>
-                  <td data-label="Mức nguy hiểm">{SEVERITY[d.severity]}</td>
-                  <td className="num" data-label="Sản phẩm">{d.products.length}</td>
-                  <td data-label="Cập nhật">{d.updatedAt.toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}</td>
-                  <td data-label="Trạng thái">{isAdmin ? <DiseaseActiveToggle slug={d.slug} active={d.active} /> : <span className={`ad-pill ${d.active ? 'done' : 'wait'}`}>{d.active ? 'Đang hiện' : 'Ẩn'}</span>}</td>
+                  <td data-label="Mức nguy hiểm" data-m="third">{SEVERITY[d.severity]}</td>
+                  <td className="num" data-label="Sản phẩm" data-m="third">{d.products.length}</td>
+                  <td data-label="Cập nhật" data-m="third">{d.updatedAt.toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}</td>
+                  <td data-label="Trạng thái" data-m="foot">{isAdmin ? <DiseaseActiveToggle slug={d.slug} active={d.active} /> : <span className={`ad-pill ${d.active ? 'done' : 'wait'}`}>{d.active ? 'Đang hiện' : 'Ẩn'}</span>}</td>
                 </tr>
               ))}
               {!rows.length && <tr><td colSpan={7} style={{ textAlign: 'center', padding: 32, color: 'var(--ink-muted)' }}>Không có bài bệnh.</td></tr>}

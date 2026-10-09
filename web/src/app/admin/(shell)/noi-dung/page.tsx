@@ -84,7 +84,7 @@ export default async function AdminPostsPage({ searchParams }: Props) {
                 return (
                   <tr key={p.id}>
                     <td>
-                      <Link href={`/admin/noi-dung/${p.id}`} className="ad-prod" style={{ color: 'inherit' }}>
+                      <Link href={`/admin/noi-dung/${p.id}`} className="ad-prod app-rowlink" style={{ color: 'inherit' }}>
                         <span className="ad-thumb"><Thumb src={p.thumb} icon={categoryOf(p.category)?.icon ?? 'leaf'} /></span>
                         <span>
                           <b>{p.kind === 'video' && <span className="vx-badge vx-badge--sale" style={{ marginRight: 6 }}>VIDEO</span>}{p.title}</b>
@@ -92,11 +92,11 @@ export default async function AdminPostsPage({ searchParams }: Props) {
                         </span>
                       </Link>
                     </td>
-                    <td data-label="Chuyên mục">{categoryOf(p.category)?.name ?? p.category}<small style={{ display: 'block', color: 'var(--ink-muted)' }}>{SECTIONS[sectionOf(p.category)].name}</small></td>
+                    <td data-label="Chuyên mục" data-m="note early">{categoryOf(p.category)?.name ?? p.category}<small style={{ display: 'block', color: 'var(--ink-muted)' }}>{SECTIONS[sectionOf(p.category)].name}</small></td>
                     <td data-label="Tác giả">{p.authorName || 'Cây Cảnh Miền Tây'}{p.reviewerName && <small style={{ display: 'block', color: 'var(--ink-muted)' }}>KD: {p.reviewerName}</small>}</td>
-                    <td data-label="Trạng thái"><span className={`ad-pill ${s.pill}`}>{s.label}</span></td>
-                    <td className="num" data-label="Lượt xem">{p.views.toLocaleString('vi-VN')}</td>
-                    <td className="num" data-label="Hữu ích">{p.helpfulYes + p.helpfulNo ? `${p.helpfulYes}/${p.helpfulYes + p.helpfulNo}` : '—'}</td>
+                    <td data-label="Trạng thái" data-m="aside"><span className={`ad-pill ${s.pill}`}>{s.label}</span></td>
+                    <td className="num" data-label="Lượt xem" data-m="third">{p.views.toLocaleString('vi-VN')}</td>
+                    <td className="num" data-label="Hữu ích" data-m="third">{p.helpfulYes + p.helpfulNo ? `${p.helpfulYes}/${p.helpfulYes + p.helpfulNo}` : '—'}</td>
                     <td data-label="Ngày đăng">{date(p.publishedAt)}<small style={{ display: 'block', color: 'var(--ink-muted)' }}>Sửa {date(p.updatedAt)}</small></td>
                   </tr>
                 );

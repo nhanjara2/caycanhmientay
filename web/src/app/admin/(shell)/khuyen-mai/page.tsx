@@ -34,7 +34,7 @@ export default async function AdminVouchersPage() {
                 return (
                   <tr key={v.id}>
                     <td>
-                      {isAdmin ? <Link className="code" href={`/admin/khuyen-mai/${v.id}`}>{v.code}</Link> : <b className="code">{v.code}</b>}
+                      {isAdmin ? <Link className="code app-rowlink" href={`/admin/khuyen-mai/${v.id}`}>{v.code}</Link> : <b className="code">{v.code}</b>}
                       <small>{v.label}</small>
                       {v.code === WELCOME_CODE && <small><span className="vx-badge vx-badge--info">Quà tài khoản mới</span> tự tặng khi đăng nhập lần đầu, dùng trong {WELCOME_DAYS} ngày</small>}
                     </td>
@@ -45,7 +45,7 @@ export default async function AdminVouchersPage() {
                     </td>
                     <td className="num" data-label="Đã dùng">{used}{v.usageLimit ? ` / ${v.usageLimit}` : ''}</td>
                     <td className="num" data-label="Doanh thu">{money(revenue)}</td>
-                    <td data-label="Trạng thái">
+                    <td data-label="Trạng thái" data-m="foot">
                       {isAdmin
                         ? <VoucherActiveToggle id={v.id} active={v.active} />
                         : <span className={`ad-pill ${STATUS_PILL[status]}`}>{VOUCHER_STATUS_LABEL[status]}</span>}

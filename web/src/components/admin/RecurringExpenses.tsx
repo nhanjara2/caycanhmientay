@@ -130,8 +130,8 @@ export function RecurringExpenses({ rows, categories, stores, month }: { rows: R
                 <td className="num" data-label="Số tiền / tháng"><b>{money(r.amount)}</b></td>
                 <td data-label="Ngày ghi">Ngày {r.day} hằng tháng</td>
                 <td data-label="Thời gian">{monthText(r.startMonth)} → {r.endMonth ? monthText(r.endMonth) : 'không kết thúc'}{r.generatedThrough && <small>Đã ghi đến {monthText(r.generatedThrough)}</small>}</td>
-                <td data-label="Trạng thái"><span className={`ad-pill ${r.active ? 'done' : 'wait'}`}>{r.active ? 'Đang chạy' : 'Tạm dừng'}</span></td>
-                <td data-label="Thao tác"><button type="button" className="vx-btn vx-btn--outline vx-btn--sm" onClick={() => open(toForm(r))}>Sửa</button></td>
+                <td data-label="Trạng thái" data-m="aside"><span className={`ad-pill ${r.active ? 'done' : 'wait'}`}>{r.active ? 'Đang chạy' : 'Tạm dừng'}</span></td>
+                <td data-label="Thao tác" data-m="foot"><button type="button" className="vx-btn vx-btn--outline vx-btn--sm" onClick={() => open(toForm(r))}>Sửa</button></td>
               </tr>
             ))}
             {!rows.length && <tr><td colSpan={7} style={{ color: 'var(--ink-muted)' }}>Chưa có khoản định kỳ nào. Thêm tiền thuê mặt bằng, lương nhân viên… để hệ thống tự ghi vào sổ mỗi tháng.</td></tr>}

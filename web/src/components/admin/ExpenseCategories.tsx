@@ -49,8 +49,8 @@ export function ExpenseCategories({ rows }: { rows: ExpenseCategoryRow[] }) {
                   ) : <b>{c.name}</b>}
                 </td>
                 <td className="num" data-label="Số khoản">{c.used}</td>
-                <td data-label="Trạng thái"><span className={`ad-pill ${c.active ? 'done' : 'wait'}`}>{c.active ? 'Đang dùng' : 'Đã ẩn'}</span></td>
-                <td data-label="Thao tác" style={{ whiteSpace: 'nowrap' }}>
+                <td data-label="Trạng thái" data-m="aside"><span className={`ad-pill ${c.active ? 'done' : 'wait'}`}>{c.active ? 'Đang dùng' : 'Đã ẩn'}</span></td>
+                <td data-label="Thao tác" data-m="foot" style={{ whiteSpace: 'nowrap' }}>
                   <button type="button" className="vx-btn vx-btn--outline vx-btn--sm" disabled={pending} onClick={() => setEdit({ slug: c.slug, name: c.name })}>Đổi tên</button>{' '}
                   {c.slug !== FALLBACK_EXPENSE_CATEGORY && (
                     <>

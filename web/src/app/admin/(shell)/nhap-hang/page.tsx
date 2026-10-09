@@ -81,12 +81,12 @@ export default async function AdminPurchasingPage() {
               <tbody>
                 {receipts.map((r) => (
                   <tr key={r.id}>
-                    <td><Link href={`/admin/nhap-hang/phieu/${r.code}`} style={link}>{r.code}</Link><small>{r.source === 'excel' ? 'Excel' : 'Nhập tay'}</small></td>
+                    <td><Link href={`/admin/nhap-hang/phieu/${r.code}`} className="app-rowlink" style={link}>{r.code}</Link><small>{r.source === 'excel' ? 'Excel' : 'Nhập tay'}</small></td>
                     <td data-label="Thời gian">{when(r.createdAt)}</td>
                     <td data-label="Nhà cung cấp">{r.supplier ?? '—'}</td>
                     <td data-label="Chứng từ">{r.docNo ?? '—'}</td>
-                    <td className="num" data-label="Dòng">{r.lines}</td>
-                    <td className="num" data-label="Số lượng">{r.units.toLocaleString('vi-VN')}</td>
+                    <td className="num" data-label="Dòng" data-m="third">{r.lines}</td>
+                    <td className="num" data-label="Số lượng" data-m="third">{r.units.toLocaleString('vi-VN')}</td>
                     <td className="num" data-label="Tiền hàng">{r.costed ? money(r.total) : '—'}{r.costed > 0 && r.costed < r.lines && <small>{r.lines - r.costed} dòng chưa ghi giá</small>}</td>
                     <td data-label="Người nhập">{r.actor}</td>
                   </tr>

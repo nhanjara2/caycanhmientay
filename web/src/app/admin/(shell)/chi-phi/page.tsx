@@ -134,8 +134,8 @@ export default async function AdminExpensesPage({ searchParams }: Props) {
             <tbody>
               {list.rows.map((e) => (
                 <tr key={e.id}>
-                  <td data-label="Ngày" style={{ whiteSpace: 'nowrap' }}>{fmtYmd(e.spentOn)}</td>
-                  <td>
+                  <td data-label="Ngày" data-m="aside" style={{ whiteSpace: 'nowrap' }}>{fmtYmd(e.spentOn)}</td>
+                  <td data-m="title">
                     {e.note || e.category}
                     <small>
                       {e.supplier}
@@ -146,7 +146,7 @@ export default async function AdminExpensesPage({ searchParams }: Props) {
                   <td data-label="Cửa hàng">{e.store ?? 'Chi chung'}</td>
                   <td className="num" data-label="Số tiền"><b>{money(e.amount)}</b></td>
                   <td data-label="Người ghi">{e.recurringId ? 'Tự động' : e.actor}{e.recurringId ? <small>Chi định kỳ</small> : null}</td>
-                  <td data-label="Thao tác">
+                  <td data-label="Thao tác" data-m="foot end">
                     <ExpenseDialog label="Sửa" categories={catOpts} stores={storeOpts} today={today}
                       initial={{ id: e.id, spentOn: e.spentOn, category: e.categorySlug, amount: e.amount, storeId: e.storeId, supplier: e.supplier ?? '', note: e.note ?? '', photo: e.photo }} />
                   </td>
