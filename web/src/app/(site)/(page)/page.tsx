@@ -38,6 +38,7 @@ const QUICK = [
 const fromBanner = (b: Banner): Slide => ({
   key: `b${b.id}`, title: b.title, subtitle: b.subtitle || undefined, cta: b.cta || undefined, href: b.href || undefined,
   showText: b.showText, image: bannerImageUrl(b.image), imageMobile: b.imageMobile ? bannerImageUrl(b.imageMobile) : null,
+  bg: b.bgImage || b.bgColor ? { image: b.bgImage ? bannerImageUrl(b.bgImage) : undefined, color: b.bgColor ?? undefined } : undefined,
 });
 
 const withImage = (list: Product[]) => list.filter((p) => p.images?.length);

@@ -5,7 +5,7 @@ export const BANNER_SLOTS = [
   {
     key: 'hero', name: 'Ảnh lớn đầu trang', max: 8,
     size: '1600 × 800 px (tỉ lệ 2:1)', ratio: 2,
-    hint: 'Chạy vòng tự động, mỗi ảnh 6 giây. Ảnh sự kiện, mùa cây, chương trình giảm giá…',
+    hint: 'Chạy vòng tự động, mỗi ảnh 6 giây. Ảnh sự kiện, mùa cây, chương trình giảm giá… Mỗi ảnh có thể kèm nền riêng phủ kín phía sau — qua ảnh mới thì nền đổi theo.',
   },
   {
     key: 'side', name: 'Ảnh nhỏ cạnh ảnh lớn', max: 2,
@@ -15,7 +15,7 @@ export const BANNER_SLOTS = [
   {
     key: 'backdrop', name: 'Ảnh nền sự kiện', max: 4,
     size: '1920 × 900 px', ratio: 2.13,
-    hint: 'Phủ kín bề ngang phía sau khung ảnh lớn — đổi theo mùa / sự kiện (Tết, Trung thu, mùa mưa…). Chỉ hiện 1 ảnh: ảnh đang bật xếp trên cùng.',
+    hint: 'Nền chung phủ kín bề ngang phía sau khung ảnh lớn — đổi theo mùa / sự kiện (Tết, Trung thu, mùa mưa…), dùng cho ảnh lớn chưa có nền riêng. Chỉ hiện 1 ảnh: ảnh đang bật xếp trên cùng.',
   },
   {
     key: 'event', name: 'Dải sự kiện giữa trang', max: 6,
@@ -40,12 +40,16 @@ export type Banner = {
   image: string;
   /** Ảnh riêng cho điện thoại (tỉ lệ 4:3), không có thì cắt ảnh chính. */
   imageMobile: string | null;
+  /** Nền riêng phía sau (chỉ ảnh lớn đầu trang): ảnh và / hoặc màu #rrggbb. */
+  bgImage: string | null;
+  bgColor: string | null;
   startsAt: Date | null;
   endsAt: Date | null;
   active: boolean;
   sort: number;
 };
 
+export const BG_COLOR = /^#[0-9a-f]{6}$/i;
 export const BANNER_IMAGE_FILE = /^[a-f0-9]{32}\.(jpg|png|webp)$/;
 export const bannerImageUrl = (file: string) => `/api/banner-images/${file}`;
 

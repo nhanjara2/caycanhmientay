@@ -22,6 +22,8 @@ export type Slide = {
   tone?: 'green' | 'sale' | 'sun';
   /** Ảnh đặt trong khung không cắt (ảnh sản phẩm vuông) thay vì phủ kín. */
   contain?: string[];
+  /** Nền riêng phủ kín phía sau khung đầu trang khi ảnh này đang hiện. */
+  bg?: { image?: string; color?: string };
 };
 
 /** Ảnh + chữ (nếu có) của một banner; cả ô là link khi có `href`. */
@@ -143,27 +145,40 @@ export function HomeCarousel({ slides, label, className = '', onIndex }: {
 }
 
 /**
- * Khung đầu trang chủ: nền phủ kín bề ngang (ảnh nền sự kiện chủ shop tải lên, chưa có thì ảnh đang chạy làm mờ),
- * băng ảnh lớn + tối đa 2 ảnh nhỏ bên phải.
+ * Khung đầu trang chủ: nền phủ kín bề ngang + băng ảnh lớn + tối đa 2 ảnh nhỏ bên phải.
+ * Mỗi ảnh lớn một lớp nền (nền riêng chủ shop tải; không có thì nền sự kiện chung; chưa có nữa thì chính ảnh đó làm mờ) —
+ * qua ảnh mới thì lớp nền của nó hiện dần lên, cả khoảng trên trang đổi theo (kiểu Long Châu).
  */
 export function HomeHero({ slides, sides, backdrop }: { slides: Slide[]; sides: Slide[]; backdrop: { image: string; imageMobile: string | null } | null }) {
   const [i, setI] = useState(0);
-  const blur = slides[i]?.contain?.[0] ?? slides[i]?.image;
+  // Chỉ tải ảnh nền của ảnh đang hiện, ảnh kế tiếp và ảnh đã xem (khỏi tải hết 8 ảnh nền ngay khi vào trang).
+  const [seen, setSeen] = useState(() => new Set([0, 1]));
+  const onIndex = useCallback((k: number) => {
+    setI(k);
+    setSeen((s) => (s.has(k) && s.has(k + 1) ? s : new Set([...s, k, k + 1])));
+  }, []);
   const style = { '--hm-sides': sides.length } as CSSProperties;
   return (
     <div className="hm-hero__stage" data-sides={sides.length || undefined} style={style}>
-      <div className={backdrop ? 'hm-hero__bg hm-hero__bg--event' : 'hm-hero__bg'} aria-hidden="true">
-        {backdrop ? (
+      <div className="hm-hero__bg" aria-hidden="true">
+        {backdrop && (
           <picture>
             {backdrop.imageMobile && <source media="(max-width: 47.9375em)" srcSet={backdrop.imageMobile} />}
             <img src={backdrop.image} alt="" />
           </picture>
-        ) : (
-          blur && <img key={blur} src={blur} alt="" className="hm-hero__blur" />
         )}
+        {slides.map((s, k) => {
+          const blur = !s.bg && !backdrop ? s.contain?.[0] ?? s.image : null;
+          if (!s.bg && !blur) return null;
+          return (
+            <div key={s.key} className={blur ? 'hm-hero__layer hm-hero__layer--blur' : 'hm-hero__layer'} data-on={k === i || undefined} style={s.bg?.color ? { backgroundColor: s.bg.color } : undefined}>
+              {seen.has(k) && (s.bg?.image ?? blur) && <img src={s.bg?.image ?? blur!} alt="" className={blur ? 'hm-hero__blur' : undefined} />}
+            </div>
+          );
+        })}
       </div>
       <div className="hm-hero__grid">
-        <HomeCarousel slides={slides} label="Sự kiện & ưu đãi nổi bật" className="hm-car--hero" onIndex={setI} />
+        <HomeCarousel slides={slides} label="Sự kiện & ưu đãi nổi bật" className="hm-car--hero" onIndex={onIndex} />
         {sides.length > 0 && (
           <div className="hm-sides">
             {sides.map((s) => <div key={s.key} className={s.showText ? 'hm-side hm-side--text' : 'hm-side'}><SlideBody s={s} /></div>)}

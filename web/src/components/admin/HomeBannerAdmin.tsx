@@ -27,11 +27,11 @@ function statusOf(b: Pick<Banner, 'active' | 'startsAt' | 'endsAt'>, now = new D
 
 type Draft = {
   id?: number; slot: BannerSlot; title: string; subtitle: string; cta: string; href: string; showText: boolean;
-  image: string | null; imageMobile: string | null; startsAt: string; endsAt: string; active: boolean;
+  image: string | null; imageMobile: string | null; bgImage: string | null; bgColor: string | null; startsAt: string; endsAt: string; active: boolean;
 };
 
 const blank = (slot: BannerSlot): Draft => ({
-  slot, title: '', subtitle: '', cta: '', href: '', showText: false, image: null, imageMobile: null, startsAt: '', endsAt: '', active: true,
+  slot, title: '', subtitle: '', cta: '', href: '', showText: false, image: null, imageMobile: null, bgImage: null, bgColor: null, startsAt: '', endsAt: '', active: true,
 });
 
 /** Xem trước đúng khung trên trang chủ (dùng chung CSS + component với trang khách). */
@@ -45,9 +45,17 @@ function Preview({ d, mobile }: { d: Draft; mobile?: boolean }) {
     key: 'prev', title: d.title || 'Tiêu đề banner', subtitle: d.subtitle || undefined, cta: d.cta || undefined, showText: d.showText, image: bannerImageUrl(img),
   };
   if (d.slot === 'side') return <div className="hm-side ad-bnr-prev ad-bnr-prev--side"><SlideBody s={s} /></div>;
-  return (
+  const car = (
     <div className={`hm-car ${d.slot === 'event' ? 'hm-car--band' : 'hm-car--hero'} ad-bnr-prev`}>
       <div className="hm-car__track" style={mobile ? { aspectRatio: '4 / 3' } : undefined}><div className="hm-slide"><SlideBody s={s} /></div></div>
+    </div>
+  );
+  // Ảnh lớn có nền riêng: xem trước ảnh đặt trên nền đó như trang chủ.
+  if (d.slot !== 'hero' || mobile || (!d.bgImage && !d.bgColor)) return car;
+  return (
+    <div className="ad-bnr-stage" style={{ backgroundColor: d.bgColor ?? undefined }}>
+      {d.bgImage && <img src={bannerImageUrl(d.bgImage)} alt="" />}
+      {car}
     </div>
   );
 }
@@ -60,13 +68,14 @@ function Editor({ initial, onClose }: { initial: Draft; onClose: () => void }) {
   const [pending, start] = useTransition();
   const main = useRef<HTMLInputElement>(null);
   const mob = useRef<HTMLInputElement>(null);
+  const bg = useRef<HTMLInputElement>(null);
   const slot = slotOf(d.slot);
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setD((x) => ({ ...x, [k]: v }));
 
-  const upload = async (f: File | undefined, key: 'image' | 'imageMobile') => {
+  const upload = async (f: File | undefined, key: 'image' | 'imageMobile' | 'bgImage') => {
     if (!f) return;
     setError('');
-    setBusy(key === 'image' ? 'Đang tải ảnh…' : 'Đang tải ảnh điện thoại…');
+    setBusy({ image: 'Đang tải ảnh…', imageMobile: 'Đang tải ảnh điện thoại…', bgImage: 'Đang tải ảnh nền…' }[key]);
     try {
       const fd = new FormData();
       fd.set('photo', await compressImage(f, 1920));
@@ -78,6 +87,7 @@ function Editor({ initial, onClose }: { initial: Draft; onClose: () => void }) {
     setBusy('');
     if (main.current) main.current.value = '';
     if (mob.current) mob.current.value = '';
+    if (bg.current) bg.current.value = '';
   };
 
   const submit = (e: FormEvent) => {
@@ -85,7 +95,7 @@ function Editor({ initial, onClose }: { initial: Draft; onClose: () => void }) {
     if (!d.image) { setError('Chọn ảnh banner'); return; }
     setError('');
     start(async () => {
-      const r = await saveBannerAction({ ...d, startsAt: d.startsAt || null, endsAt: d.endsAt || null })
+      const r = await saveBannerAction({ ...d, ...(d.slot !== 'hero' && { bgImage: null, bgColor: null }), startsAt: d.startsAt || null, endsAt: d.endsAt || null })
         .catch(() => ({ ok: false as const, error: 'Có lỗi, vui lòng thử lại' }));
       if (!r.ok) { setError(r.error); return; }
       router.refresh();
@@ -121,6 +131,7 @@ function Editor({ initial, onClose }: { initial: Draft; onClose: () => void }) {
 
           <input ref={main} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(e) => void upload(e.target.files?.[0], 'image')} />
           <input ref={mob} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(e) => void upload(e.target.files?.[0], 'imageMobile')} />
+          <input ref={bg} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(e) => void upload(e.target.files?.[0], 'bgImage')} />
           {d.image ? (
             <div className="ad-bnr-imgs">
               <Preview d={d} />
@@ -145,6 +156,28 @@ function Editor({ initial, onClose }: { initial: Draft; onClose: () => void }) {
               <b>{busy || '+ Chọn ảnh banner'}</b>
               {!busy && <small>{slot.size} · JPG, PNG, WebP</small>}
             </button>
+          )}
+
+          {d.slot === 'hero' && (
+            <fieldset className="ad-bnr-bg">
+              <legend>Nền phía sau khi ảnh này đang hiện <small>(không bắt buộc)</small></legend>
+              <span className="vx-help">
+                Qua ảnh này thì cả khoảng nền phía sau trên trang chủ đổi theo. Ảnh nền nên <b>1920 × 900 px</b>, họa tiết dồn lên trên và hai bên (phần giữa bị ảnh lớn che);
+                hoặc chỉ chọn một màu hợp với ảnh. Để trống = dùng “Ảnh nền sự kiện” chung, chưa có thì chính ảnh này làm mờ.
+              </span>
+              <div className="ad-bnr-bg__row">
+                {d.bgImage && <img className="ad-bnr-bg__thumb" src={bannerImageUrl(d.bgImage)} alt="Ảnh nền đã chọn" />}
+                <button type="button" className="vx-btn vx-btn--outline vx-btn--sm" disabled={!!busy} onClick={() => bg.current?.click()}>{d.bgImage ? 'Đổi ảnh nền' : '+ Chọn ảnh nền'}</button>
+                {d.bgImage && <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" onClick={() => set('bgImage', null)}>Bỏ ảnh nền</button>}
+              </div>
+              <div className="ad-bnr-bg__row">
+                <label className="ad-bnr-bg__color">
+                  <input type="color" value={d.bgColor ?? '#e8f2ea'} onChange={(e) => set('bgColor', e.target.value)} />
+                  {d.bgColor ? `Màu nền ${d.bgColor}` : 'Chọn màu nền'}
+                </label>
+                {d.bgColor && <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" onClick={() => set('bgColor', null)}>Bỏ màu</button>}
+              </div>
+            </fieldset>
           )}
 
           <div className="vx-fl">
@@ -246,7 +279,7 @@ export function HomeBannerAdmin({ banners, canEdit }: { banners: Row[]; canEdit:
                         </button>
                         <div className="ad-bnr__b">
                           <b>{b.title}</b>
-                          <small>{b.href ? `Mở: ${b.href}` : 'Không gắn link'}{b.showText ? ' · có chữ trên ảnh' : ''}{b.imageMobile ? ' · có ảnh điện thoại' : ''}</small>
+                          <small>{b.href ? `Mở: ${b.href}` : 'Không gắn link'}{b.showText ? ' · có chữ trên ảnh' : ''}{b.imageMobile ? ' · có ảnh điện thoại' : ''}{b.bgImage || b.bgColor ? ' · có nền riêng' : ''}</small>
                           {b.updatedBy && <small>Sửa bởi {b.updatedBy} · {showDay(b.updatedAt)}</small>}
                         </div>
                         {canEdit && (
