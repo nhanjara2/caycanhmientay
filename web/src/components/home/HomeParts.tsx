@@ -133,23 +133,6 @@ export function NewsBoard({ posts }: { posts: PostCard[] }) {
   );
 }
 
-/** Hàng video ngắn (khung dọc 9:16), cuộn ngang trên điện thoại. */
-export function VideoRow({ posts }: { posts: PostCard[] }) {
-  return (
-    <div className="hm-videos">
-      {posts.map((p) => (
-        <Link key={p.id} href={postPath(p)} className={p.videoVertical ? 'hm-video app-plain' : 'hm-video hm-video--wide app-plain'}>
-          <span className="hm-video__img">
-            <PostThumb p={p} className="hm-video__thumb" />
-            <span className="hm-video__tag"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>Video</span>
-          </span>
-          <b>{p.title}</b>
-        </Link>
-      ))}
-    </div>
-  );
-}
-
 /** Thẻ bài Góc chăm cây. */
 export function PostCards({ posts }: { posts: PostCard[] }) {
   return (

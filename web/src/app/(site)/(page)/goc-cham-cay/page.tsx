@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Icon } from '@/components/Icon';
 import { EmptyPosts, PostMeta, PostThumb } from '@/components/PostParts';
-import { CATEGORIES, categoryOf, durationLabel, isCategory, plainText, postPath, SECTIONS, sectionOf } from '@/lib/posts';
+import { CATEGORIES, categoryOf, durationLabel, isCategory, plainText, postPath, SECTIONS, sectionOf, VIDEO_PAGE } from '@/lib/posts';
 import { publishedPosts, type PostCard } from '@/server/posts';
 
 type SP = { 'chuyen-muc'?: string; the?: string; loai?: string; trang?: string };
@@ -78,7 +78,7 @@ export default async function BlogPage({ searchParams }: Props) {
 
   const used = new Set(all.map((p) => p.category));
   const chips = CATEGORIES.filter((c) => c.section === 'blog' && (used.has(c.key) || c.key === cat));
-  const videos = all.filter((p) => p.kind === 'video');
+  const videos = [...all.filter((p) => p.kind === 'video' && p.featured), ...all.filter((p) => p.kind === 'video' && !p.featured)];
 
   const tags = new Map<string, number>();
   for (const p of all) for (const t of p.tags) tags.set(t, (tags.get(t) ?? 0) + 1);
@@ -184,7 +184,7 @@ export default async function BlogPage({ searchParams }: Props) {
             <section className="vx-cblock">
               <div className="vx-sect">
                 <h2 style={{ fontSize: '1.125rem' }}><span className="vx-sect__mark"><Icon name="camera" /></span>Video ngắn</h2>
-                {videos.length > 6 && <Link href={href({ loai: 'video' })} className="vx-link">Xem tất cả <Icon name="chevron" size={14} /></Link>}
+                <Link href={VIDEO_PAGE} className="vx-link">Xem tất cả <Icon name="chevron" size={14} /></Link>
               </div>
               <div className="vx-vrow">{videos.slice(0, 6).map((p, i) => <VCard key={p.id} p={p} alt={i % 2 === 1} />)}</div>
             </section>
@@ -228,9 +228,13 @@ export default async function BlogPage({ searchParams }: Props) {
   );
 }
 
-/** Khối đầu trang: bài nổi bật (admin ghim) rồi bài viết mới nhất — video chưa ghim đã có hàng "Video ngắn" riêng. */
+/**
+ * Khối đầu trang: bài viết nổi bật (admin ghim) rồi bài viết mới nhất. Video có hàng "Video ngắn" riêng —
+ * video Nổi bật chỉ đứng đầu hàng đó, trang chủ và trang /video.
+ */
 function Hero({ posts }: { posts: PostCard[] }) {
-  const ordered = [...posts.filter((p) => p.featured), ...posts.filter((p) => !p.featured && p.kind === 'article')];
+  const articles = posts.filter((p) => p.kind === 'article');
+  const ordered = [...articles.filter((p) => p.featured), ...articles.filter((p) => !p.featured)];
   if (!ordered.length) return null;
   const [main, ...rest] = ordered;
   return (

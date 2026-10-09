@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode, type TextareaHTMLAttributes } from 'react';
-import { deletePostAction, savePostAction, uploadPostImageAction } from '@/app/actions/posts';
+import { deletePostAction, lookupVideosAction, savePostAction, uploadPostImageAction } from '@/app/actions/posts';
 import { normalize, parseYoutubeId } from '@/lib/catalog';
 import { compressImage } from '@/lib/compress-image';
 import { money } from '@/lib/format';
@@ -300,6 +300,13 @@ export function PostEditor({ initial, role, products, diseases, people, stats }:
                         const id = parseYoutubeId(t);
                         setV((x) => ({ ...x, youtubeId: id, videoVertical: id && isShortsUrl(t) ? true : x.videoVertical }));
                         touch();
+                        // Hỏi YouTube: video dọc hay ngang, và điền sẵn tiêu đề nếu còn trống (chỉ khi có quyền đăng — action kiểm tra quyền).
+                        if (id && isAdmin && id !== v.youtubeId) {
+                          lookupVideosAction(t).then((r) => {
+                            const it = r.ok ? r.items[0] : undefined;
+                            if (it && !it.error) setV((x) => (x.youtubeId !== id ? x : { ...x, videoVertical: it.vertical, title: x.title.trim() ? x.title : it.title }));
+                          }).catch(() => {});
+                        }
                       }} />
                     {ytText && !v.youtubeId && <span className="vx-err">Link chưa đúng — dán link YouTube (video thường hoặc Shorts)</span>}
                   </div>
@@ -384,7 +391,7 @@ export function PostEditor({ initial, role, products, diseases, people, stats }:
                 <input id="pe-at" className="vx-input" type="datetime-local" value={publishAt} onChange={(e) => { setPublishAt(e.target.value); touch(); }} />
                 <span className="hint">{publishAt ? (scheduled ? 'Giờ ở tương lai: bài tự hiện đúng giờ này.' : 'Ngày đăng hiện trên bài.') : 'Để trống: đăng ngay khi bấm Đăng.'}</span>
               </div>
-              <label className="pe-check"><input type="checkbox" checked={v.featured} onChange={(e) => set('featured', e.target.checked)} /> Nổi bật — đưa lên khối đầu trang</label>
+              <label className="pe-check"><input type="checkbox" checked={v.featured} onChange={(e) => set('featured', e.target.checked)} /> {v.kind === 'video' ? 'Nổi bật — đứng đầu hàng video ở trang chủ và trang Video ngắn' : 'Nổi bật — đưa lên khối đầu trang'}</label>
             </Card>
 
             <Card title="Ảnh bìa">

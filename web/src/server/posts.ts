@@ -1,12 +1,12 @@
 import 'server-only';
 import { connection } from 'next/server';
 import { cache } from 'react';
-import { and, desc, eq, lt, lte, ne, notInArray, sql, type SQL } from 'drizzle-orm';
+import { and, desc, eq, inArray, lt, lte, ne, notInArray, sql, type SQL } from 'drizzle-orm';
 import * as z from 'zod';
 import { normalize } from '@/lib/catalog';
 import {
-  blockingChecks, CATEGORY_KEYS, MAX_BLOCK_PRODUCTS, NOTE_TITLE, postChecks, postImageUrl, PRODUCTS_TITLE, readMinutes,
-  TITLE_MAX, youtubeThumb, type PostBlock, type PostStatus,
+  blockingChecks, CATEGORY_KEYS, categoryOf, MAX_BLOCK_PRODUCTS, NOTE_TITLE, postChecks, postImageUrl, postPath, PRODUCTS_TITLE,
+  readMinutes, TITLE_MAX, youtubeThumb, type PostBlock, type PostStatus, type ShortVideo,
 } from '@/lib/posts';
 import { hasAccess } from '@/lib/permissions';
 import { staffName, type SessionUser } from './auth';
@@ -47,6 +47,16 @@ export const publishedPosts = cache(async () => {
   return (await selectCards().where(live()).orderBy(desc(P.publishedAt), desc(P.id))).map(toCard);
 });
 
+/** Video đang hiện (trang Video ngắn, trang chủ): video Nổi bật trước, sau đó mới nhất trước. */
+export async function publishedVideos(): Promise<ShortVideo[]> {
+  const videos = (await publishedPosts()).filter((p) => p.kind === 'video' && p.youtubeId);
+  return [...videos.filter((p) => p.featured), ...videos.filter((p) => !p.featured)].map((p) => ({
+    id: p.id, slug: p.slug, href: postPath(p), category: p.category, categoryName: categoryOf(p.category)?.name ?? '', title: p.title,
+    youtubeId: p.youtubeId!, vertical: p.videoVertical, seconds: p.videoSeconds, thumb: p.thumb ?? youtubeThumb(p.youtubeId!),
+    zoomThumb: !p.coverFile && !p.videoVertical,
+  }));
+}
+
 async function fullPost(where: SQL | undefined) {
   const [r] = await db.select({ ...cardCols, body: P.body, seoDescription: P.seoDescription, createdAt: P.createdAt }).from(P).where(where);
   return r ? { ...toCard(r), body: r.body, seoDescription: r.seoDescription, createdAt: r.createdAt } : undefined;
@@ -86,6 +96,12 @@ export async function listPostsAdmin() {
 export async function countPostsInReview() {
   const [r] = await db.select({ n: sql<number>`count(*)`.mapWith(Number) }).from(P).where(eq(P.status, 'review'));
   return r?.n ?? 0;
+}
+
+/** Bài đã dùng các video này (mọi trạng thái) — thêm nhanh video không tạo trùng. */
+export async function postsByYoutubeId(ids: string[]) {
+  if (!ids.length) return [];
+  return db.select({ id: P.id, youtubeId: P.youtubeId, title: P.title, status: P.status }).from(P).where(inArray(P.youtubeId, ids));
 }
 
 export async function getPostAdmin(id: number) {

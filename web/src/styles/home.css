@@ -204,19 +204,10 @@
 
 .hm-dcard__img, .hm-news__img, .hm-news__thumb, .hm-post__img { position: relative; }
 /* Ảnh phủ kín khung (khung có tỉ lệ cố định; ảnh YouTube có viền đen thì bị cắt bỏ) */
-.hm-dcard__img img, .hm-news__img img, .hm-news__thumb img, .hm-post__img img, .hm-video__thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.hm-dcard__img img, .hm-news__img img, .hm-news__thumb img, .hm-post__img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 
-/* ---- Công trình, video, bài viết, cam kết ----------------------------------------------------- */
+/* ---- Công trình, bài viết, cam kết ------------------------------------------------------------ */
 .hm-projects { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-.hm-videos { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
-.hm-video { display: flex; flex-direction: column; gap: 8px; text-decoration: none; }
-.hm-video__img { position: relative; display: block; aspect-ratio: 9 / 16; overflow: hidden; border-radius: 14px; background: var(--primary-deep); }
-.hm-video__thumb { position: absolute; inset: 0; display: grid; place-items: center; color: #fff; }
-/* Video ngang: ảnh hqdefault của YouTube có viền đen trên / dưới — phóng to để cắt viền */
-.hm-video--wide .hm-video__thumb img { transform: scale(1.34); }
-.hm-video__tag { position: absolute; top: 8px; left: 8px; display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 6px; background: var(--sale); color: #fff; font-size: 0.875rem; font-weight: 700; }
-.hm-video__tag svg { width: 12px; height: 12px; fill: currentColor; }
-.hm-video b { display: -webkit-box; font-size: 0.9375rem; line-height: 1.4; color: var(--ink); -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .hm-posts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
 .hm-post { display: flex; flex-direction: column; gap: 8px; padding-bottom: 6px; text-decoration: none; }
 .hm-post__img { display: grid; place-items: center; aspect-ratio: 16 / 10; overflow: hidden; border-radius: 14px; background: var(--primary-soft); color: var(--primary); }
@@ -236,8 +227,6 @@
   .hm-season { grid-template-columns: minmax(0, 1fr); }
   .hm-season__intro { flex-direction: row; flex-wrap: wrap; align-items: center; }
   .hm-season__intro p { flex: 1 1 100%; }
-  .hm-videos { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .hm-videos > :nth-child(n + 5) { display: none; }
 }
 @media (max-width: 63.9375em) {
   .hm { --hm-gut: 16px; }
@@ -326,9 +315,6 @@
   .hm-news__lead b { font-size: 1.1875rem; }
   .hm-projects { grid-template-columns: minmax(0, 1fr); }
   .hm-projects > :nth-child(3) { display: flex; }
-  .hm-videos { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 -16px; padding: 0 16px; scrollbar-width: none; }
-  .hm-videos > * { flex: 0 0 42%; scroll-snap-align: start; }
-  .hm-videos > :nth-child(n + 5) { display: flex; }
   .hm-posts { grid-template-columns: minmax(0, 1fr); gap: 14px; }
   .hm-post { display: grid; grid-template-columns: 8rem minmax(0, 1fr); grid-template-rows: auto 1fr; column-gap: 12px; row-gap: 4px; }
   .hm-post__img { grid-row: 1 / 3; }

@@ -44,6 +44,7 @@ export default async function AdminPostsPage({ searchParams }: Props) {
         <h1>Bài viết & video</h1>
         <span className="acts">
           <Link href={SECTIONS.blog.path} target="_blank" className="vx-btn vx-btn--outline">Xem trên web</Link>
+          <Link href="/admin/noi-dung/video-nhanh" className="vx-btn vx-btn--outline">+ Thêm nhanh video ngắn</Link>
           <Link href="/admin/noi-dung/moi?loai=video" className="vx-btn vx-btn--outline">+ Thêm video</Link>
           <Link href="/admin/noi-dung/moi" className="vx-btn vx-btn--primary">+ Viết bài</Link>
         </span>
@@ -102,7 +103,7 @@ export default async function AdminPostsPage({ searchParams }: Props) {
               })}
               {!rows.length && (
                 <tr><td colSpan={7} data-wide style={{ textAlign: 'center', padding: 32, color: 'var(--ink-muted)' }}>
-                  {all.length ? 'Không có bài nào khớp bộ lọc.' : <>Chưa có bài nào. <Link href="/admin/noi-dung/moi">Viết bài đầu tiên</Link> hoặc <Link href="/admin/noi-dung/moi?loai=video">thêm video</Link>.</>}
+                  {all.length ? 'Không có bài nào khớp bộ lọc.' : <>Chưa có bài nào. <Link href="/admin/noi-dung/moi">Viết bài đầu tiên</Link> hoặc <Link href="/admin/noi-dung/video-nhanh">dán link video YouTube</Link>.</>}
                 </td></tr>
               )}
             </tbody>

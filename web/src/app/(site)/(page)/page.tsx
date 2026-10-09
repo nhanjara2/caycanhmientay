@@ -2,22 +2,23 @@ import Link from 'next/link';
 import { FlashSale } from '@/components/FlashSale';
 import { HomeCarousel, HomeHero, type Slide } from '@/components/home/HomeCarousel';
 import {
-  CategoryMosaic, HomeHead, type MosaicItem, NewsBoard, PhotoWall, PostCards, QuickLinks, SeasonDiseases, TrustRow, VideoRow,
+  CategoryMosaic, HomeHead, type MosaicItem, NewsBoard, PhotoWall, PostCards, QuickLinks, SeasonDiseases, TrustRow,
 } from '@/components/home/HomeParts';
 import { Icon } from '@/components/Icon';
 import { ProductGrid } from '@/components/ProductCard';
 import { ProjectCard } from '@/components/ProjectParts';
+import { ShortVideos } from '@/components/ShortVideos';
 import type { Product } from '@/lib/catalog';
 import { money } from '@/lib/format';
 import { bannerImageUrl, slotOf, type Banner } from '@/lib/home-banners';
 import { PARTNER_IMAGE, PARTNER_INFO, PARTNER_TYPES, WHOLESALE_QUOTE_URL, WHOLESALE_URL } from '@/lib/partners';
-import { categoryOf, SECTIONS } from '@/lib/posts';
+import { categoryOf, SECTIONS, VIDEO_PAGE } from '@/lib/posts';
 import { WARRANTY_DAYS } from '@/lib/warranty-labels';
 import { allProducts, categoryCounts, flashProducts } from '@/server/catalog';
 import { menuCategories } from '@/server/categories';
 import { allDiseases } from '@/server/diseases';
 import { liveBanners } from '@/server/home-banners';
-import { publishedPosts } from '@/server/posts';
+import { publishedPosts, publishedVideos } from '@/server/posts';
 import { publishedProjects } from '@/server/projects';
 import { getShippingConfig } from '@/server/shipping';
 import '@/styles/home.css';
@@ -58,9 +59,9 @@ function seasonNow() {
 }
 
 export default async function HomePage() {
-  const [banners, products, flash, categories, counts, posts, projects, diseases, cfg] = await Promise.all([
+  const [banners, products, flash, categories, counts, posts, allVideos, projects, diseases, cfg] = await Promise.all([
     liveBanners(), allProducts(), flashProducts(), menuCategories(), categoryCounts(),
-    publishedPosts(), publishedProjects(), allDiseases(), getShippingConfig(),
+    publishedPosts(), publishedVideos(), publishedProjects(), allDiseases(), getShippingConfig(),
   ]);
   // Mỗi vị trí chỉ hiện tối đa `max` ảnh đầu (BANNER_SLOTS).
   const inSlot = (slot: Banner['slot']) => banners.filter((b) => b.slot === slot).slice(0, slotOf(slot).max).map(fromBanner);
@@ -151,7 +152,8 @@ export default async function HomePage() {
 
   // ---- Bài viết ----
   const news = posts.filter((p) => categoryOf(p.category)?.promo || categoryOf(p.category)?.section === 'news').slice(0, 5);
-  const videos = posts.filter((p) => p.youtubeId).slice(0, 6);
+  // Video ngắn nổi bật: video admin đánh dấu Nổi bật trước, rồi mới nhất (publishedVideos đã xếp sẵn).
+  const videos = allVideos.slice(0, 8);
   const care = posts.filter((p) => !p.youtubeId && categoryOf(p.category)?.section === 'blog' && !categoryOf(p.category)?.promo).slice(0, 4);
   const shownProjects = projects.filter((p) => p.images.length).slice(0, 3);
 
@@ -219,6 +221,13 @@ export default async function HomePage() {
           </section>
         )}
 
+        {videos.length > 0 && (
+          <section className="hm-sec">
+            <HomeHead icon="camera" title="Video ngắn nổi bật" sub="Cây thật tại vườn, mẹo chăm cây — bấm là xem ngay" href={VIDEO_PAGE} />
+            <ShortVideos videos={videos} layout="row" />
+          </section>
+        )}
+
         {seasonal.length > 0 && (
           <section className="hm-sec">
             <HomeHead icon="bug" title={`Bệnh cây ${season.name.toLowerCase()}`} sub="Nhận biết sớm, xử lý đúng thuốc" href="/benh-cay" />
@@ -237,13 +246,6 @@ export default async function HomePage() {
           <section className="hm-sec">
             <HomeHead icon="trees" title="Công trình đã cung cấp cây" sub="Năng lực thật của vườn — ảnh chụp tại công trình" href={`${WHOLESALE_URL}#cong-trinh`} />
             <div className="hm-projects">{shownProjects.map((p) => <ProjectCard key={p.id} p={p} />)}</div>
-          </section>
-        )}
-
-        {videos.length > 0 && (
-          <section className="hm-sec">
-            <HomeHead icon="camera" title="Video ngắn" href={`${SECTIONS.blog.path}?loai=video`} />
-            <VideoRow posts={videos} />
           </section>
         )}
 

@@ -134,7 +134,31 @@ export const plainText = (text: string) => parseInline(text).map((x) => x.v).joi
 
 export const youtubeThumb = (id: string) => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
 export const youtubeEmbed = (id: string) => `https://www.youtube-nocookie.com/embed/${id}?rel=0`;
+/** Khung xem video ngắn: tự chạy, phát lặp lại như YouTube Shorts. */
+export const youtubePlayer = (id: string) => `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&playsinline=1&rel=0&loop=1&playlist=${id}`;
 export const isShortsUrl = (url: string) => /youtube\.com\/shorts\//i.test(url);
+
+/** Trang Video ngắn: mọi video đã đăng (bài loại "video"), bấm là xem ngay. */
+export const VIDEO_PAGE = '/video';
+/** Admin "Thêm nhanh video ngắn": tối đa bấy nhiêu link một lần. */
+export const MAX_QUICK_VIDEOS = 30;
+export const videoShareUrl = (slug: string) => `${VIDEO_PAGE}?v=${encodeURIComponent(slug)}`;
+
+/** Video cho thẻ + khung xem video ngắn (components/ShortVideos.tsx). */
+export type ShortVideo = {
+  id: number; slug: string; href: string; category: string; categoryName: string; title: string; youtubeId: string;
+  vertical: boolean; seconds: number | null; thumb: string;
+  /** Ảnh YouTube của video ngang (có viền đen trên / dưới) — phóng to cho kín thẻ dọc. */
+  zoomThumb: boolean;
+};
+
+/** Tiêu đề lấy từ YouTube: bỏ hashtag (#shorts #caycanh…), gom khoảng trắng, cắt cho vừa TITLE_MAX. */
+export function cleanVideoTitle(raw: string) {
+  const s = raw.replace(/(^|\s)#[^\s#]+/gu, ' ').replace(/\s+/g, ' ').trim().replace(/[\s|·•,;:–-]+$/u, '');
+  if (s.length <= TITLE_MAX) return s;
+  const cut = s.slice(0, TITLE_MAX - 1);
+  return `${cut.slice(0, cut.lastIndexOf(' ') > 80 ? cut.lastIndexOf(' ') : cut.length)}…`;
+}
 
 export function durationLabel(sec: number | null | undefined) {
   if (!sec) return '';
