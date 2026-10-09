@@ -38,7 +38,11 @@ const QUICK = [
 const fromBanner = (b: Banner): Slide => ({
   key: `b${b.id}`, title: b.title, subtitle: b.subtitle || undefined, cta: b.cta || undefined, href: b.href || undefined,
   showText: b.showText, image: bannerImageUrl(b.image), imageMobile: b.imageMobile ? bannerImageUrl(b.imageMobile) : null,
-  bg: b.bgImage || b.bgColor ? { image: b.bgImage ? bannerImageUrl(b.bgImage) : undefined, color: b.bgColor ?? undefined } : undefined,
+  bg: b.slot === 'top' && (b.bgImage || b.bgColor) ? {
+    image: b.bgImage ? bannerImageUrl(b.bgImage) : undefined,
+    imageMobile: b.bgImageMobile ? bannerImageUrl(b.bgImageMobile) : undefined,
+    color: b.bgColor ?? undefined,
+  } : undefined,
 });
 
 const withImage = (list: Product[]) => list.filter((p) => p.images?.length);
@@ -63,6 +67,25 @@ export default async function HomePage() {
   const minOrder = cfg.minOrder > 0 ? `Đơn từ ${money(cfg.minOrder)}` : 'Không giới hạn đơn tối thiểu';
 
   // ---- Khung đầu trang: ảnh chủ shop tải lên; chưa có thì dựng từ ảnh thật của shop ----
+  const season = seasonNow();
+  const diseaseImgs = diseases.flatMap((d) => d.symptoms).flatMap((s) => (s.image ? [s.image] : []));
+  const diseaseImg = diseaseImgs[0];
+  // Băng ảnh rộng dựng sẵn: mỗi ảnh một màu nền riêng (ảnh làm mờ phủ lên) để nền cả khoảng trên đổi theo.
+  const fallbackTop: Slide[] = [
+    {
+      key: 'top-tet', badge: 'Mùa cây Tết 2027', tone: 'sun', showText: true, image: '/videos/mai-vang.jpg', bg: { color: '#7f1d1d', blur: true },
+      title: 'Mai, quất, cây Tết — đặt sớm, giữ hàng giá sỉ', subtitle: 'Cho cửa hàng, công trình, quà tặng doanh nghiệp', cta: 'Xem cây Tết', href: '/cay-tet',
+    },
+    {
+      key: 'top-mua', badge: season.name, tone: 'green', showText: true, bg: { color: season.key === 'mưa' ? '#134e5e' : '#7c4a03', blur: true },
+      image: diseaseImgs.length ? `/api/disease-images/${diseaseImgs[1] ?? diseaseImgs[0]}` : PARTNER_IMAGE.landscape,
+      title: `${season.name}: phòng bệnh sớm, không mất cả lô cây`, subtitle: 'Tra bệnh theo triệu chứng, chọn đúng thuốc, đúng liều', cta: 'Bắt bệnh cho cây', href: '/benh-cay',
+    },
+    {
+      key: 'top-vuon', badge: 'Vườn ươm miền Tây', tone: 'green', showText: true, image: PARTNER_IMAGE.landscape, bg: { color: '#14532d', blur: true },
+      title: 'Xem cây tận vườn trước khi lấy sỉ', subtitle: 'Hệ thống vườn ươm, cửa hàng khắp miền Tây', cta: 'Tìm vườn gần bạn', href: '/he-thong-cua-hang',
+    },
+  ];
   const ofSub = (sub: string) => products.filter((p) => p.sub === sub || p.extraSubs?.includes(sub));
   const flashImgs = pickImages(flash, 3);
   const officeImgs = pickImages(ofSub('cay-van-phong'), 3);
@@ -80,12 +103,7 @@ export default async function HomePage() {
       key: 'tu-van', badge: 'Miễn phí', tone: 'green' as const, showText: true, image: officeImgs[0], contain: officeImgs,
       title: 'Chọn đúng cây cho từng không gian', subtitle: 'Trả lời vài câu hỏi — gợi ý loại cây, số lượng, dự toán', cta: 'Tư vấn chọn cây', href: '/tu-van-chon-cay',
     }] : []),
-    {
-      key: 'tet', badge: 'Đặt sớm cây Tết', tone: 'sun', showText: true, image: '/videos/mai-vang.jpg',
-      title: 'Mai, quất, cây Tết — giữ hàng sớm, giá sỉ', subtitle: 'Đặt trước cho cửa hàng, công trình, quà tặng doanh nghiệp', cta: 'Xem cây Tết', href: '/cay-tet',
-    },
   ];
-  const diseaseImg = diseases.flatMap((d) => d.symptoms).find((s) => s.image)?.image;
   const fallbackSides: Slide[] = [
     {
       key: 'bao-gia', tone: 'green', showText: true, image: PARTNER_IMAGE.trade,
@@ -96,6 +114,7 @@ export default async function HomePage() {
       title: 'Cây bị bệnh? Tra theo triệu chứng', cta: 'Bắt bệnh cho cây', href: '/benh-cay',
     },
   ];
+  const top = inSlot('top');
   const hero = inSlot('hero');
   const sides = inSlot('side');
   const backdrop = banners.find((b) => b.slot === 'backdrop');
@@ -124,7 +143,6 @@ export default async function HomePage() {
   const best = [...products].sort((a, b) => Number(!!b.images?.length) - Number(!!a.images?.length) || bySold(a, b)).slice(0, 10);
 
   // ---- Bệnh cây theo mùa ----
-  const season = seasonNow();
   const hasSeason = (d: (typeof diseases)[number]) => d.season.normalize('NFC').toLowerCase().includes(season.key);
   const seasonal = diseases
     .filter((d) => d.symptoms.some((s) => s.image))
@@ -143,6 +161,7 @@ export default async function HomePage() {
 
       <section className="hm-hero" aria-label="Sự kiện và ưu đãi">
         <HomeHero
+          tops={top.length ? top : fallbackTop}
           slides={hero.length ? hero : fallbackHero}
           sides={(sides.length ? sides : fallbackSides).slice(0, 2)}
           backdrop={backdrop ? { image: bannerImageUrl(backdrop.image), imageMobile: backdrop.imageMobile ? bannerImageUrl(backdrop.imageMobile) : null } : null}

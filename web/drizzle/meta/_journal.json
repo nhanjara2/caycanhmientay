@@ -316,6 +316,13 @@
       "when": 1791513908051,
       "tag": "0044_nen_theo_banner",
       "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1791517061084,
+      "tag": "0045_bang_anh_rong",
+      "breakpoints": true
     }
   ]
 }

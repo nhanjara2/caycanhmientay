@@ -52,6 +52,7 @@ export const BannerInputSchema = z.object({
   image: file,
   imageMobile: file.nullable(),
   bgImage: file.nullable(),
+  bgImageMobile: file.nullable(),
   bgColor: z.string().regex(BG_COLOR, 'Màu nền không hợp lệ').nullable(),
   startsAt: day,
   endsAt: day,
@@ -61,16 +62,16 @@ export type BannerInput = z.infer<typeof BannerInputSchema>;
 
 /** Dọn ảnh đã tải hơn 1 ngày mà không banner nào dùng (ảnh vừa tải chưa kịp lưu thì giữ). */
 async function cleanImages() {
-  const used = await db.select({ a: B.image, b: B.imageMobile, c: B.bgImage }).from(B);
-  const keep = used.flatMap((u) => [u.a, u.b, u.c]).filter((f): f is string => !!f);
+  const used = await db.select({ a: B.image, b: B.imageMobile, c: B.bgImage, d: B.bgImageMobile }).from(B);
+  const keep = used.flatMap((u) => [u.a, u.b, u.c, u.d]).filter((f): f is string => !!f);
   await db.delete(BI).where(and(lt(BI.createdAt, new Date(Date.now() - 86_400_000)), keep.length ? notInArray(BI.file, keep) : undefined));
 }
 
 export async function saveBanner(v: BannerInput, user: SessionUser) {
   const { id, startsAt, endsAt, ...rest } = v;
-  // Nền riêng chỉ có ở ảnh lớn đầu trang.
-  if (rest.slot !== 'hero') Object.assign(rest, { bgImage: null, bgColor: null });
-  const files = [rest.image, rest.imageMobile, rest.bgImage].filter((f): f is string => !!f);
+  // Nền riêng chỉ có ở băng ảnh rộng trên cùng.
+  if (rest.slot !== 'top') Object.assign(rest, { bgImage: null, bgImageMobile: null, bgColor: null });
+  const files = [rest.image, rest.imageMobile, rest.bgImage, rest.bgImageMobile].filter((f): f is string => !!f);
   const found = await db.select({ file: BI.file }).from(BI).where(inArray(BI.file, files));
   if (found.length !== new Set(files).size) return { ok: false as const, error: 'Ảnh đã bị xóa — hãy tải ảnh lại' };
   const data = {
@@ -101,13 +102,14 @@ export async function setBannerActive(id: number, active: boolean) {
 }
 
 export async function deleteBanner(id: number) {
-  const r = await db.delete(B).where(eq(B.id, id)).returning({ image: B.image, imageMobile: B.imageMobile, bgImage: B.bgImage });
+  const r = await db.delete(B).where(eq(B.id, id))
+    .returning({ image: B.image, imageMobile: B.imageMobile, bgImage: B.bgImage, bgImageMobile: B.bgImageMobile });
   if (!r.length) return false;
   // Ảnh của banner vừa xóa: xóa luôn nếu không banner khác dùng chung.
-  const mine = [r[0].image, r[0].imageMobile, r[0].bgImage].filter((f): f is string => !!f);
-  const still = await db.select({ a: B.image, b: B.imageMobile, c: B.bgImage }).from(B)
-    .where(or(inArray(B.image, mine), inArray(B.imageMobile, mine), inArray(B.bgImage, mine)));
-  const used = new Set(still.flatMap((s) => [s.a, s.b, s.c]));
+  const mine = [r[0].image, r[0].imageMobile, r[0].bgImage, r[0].bgImageMobile].filter((f): f is string => !!f);
+  const still = await db.select({ a: B.image, b: B.imageMobile, c: B.bgImage, d: B.bgImageMobile }).from(B)
+    .where(or(inArray(B.image, mine), inArray(B.imageMobile, mine), inArray(B.bgImage, mine), inArray(B.bgImageMobile, mine)));
+  const used = new Set(still.flatMap((s) => [s.a, s.b, s.c, s.d]));
   const drop = mine.filter((f) => !used.has(f));
   if (drop.length) await db.delete(BI).where(inArray(BI.file, drop));
   return true;

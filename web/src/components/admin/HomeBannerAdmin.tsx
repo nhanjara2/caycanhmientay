@@ -27,11 +27,11 @@ function statusOf(b: Pick<Banner, 'active' | 'startsAt' | 'endsAt'>, now = new D
 
 type Draft = {
   id?: number; slot: BannerSlot; title: string; subtitle: string; cta: string; href: string; showText: boolean;
-  image: string | null; imageMobile: string | null; bgImage: string | null; bgColor: string | null; startsAt: string; endsAt: string; active: boolean;
+  image: string | null; imageMobile: string | null; bgImage: string | null; bgImageMobile: string | null; bgColor: string | null; startsAt: string; endsAt: string; active: boolean;
 };
 
 const blank = (slot: BannerSlot): Draft => ({
-  slot, title: '', subtitle: '', cta: '', href: '', showText: false, image: null, imageMobile: null, bgImage: null, bgColor: null, startsAt: '', endsAt: '', active: true,
+  slot, title: '', subtitle: '', cta: '', href: '', showText: false, image: null, imageMobile: null, bgImage: null, bgImageMobile: null, bgColor: null, startsAt: '', endsAt: '', active: true,
 });
 
 /** Xem trước đúng khung trên trang chủ (dùng chung CSS + component với trang khách). */
@@ -45,16 +45,18 @@ function Preview({ d, mobile }: { d: Draft; mobile?: boolean }) {
     key: 'prev', title: d.title || 'Tiêu đề banner', subtitle: d.subtitle || undefined, cta: d.cta || undefined, showText: d.showText, image: bannerImageUrl(img),
   };
   if (d.slot === 'side') return <div className="hm-side ad-bnr-prev ad-bnr-prev--side"><SlideBody s={s} /></div>;
+  const ratio = mobile ? slotOf(d.slot).mobile?.ratio : undefined;
   const car = (
-    <div className={`hm-car ${d.slot === 'event' ? 'hm-car--band' : 'hm-car--hero'} ad-bnr-prev`}>
-      <div className="hm-car__track" style={mobile ? { aspectRatio: '4 / 3' } : undefined}><div className="hm-slide"><SlideBody s={s} /></div></div>
+    <div className={`hm-car hm-car--${d.slot === 'event' ? 'band' : d.slot} ad-bnr-prev`}>
+      <div className="hm-car__track" style={ratio ? { aspectRatio: String(ratio) } : undefined}><div className="hm-slide"><SlideBody s={s} /></div></div>
     </div>
   );
-  // Ảnh lớn có nền riêng: xem trước ảnh đặt trên nền đó như trang chủ.
-  if (d.slot !== 'hero' || mobile || (!d.bgImage && !d.bgColor)) return car;
+  // Băng ảnh rộng có nền riêng: xem trước ảnh đặt trên nền đó như trang chủ.
+  if (d.slot !== 'top' || (!d.bgImage && !d.bgColor)) return car;
+  const bg = mobile ? d.bgImageMobile ?? d.bgImage : d.bgImage;
   return (
-    <div className="ad-bnr-stage" style={{ backgroundColor: d.bgColor ?? undefined }}>
-      {d.bgImage && <img src={bannerImageUrl(d.bgImage)} alt="" />}
+    <div className="ad-bnr-stage" data-fit={(bg && d.bgColor) || undefined} style={{ backgroundColor: d.bgColor ?? undefined }}>
+      {bg && <img src={bannerImageUrl(bg)} alt="" />}
       {car}
     </div>
   );
@@ -69,13 +71,14 @@ function Editor({ initial, onClose }: { initial: Draft; onClose: () => void }) {
   const main = useRef<HTMLInputElement>(null);
   const mob = useRef<HTMLInputElement>(null);
   const bg = useRef<HTMLInputElement>(null);
+  const bgm = useRef<HTMLInputElement>(null);
   const slot = slotOf(d.slot);
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setD((x) => ({ ...x, [k]: v }));
 
-  const upload = async (f: File | undefined, key: 'image' | 'imageMobile' | 'bgImage') => {
+  const upload = async (f: File | undefined, key: 'image' | 'imageMobile' | 'bgImage' | 'bgImageMobile') => {
     if (!f) return;
     setError('');
-    setBusy({ image: 'Đang tải ảnh…', imageMobile: 'Đang tải ảnh điện thoại…', bgImage: 'Đang tải ảnh nền…' }[key]);
+    setBusy({ image: 'Đang tải ảnh…', imageMobile: 'Đang tải ảnh điện thoại…', bgImage: 'Đang tải ảnh nền…', bgImageMobile: 'Đang tải ảnh nền điện thoại…' }[key]);
     try {
       const fd = new FormData();
       fd.set('photo', await compressImage(f, 1920));
@@ -88,6 +91,7 @@ function Editor({ initial, onClose }: { initial: Draft; onClose: () => void }) {
     if (main.current) main.current.value = '';
     if (mob.current) mob.current.value = '';
     if (bg.current) bg.current.value = '';
+    if (bgm.current) bgm.current.value = '';
   };
 
   const submit = (e: FormEvent) => {
@@ -95,7 +99,7 @@ function Editor({ initial, onClose }: { initial: Draft; onClose: () => void }) {
     if (!d.image) { setError('Chọn ảnh banner'); return; }
     setError('');
     start(async () => {
-      const r = await saveBannerAction({ ...d, ...(d.slot !== 'hero' && { bgImage: null, bgColor: null }), startsAt: d.startsAt || null, endsAt: d.endsAt || null })
+      const r = await saveBannerAction({ ...d, ...(d.slot !== 'top' && { bgImage: null, bgImageMobile: null, bgColor: null }), startsAt: d.startsAt || null, endsAt: d.endsAt || null })
         .catch(() => ({ ok: false as const, error: 'Có lỗi, vui lòng thử lại' }));
       if (!r.ok) { setError(r.error); return; }
       router.refresh();
@@ -132,19 +136,20 @@ function Editor({ initial, onClose }: { initial: Draft; onClose: () => void }) {
           <input ref={main} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(e) => void upload(e.target.files?.[0], 'image')} />
           <input ref={mob} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(e) => void upload(e.target.files?.[0], 'imageMobile')} />
           <input ref={bg} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(e) => void upload(e.target.files?.[0], 'bgImage')} />
+          <input ref={bgm} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(e) => void upload(e.target.files?.[0], 'bgImageMobile')} />
           {d.image ? (
             <div className="ad-bnr-imgs">
               <Preview d={d} />
               <div className="ad-bnr-imgacts">
                 <button type="button" className="vx-btn vx-btn--outline vx-btn--sm" disabled={!!busy} onClick={() => main.current?.click()}>Đổi ảnh</button>
-                {d.slot !== 'side' && (
+                {slot.mobile && (
                   d.imageMobile
                     ? <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" onClick={() => set('imageMobile', null)}>Bỏ ảnh riêng cho điện thoại</button>
-                    : <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" disabled={!!busy} onClick={() => mob.current?.click()}>+ Ảnh riêng cho điện thoại (4:3)</button>
+                    : <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" disabled={!!busy} onClick={() => mob.current?.click()}>+ Ảnh riêng cho điện thoại ({slot.mobile.size})</button>
                 )}
                 {busy && <span className="vx-help">{busy}</span>}
               </div>
-              {d.imageMobile && d.slot !== 'side' && (
+              {slot.mobile && (d.imageMobile || (d.slot === 'top' && d.bgImageMobile)) && (
                 <div className="ad-bnr-mob">
                   <span className="vx-help">Trên điện thoại:</span>
                   <Preview d={d} mobile />
@@ -158,18 +163,28 @@ function Editor({ initial, onClose }: { initial: Draft; onClose: () => void }) {
             </button>
           )}
 
-          {d.slot === 'hero' && (
+          {d.slot === 'top' && (
             <fieldset className="ad-bnr-bg">
               <legend>Nền phía sau khi ảnh này đang hiện <small>(không bắt buộc)</small></legend>
               <span className="vx-help">
-                Qua ảnh này thì cả khoảng nền phía sau trên trang chủ đổi theo. Ảnh nền nên <b>1920 × 900 px</b>, họa tiết dồn lên trên và hai bên (phần giữa bị ảnh lớn che);
-                hoặc chỉ chọn một màu hợp với ảnh. Để trống = dùng “Ảnh nền sự kiện” chung, chưa có thì chính ảnh này làm mờ.
+                Qua ảnh này thì cả khoảng nền phía sau trên trang chủ (sau băng ảnh, ảnh lớn, lối tắt) đổi theo. Ảnh nền máy tính <b>1920 × 940 px</b>,
+                điện thoại <b>720 × 900 px</b>; họa tiết dồn lên trên và hai bên (phần giữa bị ảnh che). Chọn thêm <b>màu nền</b> trùng màu mép dưới ảnh nền
+                để nền kéo dài liền mạch xuống dưới — hoặc chỉ chọn màu. Để trống = dùng “Ảnh nền sự kiện” chung, chưa có thì chính ảnh này làm mờ.
               </span>
               <div className="ad-bnr-bg__row">
-                {d.bgImage && <img className="ad-bnr-bg__thumb" src={bannerImageUrl(d.bgImage)} alt="Ảnh nền đã chọn" />}
+                {d.bgImage && <img className="ad-bnr-bg__thumb" src={bannerImageUrl(d.bgImage)} alt="Ảnh nền máy tính đã chọn" />}
                 <button type="button" className="vx-btn vx-btn--outline vx-btn--sm" disabled={!!busy} onClick={() => bg.current?.click()}>{d.bgImage ? 'Đổi ảnh nền' : '+ Chọn ảnh nền'}</button>
-                {d.bgImage && <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" onClick={() => set('bgImage', null)}>Bỏ ảnh nền</button>}
+                {d.bgImage && <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" onClick={() => setD((x) => ({ ...x, bgImage: null, bgImageMobile: null }))}>Bỏ ảnh nền</button>}
               </div>
+              {d.bgImage && (
+                <div className="ad-bnr-bg__row">
+                  {d.bgImageMobile && <img className="ad-bnr-bg__thumb ad-bnr-bg__thumb--mob" src={bannerImageUrl(d.bgImageMobile)} alt="Ảnh nền điện thoại đã chọn" />}
+                  <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" disabled={!!busy} onClick={() => bgm.current?.click()}>
+                    {d.bgImageMobile ? 'Đổi ảnh nền điện thoại' : '+ Ảnh nền riêng cho điện thoại'}
+                  </button>
+                  {d.bgImageMobile && <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" onClick={() => set('bgImageMobile', null)}>Bỏ</button>}
+                </div>
+              )}
               <div className="ad-bnr-bg__row">
                 <label className="ad-bnr-bg__color">
                   <input type="color" value={d.bgColor ?? '#e8f2ea'} onChange={(e) => set('bgColor', e.target.value)} />
@@ -279,7 +294,7 @@ export function HomeBannerAdmin({ banners, canEdit }: { banners: Row[]; canEdit:
                         </button>
                         <div className="ad-bnr__b">
                           <b>{b.title}</b>
-                          <small>{b.href ? `Mở: ${b.href}` : 'Không gắn link'}{b.showText ? ' · có chữ trên ảnh' : ''}{b.imageMobile ? ' · có ảnh điện thoại' : ''}{b.bgImage || b.bgColor ? ' · có nền riêng' : ''}</small>
+                          <small>{b.href ? `Mở: ${b.href}` : 'Không gắn link'}{b.showText ? ' · có chữ trên ảnh' : ''}{b.imageMobile ? ' · có ảnh điện thoại' : ''}{b.slot === 'top' && (b.bgImage || b.bgColor) ? ' · có nền riêng' : ''}</small>
                           {b.updatedBy && <small>Sửa bởi {b.updatedBy} · {showDay(b.updatedAt)}</small>}
                         </div>
                         {canEdit && (

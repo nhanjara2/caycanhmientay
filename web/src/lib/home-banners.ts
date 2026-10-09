@@ -3,23 +3,28 @@
 /** Vị trí banner trên trang chủ. Thêm vị trí mới = thêm 1 dòng (key không đổi sau khi đã dùng). */
 export const BANNER_SLOTS = [
   {
+    key: 'top', name: 'Băng ảnh rộng trên cùng', max: 8,
+    size: '1216 × 280 px', ratio: 4.34, mobile: { size: '720 × 300 px', ratio: 2.4 },
+    hint: 'Băng ảnh rộng nằm trên cùng trang chủ (trên ảnh lớn), chạy vòng 6 giây. Mỗi ảnh kèm một nền riêng phủ kín cả khoảng phía sau — qua ảnh mới thì cả nền đổi theo, như Long Châu.',
+  },
+  {
     key: 'hero', name: 'Ảnh lớn đầu trang', max: 8,
-    size: '1600 × 800 px (tỉ lệ 2:1)', ratio: 2,
-    hint: 'Chạy vòng tự động, mỗi ảnh 6 giây. Ảnh sự kiện, mùa cây, chương trình giảm giá… Mỗi ảnh có thể kèm nền riêng phủ kín phía sau — qua ảnh mới thì nền đổi theo.',
+    size: '1600 × 800 px (tỉ lệ 2:1)', ratio: 2, mobile: { size: '1200 × 900 px (4:3)', ratio: 4 / 3 },
+    hint: 'Chạy vòng tự động, mỗi ảnh 6 giây. Ảnh sự kiện, mùa cây, chương trình giảm giá…',
   },
   {
     key: 'side', name: 'Ảnh nhỏ cạnh ảnh lớn', max: 2,
-    size: '800 × 390 px (tỉ lệ 2:1)', ratio: 2.05,
+    size: '800 × 390 px (tỉ lệ 2:1)', ratio: 2.05, mobile: null,
     hint: 'Hai ô xếp chồng bên phải ảnh lớn (máy tính); điện thoại hiện thành hàng dưới ảnh lớn.',
   },
   {
     key: 'backdrop', name: 'Ảnh nền sự kiện', max: 4,
-    size: '1920 × 900 px', ratio: 2.13,
-    hint: 'Nền chung phủ kín bề ngang phía sau khung ảnh lớn — đổi theo mùa / sự kiện (Tết, Trung thu, mùa mưa…), dùng cho ảnh lớn chưa có nền riêng. Chỉ hiện 1 ảnh: ảnh đang bật xếp trên cùng.',
+    size: '1920 × 900 px', ratio: 2.13, mobile: { size: '720 × 900 px', ratio: 0.8 },
+    hint: 'Nền chung phủ kín bề ngang phía sau băng ảnh rộng và ảnh lớn — đổi theo mùa / sự kiện (Tết, Trung thu, mùa mưa…), dùng khi ảnh trên băng rộng chưa có nền riêng. Chỉ hiện 1 ảnh: ảnh đang bật xếp trên cùng.',
   },
   {
     key: 'event', name: 'Dải sự kiện giữa trang', max: 6,
-    size: '1600 × 400 px (tỉ lệ 4:1)', ratio: 4,
+    size: '1600 × 400 px (tỉ lệ 4:1)', ratio: 4, mobile: { size: '1200 × 600 px (2:1)', ratio: 2 },
     hint: 'Dải ảnh ngang giữa các khối sản phẩm: hội chợ, workshop, mùa cây Tết, chương trình đối tác…',
   },
 ] as const;
@@ -40,8 +45,9 @@ export type Banner = {
   image: string;
   /** Ảnh riêng cho điện thoại (tỉ lệ 4:3), không có thì cắt ảnh chính. */
   imageMobile: string | null;
-  /** Nền riêng phía sau (chỉ ảnh lớn đầu trang): ảnh và / hoặc màu #rrggbb. */
+  /** Nền riêng phía sau (chỉ băng ảnh rộng trên cùng): ảnh (máy tính / điện thoại) và / hoặc màu #rrggbb. */
   bgImage: string | null;
+  bgImageMobile: string | null;
   bgColor: string | null;
   startsAt: Date | null;
   endsAt: Date | null;

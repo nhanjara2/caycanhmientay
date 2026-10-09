@@ -980,8 +980,9 @@ export const homeBanners = pgTable('home_banners', {
   /** Tên file trong home_banner_images. */
   image: text('image').notNull(),
   imageMobile: text('image_mobile'),
-  /** Chỉ ảnh lớn đầu trang: nền phủ kín phía sau khi ảnh này đang hiện (đổi theo ảnh, kiểu Long Châu). */
+  /** Chỉ băng ảnh rộng trên cùng: nền phủ kín phía sau khi ảnh này đang hiện (đổi theo ảnh, kiểu Long Châu). */
   bgImage: text('bg_image'),
+  bgImageMobile: text('bg_image_mobile'),
   /** Màu nền (#rrggbb) phía sau ảnh nền / thay ảnh nền. */
   bgColor: text('bg_color'),
   /** Hiện từ / đến (null = không giới hạn). */
