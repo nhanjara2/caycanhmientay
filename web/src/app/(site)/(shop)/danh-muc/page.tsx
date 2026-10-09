@@ -1,4 +1,6 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
+import { Breadcrumb } from '@/components/Blocks';
 import { CategoryBlock } from '@/components/CategoryBlock';
 import { FlashSale } from '@/components/FlashSale';
 import { Icon, type IconName } from '@/components/Icon';
@@ -30,14 +32,23 @@ const QUICK: { label: string; icon: IconName; href: string }[] = [
   { label: 'Tìm vườn ươm', icon: 'pin', href: '/he-thong-cua-hang' },
 ];
 
-export default async function HomePage() {
+export const metadata: Metadata = { title: 'Tất cả sản phẩm' };
+
+/** Trang danh mục tổng (trước 09/10/2026 là trang chủ): lối tắt nhóm hàng, Flash sale, mỗi danh mục một khối sản phẩm. */
+export default async function AllProductsPage() {
   const [flash, blocks, cfg] = await Promise.all([
     flashProducts(),
     menuCategories().then((list) => Promise.all(list.map(async (c) => ({ category: c, products: await productsIn(c.slug) })))),
     getShippingConfig(),
   ]);
+  const total = blocks.reduce((n, b) => n + b.products.length, 0);
   return (
     <>
+      <Breadcrumb items={[{ label: 'Trang chủ', href: '/' }, { label: 'Tất cả sản phẩm' }]} />
+      <div className="pl-head">
+        <h1>Tất cả sản phẩm <small>{total} sản phẩm</small></h1>
+      </div>
+
       <nav className="vx-strip" aria-label="Bộ sưu tập">
         {COLLECTIONS.map((c) => (
           <Link key={c.label} href={c.href ?? `/tim-kiem?q=${encodeURIComponent(c.q ?? '')}`} className={`vx-strip__item app-plain${c.hot ? ' hot' : ''}`}>

@@ -138,7 +138,7 @@ export function WholesaleQuoteForm({ defaults, fromAdvisor = false }: { defaults
         </p>
         <div className="vx-row" style={{ justifyContent: 'center' }}>
           <Link href={WHOLESALE_URL} className="vx-btn vx-btn--outline">Về trang Đối tác</Link>
-          <Link href="/" className="vx-btn vx-btn--primary">Xem sản phẩm</Link>
+          <Link href="/danh-muc" className="vx-btn vx-btn--primary">Xem sản phẩm</Link>
         </div>
       </div>
     );

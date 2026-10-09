@@ -962,3 +962,39 @@ export const serviceRequestEvents = pgTable('service_request_events', {
   actor: text('actor').notNull(),
   createdAt: createdAt(),
 }, (t) => [index('service_request_events_req_idx').on(t.requestId, t.id)]);
+
+// ---- Trang chủ ------------------------------------------------------------------------------
+
+/** Banner trang chủ (ảnh lớn chạy vòng, ảnh nhỏ cạnh, nền sự kiện, dải sự kiện) — chủ shop tự tải ở /admin/trang-chu. */
+export const homeBanners = pgTable('home_banners', {
+  id: serial('id').primaryKey(),
+  /** Vị trí (BANNER_SLOTS trong lib/home-banners.ts). */
+  slot: text('slot').notNull(),
+  /** Tiêu đề — làm chữ thay ảnh (alt) và chữ trên ảnh khi bật `show_text`. */
+  title: text('title').notNull(),
+  subtitle: text('subtitle').notNull().default(''),
+  /** Chữ trên nút; trống = không có nút (cả ảnh vẫn bấm được nếu có link). */
+  cta: text('cta').notNull().default(''),
+  href: text('href').notNull().default(''),
+  showText: boolean('show_text').notNull().default(false),
+  /** Tên file trong home_banner_images. */
+  image: text('image').notNull(),
+  imageMobile: text('image_mobile'),
+  /** Hiện từ / đến (null = không giới hạn). */
+  startsAt: ts('starts_at'),
+  endsAt: ts('ends_at'),
+  active: boolean('active').notNull().default(true),
+  sort: integer('sort').notNull().default(0),
+  updatedBy: text('updated_by'),
+  updatedAt: ts('updated_at').notNull().defaultNow(),
+  createdAt: createdAt(),
+}, (t) => [index('home_banners_slot_idx').on(t.slot, t.sort)]);
+
+/** Ảnh banner (công khai, /api/banner-images/[file]). Ảnh tải lên trước khi lưu banner nên không gắn khóa ngoại — ảnh không dùng tự dọn sau 1 ngày. */
+export const homeBannerImages = pgTable('home_banner_images', {
+  id: serial('id').primaryKey(),
+  file: text('file').notNull().unique(),
+  mime: text('mime').notNull(),
+  data: bytea('data').notNull(),
+  createdAt: createdAt(),
+});

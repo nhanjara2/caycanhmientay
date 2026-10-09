@@ -26,6 +26,7 @@ const I = {
   list: <><path d="M9 6h11M9 12h11M9 18h11" /><rect x="3.5" y="4.5" width="3" height="3" rx=".5" /><rect x="3.5" y="10.5" width="3" height="3" rx=".5" /><rect x="3.5" y="16.5" width="3" height="3" rx=".5" /></>,
   stock: <><path d="M6 7h12l1 13H5z" /><path d="M9 7V5a3 3 0 0 1 6 0v2" /></>,
   inbound: <path d="M4 9h16l-1-4H5zM5 9v11h14V9M10 20v-5h4v5" />,
+  image: <><rect x="3" y="5" width="18" height="14" rx="2" /><circle cx="8.5" cy="10" r="1.5" /><path d="m21 16-5-5-9 8" /></>,
   doc: <><path d="M6 3h9l4 4v14H6z" /><path d="M9 12h7M9 16h7" /></>,
   chat: <path d="M4 5h16v11H9l-5 4z" />,
   bell: <><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z" /><path d="M10 20a2 2 0 0 0 4 0" /></>,
@@ -60,6 +61,7 @@ export const ADMIN_NAV: { group: string; items: { href: string; label: string; i
     { href: '/admin/nhap-hang', label: 'Nhập hàng', icon: 'inbound' },
   ] },
   { group: 'NỘI DUNG', items: [
+    { href: '/admin/trang-chu', label: 'Banner trang chủ', icon: 'image' },
     { href: '/admin/noi-dung', label: 'Bài viết & video', icon: 'doc' },
     { href: '/admin/benh-cay', label: 'Bệnh cây', icon: 'bug' },
     { href: '/admin/du-an', label: 'Công trình đã cung cấp', icon: 'building' },

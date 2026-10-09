@@ -29,6 +29,10 @@ export function SidebarMenu({ categories, counts }: { categories: Category[]; co
         <DeliverToButton variant="side" />
         <div className="vx-side__title">DANH MỤC SẢN PHẨM</div>
         <div className="vx-side__promo">
+          <Link href="/danh-muc" className="plain" aria-current={pathname === '/danh-muc' ? 'page' : undefined}>
+            <Icon name="leaf" />
+            Tất cả sản phẩm
+          </Link>
           <Link href="/doi-tac" className="plain">
             <Icon name="box" />
             Đối tác sỉ · báo giá

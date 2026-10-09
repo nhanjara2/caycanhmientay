@@ -62,7 +62,7 @@ export default function CartPage() {
           ? <button type="button" className="vx-btn vx-btn--primary vx-btn--lg vx-btn--block" disabled>Chưa đủ đơn tối thiểu</button>
           : <Link href="/thanh-toan" className="vx-btn vx-btn--primary vx-btn--lg vx-btn--block">Tiến hành đặt hàng</Link>}
         <Link href={WHOLESALE_QUOTE_URL} className="vx-btn vx-btn--outline vx-btn--block">Gửi danh sách, nhận báo giá sỉ</Link>
-        <Link href="/" className="vx-btn vx-btn--ghost vx-btn--block">Tiếp tục mua sắm</Link>
+        <Link href="/danh-muc" className="vx-btn vx-btn--ghost vx-btn--block">Tiếp tục mua sắm</Link>
       </OrderSummary>
     </div>
   );
