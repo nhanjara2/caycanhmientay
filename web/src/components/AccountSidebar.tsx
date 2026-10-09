@@ -13,7 +13,7 @@ const NAV: { href: string; label: string; icon: IconName; badge?: number }[] = [
   { href: '/tai-khoan/vuon-cua-toi', label: 'Vườn của tôi', icon: 'plant' },
   { href: '/tai-khoan/lich-cham-cay', label: 'Lịch chăm cây', icon: 'clock' },
   { href: '/tai-khoan/bao-hanh', label: 'Bảo hành cây', icon: 'shield' },
-  { href: '/dich-vu', label: 'Lịch hẹn dịch vụ', icon: 'home' },
+  { href: '/doi-tac#dang-ky', label: 'Đối tác sỉ', icon: 'box' },
   { href: '/khuyen-mai', label: 'Voucher & Điểm thưởng', icon: 'tag' },
   { href: '/tai-khoan/yeu-thich', label: 'Sản phẩm yêu thích', icon: 'star' },
 ];

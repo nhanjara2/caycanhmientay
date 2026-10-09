@@ -8,7 +8,7 @@ import { listProjectsAdmin } from '@/server/projects';
 
 export const metadata: Metadata = { title: 'Dự án doanh nghiệp' };
 
-/** Dự án / công trình đã triển khai: hiện ở trang /doanh-nghiep để khách doanh nghiệp xem năng lực thật của shop. */
+/** Công trình đã cung cấp cây: hiện ở trang Đối tác sỉ /doi-tac để đối tác xem năng lực thật của shop. */
 export default async function AdminProjectsPage() {
   const me = await requireAccess('content');
   const canEdit = hasAccess(me, 'content', 'full');
@@ -20,7 +20,7 @@ export default async function AdminProjectsPage() {
       <div className="ad-title">
         <h1>Dự án doanh nghiệp</h1>
         <span className="acts">
-          <Link href="/doanh-nghiep#du-an" target="_blank" className="vx-btn vx-btn--outline">Xem trên web</Link>
+          <Link href="/doi-tac#cong-trinh" target="_blank" className="vx-btn vx-btn--outline">Xem trên web</Link>
           {canEdit && <Link href="/admin/du-an/moi" className="vx-btn vx-btn--primary">+ Thêm dự án</Link>}
         </span>
       </div>
@@ -28,7 +28,7 @@ export default async function AdminProjectsPage() {
         <svg className="vx-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8v.5" /></svg>
         <div>
           Mỗi dự án là một công trình shop <b>đã thật sự làm</b> (cung cấp cây, thi công, chăm sóc…), kèm ảnh chụp tại công trình. Dự án đang hiện
-          nằm ở mục <b>“Dự án đã triển khai”</b> trang <Link href="/doanh-nghiep" target="_blank">Khách doanh nghiệp</Link>: có ảnh thì thành thẻ ảnh,
+          nằm ở mục <b>“Công trình đã cung cấp cây”</b> trang <Link href="/doi-tac" target="_blank">Đối tác sỉ</Link>: có ảnh thì thành thẻ ảnh,
           chưa có ảnh thì là một dòng trong bảng công trình; dự án <b>Nổi bật</b> (cần ảnh) lên đầu trang. Tên và logo của khách hàng <b>chỉ điền khi khách đồng ý công khai</b> — không thì ghi chung, ví dụ “Một khu nghỉ dưỡng tại Phú Quốc”.
         </div>
       </div>
@@ -46,7 +46,7 @@ export default async function AdminProjectsPage() {
                       {p.images[0]
                         ? <img src={projectImageUrl(p.images[0].file)} alt="" width={64} height={48} style={{ width: 64, height: 48, objectFit: 'cover', borderRadius: 6, flex: 'none' }} />
                         : <span style={{ width: 64, height: 48, borderRadius: 6, border: '1px dashed var(--border)', flex: 'none', display: 'grid', placeItems: 'center', fontSize: '0.6875rem', color: 'var(--ink-muted)' }}>Chưa ảnh</span>}
-                      <span><b>{p.featured && <span title="Nổi bật" style={{ color: 'var(--sun)' }}>★ </span>}{p.title}</b><small>/doanh-nghiep/du-an/{p.slug}</small></span>
+                      <span><b>{p.featured && <span title="Nổi bật" style={{ color: 'var(--sun)' }}>★ </span>}{p.title}</b><small>/doi-tac/cong-trinh/{p.slug}</small></span>
                     </Link>
                   </td>
                   <td data-label="Loại công trình">{projectTypeOf(p.type).name}</td>

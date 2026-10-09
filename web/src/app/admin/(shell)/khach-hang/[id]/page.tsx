@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { OrderPill } from '@/components/admin/OrderPill';
 import { CustomerNotes } from '@/components/admin/CustomerNotes';
+import { PartnerAdmin } from '@/components/admin/PartnerAdmin';
 import { hasAccess } from '@/lib/permissions';
 import { Thumb } from '@/components/Icon';
 import { CONDITION_LABEL, fullAddress, KIND_LABEL } from '@/lib/address-labels';
@@ -33,7 +34,7 @@ export default async function AdminCustomerDetailPage({ params }: Props) {
   return (
     <div className="ad-body">
       <div className="ad-title">
-        <h1>{user.name ?? 'Chưa đặt tên'}</h1>
+        <h1>{user.name ?? 'Chưa đặt tên'}{user.company ? ` · ${user.company}` : ''}</h1>
         <span className="vx-tier" style={tier.gold ? undefined : { background: 'var(--surface-sunken)', color: 'var(--ink-muted)' }}>{tier.label}</span>
         <span className="acts"><Link href="/admin/khach-hang" className="vx-btn vx-btn--outline">← Danh sách</Link></span>
       </div>
@@ -66,6 +67,15 @@ export default async function AdminCustomerDetailPage({ params }: Props) {
               </div>
             </div>
           </div>
+          <PartnerAdmin
+            userId={user.id}
+            canEdit={hasAccess(me, 'customers', 'full')}
+            since={user.partnerAt ? fmtDateTime(user.partnerAt) : null}
+            initial={{
+              type: user.partnerType, status: user.partnerStatus, discount: user.partnerDiscount,
+              company: user.company ?? '', taxCode: user.taxCode ?? '', area: user.partnerArea ?? '',
+            }}
+          />
           {interests.length > 0 && (
             <div className="ad-card">
               <div className="ad-card__h">Quan tâm</div>

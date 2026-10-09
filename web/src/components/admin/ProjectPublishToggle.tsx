@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { setProjectPublishedAction } from '@/app/actions/projects';
 
-/** Hiện / ẩn dự án trên trang Khách doanh nghiệp ngay trong bảng. */
+/** Hiện / ẩn dự án trên trang Đối tác sỉ ngay trong bảng. */
 export function ProjectPublishToggle({ id, published }: { id: number; published: boolean }) {
   const router = useRouter();
   const [pending, start] = useTransition();

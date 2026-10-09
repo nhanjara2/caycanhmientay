@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { isQuote, type Product } from './catalog';
 import { snapOf, type CartLine } from './cart-snap';
 import { computeTotals, type Totals } from './pricing';
+import { useAuth } from './auth';
 import { useShipping } from './shipping-client';
 
 export { SHIP_RULES } from './pricing';
@@ -88,7 +89,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const totals = useMemo(() => computeTotals(lines.map((l) => ({ ...l.snap, qty: l.qty })), 'ship', 0, rules), [lines, rules]);
+  // Chiết khấu đối tác sỉ đã duyệt hiện ngay trong giỏ (server tính lại khi đặt).
+  const partnerPct = useAuth().user?.partner?.discount ?? 0;
+  const totals = useMemo(() => computeTotals(lines.map((l) => ({ ...l.snap, qty: l.qty })), 'ship', 0, rules, partnerPct), [lines, rules, partnerPct]);
 
   return (
     <Ctx.Provider value={{ lines, totals, ready, add, setQty, remove, replace: setLines, merge, clear, toast, notify: setToast }}>

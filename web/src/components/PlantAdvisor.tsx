@@ -10,7 +10,7 @@ import {
   COMMON, KINDS, PLAN_STORE_KEY, SPACE_KINDS, TIERS, buildPlan, cleanAnswers, defaults, fmtHeight, lightName, quotePrefill, summarize, toSavedPlan,
   visibleQuestions, type AdvisorPlant, type Answers, type Question, type SpaceKind, type ZoneResult,
 } from '@/lib/plant-advisor';
-import { SERVICE_INFO } from '@/lib/service-labels';
+import { WHOLESALE_QUOTE_URL } from '@/lib/partners';
 import { Icon, Thumb } from './Icon';
 
 const STATE_KEY = 'ccmt-advisor-v1';
@@ -70,7 +70,7 @@ export function PlantAdvisor({ plants, initialKind }: { plants: AdvisorPlant[]; 
 
   return (
     <div className="pa" ref={top}>
-      <div className="vx-crumb"><Link href="/dich-vu">Dịch vụ</Link>/<span>Tư vấn chọn cây</span></div>
+      <div className="vx-crumb"><Link href="/">Trang chủ</Link>/<span>Tư vấn chọn cây</span></div>
       <header className="pa-head">
         <h1>Tư vấn chọn cây</h1>
         <p>Trả lời vài câu hỏi về chỗ đặt cây, web gợi ý <b>loại cây, số lượng và chiều cao</b> cho từng vị trí. Miễn phí, không cần đăng nhập.</p>
@@ -123,7 +123,7 @@ export function PlantAdvisor({ plants, initialKind }: { plants: AdvisorPlant[]; 
             try {
               sessionStorage.setItem(PLAN_STORE_KEY, JSON.stringify({ plan: toSavedPlan(kind, s.answers, zones, s.choice), prefill: quotePrefill(kind, s.answers) }));
             } catch { /* không lưu được thì vẫn sang form, khách tự điền */ }
-            router.push(`/dich-vu/dat-lich-khao-sat?loai=${SERVICE_INFO[KINDS[kind].service].param}&phuong-an=1`);
+            router.push(`${WHOLESALE_QUOTE_URL}?phuong-an=1`);
           }}
         />
       )}
@@ -238,7 +238,7 @@ function Result({ kind, answers, zones, choice, setChoice, setTier, edit, restar
   const planBtn = (primary: boolean) => (
     <button type="button" className={`vx-btn vx-btn--lg ${primary ? 'vx-btn--primary' : 'vx-btn--outline'}`} onClick={sendPlan}>
       <Icon name="receipt" size={18} />
-      {primary ? 'Gửi phương án, đặt lịch khảo sát' : 'Gửi phương án cho kỹ sư'}
+      {primary ? 'Gửi phương án, nhận báo giá sỉ' : 'Gửi phương án xin báo giá sỉ'}
     </button>
   );
 
@@ -331,7 +331,7 @@ function Result({ kind, answers, zones, choice, setChoice, setTier, edit, restar
           </div>
           <ul className="pa-total__notes">
             {missing > 0 && <li>{missing} vị trí chưa có cây trên web — kỹ sư báo giá riêng.</li>}
-            <li>Chưa gồm phí giao{k.retail ? '' : ', công trồng, đất, chậu, vật tư'}. Giá có thể đổi theo mùa và cỡ cây thực tế.</li>
+            <li>Giá sỉ, chưa gồm phí giao{k.retail ? '' : ', đất, chậu, vật tư'}. Giá có thể đổi theo mùa và cỡ cây thực tế.</li>
             {capped && <li>Giỏ hàng nhận tối đa {CART_MAX} cây mỗi loại; số lượng lớn hơn nên gửi phương án để kỹ sư báo giá sỉ.</li>}
           </ul>
           <div className="pa-acts">

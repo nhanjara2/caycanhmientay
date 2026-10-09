@@ -6,11 +6,11 @@ import { SERVICE_TYPES, shortMoney, type ServiceType } from '@/lib/service-label
 import { requireAccess } from '@/server/auth';
 import { serviceBoard, serviceKpis, staffOptions } from '@/server/service-requests';
 
-export const metadata: Metadata = { title: 'Yêu cầu dịch vụ' };
+export const metadata: Metadata = { title: 'Yêu cầu báo giá sỉ' };
 
 type Props = { searchParams: Promise<{ loai?: string; ks?: string; thua?: string }> };
 
-/** AdminServiceRequests: 4 chỉ số + bảng Kanban Mới → Đã hẹn khảo sát → Đã báo giá → Đang thi công → Hoàn thành (+ Thua). */
+/** Yêu cầu báo giá sỉ: 4 chỉ số + bảng Kanban Mới → Đã liên hệ → Đã báo giá → Đang giao hàng → Hoàn thành (+ Thua). */
 export default async function AdminServiceRequestsPage({ searchParams }: Props) {
   await requireAccess('services');
   const sp = await searchParams;
@@ -22,7 +22,7 @@ export default async function AdminServiceRequestsPage({ searchParams }: Props) 
   return (
     <div className="ad-body">
       <div className="ad-title">
-        <h1>Yêu cầu dịch vụ</h1>
+        <h1>Yêu cầu báo giá sỉ</h1>
         <span className="acts">
           <ServiceFilters staff={staff} value={{ loai: service ?? '', ks: assignee ? String(assignee) : '', thua: lost }} />
           <Link href="/admin/dich-vu/moi" className="vx-btn vx-btn--primary"><Icon name="plus" />Tạo yêu cầu</Link>
@@ -39,12 +39,12 @@ export default async function AdminServiceRequestsPage({ searchParams }: Props) 
         <div className="ad-kpi">
           <span><Icon name="check" />Tỉ lệ chốt</span>
           <b>{kpi.closeRate == null ? '—' : `${kpi.closeRate}%`}</b>
-          <small>Báo giá → ký hợp đồng</small>
+          <small>Báo giá → chốt đơn</small>
         </div>
         <div className="ad-kpi">
-          <span><Icon name="cash" />Giá trị hợp đồng</span>
+          <span><Icon name="cash" />Giá trị đơn đã chốt</span>
           <b>{kpi.wonValue ? shortMoney(kpi.wonValue) : '0'}</b>
-          <small>Đang thi công: {kpi.runningValue ? shortMoney(kpi.runningValue) : '0'}</small>
+          <small>Đang giao: {kpi.runningValue ? shortMoney(kpi.runningValue) : '0'}</small>
         </div>
         <div className={`ad-kpi${kpi.overdue ? ' warn' : ''}`}>
           <span><Icon name="clock" />Chưa gọi lại quá 2 giờ</span>
@@ -55,7 +55,7 @@ export default async function AdminServiceRequestsPage({ searchParams }: Props) 
       <ServiceBoard cards={cards} showLost={lost} />
       {!cards.length && (
         <p className="vx-help" style={{ textAlign: 'center', margin: 0 }}>
-          Chưa có yêu cầu nào{service || assignee ? ' khớp bộ lọc' : ''}. Khách gửi ở trang <Link href="/dich-vu/dat-lich-khao-sat" style={{ color: 'var(--primary)' }}>Đặt lịch khảo sát</Link>, hoặc bấm “Tạo yêu cầu” khi khách gọi hotline.
+          Chưa có yêu cầu nào{service || assignee ? ' khớp bộ lọc' : ''}. Khách gửi ở trang <Link href="/bao-gia-si" style={{ color: 'var(--primary)' }}>Yêu cầu báo giá sỉ</Link>, hoặc bấm “Tạo yêu cầu” khi khách gọi hotline / nhắn Zalo.
         </p>
       )}
     </div>

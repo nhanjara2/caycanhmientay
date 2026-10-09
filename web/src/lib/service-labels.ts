@@ -1,16 +1,23 @@
-// Yêu cầu dịch vụ (QuoteRequestForm ↔ AdminServiceRequests): nhãn và lựa chọn dùng chung client/server.
+// Yêu cầu báo giá sỉ (WholesaleQuoteForm ↔ admin /admin/dich-vu): nhãn và lựa chọn dùng chung client/server.
+// Bảng `service_requests` có từ khi shop còn làm dịch vụ (29/09/2026); từ 09/10/2026 shop chỉ bán sỉ — yêu cầu mới mang loại đối tác
+// (lib/partners.ts), 4 loại dịch vụ cũ chỉ còn để hiện đúng các yêu cầu đã gửi trước đó.
 
-export const SERVICE_TYPES = ['garden', 'office', 'care', 'clinic'] as const;
+import { PARTNER_INFO, PARTNER_TYPES } from './partners';
+
+export const OLD_SERVICE_TYPES = ['garden', 'office', 'care', 'clinic'] as const;
+export const SERVICE_TYPES = [...PARTNER_TYPES, ...OLD_SERVICE_TYPES] as const;
 export type ServiceType = (typeof SERVICE_TYPES)[number];
 
-/** 4 thẻ dịch vụ ở phần 1 của form. `param` = giá trị ?loai= trên link từ trang dịch vụ. */
-export const SERVICE_INFO: Record<ServiceType, { label: string; hint: string; param: string }> = {
-  garden: { label: 'Sân vườn, ban công', hint: 'Thiết kế & thi công', param: 'san-vuon' },
-  office: { label: 'Cây văn phòng', hint: 'Cho thuê, bán', param: 'van-phong' },
-  care: { label: 'Chăm sóc định kỳ', hint: 'Tại nhà, văn phòng', param: 'cham-soc' },
-  clinic: { label: 'Chữa cây tại nhà', hint: 'Kỹ sư đến tận nơi', param: 'chua-cay' },
+export const SERVICE_INFO: Record<ServiceType, { label: string }> = {
+  ...(Object.fromEntries(PARTNER_TYPES.map((t) => [t, { label: PARTNER_INFO[t].label }])) as Record<(typeof PARTNER_TYPES)[number], { label: string }>),
+  garden: { label: 'Sân vườn, ban công (dịch vụ cũ)' },
+  office: { label: 'Cây văn phòng (dịch vụ cũ)' },
+  care: { label: 'Chăm sóc định kỳ (dịch vụ cũ)' },
+  clinic: { label: 'Chữa cây tại nhà (dịch vụ cũ)' },
 };
-export const serviceFromParam = (p?: string | null) => SERVICE_TYPES.find((s) => SERVICE_INFO[s].param === p);
+
+/** Thời gian cần hàng — khách chọn ở form báo giá sỉ (lưu chữ vào service_requests.need_by). */
+export const NEED_BY = ['Càng sớm càng tốt', 'Trong 1 tuần', 'Trong 2–4 tuần', 'Trên 1 tháng / theo tiến độ', 'Chưa xác định'] as const;
 
 /** Giai đoạn trên bảng Kanban admin. `lost` = cột Thua (ẩn mặc định). */
 export const SERVICE_STAGES = ['new', 'scheduled', 'quoted', 'in_progress', 'done', 'lost'] as const;
@@ -19,9 +26,9 @@ export const BOARD_STAGES = ['new', 'scheduled', 'quoted', 'in_progress', 'done'
 
 export const STAGE_LABEL: Record<ServiceStage, string> = {
   new: 'Mới',
-  scheduled: 'Đã hẹn khảo sát',
+  scheduled: 'Đã liên hệ',
   quoted: 'Đã báo giá',
-  in_progress: 'Đang thi công',
+  in_progress: 'Đang giao hàng',
   done: 'Hoàn thành',
   lost: 'Thua',
 };
@@ -79,7 +86,7 @@ export const fmtSlotDay = (ymd: string) => {
 };
 export const fmtSlot = (ymd: string, t: SlotTime) => `${fmtSlotDay(ymd)} · ${SLOT_TIMES[t]}`;
 
-export const serviceCode = (id: number) => `DV-${String(id).padStart(4, '0')}`;
+export const serviceCode = (id: number) => `BG-${String(id).padStart(4, '0')}`;
 
 /** Tiền gọn cho thẻ Kanban: 2.400.000 → "2,4 tr", 350.000 → "350k". */
 export const shortMoney = (n: number) =>

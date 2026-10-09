@@ -305,7 +305,7 @@ export function ProjectForm({ initial, canEdit }: { initial: ProjectFormValue; c
             <Card title="Hiển thị">
               <label className="vx-check" style={{ alignItems: 'center' }}>
                 <input type="checkbox" checked={v.published} disabled={!v.id} onChange={(e) => { set('published', e.target.checked); if (!e.target.checked) set('featured', false); }} />
-                Hiện trên trang Khách doanh nghiệp
+                Hiện trên trang Đối tác sỉ
               </label>
               <label className="vx-check" style={{ alignItems: 'center' }}>
                 <input type="checkbox" checked={v.featured} disabled={!v.published || !v.images.length} onChange={(e) => set('featured', e.target.checked)} />
@@ -356,7 +356,7 @@ export function ProjectForm({ initial, canEdit }: { initial: ProjectFormValue; c
       </fieldset>
       <div className="ad-sticky" style={{ margin: '0 calc(-1 * var(--space-4))' }}>
         <span className="note">
-          {error ? <span className="vx-err" role="alert">{error}</span> : busy || (saved ? 'Đã lưu' : canEdit ? 'Lưu xong trang Khách doanh nghiệp cập nhật ngay' : 'Bạn chỉ có quyền xem')}
+          {error ? <span className="vx-err" role="alert">{error}</span> : busy || (saved ? 'Đã lưu' : canEdit ? 'Lưu xong trang Đối tác sỉ cập nhật ngay' : 'Bạn chỉ có quyền xem')}
         </span>
         {canEdit && v.id && <button type="button" className="vx-btn vx-btn--ghost" style={{ color: 'var(--danger)' }} disabled={pending} onClick={remove}>Xóa</button>}
         <Link href="/admin/du-an" className="vx-btn vx-btn--outline">{canEdit ? 'Hủy' : 'Quay lại'}</Link>

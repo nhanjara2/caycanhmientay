@@ -30,7 +30,7 @@ const contact = (who: 'sales' | 'care' | 'support' = 'support'): Block => ({
   note: who === 'sales'
     ? `Cần tư vấn mua hàng? Gọi ${phone(SALES_PHONE)} (Nhân) hoặc nhắn ${zalo}, ${HOURS}.`
     : who === 'care'
-      ? `Cần tư vấn chăm cây, bắt bệnh hoặc dịch vụ sân vườn? Gọi ${phone(CARE_PHONE)} (Thịnh) hoặc nhắn ${zalo}, ${HOURS}.`
+      ? `Cần tư vấn chăm cây, bắt bệnh? Gọi ${phone(CARE_PHONE)} (Thịnh) hoặc nhắn ${zalo}, ${HOURS}.`
       : `Cần hỗ trợ, góp ý hoặc khiếu nại? Gọi ${phone(SUPPORT_PHONE)} (Trâm), nhắn ${zalo} hoặc gửi email ${SHOP_EMAIL}, ${HOURS}.`,
 });
 
@@ -53,7 +53,7 @@ const GIAY_PHEP: Section[] = [
     { ul: [
       '**Cây cảnh:** cây cảnh công trình, cây cảnh văn phòng, cây cảnh giống.',
       '**Thuốc bảo vệ thực vật, phân bón, vật tư làm vườn:** chậu, đất – giá thể, dụng cụ, hạt giống.',
-      '**Dịch vụ sân vườn:** khảo sát, báo giá, thi công và chăm sóc cây định kỳ ([xem các dịch vụ](/dich-vu)).',
+      '**Cung cấp sỉ:** cây cảnh và vật tư cho đối tác dịch vụ cảnh quan, công trình và buôn bán ([trang Đối tác sỉ](/doi-tac)). Từ tháng 10/2026 shop không còn nhận thi công, chăm sóc hay cho thuê cây.',
     ] },
   ] },
   { h: 'Giấy phép chuyên ngành', blocks: [
@@ -75,7 +75,7 @@ const QUY_CHE: Section[] = [
   { h: 'Nguyên tắc chung', blocks: [
     'Quy chế này áp dụng cho website **caycanhmientay.com** (sau đây gọi là "website") do **Cây Cảnh Miền Tây** (sau đây gọi là "shop") vận hành, người chịu trách nhiệm là ông Lê Hoài Nhân. Thông tin đăng ký kinh doanh xem tại [Giấy phép kinh doanh](/chinh-sach/giay-phep-kinh-doanh).',
     { ul: [
-      'Website là nơi shop bán lẻ cây cảnh, thuốc bảo vệ thực vật (BVTV), phân bón, vật tư làm vườn và nhận yêu cầu dịch vụ sân vườn. Hàng hóa trên website do shop bán; website không phải sàn cho người bán khác.',
+      'Website là nơi shop **bán sỉ** cây cảnh, thuốc bảo vệ thực vật (BVTV), phân bón, vật tư làm vườn cho đối tác (đơn vị dịch vụ cảnh quan, công trình, cửa hàng / đại lý) và nhận yêu cầu báo giá sỉ. Hàng hóa trên website do shop bán; website không phải sàn cho người bán khác.',
       'Các điểm cung cấp của đối tác trong trang [Hệ thống cửa hàng & vườn](/he-thong-cua-hang) chỉ để bạn tham khảo địa chỉ, không bán qua website này.',
       'Shop hoạt động theo pháp luật Việt Nam về thương mại điện tử, bảo vệ quyền lợi người tiêu dùng, bảo vệ thực vật và bảo vệ dữ liệu cá nhân.',
     ] },
@@ -117,7 +117,7 @@ const QUY_CHE: Section[] = [
     { ul: [
       'Tài khoản được xác thực bằng số điện thoại (mã OTP dùng một lần, hết hạn sau 5 phút) hoặc bằng tài khoản Google; phiên đăng nhập được bảo vệ bằng cookie riêng.',
       'Website không thu thập và không lưu số thẻ, mã CVV, mật khẩu hay mã OTP của ngân hàng. Shop không bao giờ nhờ bạn cung cấp những thông tin đó.',
-      'Ảnh bạn gửi để bảo hành, khảo sát chỉ bạn và nhân viên xử lý mới xem được.',
+      'Ảnh bạn gửi để bảo hành, xin báo giá chỉ bạn và nhân viên xử lý mới xem được.',
       'Nhân viên shop chỉ truy cập được phần việc của mình (chăm sóc khách hàng, kho, kỹ sư, giao hàng) theo phân quyền.',
       'Bạn nên đăng xuất khi dùng máy chung. Nghi ngờ tài khoản bị người khác dùng, hãy gọi ngay hotline bên dưới.',
     ] },
@@ -146,7 +146,7 @@ const DOI_NGU: Section[] = [
     'Mỗi nhu cầu có một đầu mối riêng để bạn không phải chờ chuyển máy:',
     { table: { head: ['Bạn cần', 'Gọi', 'Phụ trách'], rows: [
       ['Tư vấn mua hàng', phone(SALES_PHONE), 'Nhân'],
-      ['Tư vấn chăm cây, bắt bệnh, dịch vụ sân vườn', phone(CARE_PHONE), 'Thịnh'],
+      ['Tư vấn chăm cây, bắt bệnh', phone(CARE_PHONE), 'Thịnh'],
       ['Góp ý, khiếu nại, bảo hành', phone(SUPPORT_PHONE), 'Trâm'],
     ] } },
     `Giờ làm việc ${HOURS}. Bạn cũng nhắn được qua ${zalo}.`,
@@ -165,7 +165,7 @@ const DOI_NGU: Section[] = [
       '**Hỏi trên trang sản phẩm:** đặt câu hỏi ở mục Hỏi đáp, kỹ sư trả lời trong 2 giờ làm việc và báo cho bạn khi có trả lời.',
       '**Hỏi qua Zalo:** kỹ sư giải đáp miễn phí cho mọi cây bạn đã mua.',
       '**Cây bị bệnh, héo, rụng lá:** gửi ảnh ở **Tài khoản → Bảo hành cây** (trong ' + WARRANTY_DAYS + ' ngày kể từ khi nhận), kỹ sư phản hồi trong 24 giờ.',
-      '**Sân vườn, cây văn phòng, chăm sóc định kỳ:** [đặt lịch khảo sát](/dich-vu/dat-lich-khao-sat), kỹ sư gọi xác nhận trong 2 giờ làm việc.',
+      '**Mua số lượng lớn, công trình:** [gửi yêu cầu báo giá sỉ](/bao-gia-si) kèm danh sách cây hoặc ảnh bảng khối lượng.',
       '**Đến tận nơi:** mang mẫu lá hoặc ảnh cây tới Vườn ươm để kỹ sư xem ([địa chỉ và giờ mở cửa](/he-thong-cua-hang)).',
     ] },
     contact('care'),
@@ -187,6 +187,9 @@ function giaoHang({ shipping: s }: PolicyContext): Section[] {
         `**Nhận tại vườn:** chọn **Nhận tại vườn** ở bước thanh toán, không tính phí giao. Vườn ươm Cây Cảnh Miền Tây tại ${SHOP_ADDRESS} ([bản đồ, giờ mở cửa](/he-thong-cua-hang)). Shop giữ hàng 3 ngày và nhắn Zalo khi cây sẵn sàng.`,
       ] },
     ] },
+    ...(s.minOrder > 0 ? [{ h: 'Đơn sỉ tối thiểu', blocks: [
+      `Shop bán sỉ: mỗi đơn đặt trên website cần tối thiểu **${money(s.minOrder)} tiền hàng** (tính trước chiết khấu đối tác và mã giảm giá). Giỏ hàng chưa đủ sẽ báo số tiền còn thiếu. Cần số lượng lớn hoặc quy cách đặc biệt, [gửi yêu cầu báo giá sỉ](/bao-gia-si).`,
+    ] } as Section] : []),
     { h: 'Phí giao hàng', blocks: [
       { table: { head: ['Nhóm hàng', 'Phí giao', 'Miễn phí khi tiền hàng từ'], rows: [
         ['Cây sống', money(s.plant.fee), money(s.plant.freeFrom)],
@@ -339,7 +342,8 @@ const THANH_TOAN: Section[] = [
   ] },
   { h: 'Giá và giảm giá', blocks: [
     { ul: [
-      'Giá bán bằng đồng Việt Nam. Giá, phí giao hàng và mã giảm giá được tính lại lúc bạn bấm Đặt hàng; số tiền cần thanh toán hiện rõ trước khi xác nhận.',
+      'Giá trên website là **giá sỉ**, bằng đồng Việt Nam. Giá, phí giao hàng, chiết khấu đối tác và mã giảm giá được tính lại lúc bạn bấm Đặt hàng; số tiền cần thanh toán hiện rõ trước khi xác nhận.',
+      'Đối tác đã đăng ký và được shop duyệt ở [trang Đối tác sỉ](/doi-tac) có thể được chiết khấu riêng theo % tiền hàng; chiết khấu tự trừ khi đăng nhập và đặt hàng.',
       'Mã giảm giá nhập ở bước thanh toán, xem được số tiền giảm ngay. Mỗi mã có điều kiện riêng (đơn tối thiểu, số lượt, thời hạn, lượt dùng cho mỗi khách).',
       'Sản phẩm Flash sale có số lượng và thời gian giới hạn.',
       'Điểm thưởng: xem [Thể lệ tích điểm](/chinh-sach/tich-diem).',
@@ -381,8 +385,8 @@ const DAT_COC: Section[] = [
   ] },
   { h: 'Quy trình', blocks: [
     { ol: [
-      'Liên hệ shop qua hotline hoặc Zalo. Với công trình sân vườn, [đặt lịch khảo sát miễn phí](/dich-vu/dat-lich-khao-sat): kỹ sư khảo sát và gửi báo giá qua Zalo sau 48 giờ kể từ buổi khảo sát.',
-      'Shop xác nhận cây hoặc hạng mục, giá và thời gian giao (hoặc thi công) bằng báo giá hay tin nhắn.',
+      'Liên hệ shop qua hotline, Zalo hoặc [gửi yêu cầu báo giá sỉ](/bao-gia-si) kèm danh sách cây / bảng khối lượng; shop gửi báo giá qua Zalo.',
+      'Shop xác nhận cây, quy cách, số lượng, giá và thời gian giao bằng báo giá hay tin nhắn.',
       'Bạn chuyển khoản tiền cọc; shop xác nhận khi đã nhận tiền.',
       'Shop chuẩn bị cây hoặc triển khai công trình theo đúng thỏa thuận.',
       'Bạn thanh toán phần còn lại khi nhận cây hoặc nghiệm thu.',
@@ -422,7 +426,7 @@ const BAO_MAT: Section[] = [
     { ul: [
       'Xử lý đơn hàng, thanh toán, giao hàng, bảo hành, đổi trả và hoàn tiền.',
       'Liên hệ bạn về đơn hàng, bảo hành, câu hỏi và đánh giá (thông báo trên website, qua Zalo hoặc email).',
-      'Nhắc lịch chăm cây và tư vấn sau bán hàng; tiếp nhận yêu cầu khảo sát, báo giá dịch vụ.',
+      'Nhắc lịch chăm cây và tư vấn sau bán hàng; tiếp nhận yêu cầu báo giá sỉ, đăng ký đối tác.',
       'Chống gian lận và lạm dụng ưu đãi; bảo đảm an toàn hệ thống.',
       'Cải thiện website, khi bạn cho phép dữ liệu phân tích.',
       'Thực hiện nghĩa vụ theo quy định của pháp luật (chứng từ giao dịch, yêu cầu của cơ quan nhà nước).',
@@ -464,7 +468,7 @@ const BAO_MAT: Section[] = [
     { ul: [
       'Kết nối tới website được mã hóa (HTTPS).',
       'Mã OTP chỉ dùng một lần, lưu dạng mã hóa và hết hạn sau 5 phút; phiên đăng nhập dùng cookie riêng, không đọc được bằng mã chạy trên trang.',
-      'Ảnh bảo hành, ảnh khảo sát chỉ chủ tài khoản và nhân viên xử lý xem được.',
+      'Ảnh bảo hành, ảnh gửi kèm yêu cầu báo giá chỉ chủ tài khoản và nhân viên xử lý xem được.',
       'Nhân viên chỉ truy cập dữ liệu thuộc phần việc của mình theo phân quyền.',
       'Không hệ thống nào an toàn tuyệt đối. Nếu xảy ra sự cố ảnh hưởng dữ liệu của bạn, chúng tôi sẽ thông báo và xử lý theo quy định của pháp luật.',
     ] },
@@ -489,7 +493,7 @@ const NOI_DUNG: Section[] = [
       'Bạn cần đăng nhập để đặt câu hỏi, trả lời hoặc viết đánh giá.',
       'Shop trả lời câu hỏi; khách đã mua cũng có thể chia sẻ kinh nghiệm. Câu trả lời của khách chỉ để tham khảo, không thay thế tư vấn của kỹ sư, nhất là với thuốc BVTV.',
       'Nội dung chứa quảng cáo, số điện thoại, đường link, thông tin cá nhân của người khác, lời xúc phạm, sai sự thật hoặc vi phạm pháp luật có thể bị ẩn hoặc xóa. Shop không xóa đánh giá chỉ vì chê sản phẩm hay dịch vụ.',
-      'Bạn đồng ý cho shop hiển thị nội dung và ảnh bạn đăng (kèm tên hiển thị) trên website. Ảnh bảo hành và ảnh khảo sát không bao giờ công khai.',
+      'Bạn đồng ý cho shop hiển thị nội dung và ảnh bạn đăng (kèm tên hiển thị) trên website. Ảnh bảo hành và ảnh gửi kèm yêu cầu báo giá không bao giờ công khai.',
     ] },
   ] },
   { h: 'Ảnh và video trên website', blocks: [

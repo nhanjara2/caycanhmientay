@@ -12,7 +12,7 @@ import { getServiceRequest, staffOptions } from '@/server/service-requests';
 type Props = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  return { title: `Yêu cầu dịch vụ ${serviceCode(Number((await params).id) || 0)}` };
+  return { title: `Yêu cầu báo giá ${serviceCode(Number((await params).id) || 0)}` };
 }
 
 /** Giờ Việt Nam cho ô datetime-local: "2026-09-29T09:00". */
@@ -40,21 +40,24 @@ export default async function AdminServiceRequestPage({ params }: Props) {
             <div className="ad-card__h">Nhu cầu · {SERVICE_INFO[r.service].label}</div>
             <div className="ad-card__b">
               <div className="ad-kv">
+                {r.company && <><span>Đơn vị</span><span>{r.company}</span></>}
+                {r.needBy && <><span>Cần hàng</span><span>{r.needBy}</span></>}
+                {/* Các ô dưới chỉ có ở yêu cầu dịch vụ cũ (trước 09/10/2026) */}
                 {r.space && <><span>Không gian</span><span>{r.space}</span></>}
                 {r.area != null && <><span>Diện tích</span><span>{r.area} m²</span></>}
                 {r.sun && <><span>Hướng / nắng</span><span>{r.sun}</span></>}
                 {r.styles.length > 0 && <><span>Phong cách</span><span>{r.styles.join(', ')}</span></>}
-                <span>Ngân sách</span><span>{r.budget ?? 'Chưa nói'}</span>
-                <span>Khách muốn khảo sát</span><span>{r.slotDate ? fmtSlot(r.slotDate, r.slotTime ?? 'am') : 'Chưa chọn — gọi hẹn'}</span>
-                {r.note && <><span>Ghi chú của khách</span><span style={{ whiteSpace: 'pre-line' }}>{r.note}</span></>}
+                {r.budget && <><span>Ngân sách</span><span>{r.budget}</span></>}
+                {r.slotDate && <><span>Khách muốn khảo sát</span><span>{fmtSlot(r.slotDate, r.slotTime ?? 'am')}</span></>}
+                {r.note && <><span>Danh sách hàng / ghi chú</span><span style={{ whiteSpace: 'pre-line' }}>{r.note}</span></>}
               </div>
               {d.photos.length > 0 && (
                 <div className="ad-cmp" style={{ marginTop: 12 }}>
                   {d.photos.map((f, i) => (
                     <a key={f} className="ad-cmp__col" href={`/api/service-photos/${f}`} target="_blank" rel="noreferrer">
-                      <b>Ảnh hiện trạng {i + 1}</b>
+                      <b>Ảnh khách gửi {i + 1}</b>
                       {/* eslint-disable-next-line @next/next/no-img-element -- ảnh riêng tư, phục vụ qua route có kiểm tra quyền */}
-                      <img className="ad-cmp__img" src={`/api/service-photos/${f}`} alt={`Ảnh hiện trạng ${i + 1} của yêu cầu ${d.code}`} style={{ objectFit: 'cover', width: '100%' }} />
+                      <img className="ad-cmp__img" src={`/api/service-photos/${f}`} alt={`Ảnh khách gửi ${i + 1} của yêu cầu ${d.code}`} style={{ objectFit: 'cover', width: '100%' }} />
                     </a>
                   ))}
                 </div>
@@ -67,7 +70,7 @@ export default async function AdminServiceRequestPage({ params }: Props) {
               <div className="ad-card__b">
                 <p className="hint" style={{ margin: '0 0 8px' }}>
                   Khách tạo ở trang Tư vấn chọn cây · ngân sách “{TIERS.find((t) => t.key === r.plan!.tier)?.name ?? r.plan.tier}”.
-                  Giá là giá lúc khách xem, chỉ để tham khảo; số lượng tính theo quy tắc chung — chỉnh lại khi khảo sát.
+                  Giá là giá lúc khách xem, chỉ để tham khảo; số lượng tính theo quy tắc chung — xác nhận lại với khách trước khi báo giá.
                 </p>
                 <table className="ad-table app-mtable">
                   <thead><tr><th>Vị trí</th><th>SL</th><th>Cao</th><th>Cây đề xuất</th><th>Tạm tính</th></tr></thead>
@@ -119,8 +122,8 @@ export default async function AdminServiceRequestPage({ params }: Props) {
                 <span>Nguồn</span><span>{SOURCE_LABEL[r.source]}</span>
                 <span>Gửi lúc</span><span>{fmtDateTime(r.createdAt)}</span>
                 <span>Gọi lại lần đầu</span><span>{r.contactedAt ? fmtDateTime(r.contactedAt) : <b style={{ color: 'var(--sale)' }}>Chưa gọi</b>}</span>
-                {r.surveyAt && <><span>Lịch khảo sát</span><span>{fmtDateTime(r.surveyAt)}{d.assignee ? ` · ${d.assignee}` : ''}</span></>}
-                {r.value != null && <><span>Báo giá / hợp đồng</span><span><b>{money(r.value)}</b></span></>}
+                {r.surveyAt && <><span>Hẹn gặp</span><span>{fmtDateTime(r.surveyAt)}{d.assignee ? ` · ${d.assignee}` : ''}</span></>}
+                {r.value != null && <><span>Báo giá / đơn</span><span><b>{money(r.value)}</b></span></>}
                 {r.stage === 'lost' && r.lostReason && <><span>Lý do thua</span><span>{r.lostReason}</span></>}
               </div>
             </div>

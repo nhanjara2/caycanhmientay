@@ -7,6 +7,7 @@ import type { ProductAttrs } from '../../lib/product-filters';
 import type { ProjectImage, ProjectMetric, ProjectQuote, ProjectRole } from '../../lib/projects';
 import type { SavedPlan } from '../../lib/plant-advisor';
 import { STAFF_ROLES } from '../../lib/permissions';
+import { PARTNER_STATUSES, PARTNER_TYPES } from '../../lib/partners';
 import { SERVICE_STAGES, SERVICE_TYPES, SOURCES } from '../../lib/service-labels';
 import { boolean, customType, doublePrecision, index, integer, jsonb, pgTable, primaryKey, serial, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 
@@ -39,6 +40,16 @@ export const users = pgTable('users', {
   points: integer('points').notNull().default(0),
   /** Ghi chú nội bộ của shop về khách (admin Khách hàng) — khách không thấy. */
   notes: text('notes'),
+  /** Đối tác sỉ (lib/partners.ts): khách tự đăng ký ở /doi-tac (status 'pending'), admin duyệt + đặt chiết khấu. null = khách thường. */
+  partnerType: text('partner_type', { enum: PARTNER_TYPES }),
+  partnerStatus: text('partner_status', { enum: PARTNER_STATUSES }),
+  /** % chiết khấu riêng trên tiền hàng — chỉ áp dụng khi partner_status = 'approved'. */
+  partnerDiscount: integer('partner_discount').notNull().default(0),
+  /** Tên đơn vị, mã số thuế, khu vực hoạt động khách khai khi đăng ký đối tác. */
+  company: text('company'),
+  taxCode: text('tax_code'),
+  partnerArea: text('partner_area'),
+  partnerAt: ts('partner_at'),
   createdAt: createdAt(),
 });
 
@@ -235,12 +246,12 @@ export const postImages = pgTable('post_images', {
 }, (t) => [index('post_images_post_idx').on(t.postId)]);
 
 /**
- * Dự án / công trình đã triển khai — hiện ở trang Khách doanh nghiệp (/doanh-nghiep) khi `published`.
+ * Dự án / công trình đã triển khai — hiện ở trang Đối tác sỉ (/doi-tac) khi `published`.
  * Chủ shop tự nhập ở /admin/du-an; tên / logo khách chỉ điền khi khách đồng ý công khai.
  */
 export const projects = pgTable('projects', {
   id: serial('id').primaryKey(),
-  /** Sinh từ tên dự án lúc tạo, không đổi (link /doanh-nghiep/du-an/<slug>). */
+  /** Sinh từ tên dự án lúc tạo, không đổi (link /doi-tac/cong-trinh/<slug>). */
   slug: text('slug').notNull().unique(),
   title: text('title').notNull(),
   /** Loại công trình (PROJECT_TYPES trong lib/projects.ts). */
@@ -347,6 +358,8 @@ export const orders = pgTable('orders', {
   /** Chụp lại mã + số tiền giảm lúc đặt — không ràng buộc khóa ngoại, mã đổi/tắt sau đó không ảnh hưởng đơn cũ. */
   voucherCode: text('voucher_code'),
   voucherDiscount: integer('voucher_discount').notNull().default(0),
+  /** Chiết khấu đối tác sỉ chụp lại lúc đặt (tiền, không phải %). */
+  partnerDiscount: integer('partner_discount').notNull().default(0),
   total: integer('total').notNull(),
   createdAt: createdAt(),
   updatedAt: ts('updated_at').notNull().defaultNow(),
@@ -880,10 +893,10 @@ export const outboundMessages = pgTable('outbound_messages', {
   createdAt: createdAt(),
 }, (t) => [index('outbound_created_idx').on(t.createdAt)]);
 
-// ---- Yêu cầu dịch vụ (khảo sát, báo giá, thi công) --------------------------------------------
+// ---- Yêu cầu báo giá sỉ (trước 09/10/2026: yêu cầu dịch vụ khảo sát, thi công) ---------------------
 
 /**
- * Yêu cầu dịch vụ từ form Đặt lịch khảo sát (khách, không bắt buộc đăng nhập) hoặc nhân viên nhập tay (hotline, Zalo…).
+ * Yêu cầu báo giá sỉ từ form /bao-gia-si (khách, không bắt buộc đăng nhập) hoặc nhân viên nhập tay (hotline, Zalo…).
  * Đi qua các giai đoạn trên bảng Kanban admin: new → scheduled → quoted → in_progress → done (hoặc lost).
  */
 export const serviceRequests = pgTable('service_requests', {
@@ -902,6 +915,9 @@ export const serviceRequests = pgTable('service_requests', {
   phone: text('phone').notNull(),
   address: text('address').notNull(),
   note: text('note'),
+  /** Yêu cầu báo giá sỉ: tên đơn vị + thời gian cần hàng (chữ khách chọn). */
+  company: text('company'),
+  needBy: text('need_by'),
   /** Phương án khách tự chọn ở trang Tư vấn chọn cây rồi gửi kèm (giá lúc khách xem, chỉ để tham khảo). Null = không có. */
   plan: jsonb('plan').$type<SavedPlan>(),
   /** Tài khoản gửi (nếu đang đăng nhập). */

@@ -49,8 +49,8 @@ export const ADMIN_NAV: { group: string; items: { href: string; label: string; i
     { href: '/admin/pos', label: 'Bán tại quầy', icon: 'pos' },
     { href: '/admin/giao-hang', label: 'Giao hàng', icon: 'truck' },
     { href: '/admin/bao-hanh', label: 'Bảo hành cây', icon: 'shield' },
-    { href: '/admin/dich-vu', label: 'Yêu cầu dịch vụ', icon: 'service' },
-    { href: '/admin/khach-hang', label: 'Khách hàng', icon: 'users' },
+    { href: '/admin/dich-vu', label: 'Yêu cầu báo giá sỉ', icon: 'service' },
+    { href: '/admin/khach-hang', label: 'Khách hàng & đối tác', icon: 'users' },
     { href: '/admin/khuyen-mai', label: 'Khuyến mãi', icon: 'tag' },
   ] },
   { group: 'HÀNG HÓA', items: [
@@ -62,14 +62,13 @@ export const ADMIN_NAV: { group: string; items: { href: string; label: string; i
   { group: 'NỘI DUNG', items: [
     { href: '/admin/noi-dung', label: 'Bài viết & video', icon: 'doc' },
     { href: '/admin/benh-cay', label: 'Bệnh cây', icon: 'bug' },
-    { href: '/admin/du-an', label: 'Dự án doanh nghiệp', icon: 'building' },
+    { href: '/admin/du-an', label: 'Công trình đã cung cấp', icon: 'building' },
     { href: '/admin/danh-gia', label: 'Hỏi đáp & đánh giá', icon: 'chat' },
     { href: '/admin/mau-tin-nhan', label: 'Mẫu tin nhắn', icon: 'bell' },
   ] },
   { group: 'HỆ THỐNG', items: [
     { href: '/admin/cua-hang', label: 'Cửa hàng', icon: 'inbound' },
-    { href: '/admin/cai-dat-giao-hang', label: 'Cài đặt giao hàng', icon: 'map' },
-    { href: '/admin/thue-cay', label: 'Gói thuê cây', icon: 'plant' },
+    { href: '/admin/cai-dat-giao-hang', label: 'Đơn sỉ & giao hàng', icon: 'map' },
     { href: '/admin/phan-quyen', label: 'Phân quyền', icon: 'gear' },
   ] },
 ];

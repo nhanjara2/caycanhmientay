@@ -6,6 +6,7 @@ import { countOrdersByStatus } from '@/server/orders';
 import { countPostsInReview } from '@/server/posts';
 import { countQuestions } from '@/server/questions';
 import { countReviewsByStatus } from '@/server/reviews';
+import { countPendingPartners } from '@/server/partners';
 import { countNewServiceRequests } from '@/server/service-requests';
 import { countWarrantyByStatus } from '@/server/warranty';
 
@@ -21,8 +22,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const badges = {
     '/admin/don-hang': (await countOrdersByStatus()).pending ?? 0,
     '/admin/bao-hanh': (await countWarrantyByStatus()).pending,
-    // Yêu cầu dịch vụ mới chưa gọi lại
+    // Yêu cầu báo giá sỉ mới chưa gọi lại
     '/admin/dich-vu': await countNewServiceRequests(),
+    // Khách đăng ký đối tác sỉ chờ duyệt
+    '/admin/khach-hang': await countPendingPartners(),
     '/admin/kho': (await inventorySummary()).low,
     // Bài viết nhân viên gửi duyệt
     '/admin/noi-dung': await countPostsInReview(),

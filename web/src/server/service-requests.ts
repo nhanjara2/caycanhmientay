@@ -6,11 +6,12 @@ import { isPhone, normalizePhone } from './auth';
 import { db, schema } from './db';
 import { saveImage, type SavedImage } from './uploads';
 import {
-  BUDGETS, BUDGET_SHORT, CALLBACK_HOURS, QUOTE_STALE_DAYS, SERVICE_INFO, SERVICE_STAGES, SERVICE_TYPES, SLOT_CAPACITY, SLOT_TIMES, SOURCES, SPACES,
+  BUDGETS, BUDGET_SHORT, CALLBACK_HOURS, NEED_BY, QUOTE_STALE_DAYS, SERVICE_INFO, SERVICE_STAGES, SERVICE_TYPES, SLOT_CAPACITY, SLOT_TIMES, SOURCES, SPACES,
   STAGE_LABEL, STYLES, SUNS, fmtSlot, serviceCode, shortMoney, slotDates, todayVN, type SlotTime,
 } from '@/lib/service-labels';
 import { fmtDate, fmtDateTime } from '@/lib/order-labels';
 import { SPACE_KINDS } from '@/lib/plant-advisor';
+import { PARTNER_TYPES } from '@/lib/partners';
 import { money } from '@/lib/format';
 
 const { serviceRequests: S, serviceRequestPhotos: SP, serviceRequestEvents: SE, users } = schema;
@@ -32,7 +33,10 @@ type Err = { ok: false; error: string };
 const phone = z.string().trim().refine(isPhone, 'Số điện thoại chưa đúng').transform(normalizePhone);
 
 export const ServiceInputSchema = z.object({
-  service: z.enum(SERVICE_TYPES, 'Chọn dịch vụ bạn cần'),
+  /** Web chỉ nhận loại đối tác (bán sỉ); 4 loại dịch vụ cũ không còn nhận yêu cầu mới. */
+  service: z.enum(PARTNER_TYPES, 'Chọn bạn là đối tác nào'),
+  company: z.string().trim().max(120).optional(),
+  needBy: z.enum(NEED_BY).optional(),
   space: z.enum(SPACES).optional(),
   area: z.coerce.number().int().min(1, 'Diện tích chưa đúng').max(100_000, 'Diện tích chưa đúng').optional(),
   sun: z.enum(SUNS).optional(),
@@ -42,8 +46,9 @@ export const ServiceInputSchema = z.object({
   slot: z.string().regex(/^\d{4}-\d{2}-\d{2}\|(am|pm)$/).optional(),
   name: z.string().trim().min(2, 'Nhập họ tên').max(80),
   phone,
-  address: z.string().trim().min(5, 'Nhập địa chỉ khảo sát').max(200),
-  note: z.string().trim().max(1000).optional(),
+  address: z.string().trim().min(3, 'Nhập nơi giao hàng').max(200),
+  /** Danh sách hàng cần báo giá (tên, quy cách, số lượng) + ghi chú. */
+  note: z.string().trim().max(4000).optional(),
   /** Phương án từ trang Tư vấn chọn cây; sai định dạng thì bỏ qua, không chặn khách gửi. */
   plan: z.object({
     kind: z.enum(SPACE_KINDS),
@@ -59,26 +64,9 @@ export const ServiceInputSchema = z.object({
 });
 export type ServiceInput = z.infer<typeof ServiceInputSchema>;
 
-/** Số lịch đã đặt theo từng khung giờ (không tính yêu cầu đã thua). Key "YYYY-MM-DD|am". */
-export async function slotUsage(dates: string[]) {
-  const rows = await db.select({ d: S.slotDate, t: S.slotTime, n: count() }).from(S)
-    .where(and(inArray(S.slotDate, dates), ne(S.stage, 'lost')))
-    .groupBy(S.slotDate, S.slotTime);
-  return Object.fromEntries(rows.map((r) => [`${r.d}|${r.t}`, r.n])) as Record<string, number>;
-}
-
-/** Các khung giờ khảo sát cho form: ngày mai trở đi, đánh dấu khung đã kín. */
-export async function surveySlots() {
-  const dates = slotDates();
-  const used = await slotUsage(dates);
-  return dates.flatMap((d) => (Object.keys(SLOT_TIMES) as SlotTime[]).map((t) => ({
-    key: `${d}|${t}`, date: d, time: t, full: (used[`${d}|${t}`] ?? 0) >= SLOT_CAPACITY,
-  })));
-}
-export type SurveySlot = Awaited<ReturnType<typeof surveySlots>>[number];
-
 export async function createServiceRequest(input: ServiceInput, files: File[], user: SessionUser | null): Promise<Ok<{ code: string }> | Err> {
   if (files.length > MAX_SERVICE_PHOTOS) return { ok: false, error: `Tối đa ${MAX_SERVICE_PHOTOS} ảnh` };
+  if (!input.note && !input.plan && !files.length) return { ok: false, error: 'Ghi danh sách hàng cần báo giá, hoặc gửi kèm ảnh bảng khối lượng' };
 
   const since = new Date(Date.now() - DAY);
   const [{ n: byPhone }] = await db.select({ n: count() }).from(S).where(and(eq(S.phone, input.phone), gte(S.createdAt, since)));
@@ -113,12 +101,13 @@ export async function createServiceRequest(input: ServiceInput, files: File[], u
         service: input.service, space: input.space ?? null, area: input.area ?? null, sun: input.sun ?? null,
         styles: input.styles, budget: input.budget ?? null, slotDate: slot?.date ?? null, slotTime: slot?.time ?? null,
         name: input.name, phone: input.phone, address: input.address, note: input.note || null, plan: input.plan ?? null,
+        company: input.company || null, needBy: input.needBy ?? null,
         userId: user?.id ?? null, source: 'web',
       }).returning({ id: S.id });
       if (saved.length) await tx.insert(SP).values(saved.map((s) => ({ requestId: row.id, file: s.file, mime: s.mime, data: s.data })));
       await tx.insert(SE).values({
         requestId: row.id, kind: 'created', actor: input.name,
-        text: `Khách gửi yêu cầu trên web${slot ? ` · muốn khảo sát ${fmtSlot(slot.date, slot.time)}` : ' · chờ gọi hẹn lịch'}${saved.length ? ` · ${saved.length} ảnh` : ''}${input.plan ? ` · kèm phương án chọn cây (${input.plan.lines.length} mục)` : ''}`,
+        text: `Khách gửi yêu cầu báo giá sỉ trên web${slot ? ` · muốn khảo sát ${fmtSlot(slot.date, slot.time)}` : ''}${saved.length ? ` · ${saved.length} ảnh / file` : ''}${input.plan ? ` · kèm phương án chọn cây (${input.plan.lines.length} mục)` : ''}`,
       });
       return row.id;
     });
@@ -133,21 +122,22 @@ class SlotFull extends Error {}
 // ---- Nhân viên nhập tay (hotline, Zalo…) ------------------------------------------------------
 
 export const StaffCreateSchema = z.object({
-  service: z.enum(SERVICE_TYPES, 'Chọn dịch vụ'),
+  service: z.enum(PARTNER_TYPES, 'Chọn loại đối tác'),
+  company: z.string().trim().max(120).optional(),
   source: z.enum(SOURCES).exclude(['web']),
   name: z.string().trim().min(2, 'Nhập tên khách').max(80),
   phone,
   address: z.string().trim().min(3, 'Nhập địa chỉ').max(200),
   budget: z.enum(BUDGETS).optional(),
   area: z.number().int().min(1).max(100_000).optional(),
-  note: z.string().trim().max(1000).optional(),
+  note: z.string().trim().max(4000).optional(),
 });
 
 export async function createByStaff(input: z.infer<typeof StaffCreateSchema>, staff: SessionUser, actor: string) {
   const id = await db.transaction(async (tx) => {
     const now = new Date();
     const [row] = await tx.insert(S).values({
-      service: input.service, source: input.source, name: input.name, phone: input.phone, address: input.address,
+      service: input.service, source: input.source, name: input.name, phone: input.phone, address: input.address, company: input.company || null,
       budget: input.budget ?? null, area: input.area ?? null, note: input.note || null,
       // Khách tự liên hệ nên coi như đã nói chuyện; người nhập là người phụ trách
       contactedAt: now, assigneeId: staff.id,
@@ -185,8 +175,9 @@ function cardMeta(r: typeof S.$inferSelect, now: number): { when: string; late: 
         : { when: `Chưa gọi · quá ${ago(new Date(r.createdAt.getTime() + CALLBACK_HOURS * HOUR))}`, late: true };
     }
     case 'scheduled':
-      if (r.surveyAt) return { when: `KS ${fmtDateTime(r.surveyAt).split(', ').reverse().join(' · ')}`, late: r.surveyAt.getTime() < now - DAY };
-      return { when: r.slotDate ? `Khách chọn ${fmtSlot(r.slotDate, r.slotTime ?? 'am')}` : 'Chưa chốt giờ', late: !r.slotDate };
+      if (r.surveyAt) return { when: `Hẹn ${fmtDateTime(r.surveyAt).split(', ').reverse().join(' · ')}`, late: r.surveyAt.getTime() < now - DAY };
+      if (r.slotDate) return { when: `Khách chọn ${fmtSlot(r.slotDate, r.slotTime ?? 'am')}`, late: false };
+      return { when: `Đã liên hệ ${ago(r.stageAt)} trước`, late: false };
     case 'quoted': {
       const at = r.quotedAt ?? r.stageAt;
       const days = Math.floor((now - at.getTime()) / DAY);
@@ -216,7 +207,7 @@ export async function serviceBoard(f: BoardFilter) {
   const now = Date.now();
   return rows.map(({ r, assignee, photos }) => {
     const need = [
-      r.space ?? SERVICE_INFO[r.service].label,
+      r.company ?? r.space ?? SERVICE_INFO[r.service].label,
       r.area ? `${r.area}m²` : null,
       r.address.split(',').map((s) => s.trim()).filter(Boolean).at(-1) ?? null,
     ].filter(Boolean).join(' · ');
@@ -271,7 +262,7 @@ export type ServiceRequestFull = NonNullable<Awaited<ReturnType<typeof getServic
 // ---- Nhân viên xử lý --------------------------------------------------------------------------
 
 /** "2026-09-29T09:00" (giờ Việt Nam, từ ô datetime-local) → Date. */
-const vnDateTime = z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/, 'Giờ khảo sát chưa đúng').transform((s) => new Date(`${s}:00+07:00`));
+const vnDateTime = z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/, 'Giờ hẹn chưa đúng').transform((s) => new Date(`${s}:00+07:00`));
 
 export const UpdateSchema = z.object({
   id: z.number().int().positive(),
@@ -303,7 +294,7 @@ export async function updateServiceRequest(input: ServiceUpdate, actor: string):
       // Hẹn khảo sát: mặc định theo khung khách đã chọn nếu chưa chốt giờ
       if (input.stage === 'scheduled' && !cur.surveyAt && !input.surveyAt && cur.slotDate) {
         set.surveyAt = new Date(`${cur.slotDate}T${cur.slotTime === 'pm' ? '14' : '09'}:00:00+07:00`);
-        log.push({ kind: 'update', text: `Hẹn khảo sát ${fmtDateTime(set.surveyAt)} (theo lịch khách chọn)` });
+        log.push({ kind: 'update', text: `Hẹn gặp ${fmtDateTime(set.surveyAt)} (theo lịch khách chọn)` });
       }
     }
     if (input.assigneeId !== undefined && input.assigneeId !== cur.assigneeId) {
@@ -318,11 +309,11 @@ export async function updateServiceRequest(input: ServiceUpdate, actor: string):
     }
     if (input.surveyAt !== undefined && (input.surveyAt?.getTime() ?? null) !== (cur.surveyAt?.getTime() ?? null)) {
       set.surveyAt = input.surveyAt;
-      log.push({ kind: 'update', text: input.surveyAt ? `Hẹn khảo sát ${fmtDateTime(input.surveyAt)}` : 'Bỏ lịch khảo sát' });
+      log.push({ kind: 'update', text: input.surveyAt ? `Hẹn gặp ${fmtDateTime(input.surveyAt)}` : 'Bỏ lịch hẹn' });
     }
     if (input.value !== undefined && input.value !== cur.value) {
       set.value = input.value;
-      log.push({ kind: 'update', text: input.value != null ? `Giá trị báo giá / hợp đồng: ${money(input.value)}` : 'Bỏ giá trị báo giá' });
+      log.push({ kind: 'update', text: input.value != null ? `Giá trị báo giá / đơn: ${money(input.value)}` : 'Bỏ giá trị báo giá' });
       if (input.value != null && !cur.quotedAt && (set.stage ?? cur.stage) !== 'new') set.quotedAt = now;
     }
     if (!log.length) return { ok: true as const };

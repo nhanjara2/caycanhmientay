@@ -7,7 +7,7 @@ import { MAX_SLOTS, WEEKDAYS, type ShippingConfig } from '@/lib/shipping';
 import { Select } from '@/components/Select';
 
 type Form = {
-  plantFee: string; plantFree: string; supplyFee: string; supplyFree: string; zoneKm: string; zoneOn: boolean; slotsOn: boolean; daysAhead: string;
+  plantFee: string; plantFree: string; supplyFee: string; supplyFree: string; minOrder: string; zoneKm: string; zoneOn: boolean; slotsOn: boolean; daysAhead: string;
   slots: { key: string; from: string; to: string }[];
   cap: Record<string, string[]>;
   closed: { date: string; note: string }[];
@@ -16,13 +16,13 @@ type Form = {
 const digits = (s: string) => s.replace(/\D/g, '');
 const fmt = (n: number) => new Intl.NumberFormat('vi-VN').format(n);
 const toForm = (c: ShippingConfig): Form => ({
-  plantFee: String(c.plant.fee), plantFree: String(c.plant.freeFrom), supplyFee: String(c.supply.fee), supplyFree: String(c.supply.freeFrom),
+  plantFee: String(c.plant.fee), plantFree: String(c.plant.freeFrom), supplyFee: String(c.supply.fee), supplyFree: String(c.supply.freeFrom), minOrder: String(c.minOrder),
   zoneKm: String(c.plantZoneKm), zoneOn: c.plantZoneEnabled, slotsOn: c.slotsEnabled, daysAhead: String(c.daysAhead), slots: c.slots.map((s) => ({ ...s })),
   cap: Object.fromEntries(c.slots.map((s) => [s.key, (c.cap[s.key] ?? Array(7).fill(0)).map(String)])),
   closed: c.closed.map((x) => ({ ...x })),
 });
 
-/** AdminShippingSettings: phí giao theo nhóm, giới hạn vùng giao cây sống (tùy chọn), khung giờ × thứ với số đơn tối đa và ngày nghỉ lễ (khi shop có xe giao riêng). */
+/** AdminShippingSettings: đơn sỉ tối thiểu, phí giao theo nhóm, giới hạn vùng giao cây sống (tùy chọn), khung giờ × thứ với số đơn tối đa và ngày nghỉ lễ (khi shop có xe giao riêng). */
 export function ShippingSettings({ initial }: { initial: ShippingConfig }) {
   const router = useRouter();
   const [f, setF] = useState<Form>(() => toForm(initial));
@@ -58,6 +58,7 @@ export function ShippingSettings({ initial }: { initial: ShippingConfig }) {
       slots: f.slots,
       cap: Object.fromEntries(f.slots.map((s) => [s.key, f.cap[s.key].map((c) => Number(c || 0))])),
       closed: f.closed.filter((c) => c.date),
+      minOrder: Number(f.minOrder || 0),
     };
     start(async () => {
       const r = await saveShippingAction(payload).catch(() => ({ ok: false as const, error: 'Có lỗi, vui lòng thử lại' }));
@@ -68,7 +69,7 @@ export function ShippingSettings({ initial }: { initial: ShippingConfig }) {
     });
   };
 
-  const money = (k: 'plantFee' | 'plantFree' | 'supplyFee' | 'supplyFree', label: string, id: string) => (
+  const money = (k: 'plantFee' | 'plantFree' | 'supplyFee' | 'supplyFree' | 'minOrder', label: string, id: string) => (
     <div className="ad-f">
       <label htmlFor={id}>{label}</label>
       <input id={id} className="vx-input" inputMode="numeric" value={f[k]} onChange={(e) => edit((x) => ({ ...x, [k]: digits(e.target.value) }))} />
@@ -79,6 +80,19 @@ export function ShippingSettings({ initial }: { initial: ShippingConfig }) {
   return (
     <form className="ad-body" onSubmit={submit} style={{ paddingBottom: 0 }}>
       <div className="ad-title"><h1>Cài đặt giao hàng</h1></div>
+
+      <div className="ad-card">
+        <div className="ad-card__h">Bán sỉ — đơn tối thiểu</div>
+        <div className="ad-card__b" style={{ gap: 12 }}>
+          <div className="ad-frow two">
+            {money('minOrder', 'Tiền hàng tối thiểu mỗi đơn đặt trên web (đ)', 'sh-min')}
+          </div>
+          <span className="vx-help" style={{ margin: 0 }}>
+            Tính trên tiền hàng, trước chiết khấu đối tác và mã giảm giá. Giỏ hàng chưa đủ thì khách không bấm đặt được và thấy số tiền còn thiếu.
+            Đặt 0 = không giới hạn. Bán tại quầy (POS) không áp dụng.
+          </span>
+        </div>
+      </div>
 
       <div className="ad-card">
         <div className="ad-card__h">Phí giao và ngưỡng miễn phí</div>

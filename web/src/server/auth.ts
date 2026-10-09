@@ -6,6 +6,7 @@ import { createHash, createHmac, randomBytes, randomInt, timingSafeEqual } from 
 import { cache } from 'react';
 import { cleanGoogleAvatar } from '@/lib/avatar';
 import { hasAccess, homeFor, type Area } from '@/lib/permissions';
+import { MAX_PARTNER_DISCOUNT } from '@/lib/partners';
 import type { WelcomeOffer } from '@/lib/voucher-labels';
 import { db, schema } from './db';
 import type { Role } from './db/schema';
@@ -265,9 +266,14 @@ export async function destroySession() {
   store.delete(SESSION_COOKIE);
 }
 
-export type SessionUser = Pick<typeof users.$inferSelect, 'id' | 'phone' | 'contactPhone' | 'email' | 'googleSub' | 'avatarUrl' | 'name' | 'role' | 'staffRole' | 'points'>;
-const toSessionUser = ({ id, phone, contactPhone, email, googleSub, avatarUrl, name, role, staffRole, points }: typeof users.$inferSelect): SessionUser =>
-  ({ id, phone, contactPhone, email, googleSub, avatarUrl, name, role, staffRole, points });
+export type SessionUser = Pick<typeof users.$inferSelect,
+  'id' | 'phone' | 'contactPhone' | 'email' | 'googleSub' | 'avatarUrl' | 'name' | 'role' | 'staffRole' | 'points' | 'partnerType' | 'partnerStatus' | 'partnerDiscount'>;
+const toSessionUser = ({ id, phone, contactPhone, email, googleSub, avatarUrl, name, role, staffRole, points, partnerType, partnerStatus, partnerDiscount }: typeof users.$inferSelect): SessionUser =>
+  ({ id, phone, contactPhone, email, googleSub, avatarUrl, name, role, staffRole, points, partnerType, partnerStatus, partnerDiscount });
+
+/** % chiết khấu đối tác đang áp dụng cho tài khoản (0 khi chưa được duyệt). */
+export const partnerPct = (u: Pick<SessionUser, 'partnerStatus' | 'partnerDiscount'> | null) =>
+  u?.partnerStatus === 'approved' ? Math.max(0, Math.min(MAX_PARTNER_DISCOUNT, u.partnerDiscount)) : 0;
 
 /** SĐT để liên lạc: SĐT đã xác thực OTP, không có thì SĐT khách tự khai. */
 export const accountPhone = (u: Pick<SessionUser, 'phone' | 'contactPhone'>) => u.phone ?? u.contactPhone ?? null;
@@ -331,5 +337,7 @@ export const publicUser = (u: SessionUser) => ({
   role: u.role,
   staffRole: u.staffRole ?? null,
   points: u.points,
+  /** Đối tác sỉ: loại + trạng thái duyệt; `discount` = % đang áp dụng (0 khi chưa duyệt). */
+  partner: u.partnerType ? { type: u.partnerType, status: u.partnerStatus ?? 'pending', discount: partnerPct(u) } : null,
 });
 export type PublicUser = ReturnType<typeof publicUser>;

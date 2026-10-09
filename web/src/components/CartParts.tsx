@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { type CartLine, type Totals, useCart } from '@/lib/cart';
 import { useShipping } from '@/lib/shipping-client';
 import { money } from '@/lib/format';
+import { minOrderShort } from '@/lib/pricing';
 import { Art, Icon } from './Icon';
 
 export function Steps({ step }: { step: 1 | 2 | 3 }) {
@@ -24,7 +25,7 @@ export function Steps({ step }: { step: 1 | 2 | 3 }) {
 /** Danh sách sản phẩm chia nhóm Cây sống / Vật tư (giao khác nhau, tính phí riêng). */
 export function CartList({ editable }: { editable: boolean }) {
   const { lines, totals, setQty, remove } = useCart();
-  const { rules } = useShipping();
+  const { rules, minOrder } = useShipping();
   const plants = lines.filter((l) => l.snap.ship === 'plant');
   const supplies = lines.filter((l) => l.snap.ship === 'supply');
 
@@ -33,7 +34,7 @@ export function CartList({ editable }: { editable: boolean }) {
       <h3 className="vx-card__title">Danh sách sản phẩm</h3>
       <div className="vx-ship-banner">
         <Icon name="truck" />
-        <span><b>Miễn phí vận chuyển</b> cho đơn vật tư từ {money(rules.supply.freeFrom)}</span>
+        <span><b>Miễn phí vận chuyển</b> cho đơn vật tư từ {money(rules.supply.freeFrom)}{minOrder > 0 && <> · Đơn sỉ tối thiểu {money(minOrder)}</>}</span>
       </div>
       {plants.length > 0 && (
         <>
@@ -98,8 +99,10 @@ function Item({ l, editable, setQty, remove }: {
 
 /** OrderSummary: khối tổng tiền cột phải, dính khi cuộn. */
 export function OrderSummary({ totals: t, children }: { totals: Totals; children: ReactNode }) {
-  const { rules } = useShipping();
+  const { rules, minOrder } = useShipping();
   const plantLeft = t.plantSubtotal > 0 && t.plantShip > 0 ? rules.plant.freeFrom - t.plantSubtotal : 0;
+  const short = minOrderShort(t.subtotal, minOrder);
+  const saved = t.directDiscount + t.voucherDiscount + t.partnerDiscount;
   return (
     <aside className="vx-sum">
       <div className="vx-lines">
@@ -108,8 +111,15 @@ export function OrderSummary({ totals: t, children }: { totals: Totals; children
         {t.plantSubtotal > 0 && <div><span>Phí giao cây sống</span>{t.plantShip ? <b>{money(t.plantShip)}</b> : <b className="pos">Miễn phí</b>}</div>}
         {t.supplySubtotal > 0 && <div><span>Phí giao vật tư</span>{t.supplyShip ? <b>{money(t.supplyShip)}</b> : <b className="pos">Miễn phí</b>}</div>}
         {t.voucherDiscount > 0 && <div><span>Mã giảm giá</span><b className="neg">-{money(t.voucherDiscount)}</b></div>}
-        {(t.directDiscount > 0 || t.voucherDiscount > 0) && <div><span>Tiết kiệm được</span><b className="neg">{money(t.directDiscount + t.voucherDiscount)}</b></div>}
+        {t.partnerDiscount > 0 && <div><span>Chiết khấu đối tác</span><b className="neg">-{money(t.partnerDiscount)}</b></div>}
+        {saved > 0 && <div><span>Tiết kiệm được</span><b className="neg">{money(saved)}</b></div>}
       </div>
+      {short > 0 && (
+        <div className="vx-freeship app-minorder" role="status">
+          <span>Đơn sỉ tối thiểu <b>{money(minOrder)}</b> tiền hàng — mua thêm <b>{money(short)}</b> để đặt hàng</span>
+          <div className="bar"><i style={{ width: `${(t.subtotal / minOrder) * 100}%` }} /></div>
+        </div>
+      )}
       {plantLeft > 0 && (
         <div className="vx-freeship">
           <span>Mua thêm <b>{money(plantLeft)}</b> để miễn phí giao cây sống</span>
@@ -119,7 +129,7 @@ export function OrderSummary({ totals: t, children }: { totals: Totals; children
       <div className="vx-total">
         <b>Thành tiền</b>
         <span>
-          {(t.directDiscount > 0 || t.voucherDiscount > 0) && <s>{money(t.original + t.plantShip + t.supplyShip)}</s>}
+          {saved > 0 && <s>{money(t.original + t.plantShip + t.supplyShip)}</s>}
           <span className="amt">{money(t.total)}</span>
         </span>
       </div>

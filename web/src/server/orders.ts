@@ -3,8 +3,9 @@ import { and, count, desc, eq, getTableColumns, ilike, inArray, ne, or, sql } fr
 import { randomInt } from 'node:crypto';
 import * as z from 'zod';
 import type { Product, Unit } from '@/lib/catalog';
-import { computeTotals } from '@/lib/pricing';
-import { accountPhone, normalizePhone, isPhone, type SessionUser } from './auth';
+import { computeTotals, minOrderShort } from '@/lib/pricing';
+import { money } from '@/lib/format';
+import { accountPhone, normalizePhone, isPhone, partnerPct, type SessionUser } from './auth';
 import { getProducts, mainImageOf } from './catalog';
 import { buildSlotOptions, dayLabel, slotTime, vnDate, type ShippingConfig } from '@/lib/shipping';
 import { plantZone } from '@/lib/stock';
@@ -84,8 +85,11 @@ export async function createOrder(input: PlaceOrderInput, user: SessionUser | nu
 
   const totals = computeTotals(
     lines.map(({ p, u, it }) => ({ price: u.price, oldPrice: u.oldPrice, qty: it.qty, ship: p.ship, pesticide: p.pesticide })),
-    input.delivery, 0, cfg,
+    input.delivery, 0, cfg, partnerPct(user),
   );
+  // Bán sỉ: tiền hàng (trước chiết khấu) phải đạt mức tối thiểu ở Cài đặt giao hàng.
+  const short = minOrderShort(totals.subtotal, cfg.minOrder);
+  if (short) return { ok: false, error: `Đơn sỉ tối thiểu ${money(cfg.minOrder)} tiền hàng — vui lòng thêm ${money(short)} nữa.` };
 
   try {
     return await db.transaction((tx) => createOrderTx(tx, input, user, lines, totals, cfg));
@@ -169,7 +173,7 @@ async function createOrderTx(
     delivery: input.delivery, address: input.delivery === 'ship' ? input.address : null,
     slot: slot?.text ?? null, slotDate: slot?.date ?? null, slotKey: slot?.key ?? null, note: input.note || null, paymentMethod: input.payment,
     original: totals.original, subtotal: totals.subtotal, plantShip: totals.plantShip, supplyShip: totals.supplyShip,
-    voucherCode, voucherDiscount, total,
+    voucherCode, voucherDiscount, partnerDiscount: totals.partnerDiscount, total,
   }).returning({ id: orders.id });
 
   for (const { p, u, it } of lines) {

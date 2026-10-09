@@ -202,7 +202,7 @@ export function StoreLocator({ stores }: { stores: PublicStore[] }) {
                         Xem chỉ đường
                       </a>
                       {sel.phone && <a className="vx-btn vx-btn--soft" href={`tel:${sel.phone}`}>Gọi tư vấn</a>}
-                      {sel.kind === 'store' && <Link className="vx-btn vx-btn--outline" href="/dich-vu/dat-lich-khao-sat">Đặt lịch đến xem cây</Link>}
+                      {sel.kind === 'store' && <Link className="vx-btn vx-btn--outline" href="/bao-gia-si">Yêu cầu báo giá sỉ</Link>}
                     </div>
                   </div>
                 </div>

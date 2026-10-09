@@ -17,7 +17,7 @@ export type PanelValue = {
   lostReason: string;
 };
 
-/** Khung "Xử lý": giai đoạn, người phụ trách, lịch khảo sát, giá trị báo giá / hợp đồng. Mọi thay đổi ghi vào lịch sử. */
+/** Khung "Xử lý": giai đoạn, người phụ trách, lịch hẹn, giá trị báo giá. Mọi thay đổi ghi vào lịch sử. */
 export function ServiceRequestPanel({ init, staff }: { init: PanelValue; staff: { id: number; name: string }[] }) {
   const router = useRouter();
   const [v, setV] = useState(init);
@@ -59,22 +59,22 @@ export function ServiceRequestPanel({ init, staff }: { init: PanelValue; staff: 
           <div className="ad-f">
             <label htmlFor="sr-lost">Lý do thua</label>
             <input id="sr-lost" className="vx-input" value={v.lostReason} maxLength={300} onChange={(e) => set('lostReason', e.target.value)}
-              placeholder="Ví dụ: khách chọn bên khác, vượt ngân sách" />
+              placeholder="Ví dụ: khách chọn nơi khác, giá chưa phù hợp" />
           </div>
         )}
         <div className="ad-f">
-          <label htmlFor="sr-who">Kỹ sư / nhân viên phụ trách</label>
+          <label htmlFor="sr-who">Nhân viên phụ trách</label>
           <Select id="sr-who" className="vx-input" value={v.assigneeId ?? ''} onChange={(e) => set('assigneeId', e.target.value ? Number(e.target.value) : null)}>
             <option value="">Chưa giao</option>
             {staff.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </Select>
         </div>
         <div className="ad-f">
-          <label htmlFor="sr-survey">Lịch khảo sát đã chốt</label>
+          <label htmlFor="sr-survey">Hẹn gặp / xem cây (nếu có)</label>
           <input id="sr-survey" type="datetime-local" className="vx-input" value={v.surveyAt} onChange={(e) => set('surveyAt', e.target.value)} />
         </div>
         <div className="ad-f">
-          <label htmlFor="sr-value">Giá trị báo giá / hợp đồng (đồng)</label>
+          <label htmlFor="sr-value">Giá trị báo giá / đơn đã chốt (đồng)</label>
           <input id="sr-value" className="vx-input" inputMode="numeric" value={valueText} placeholder="Chưa báo giá"
             onChange={(e) => { setValueText(e.target.value.replace(/\D/g, '').slice(0, 11)); setMsg(null); }} />
           {value != null && <span className="vx-help">{money(value)}</span>}

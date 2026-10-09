@@ -6,7 +6,7 @@ import { ProjectCard } from './ProjectParts';
 
 const PAGE = 6;
 
-/** Lưới dự án trên trang Khách doanh nghiệp: lọc theo loại công trình (chỉ hiện loại đang có dự án) + "Xem thêm". */
+/** Lưới công trình trên trang Đối tác sỉ: lọc theo loại công trình (chỉ hiện loại đang có dự án) + "Xem thêm". */
 export function ProjectShowcase({ projects }: { projects: Project[] }) {
   const [type, setType] = useState('');
   const [shown, setShown] = useState(PAGE);

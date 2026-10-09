@@ -14,13 +14,13 @@ const ABOUT: [string, string][] = [
 ];
 const LEARN: [string, string][] = [
   ['Góc chăm cây', '/goc-cham-cay'], ['Bắt bệnh cho cây', '/benh-cay'], ['Tra cứu thuốc BVTV', '/danh-muc/thuoc-bvtv'],
-  ['Hướng dẫn dùng thuốc an toàn', '/chinh-sach/thuoc-bvtv-an-toan'], ['Dịch vụ sân vườn', '/dich-vu'], ['Tư vấn chọn cây', '/tu-van-chon-cay'],
-  ['Khách doanh nghiệp', '/doanh-nghiep'], ['Tin khuyến mãi', '/khuyen-mai'], ['Truyền thông', '/tin-tuc'],
+  ['Hướng dẫn dùng thuốc an toàn', '/chinh-sach/thuoc-bvtv-an-toan'], ['Đối tác sỉ', '/doi-tac'], ['Yêu cầu báo giá sỉ', '/bao-gia-si'],
+  ['Tư vấn chọn cây', '/tu-van-chon-cay'], ['Tin khuyến mãi', '/khuyen-mai'], ['Truyền thông', '/tin-tuc'],
 ];
 // [nội dung, số điện thoại, người phụ trách]
 const HOTLINES: [string, string, string?][] = [
-  ['Tư vấn mua hàng', SALES_PHONE, 'Nhân'],
-  ['Tư vấn chăm cây, bắt bệnh, dịch vụ sân vườn', CARE_PHONE, 'Thịnh'],
+  ['Kinh doanh sỉ, báo giá', SALES_PHONE, 'Nhân'],
+  ['Tư vấn chăm cây, bắt bệnh', CARE_PHONE, 'Thịnh'],
   ['Góp ý, khiếu nại, bảo hành', SUPPORT_PHONE, 'Trâm'],
 ];
 // Logo trong public/images/pay/

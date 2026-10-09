@@ -289,11 +289,6 @@ export const KINDS: Record<SpaceKind, KindDef> = {
           { key: 'sang', name: 'Nhiều cửa kính, sáng tự nhiên' }, { key: 'den', name: 'Chủ yếu đèn, máy lạnh' }, { key: 'ram', name: 'Khá tối' },
         ],
       },
-      {
-        id: 'rent', type: 'choice', label: 'Bạn muốn thuê hay mua cây?', def: 'chua', options: [
-          { key: 'thue', name: 'Thuê theo tháng', hint: 'shop thay cây, chăm định kỳ' }, { key: 'mua', name: 'Mua đứt' }, { key: 'chua', name: 'Chưa biết, cần tư vấn' },
-        ],
-      },
     ],
     plan: (a) => {
       const zones = arr(a, 'zones');
@@ -330,7 +325,6 @@ export const KINDS: Record<SpaceKind, KindDef> = {
           { id: 'pantry', title: 'Cây đặt sàn nhỏ', role: 'goc', qty: 2, unit: 'chậu', h: [60, 120], lightCap: 'ram', why: 'Hành lang thường thiếu sáng: chọn cây chịu bóng, dáng gọn không vướng lối đi.' },
         ],
       });
-      if (str(a, 'rent') === 'thue' && out.length) out[0].note = 'Bạn chọn thuê cây: giá bên dưới là giá mua tham khảo. Giá thuê tính theo tháng (đã gồm thay cây, chăm sóc), kỹ sư báo sau khảo sát.';
       return out;
     },
   },
@@ -616,7 +610,7 @@ function lightNear(plant: LightKey[], want: LightKey): string | null {
   const idx = plant.map((l) => LIGHT_ORDER.indexOf(l));
   // Chỗ chỉ có đèn: cây ưa sáng tán xạ (kim tiền, monstera…) vẫn sống được nếu đưa ra chỗ sáng luân phiên
   if (idx.some((i) => i === w - 1 || (want === 'den' && i === w - 2))) {
-    return want === 'den' ? 'Chỉ có đèn: nên đưa cây ra chỗ sáng 1–2 ngày mỗi tuần (thuê cây thì shop thay luân phiên)' : 'Chỗ này hơi tối với cây: đặt càng gần cửa sổ càng tốt';
+    return want === 'den' ? 'Chỉ có đèn: nên đưa cây ra chỗ sáng 1–2 ngày mỗi tuần' : 'Chỗ này hơi tối với cây: đặt càng gần cửa sổ càng tốt';
   }
   if (idx.some((i) => i === w + 1)) return 'Nắng hơi gắt với cây: nên che lưới hoặc để chỗ có bóng buổi trưa';
   return null;
@@ -724,7 +718,7 @@ export function summarize(kind: SpaceKind, a: Answers): string[] {
   return lines;
 }
 
-/** Phương án gửi kèm yêu cầu khảo sát (lưu ở service_requests.plan). Giá là giá lúc khách xem — chỉ để tham khảo. */
+/** Phương án gửi kèm yêu cầu báo giá sỉ (lưu ở service_requests.plan). Giá là giá lúc khách xem — chỉ để tham khảo. */
 export type PlanLine = { zone: string; title: string; qty: number; unit: string; height?: string; slug?: string; product?: string; option?: string; price?: number };
 export type SavedPlan = { kind: SpaceKind; tier: TierKey; summary: string[]; lines: PlanLine[]; total: number };
 

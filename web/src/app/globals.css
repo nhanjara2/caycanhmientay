@@ -528,8 +528,38 @@ button.rvw-help:hover, .rvw-help[aria-pressed="true"] { color: var(--primary); }
   .faq-item .acts { grid-column: 1 / -1; }
 }
 
-/* ---- Yêu cầu dịch vụ: form Đặt lịch khảo sát (components/QuoteForm.tsx) + admin /admin/dich-vu ---- */
+/* ---- Yêu cầu báo giá sỉ: form /bao-gia-si (components/WholesaleQuoteForm.tsx) + admin /admin/dich-vu ---- */
 button.qf-opt { font: inherit; color: inherit; background: var(--surface); cursor: pointer; text-align: left; }
+/* Bán sỉ (09/10/2026): 3 thẻ loại đối tác, ô danh sách hàng, khung "Cách khác" (/bao-gia-si, đăng ký ở /doi-tac) */
+.qf-opts.app-qf-opts3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.app-qf-opts3 .qf-opt { font-size: 0.9375rem; line-height: 1.35; padding: 12px; }
+.app-qf-opts3 .qf-opt small { font-size: 0.8125rem; line-height: 1.45; }
+.app-qf-opts3 .qf-opt:disabled { opacity: .5; cursor: not-allowed; }
+textarea.vx-input.app-qf-items { min-height: 9rem; font-size: 0.9375rem; line-height: 1.5; resize: vertical; }
+.app-qf-ways p { margin: 0 0 8px; font-size: 0.875rem; line-height: 1.5; color: var(--ink-muted); }
+.app-qf-ways a { color: var(--primary); font-weight: 600; }
+@media (max-width: 47.9375em) { .qf-opts.app-qf-opts3 { grid-template-columns: minmax(0, 1fr); } }
+/* Giỏ / thanh toán: thanh "đơn sỉ tối thiểu" (vx-freeship tô cam) */
+.vx-freeship.app-minorder { padding: 10px 12px; border: 1px solid #f59e0b; border-radius: var(--radius-md); background: #fff7e6; color: var(--ink); }
+.app-minorder .bar i { background: #d97706; }
+/* Trang sản phẩm: dòng "Giá sỉ · đơn tối thiểu" dưới giá */
+.app-wsnote { display: flex; gap: 6px; align-items: flex-start; margin: 2px 0 0; font-size: 0.875rem; line-height: 1.45; color: var(--ink-muted); }
+.app-wsnote .vx-ico { flex: none; margin-top: 2px; color: var(--primary); }
+.app-wsnote b { color: var(--ink); }
+.app-wsnote a { color: var(--primary-hover); font-weight: 600; }
+/* Đăng ký đối tác (/doi-tac#dang-ky, components/PartnerSignup) */
+.pt-signup { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4); max-width: 64rem; padding: 1.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-sizing: border-box; }
+.pt-signup > div:not(.pt-signup__acts):not(.qf-opts):not(.ad-frow):not(.app-qf-actions) { flex: 1 1 18rem; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.pt-signup b { font-size: 1.0625rem; line-height: 1.4; }
+.pt-signup p { margin: 0; font-size: 0.9375rem; line-height: 1.55; color: var(--ink-muted); }
+.pt-signup p b { font-size: inherit; color: var(--ink); }
+.pt-signup__ic { flex: none; display: grid; place-items: center; width: 3rem; height: 3rem; border-radius: 50%; background: var(--primary-soft); color: var(--primary-hover); }
+.pt-signup--approved { border: 2px solid var(--primary); }
+.pt-signup--pending .pt-signup__ic { background: #fff3d6; color: #92400e; }
+p.pt-signup__co { color: var(--ink); font-weight: 600; }
+.pt-signup__acts { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.pt-signup--form { flex-direction: column; align-items: stretch; gap: var(--space-3); }
+.app-pt-offer { margin: 4px 0; font-size: 0.875rem; line-height: 1.4rem; }
 .qf-up .app-qf-photo { position: relative; background: center / cover no-repeat var(--primary-soft); }
 .app-qf-photo button { position: absolute; top: 4px; right: 4px; display: grid; place-items: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 50%; background: rgba(0, 0, 0, .55); color: #fff; cursor: pointer; }
 .app-qf-photo button .vx-ico { width: 14px; height: 14px; }
@@ -1128,7 +1158,7 @@ button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
   .pm-follow { padding: var(--space-4); }
 }
 
-/* Dịch vụ / Cây văn phòng / Doanh nghiệp (components/ServicesHub, OfficePlants, BusinessPage, ServiceParts): phần thêm cho các khối của ServicesHubLayout */
+/* Trang landing (Đối tác sỉ /doi-tac — components/PartnerPage, LandingParts): phần thêm cho các khối của ServicesHubLayout */
 .sv-sec > p.sub { margin: -0.5rem auto 0; max-width: 46rem; }
 .sv-crumb { padding: var(--space-3) var(--space-6) 0; }
 .sv-title { margin: 0; text-align: center; font-size: 1.75rem; line-height: 2.25rem; }
@@ -1176,7 +1206,7 @@ button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
   .sv-cta .vx-btn { margin-left: 0; width: 100%; justify-content: center; }
 }
 
-/* Trang từng dịch vụ (components/ServiceDetail, service-content, ServiceParts: ServiceTabs / ServiceCards) + ảnh minh họa public/images/dich-vu/ */
+/* Thẻ ảnh 3 nhóm đối tác (/doi-tac, components/PartnerPage) + khung ảnh đầu trang (sv-art--img), ảnh ở public/images/doi-tac/ */
 .sv-art--img { overflow: hidden; background: var(--primary); }
 .sv-art--img > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 .sv-art--img .tag { z-index: 1; }
@@ -1184,168 +1214,12 @@ button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .sv-card .img > img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .3s; }
 .sv-card:hover .img > img { transform: scale(1.04); }
 .sv-cards[data-n="3"] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.sd-tabs { display: flex; gap: var(--space-2); padding: var(--space-3) var(--space-6) 0; overflow-x: auto; scrollbar-width: thin; }
-.sd-tabs a { flex: none; display: inline-flex; align-items: center; gap: 0.375rem; min-height: 2.75rem; padding: 0 1rem; border: 1px solid var(--border); border-radius: var(--radius-pill); background: var(--surface); color: var(--ink); font-size: 0.9375rem; font-weight: 600; text-decoration: none; white-space: nowrap; }
-.sd-tabs a .vx-ico { color: var(--primary); }
-.sd-tabs a:hover { border-color: var(--primary); color: var(--primary-hover); }
-.sd-tabs a[aria-current="page"] { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
-.sd-tabs a[aria-current="page"] .vx-ico { color: inherit; }
-.sd-white { background: var(--surface); }
-.sd-ic { flex: none; width: 2.75rem; height: 2.75rem; border-radius: var(--radius-md); background: var(--primary-soft); color: var(--primary-hover); display: grid; place-items: center; }
-.sd-ic .vx-ico { width: 1.375rem; height: 1.375rem; }
-.sd-fit { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: var(--space-3); max-width: 72rem; margin: 0 auto; width: 100%; }
-.sd-fit--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.sd-fit__i { display: flex; gap: var(--space-3); align-items: flex-start; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-4); font-size: 0.9375rem; line-height: 1.5; color: var(--ink-muted); }
-.sd-fit__i b { display: block; color: var(--ink); font-size: 1.0625rem; line-height: 1.4; margin-bottom: 0.125rem; }
-.sd-fit__i a { color: var(--primary); font-weight: 600; }
-.sd-scope { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-4); max-width: 72rem; margin: 0 auto; width: 100%; counter-reset: sd; }
-.sd-scope[data-n="4"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.sd-scope__i { position: relative; display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4); border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface-page); }
-.sd-scope__n { position: absolute; top: var(--space-3); right: var(--space-4); font-size: 1.5rem; font-weight: 700; line-height: 1; color: var(--primary-soft); -webkit-text-stroke: 1px var(--primary); }
-.sd-scope__i b { font-size: 1.0625rem; line-height: 1.4; }
-.sd-scope__i p { margin: 0; color: var(--ink-muted); font-size: 0.9375rem; line-height: 1.55; }
-.sd-quick { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-3); max-width: 72rem; margin: 0 auto; width: 100%; }
-.sd-quick__i { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); min-height: 4.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); color: var(--ink-muted); text-decoration: none; font-size: 0.875rem; line-height: 1.4; }
-.sd-quick__i > span:nth-child(2) { flex: 1; min-width: 0; }
-.sd-quick__i b { display: block; color: var(--ink); font-size: 0.9375rem; }
-.sd-quick__i > .vx-ico:last-child { flex: none; color: var(--primary); }
-.sd-quick__i:hover { border-color: var(--primary); }
-.sd-causes { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--space-3); max-width: 72rem; margin: 0 auto; width: 100%; }
-.sd-cause { display: flex; flex-direction: column; gap: 0.25rem; padding: var(--space-3) var(--space-4); border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-page); color: var(--ink-muted); text-decoration: none; font-size: 0.875rem; line-height: 1.4; }
-.sd-cause b { color: var(--ink); font-size: 0.9375rem; }
-.sd-cause:hover { border-color: var(--primary); background: var(--primary-soft); }
 @media (prefers-reduced-motion: reduce) { .sv-card .img > img { transition: none; } .sv-card:hover .img > img { transform: none; } }
 @media (max-width: 63.9375em) {
-  .sd-scope, .sd-scope[data-n="4"], .sd-fit--3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .sd-quick { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .sd-causes { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .sv-cards[data-n="3"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 47.9375em) {
-  .sd-tabs { padding: var(--space-3) var(--space-3) 0; }
-  .sd-scope, .sd-scope[data-n="4"], .sd-fit--3, .sd-quick, .sv-cards[data-n="3"] { grid-template-columns: minmax(0, 1fr); }
-  .sd-causes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .sd-fit__i, .sd-scope__i { padding: var(--space-3); }
-}
-
-/* Cho thuê cây văn phòng (components/OfficePlants, OfficeRentalPlanner; admin/RentalSettings): gói thuê + tự chọn số cây theo ServiceDetailLayout */
-.ort-head { padding-top: 0; }
-.ort-facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-3); max-width: 72rem; margin: var(--space-2) auto 0; width: 100%; }
-.ort-facts > span { display: flex; gap: var(--space-3); align-items: flex-start; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-3) var(--space-4); font-size: 0.875rem; line-height: 1.4; color: var(--ink-muted); }
-.ort-facts > span > .vx-ico { flex: none; width: 1.5rem; height: 1.5rem; color: var(--primary); margin-top: 0.125rem; }
-.ort-facts b { display: block; color: var(--ink); font-size: 1.0625rem; line-height: 1.4; }
-.ort-jump { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-3); }
-.ort-pk-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-4); max-width: 72rem; margin: 0 auto; width: 100%; padding-top: 0.75rem; }
-.pk.ort-pk { gap: 0.625rem; padding: var(--space-6) var(--space-4) var(--space-4); }
-.pk.ort-pk[data-active] { outline: 3px solid var(--primary); outline-offset: 2px; }
-.pk.ort-pk .badge { font-size: 0.8125rem; }
-.ort-pk b.n { font-size: 1.25rem; line-height: 1.5rem; }
-.ort-pk__fit { font-size: 0.875rem; line-height: 1.4; color: var(--ink-muted); margin-top: -0.25rem; }
-.ort-pk__sub { font-size: 0.875rem; line-height: 1.4; color: var(--ink-muted); }
-.ort-pk__sub b { color: var(--primary-hover); }
-.pk .p.ort-pk__quote { font-size: 1.25rem; line-height: 1.75rem; }
-.pk.ort-pk ul { font-size: 0.9375rem; line-height: 1.4; gap: 0.5rem; padding-top: 0.625rem; border-top: 1px solid var(--border); }
-.pk.ort-pk li { flex-wrap: nowrap; }
-.pk.ort-pk li > span { min-width: 0; }
-.pk.ort-pk li .vx-ico { width: 1.125rem; height: 1.125rem; margin-top: 0.0625rem; }
-.pk.ort-pk .vx-btn { margin-top: auto; min-height: 2.75rem; }
-.ort-muted { color: var(--ink-muted); }
-.ort-incl { max-width: 72rem; margin: 0 auto; width: 100%; box-sizing: border-box; background: var(--primary-soft); border-radius: var(--radius-lg); padding: var(--space-4) var(--space-6); display: flex; flex-direction: column; gap: var(--space-2); }
-.ort-incl > b { font-size: 1.0625rem; }
-.ort-incl .sv-check { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem var(--space-6); }
-.ort-calc-sec { scroll-margin-top: calc(var(--header-h) + 0.5rem); }
-#goi-thue, #ort-out { scroll-margin-top: calc(var(--header-h) + 0.5rem); }
-.ort-calc { display: grid; grid-template-columns: minmax(0, 1fr) 23rem; gap: var(--space-6); align-items: start; max-width: 72rem; margin: 0 auto; width: 100%; box-sizing: border-box; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-6); transition: box-shadow .3s; }
-.ort-calc[data-flash] { box-shadow: 0 0 0 4px var(--primary-soft), 0 0 0 5px var(--primary); }
-.ort-calc__in { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
-.ort-tiers { display: flex; flex-direction: column; }
-.ort-tier { display: grid; grid-template-columns: 3rem minmax(0, 1fr) auto; gap: var(--space-3); align-items: center; padding: var(--space-3) 0; border-bottom: 1px solid var(--border); }
-.ort-tier:first-child { padding-top: 0; }
-.ort-tier__ic { width: 3rem; height: 3rem; border-radius: var(--radius-md); background: var(--primary-soft); color: var(--primary-hover); display: grid; place-items: center; }
-.ort-tier__ic .vx-ico { width: 1.5rem; height: 1.5rem; }
-.ort-tier__t { display: flex; flex-direction: column; gap: 0.125rem; font-size: 0.9375rem; line-height: 1.4; min-width: 0; }
-.ort-tier__t b { font-size: 1.0625rem; }
-.ort-tier__t small { font-size: 0.875rem; line-height: 1.4; color: var(--ink-muted); }
-.ort-step { display: inline-flex; align-items: center; border: 1.5px solid var(--field-border, var(--border)); border-radius: var(--radius-pill); overflow: hidden; background: var(--surface); }
-.ort-step button { font: inherit; width: 2.75rem; height: 2.75rem; border: 0; background: none; color: var(--primary); font-size: 1.375rem; font-weight: 600; cursor: pointer; }
-.ort-step button:disabled { color: var(--border); cursor: default; }
-.ort-step button:not(:disabled):hover { background: var(--primary-soft); }
-.ort-step input { width: 3.25rem; height: 2.75rem; border: 0; border-inline: 1px solid var(--border); text-align: center; font: inherit; font-size: 1rem; font-weight: 700; color: var(--ink); background: none; padding: 0; }
-.ort-step input:focus-visible, .ort-step button:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
-.ort-help { background: var(--surface-page); border-radius: var(--radius-md); }
-.ort-help summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: center; gap: var(--space-2); padding: 0.5rem var(--space-4); font-weight: 600; font-size: 0.9375rem; line-height: 1.4; color: var(--primary-hover); }
-.ort-help summary::after { content: "+"; margin-left: auto; font-size: 1.25rem; }
-.ort-help[open] summary::after { content: "−"; }
-.ort-help__b { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) auto; gap: var(--space-3); align-items: end; padding: 0 var(--space-4) var(--space-4); }
-.ort-help__b label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.875rem; font-weight: 600; }
-.ort-help__b .vx-btn { min-height: 2.75rem; }
-.ort-help__b small { grid-column: 1 / -1; font-size: 0.875rem; line-height: 1.5; color: var(--ink-muted); }
-.ort-help__b small a { color: var(--primary); font-weight: 600; }
-.ort-opt { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2) var(--space-4); }
-.ort-opt__l { font-weight: 600; font-size: 0.9375rem; }
-.ort-chips { display: flex; flex-wrap: wrap; gap: var(--space-2); }
-.ort-chips .vx-chip { min-height: 2.75rem; padding: 0.5rem 1rem; font-size: 0.9375rem; line-height: 1.3; }
-.ort-chips .vx-chip[aria-checked="true"] { background: var(--primary-soft); border-color: var(--primary); color: var(--primary-hover); font-weight: 600; }
-.ort-vat { font-size: 0.9375rem; line-height: 1.4; min-height: 2.75rem; align-items: center; }
-.ort-mini { display: none; }
-.ort-out { position: sticky; top: calc(var(--header-h) + 1rem); background: var(--primary-soft); border-radius: var(--radius-md); padding: var(--space-4); display: flex; flex-direction: column; gap: 0.625rem; font-size: 0.9375rem; line-height: 1.5; }
-.ort-out__k { font-size: 0.875rem; font-weight: 600; color: var(--primary-hover); }
-.ort-out__big { font-size: 2rem; font-weight: 700; line-height: 1.2; color: var(--primary-hover); }
-.ort-out__big small { font-size: 0.9375rem; font-weight: 500; color: var(--ink-muted); }
-.ort-out__big--muted { font-size: 1.375rem; color: var(--ink); }
-.ort-out__lines { list-style: none; margin: 0; padding: 0.5rem 0; border-block: 1px solid color-mix(in srgb, var(--primary) 25%, transparent); display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.875rem; line-height: 1.4; }
-.ort-out__lines li { display: flex; justify-content: space-between; gap: var(--space-3); }
-.ort-out__lines li span { color: var(--ink-muted); }
-.ort-out__sum { font-size: 0.875rem; line-height: 1.4; color: var(--ink-muted); }
-.ort-out__sum b { color: var(--ink); }
-.ort-out__warn { display: flex; gap: var(--space-2); align-items: flex-start; background: var(--surface); border-radius: var(--radius-md); padding: 0.5rem 0.75rem; font-size: 0.875rem; line-height: 1.4; }
-.ort-out__warn .vx-ico { flex: none; color: #b45309; margin-top: 0.125rem; }
-.ort-out__warn a { color: var(--primary); font-weight: 600; }
-.ort-out .vx-btn { justify-content: center; }
-.ort-out__note { font-size: 0.875rem; line-height: 1.4; color: var(--ink-muted); }
-/* Admin: Gói thuê cây */
-.ort-adm-tier { display: flex; flex-direction: column; gap: var(--space-2); }
-.ort-adm-tier + .ort-adm-tier { padding-top: 14px; border-top: 1px solid var(--border); }
-.ort-adm-terms { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
-.ort-adm-term { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 0.8125rem; }
-.ort-adm-term .vx-input { width: 4.5rem; padding: 8px 10px; font-size: 0.8125rem; }
-.ort-adm-pkg { border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px; margin: 0; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
-.ort-adm-pkg legend { font-weight: 700; font-size: 0.8125rem; padding: 0 6px; }
-.ort-adm-pkg textarea, .ort-adm-pkg .vx-input { font-size: 0.8125rem; }
-.ort-adm-pkg__foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding-top: 8px; border-top: 1px dashed var(--border); }
-.ort-adm-pkg__price { font-size: 0.8125rem; color: var(--ink-muted); }
-.ort-adm-pkg__price b { color: var(--primary); }
-.ort-adm-pkg__acts { display: flex; gap: 4px; margin-left: auto; }
-@media (max-width: 79.9375em) {
-  .ort-pk-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: var(--space-6); }
-}
-@media (max-width: 63.9375em) {
-  .ort-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .ort-calc { grid-template-columns: minmax(0, 1fr); }
-  .ort-out { position: static; }
-  /* Tóm tắt dính đáy khi đang chỉnh số cây (khối kết quả nằm dưới các ô) */
-  .ort-mini { position: sticky; bottom: calc(var(--bar-h, 0px) + env(safe-area-inset-bottom, 0px) + 0.5rem); z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); background: var(--primary); color: var(--on-primary); border-radius: var(--radius-pill); padding: 0.5rem 0.5rem 0.5rem 1.25rem; font-size: 0.9375rem; line-height: 1.3; box-shadow: var(--shadow-pop); }
-  .ort-mini b { font-size: 1.0625rem; }
-  .ort-mini a { flex: none; min-height: 2.75rem; display: inline-flex; align-items: center; padding: 0 1rem; border-radius: var(--radius-pill); background: var(--surface); color: var(--primary-hover); font-weight: 700; }
-}
-@media (max-width: 47.9375em) {
-  .ort-facts { gap: var(--space-2); }
-  .ort-facts > span { padding: var(--space-3); flex-direction: column; gap: 0.25rem; }
-  .ort-facts b { font-size: 1rem; }
-  .ort-jump .vx-btn { flex: 1 1 100%; justify-content: center; }
-  .ort-pk-grid { grid-template-columns: minmax(0, 1fr); }
-  .ort-incl { padding: var(--space-4); }
-  .ort-incl .sv-check { grid-template-columns: minmax(0, 1fr); }
-  .ort-calc { padding: var(--space-3); gap: var(--space-4); border: 0; }
-  .ort-tier { grid-template-columns: 2.5rem minmax(0, 1fr); row-gap: var(--space-2); }
-  .ort-tier__ic { width: 2.5rem; height: 2.5rem; }
-  .ort-step { grid-column: 2; justify-self: start; }
-  .ort-help summary { padding-inline: var(--space-3); }
-  .ort-help__b { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); padding: 0 var(--space-3) var(--space-3); }
-  .ort-help__b .vx-btn { grid-column: 1 / -1; }
-  .ort-opt { flex-direction: column; align-items: stretch; }
-  .ort-chips .vx-chip { flex: 1 1 auto; }
-  .ort-out__big { font-size: 1.75rem; }
+  .sv-cards[data-n="3"] { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* Tra cứu thuốc BVTV (components/PesticideLookup, đầu trang danh mục Thuốc BVTV) */
@@ -1475,7 +1349,7 @@ button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
   .pa-kinds { grid-template-columns: minmax(0, 1fr); }
 }
 
-/* Phương án chọn cây đính kèm form khảo sát (QuoteForm, từ /tu-van-chon-cay) */
+/* Phương án chọn cây đính kèm form báo giá sỉ (WholesaleQuoteForm, từ /tu-van-chon-cay) */
 .qf-plan { background: var(--primary-soft); border: 1px solid var(--primary); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); display: flex; flex-direction: column; gap: var(--space-2); font-size: 0.9375rem; line-height: 1.5; }
 .qf-plan__h { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--space-2); }
 .qf-plan__h b { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--primary-hover); }
@@ -1589,7 +1463,7 @@ button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .app-catnav__extra .vx-ico { width: 1.125rem; height: 1.125rem; }
 .app-catnav__extra--sale::before { content: ''; width: 1px; height: 1.25rem; margin: 0 0.25rem 0 0.5rem; background: var(--border); }
 .app-catnav__extra--sale .app-catnav__link { color: var(--sale); }
-/* Khuyến mãi từ 1280px, Tư vấn chọn cây từ 1360px — hẹp hơn thì chỉ còn các danh mục */
+/* Khuyến mãi từ 1280px, Đối tác sỉ từ 1360px — hẹp hơn thì chỉ còn các danh mục */
 @media (max-width: 79.9375em) { .app-catnav__bar > .app-catnav__extra--sale { display: none; } }
 @media (max-width: 84.9375em) { .app-catnav__bar > .app-catnav__extra--wide { display: none; } }
 

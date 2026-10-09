@@ -2,6 +2,7 @@ import 'server-only';
 import { and, desc, eq, ilike, or, sql } from 'drizzle-orm';
 import { db, schema } from './db';
 import { findCategory } from '@/lib/catalog';
+import type { PartnerStatus } from '@/lib/partners';
 import { getCategories } from './categories';
 import { getProducts } from './catalog';
 import { listOrdersForCustomer } from './orders';
@@ -28,16 +29,18 @@ const lastOrderAtExpr = sql<Date | null>`(
 export type CustomerRow = Awaited<ReturnType<typeof listCustomers>>[number];
 export { customerTier } from '@/lib/customer-labels';
 
-/** Danh sách khách hàng cho admin; q tìm theo tên, SĐT hoặc email. */
-export async function listCustomers({ q, limit = 200 }: { q?: string; limit?: number } = {}) {
+/** Danh sách khách hàng cho admin; q tìm theo tên, SĐT, email hoặc tên đơn vị; `partner` lọc đối tác chờ duyệt / đã duyệt. */
+export async function listCustomers({ q, partner, limit = 200 }: { q?: string; partner?: PartnerStatus; limit?: number } = {}) {
   const term = q?.trim() ? `%${q.trim().replace(/[%_]/g, '')}%` : undefined;
   return db.select({
     id: users.id, name: users.name, phone: users.phone, contactPhone: users.contactPhone, email: users.email, points: users.points, createdAt: users.createdAt,
+    partnerType: users.partnerType, partnerStatus: users.partnerStatus, partnerDiscount: users.partnerDiscount, company: users.company,
     orderCount: orderCountExpr, spend: spendExpr, lastOrderAt: lastOrderAtExpr,
   }).from(users)
     .where(and(
       eq(users.role, 'customer'),
-      term ? or(ilike(users.name, term), ilike(users.phone, term), ilike(users.contactPhone, term), ilike(users.email, term)) : undefined,
+      partner ? eq(users.partnerStatus, partner) : undefined,
+      term ? or(ilike(users.name, term), ilike(users.phone, term), ilike(users.contactPhone, term), ilike(users.email, term), ilike(users.company, term)) : undefined,
     ))
     .orderBy(desc(sql`coalesce(${lastOrderAtExpr}, ${users.createdAt})`))
     .limit(limit);

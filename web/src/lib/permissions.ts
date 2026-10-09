@@ -14,7 +14,7 @@ export const STAFF_ROLE_INFO: Record<StaffRole, { name: string; hint: string }> 
   manager: { name: 'Quản lý', hint: 'Toàn quyền, quản lý nhân viên và cài đặt' },
   cskh: { name: 'CSKH', hint: 'Chăm sóc khách: đơn hàng, khách hàng, hỏi đáp, bán tại quầy' },
   warehouse: { name: 'Kho', hint: 'Kho, nhập hàng, xếp hàng lên xe giao' },
-  engineer: { name: 'Kỹ sư', hint: 'Bảo hành cây, bài viết & bệnh cây, hỏi đáp, khảo sát dịch vụ' },
+  engineer: { name: 'Kỹ sư', hint: 'Bảo hành cây, bài viết & bệnh cây, hỏi đáp, báo giá sỉ' },
   delivery: { name: 'Giao hàng', hint: 'Chỉ dùng app giao hàng của nhân viên' },
 };
 
@@ -35,7 +35,7 @@ export const AREA_INFO: Record<Area, { name: string; levels: readonly [Level, Le
   pos: { name: 'Bán tại quầy', levels: [F, F, N, N, N] },
   delivery: { name: 'Giao hàng', levels: [F, V, F, N, F] },
   warranty: { name: 'Bảo hành cây', levels: [F, V, N, F, N] },
-  services: { name: 'Yêu cầu dịch vụ', levels: [F, F, N, F, N] },
+  services: { name: 'Yêu cầu báo giá sỉ', levels: [F, F, N, F, N] },
   customers: { name: 'Khách hàng', levels: [F, F, N, V, N] },
   promotions: { name: 'Khuyến mãi', levels: [F, V, N, N, N] },
   products: { name: 'Sản phẩm & danh mục', levels: [F, V, V, V, N] },
@@ -44,7 +44,7 @@ export const AREA_INFO: Record<Area, { name: string; levels: readonly [Level, Le
   content: { name: 'Bài viết, bệnh cây & dự án', levels: [F, N, N, F, N] },
   qna: { name: 'Hỏi đáp & đánh giá', levels: [F, F, N, F, N] },
   reports: { name: 'Báo cáo', levels: [F, N, N, N, N] },
-  settings: { name: 'Cài đặt (giao hàng, mẫu tin, phân quyền, giá thuê cây)', levels: [F, N, N, N, N] },
+  settings: { name: 'Cài đặt (đơn sỉ & giao hàng, mẫu tin, phân quyền)', levels: [F, N, N, N, N] },
 };
 
 /** Trang admin ↔ chức năng (menu trái ẩn mục không có quyền xem). */
@@ -70,7 +70,6 @@ export const NAV_AREA: Record<string, Area> = {
   '/admin/mau-tin-nhan': 'settings',
   '/admin/cua-hang': 'settings',
   '/admin/cai-dat-giao-hang': 'settings',
-  '/admin/thue-cay': 'settings',
   '/admin/phan-quyen': 'settings',
 };
 

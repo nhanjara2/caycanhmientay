@@ -18,8 +18,8 @@ const font = Be_Vietnam_Pro({
 });
 
 export const metadata: Metadata = {
-  title: { default: 'Cây Cảnh Miền Tây — Cây khỏe từ nhà vườn miền Tây', template: '%s | Cây Cảnh Miền Tây' },
-  description: 'Cây cảnh, thuốc bảo vệ thực vật, phân bón, chậu và vật tư làm vườn. Cây thuần kỹ tại vườn, kỹ sư tư vấn tận tình.',
+  title: { default: 'Cây Cảnh Miền Tây — Cung cấp sỉ cây cảnh & vật tư', template: '%s | Cây Cảnh Miền Tây' },
+  description: 'Cung cấp sỉ cây cảnh, cây công trình, thuốc bảo vệ thực vật, phân bón, chậu và vật tư cho đối tác dịch vụ cảnh quan, công trình và buôn bán. Nguồn cây từ gần 200 nhà vườn miền Nam, giao toàn quốc.',
 };
 
 // Website chỉ có giao diện sáng (BRANDBOOK) — tokens.css khai báo color-scheme: light.

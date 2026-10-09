@@ -6,8 +6,8 @@ export const ROUTES = {
   orders: '/tai-khoan/don-hang',
   order: '/tai-khoan/don-hang/MT0095402',
   article: '/goc-cham-cay',
-  service: '/dich-vu/cho-thue-cay-van-phong',
-  quote: '/dich-vu/dat-lich-khao-sat',
+  service: '/doi-tac',
+  quote: '/bao-gia-si',
   adminOrder: '/admin/don-hang',
 };
 
@@ -20,7 +20,7 @@ export const GLOBAL_LINKS = {
   'Bắt bệnh cây': '/goc-cham-cay',
   'Bệnh cây trồng': '/benh-cay',
   'Bắt bệnh cho cây': '/benh-cay',
-  'Dịch vụ': '/dich-vu',
+  'Dịch vụ': '/doi-tac',
   'Tìm cửa hàng': '/he-thong-cua-hang',
   'Về Cây Cảnh Miền Tây': '/chinh-sach/gioi-thieu',
   'Giới thiệu Cây Cảnh Miền Tây': '/chinh-sach/gioi-thieu',
@@ -99,8 +99,7 @@ export const views = [
     replace: { 'div.cp-art': '<TetHeroMedia />' },
     imports: { '@/components/TetHeroMedia': ['TetHeroMedia'] },
   }),
-  // Dịch vụ (/dich-vu), Cây văn phòng (/dich-vu/cho-thue-cay-van-phong), Doanh nghiệp (/doanh-nghiep) đã viết tay (components/ServicesHub, OfficePlants, BusinessPage).
-  // Đặt lịch khảo sát (/dich-vu/dat-lich-khao-sat) đã viết tay: lưu thật, admin xem ở /admin/dich-vu.
+  // Dịch vụ / Cây văn phòng / Đặt lịch khảo sát đã gỡ 09/10/2026 (shop chỉ bán sỉ); Đối tác sỉ (/doi-tac) và Báo giá sỉ (/bao-gia-si) viết tay.
 
   // Admin — khung AdminShell ở src/app/admin/(shell)/layout.tsx. Tổng quan, báo cáo, đơn hàng, khách hàng, khuyến mãi, đánh giá, yêu cầu dịch vụ, bài viết & video đã viết tay với dữ liệu thật.
   { name: 'AdminPOSView', from: 'AdminPOS' },

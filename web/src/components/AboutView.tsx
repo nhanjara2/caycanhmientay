@@ -7,6 +7,7 @@ import { ShareButton } from './PostClient';
 /** Mốc hoạt động, mới nhất trước. `next` = dự kiến (chưa xảy ra). */
 const MILESTONES: { year: string; text: string; next?: boolean }[] = [
   { year: '2026 – 2027', next: true, text: 'Dự kiến vượt mốc 1.000 cây cảnh các loại trên khắp toàn quốc, trở thành nhà cung cấp cây cảnh hàng đầu, đưa cây cảnh đến tay người tiêu dùng.' },
+  { year: '10/2026', text: 'Chuyển sang chỉ cung cấp sỉ cây cảnh và vật tư cho đối tác dịch vụ cảnh quan, công trình và buôn bán.' },
   { year: '2025', text: 'Triển khai thêm mô hình cây cảnh văn phòng, cây cảnh giống.' },
   { year: '2024', text: 'Huy động được gần 200 nhà vườn gần xa ở khu vực miền Nam và Trung Nam Bộ.' },
   { year: '2023', text: 'Vượt mốc 100 khách hàng tiềm năng trong suốt quá trình hoạt động.' },
@@ -31,7 +32,7 @@ export function AboutView() {
         <article className="vx-policy">
           <h1>Giới thiệu Cây Cảnh Miền Tây</h1>
           <div className="vx-policy__meta">
-            <span>Cập nhật lần cuối: 07/10/2026</span>
+            <span>Cập nhật lần cuối: 09/10/2026</span>
             <span>·</span>
             <span>3 phút đọc</span>
             <span className="acts"><ShareButton title="Giới thiệu Cây Cảnh Miền Tây" /></span>
@@ -60,7 +61,7 @@ export function AboutView() {
             <li><b>Cây cảnh công trình:</b> cây cho sân vườn, khuôn viên và các công trình.</li>
             <li><b>Cây cảnh văn phòng, cây cảnh giống:</b> mô hình mới triển khai từ năm 2025.</li>
             <li><b>Thuốc BVTV, phân bón, vật tư:</b> thuốc có số đăng ký, kèm chậu, đất – giá thể và dụng cụ làm vườn.</li>
-            <li><b>Dịch vụ sân vườn:</b> khảo sát, báo giá và thi công; <Link href="/dich-vu">xem các dịch vụ</Link>.</li>
+            <li><b>Cung cấp sỉ cho đối tác:</b> đơn vị dịch vụ cảnh quan, nhà thầu công trình, cửa hàng và đại lý; <Link href="/doi-tac">xem trang Đối tác sỉ</Link>.</li>
             <li><b>Tư vấn chăm cây:</b> kỹ sư giải đáp miễn phí; xem thêm <Link href="/goc-cham-cay">Góc chăm cây</Link> và <Link href="/benh-cay">Bắt bệnh cho cây</Link>.</li>
           </ul>
 

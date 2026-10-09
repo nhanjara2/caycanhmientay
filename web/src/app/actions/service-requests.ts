@@ -12,12 +12,14 @@ const jsonOf = (v: FormDataEntryValue | null) => {
   try { return JSON.parse(v) as unknown; } catch { return undefined; }
 };
 
-/** Khách gửi form Đặt lịch khảo sát — không bắt buộc đăng nhập (FormData, có ảnh). */
+/** Khách gửi form Yêu cầu báo giá sỉ (/bao-gia-si) — không bắt buộc đăng nhập (FormData, có ảnh). */
 export async function createServiceRequestAction(fd: FormData) {
   // Ô ẩn chống bot: người thật không thấy nên không điền
   if (str(fd.get('website'))) return { ok: true as const, code: '' };
   const p = ServiceInputSchema.safeParse({
     service: str(fd.get('service')),
+    company: str(fd.get('company')),
+    needBy: str(fd.get('needBy')),
     space: str(fd.get('space')),
     area: str(fd.get('area')),
     sun: str(fd.get('sun')),

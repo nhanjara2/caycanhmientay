@@ -215,8 +215,8 @@ export function CategoryNav({ categories }: { categories: Category[] }) {
           </Link>
         </li>
         <li className="app-catnav__extra app-catnav__extra--wide" onPointerEnter={enterLink}>
-          <Link href="/tu-van-chon-cay" className="app-catnav__link">
-            <Icon name="spark" />Tư vấn chọn cây
+          <Link href="/doi-tac" className="app-catnav__link">
+            <Icon name="box" />Đối tác sỉ
           </Link>
         </li>
       </ul>

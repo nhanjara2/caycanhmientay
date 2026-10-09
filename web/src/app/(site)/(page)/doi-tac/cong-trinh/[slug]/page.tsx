@@ -6,8 +6,9 @@ import { Icon } from '@/components/Icon';
 import { ShareButton } from '@/components/PostClient';
 import { ProjectGallery } from '@/components/ProjectGallery';
 import { ProjectCard } from '@/components/ProjectParts';
-import { QUOTE_URL, ServiceCta } from '@/components/ServiceParts';
-import { CARE_PHONE, formatPhone, ZALO_URL } from '@/lib/contact';
+import { ServiceCta } from '@/components/LandingParts';
+import { formatPhone, SALES_PHONE, ZALO_URL } from '@/lib/contact';
+import { WHOLESALE_QUOTE_URL, WHOLESALE_URL } from '@/lib/partners';
 import { paragraphs, projectImageUrl, projectPath, projectTypeOf, roleName } from '@/lib/projects';
 import { getCurrentUser } from '@/server/auth';
 import { getProject, publishedProjects } from '@/server/projects';
@@ -53,7 +54,7 @@ export default async function ProjectPage(props: Props) {
   return (
     <div className="dn-page">
       <div className="dn-crumb">
-        <Breadcrumb items={[{ label: 'Trang chủ', href: '/' }, { label: 'Khách doanh nghiệp', href: '/doanh-nghiep' }, { label: 'Dự án', href: '/doanh-nghiep#du-an' }, { label: p.title }]} />
+        <Breadcrumb items={[{ label: 'Trang chủ', href: '/' }, { label: 'Đối tác sỉ', href: WHOLESALE_URL }, { label: 'Công trình', href: `${WHOLESALE_URL}#cong-trinh` }, { label: p.title }]} />
       </div>
       {!p.published && (
         <div className="dn-wrap"><div className="vx-callout"><Icon name="alert" /><div><b>Bản xem trước</b> — dự án đang ẩn, khách chưa thấy trang này.</div></div></div>
@@ -81,11 +82,11 @@ export default async function ProjectPage(props: Props) {
             </div>
           )}
           <div className="dn-pcta">
-            <b>Bạn có dự án tương tự?</b>
-            <span>Kỹ sư khảo sát miễn phí, gọi lại trong 2 giờ làm việc.</span>
-            <Link href={QUOTE_URL} className="vx-btn vx-btn--primary">Yêu cầu báo giá</Link>
+            <b>Cần cây cho công trình tương tự?</b>
+            <span>Gửi danh sách hoặc bảng khối lượng, shop báo giá sỉ qua Zalo.</span>
+            <Link href={`${WHOLESALE_QUOTE_URL}?loai=project`} className="vx-btn vx-btn--primary">Yêu cầu báo giá sỉ</Link>
             <span className="dn-pcta__alt">
-              <a href={`tel:${CARE_PHONE}`}><Icon name="phone" size={14} />{formatPhone(CARE_PHONE)}</a>
+              <a href={`tel:${SALES_PHONE}`}><Icon name="phone" size={14} />{formatPhone(SALES_PHONE)}</a>
               <a href={ZALO_URL} target="_blank" rel="noopener noreferrer"><Icon name="chat" size={14} />Nhắn Zalo</a>
             </span>
           </div>
@@ -128,15 +129,15 @@ export default async function ProjectPage(props: Props) {
         <section className="dn-sec">
           <header className="dn-head"><h2>Dự án khác</h2></header>
           <div className="dn-grid">{others.map((x) => <ProjectCard key={x.id} p={x} />)}</div>
-          <Link href="/doanh-nghiep#du-an" className="vx-btn vx-btn--outline dn-more">Xem tất cả dự án</Link>
+          <Link href={`${WHOLESALE_URL}#cong-trinh`} className="vx-btn vx-btn--outline dn-more">Xem tất cả công trình</Link>
         </section>
       )}
 
       <ServiceCta
         title="Cần cây xanh cho công trình của bạn?"
-        text="Gửi yêu cầu, kỹ sư gọi lại trong 2 giờ làm việc để xác nhận nhu cầu"
-        label="Yêu cầu báo giá"
-        href={QUOTE_URL}
+        text="Gửi danh sách cây, quy cách, số lượng hoặc ảnh bảng khối lượng để nhận báo giá sỉ"
+        label="Yêu cầu báo giá sỉ"
+        href={`${WHOLESALE_QUOTE_URL}?loai=project`}
       />
     </div>
   );

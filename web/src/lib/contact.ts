@@ -16,7 +16,7 @@ export const PICKUP_PLACE = `Vườn ươm Cây Cảnh Miền Tây, ${SHOP_ADDRE
 /** 0703005001 → 0703 005 001 */
 export const formatPhone = (p: string) => p.replace(/^(\d{4})(\d{3})(\d{3})$/, '$1 $2 $3');
 
-/** Thông tin đăng ký kinh doanh (trùng chân trang + trang Giấy phép kinh doanh) — trang Khách doanh nghiệp đọc từ đây. */
+/** Thông tin đăng ký kinh doanh (trùng chân trang + trang Giấy phép kinh doanh) — trang Đối tác sỉ đọc từ đây. */
 export const LEGAL = {
   name: 'Cây Cảnh Miền Tây',
   owner: 'Lê Hoài Nhân',

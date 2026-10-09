@@ -7,9 +7,13 @@ import { EmptyState } from '@/components/Blocks';
 import { CartList, OrderSummary, Steps } from '@/components/CartParts';
 import { Icon } from '@/components/Icon';
 import { useCart } from '@/lib/cart';
+import { WHOLESALE_QUOTE_URL } from '@/lib/partners';
+import { minOrderShort } from '@/lib/pricing';
+import { useShipping } from '@/lib/shipping-client';
 
 export default function CartPage() {
   const { lines, totals, ready, replace } = useCart();
+  const short = minOrderShort(totals.subtotal, useShipping().minOrder);
   const [notice, setNotice] = useState('');
   const refreshed = useRef(false);
 
@@ -39,8 +43,8 @@ export default function CartPage() {
         <EmptyState
           icon="cart"
           title="Giỏ hàng đang trống"
-          text="Chọn một cây xanh cho góc nhà bạn, hoặc xem các cây dễ chăm cho người mới."
-          action={<Link className="vx-btn vx-btn--primary" href="/danh-muc/cay-canh">Khám phá cây cảnh</Link>}
+          text="Chọn cây và vật tư với giá sỉ, hoặc gửi danh sách cần mua để shop báo giá."
+          action={<Link className="vx-btn vx-btn--primary" href="/danh-muc/cay-canh">Xem cây cảnh</Link>}
         />
       </div>
     );
@@ -54,7 +58,10 @@ export default function CartPage() {
         <CartList editable />
       </div>
       <OrderSummary totals={totals}>
-        <Link href="/thanh-toan" className="vx-btn vx-btn--primary vx-btn--lg vx-btn--block">Tiến hành đặt hàng</Link>
+        {short > 0
+          ? <button type="button" className="vx-btn vx-btn--primary vx-btn--lg vx-btn--block" disabled>Chưa đủ đơn tối thiểu</button>
+          : <Link href="/thanh-toan" className="vx-btn vx-btn--primary vx-btn--lg vx-btn--block">Tiến hành đặt hàng</Link>}
+        <Link href={WHOLESALE_QUOTE_URL} className="vx-btn vx-btn--outline vx-btn--block">Gửi danh sách, nhận báo giá sỉ</Link>
         <Link href="/" className="vx-btn vx-btn--ghost vx-btn--block">Tiếp tục mua sắm</Link>
       </OrderSummary>
     </div>

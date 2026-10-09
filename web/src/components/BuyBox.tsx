@@ -4,11 +4,14 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { discountPct, isQuote, QUOTE_TEXT, type Product } from '@/lib/catalog';
+import { useAuth } from '@/lib/auth';
 import { useCart } from '@/lib/cart';
 import { SALES_PHONE, ZALO_URL } from '@/lib/contact';
 import { compact, money } from '@/lib/format';
 import { starsText } from '@/lib/reviews';
+import { WHOLESALE_QUOTE_URL } from '@/lib/partners';
 import { seoNameOf } from '@/lib/seo-name';
+import { useShipping } from '@/lib/shipping-client';
 import { DeliverToNote } from './DeliverTo';
 import { Icon, Thumb } from './Icon';
 import { WishlistHeart } from './WishlistHeart';
@@ -23,6 +26,10 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
   wishlisted?: boolean;
 }) {
   const { add } = useCart();
+  const { minOrder } = useShipping();
+  const partner = useAuth().user?.partner;
+  const partnerPct = partner?.discount ?? 0;
+  const partnerType = partner?.type;
   const router = useRouter();
   const [opt, setOpt] = useState(0);
   const [qty, setQty] = useState(1);
@@ -77,6 +84,16 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
           <s>{money(u.oldPrice)}</s>
           <span className="vx-badge vx-badge--sale">-{money(u.oldPrice - u.price)}</span>
         </div>
+      )}
+      {!quote && (
+        <p className="app-wsnote">
+          <Icon name="box" size={16} />
+          <span>
+            Giá sỉ{partnerPct > 0 && <> · bạn được chiết khấu thêm <b>{partnerPct}%</b></>}
+            {minOrder > 0 && <> · đơn tối thiểu {money(minOrder)} (tính cả giỏ)</>}
+            {' · '}<Link href={partnerType ? `${WHOLESALE_QUOTE_URL}?loai=${partnerType}` : WHOLESALE_QUOTE_URL}>Báo giá số lượng lớn</Link>
+          </span>
+        </p>
       )}
       {p.options.length > 1 && (
         <div className="vx-opt">

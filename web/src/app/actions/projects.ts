@@ -7,11 +7,11 @@ import { requireAccess } from '@/server/auth';
 import { addProjectImage, deleteProject, ProjectInputSchema, saveProject, setProjectPublished } from '@/server/projects';
 import { saveImage } from '@/server/uploads';
 
-// Dự án đã triển khai (trang Khách doanh nghiệp): ai có quyền Bài viết toàn quyền (Quản lý, Kỹ sư) được sửa.
+// Công trình đã cung cấp cây (trang Đối tác sỉ /doi-tac): ai có quyền Bài viết toàn quyền (Quản lý, Kỹ sư) được sửa.
 
 function refresh(slug?: string) {
   revalidatePath('/admin/du-an', 'layout');
-  revalidatePath('/doanh-nghiep');
+  revalidatePath('/doi-tac');
   if (slug) revalidatePath(projectPath(slug));
 }
 

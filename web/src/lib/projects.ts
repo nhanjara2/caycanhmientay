@@ -1,9 +1,9 @@
-// Dự án / công trình đã triển khai (trang Khách doanh nghiệp) — dùng chung trình duyệt + server.
+// Công trình đã cung cấp cây (trang Đối tác sỉ /doi-tac) — dùng chung trình duyệt + server.
 // Dữ liệu do chủ shop tự nhập ở /admin/du-an; web KHÔNG tự đặt ra dự án, tên khách hay số liệu.
 
 import type { IconName } from '@/components/Icon';
 
-/** Loại công trình: lọc trên trang /doanh-nghiep. Thêm loại mới = thêm 1 dòng (key không đổi sau khi đã dùng). */
+/** Loại công trình: lọc trên trang /doi-tac. Thêm loại mới = thêm 1 dòng (key không đổi sau khi đã dùng). */
 export const PROJECT_TYPES = [
   { key: 'van-phong', name: 'Văn phòng & tòa nhà', icon: 'home' },
   { key: 'khu-do-thi', name: 'Khu đô thị & bất động sản', icon: 'trees' },
@@ -41,7 +41,7 @@ export const MAX_PROJECT_PLANTS = 30;
 
 export const PROJECT_IMAGE_FILE = /^[a-f0-9]{32}\.(jpg|png|webp)$/;
 export const projectImageUrl = (file: string) => `/api/project-images/${file}`;
-export const projectPath = (slug: string) => `/doanh-nghiep/du-an/${slug}`;
+export const projectPath = (slug: string) => `/doi-tac/cong-trinh/${slug}`;
 
 /** Thông tin dự án hiện trên web (đã bỏ cột nội bộ). */
 export type Project = {
