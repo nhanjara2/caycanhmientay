@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react';
-import { videoShareUrl, youtubePlayer, type ShortVideo } from '@/lib/posts';
+import { videoPlayer, videoShareUrl, type ShortVideo } from '@/lib/posts';
 import '@/styles/shorts.css';
 
 const clock = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
@@ -17,7 +17,7 @@ function setVideoParam(slug: string | null, push: boolean) {
 }
 
 /**
- * Video ngắn (YouTube Shorts): thẻ dọc 9:16, bấm là xem ngay trên trang trong khung toàn màn hình.
+ * Video ngắn (YouTube Shorts, TikTok): thẻ dọc 9:16, bấm là xem ngay trên trang trong khung toàn màn hình.
  * Chuyển video: nút Trước / Sau, phím mũi tên, vuốt lên / xuống ngoài khung video. Đóng: nút Đóng, Esc, bấm ra ngoài, nút Quay lại.
  * `openSlug` (trang /video?v=…) mở sẵn video đó — link chia sẻ qua Zalo / Facebook.
  */
@@ -114,7 +114,8 @@ export function ShortVideos({ videos, layout, openSlug }: { videos: ShortVideo[]
         {videos.map((x, i) => (
           <Link key={x.id} href={x.href} prefetch={false} className="shv-card app-plain" onClick={(e) => onCardClick(e, i)}>
             <span className={x.zoomThumb ? 'shv-card__img shv-card__img--zoom' : 'shv-card__img'}>
-              <img src={x.thumb} alt="" loading="lazy" />
+              {x.thumb ? <img src={x.thumb} alt="" loading="lazy" /> : <span className="shv-card__blank" aria-hidden="true" />}
+              {x.source === 'tiktok' && <span className="shv-card__src">TikTok</span>}
               <span className="shv-card__play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg></span>
               {x.seconds ? <small className="shv-card__time">{clock(x.seconds)}</small> : null}
             </span>
@@ -134,7 +135,7 @@ export function ShortVideos({ videos, layout, openSlug }: { videos: ShortVideo[]
         {v && (
           <>
             <div className={v.vertical ? 'shv-player' : 'shv-player shv-player--wide'}>
-              <iframe key={v.youtubeId} src={youtubePlayer(v.youtubeId)} title={v.title} referrerPolicy="strict-origin-when-cross-origin"
+              <iframe key={`${v.source}:${v.videoId}`} src={videoPlayer(v.source, v.videoId)} title={v.title} referrerPolicy="strict-origin-when-cross-origin"
                 allow="autoplay; encrypted-media; picture-in-picture; web-share; fullscreen" allowFullScreen />
             </div>
             <div className="shv-side">

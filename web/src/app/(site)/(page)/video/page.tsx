@@ -19,7 +19,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   if (shared) {
     return {
       title: shared.title, description: DESCRIPTION, alternates: { canonical: shared.href },
-      openGraph: { type: 'video.other', title: shared.title, description: DESCRIPTION, images: [shared.thumb] },
+      openGraph: { type: 'video.other', title: shared.title, description: DESCRIPTION, images: shared.thumb ? [shared.thumb] : undefined },
     };
   }
   return { title: 'Video ngắn', description: DESCRIPTION, alternates: { canonical: VIDEO_PAGE } };

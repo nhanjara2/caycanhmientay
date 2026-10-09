@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { Fragment, type ReactNode } from 'react';
 import type { Product } from '@/lib/catalog';
 import {
-  categoryOf, durationLabel, parseInline, postImageUrl, postPath, tableOfContents, youtubeEmbed, type PostBlock,
+  categoryOf, durationLabel, parseInline, postImageUrl, postPath, tableOfContents, tiktokPlayer, youtubeEmbed, type PostBlock,
 } from '@/lib/posts';
 import { Art, Icon, type IconName } from './Icon';
 import { ArticleProducts } from './PostClient';
@@ -48,6 +48,15 @@ export function Rich({ text }: { text: string }) {
         return <Fragment key={i}>{v}</Fragment>;
       })}
     </>
+  );
+}
+
+/** Video TikTok: trình phát chính thức của TikTok, khung dọc. */
+export function TikTok({ id, title }: { id: string; title: string }) {
+  return (
+    <div className="app-yt app-yt--v">
+      <iframe src={tiktokPlayer(id)} title={title} loading="lazy" allowFullScreen allow="encrypted-media; picture-in-picture; fullscreen" />
+    </div>
   );
 }
 

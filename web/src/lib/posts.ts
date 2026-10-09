@@ -138,6 +138,45 @@ export const youtubeEmbed = (id: string) => `https://www.youtube-nocookie.com/em
 export const youtubePlayer = (id: string) => `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&playsinline=1&rel=0&loop=1&playlist=${id}`;
 export const isShortsUrl = (url: string) => /youtube\.com\/shorts\//i.test(url);
 
+// TikTok: phát bằng trình phát chính thức của TikTok (player/v1). TikTok không có link ảnh cố định
+// (link ảnh hết hạn sau vài ngày) nên ảnh thẻ video là ảnh bìa của bài — tự lưu khi thêm nhanh, hoặc tải lên ở trang sửa.
+export const tiktokPlayer = (id: string, autoplay = false) =>
+  `https://www.tiktok.com/player/v1/${id}?rel=0&music_info=0&description=0${autoplay ? '&autoplay=1&loop=1' : ''}`;
+
+/** Mã video TikTok trong link đầy đủ (tiktok.com/@kenh/video/<mã>, m.tiktok.com/v/<mã>.html, link nhúng). */
+export function parseTiktokId(input: string): string | null {
+  const s = input.trim();
+  let u: URL;
+  try { u = new URL(/^https?:\/\//i.test(s) ? s : `https://${s}`); } catch { return null; }
+  if (!/^https?:$/.test(u.protocol) || !/(^|\.)tiktok\.com$/i.test(u.hostname)) return null;
+  return u.pathname.match(/\/(?:video|v|embed(?:\/v2)?|player\/v1)\/(\d{8,25})/)?.[1] ?? null;
+}
+/** Link rút gọn khi bấm Chia sẻ trong app TikTok (vt.tiktok.com/…, vm.tiktok.com/…, tiktok.com/t/…): phải mở ra mới biết mã video. */
+export const isTiktokShortLink = (input: string) => /^(https?:\/\/)?((vt|vm)\.tiktok\.com\/|(www\.)?tiktok\.com\/t\/)/i.test(input.trim());
+
+/**
+ * Tên, kênh, ảnh (link tạm) của video TikTok qua oEmbed — gọi từ trình duyệt admin (ở Việt Nam): máy chủ web đặt ở Ấn Độ,
+ * nơi TikTok bị cấm, thường không lấy được. Không được (TikTok chặn) thì null — admin gõ tên, ảnh bìa tải tay.
+ */
+export async function tiktokOembed(url: string) {
+  try {
+    const r = await fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`, { signal: AbortSignal.timeout(8000) });
+    if (!r.ok) return null;
+    const j = (await r.json()) as { title?: unknown; author_name?: unknown; thumbnail_url?: unknown };
+    return {
+      title: typeof j.title === 'string' ? cleanVideoTitle(j.title) : '',
+      channel: typeof j.author_name === 'string' ? j.author_name : '',
+      thumb: typeof j.thumbnail_url === 'string' && j.thumbnail_url.startsWith('https://') ? j.thumbnail_url : null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export type VideoSource = 'youtube' | 'tiktok';
+/** Khung xem video ngắn: tự chạy, phát lặp lại. */
+export const videoPlayer = (source: VideoSource, id: string) => (source === 'tiktok' ? tiktokPlayer(id, true) : youtubePlayer(id));
+
 /** Trang Video ngắn: mọi video đã đăng (bài loại "video"), bấm là xem ngay. */
 export const VIDEO_PAGE = '/video';
 /** Admin "Thêm nhanh video ngắn": tối đa bấy nhiêu link một lần. */
@@ -146,13 +185,15 @@ export const videoShareUrl = (slug: string) => `${VIDEO_PAGE}?v=${encodeURICompo
 
 /** Video cho thẻ + khung xem video ngắn (components/ShortVideos.tsx). */
 export type ShortVideo = {
-  id: number; slug: string; href: string; category: string; categoryName: string; title: string; youtubeId: string;
-  vertical: boolean; seconds: number | null; thumb: string;
+  id: number; slug: string; href: string; category: string; categoryName: string; title: string;
+  source: VideoSource; videoId: string; vertical: boolean; seconds: number | null;
+  /** null = video TikTok chưa có ảnh bìa → thẻ hiện nền TikTok. */
+  thumb: string | null;
   /** Ảnh YouTube của video ngang (có viền đen trên / dưới) — phóng to cho kín thẻ dọc. */
   zoomThumb: boolean;
 };
 
-/** Tiêu đề lấy từ YouTube: bỏ hashtag (#shorts #caycanh…), gom khoảng trắng, cắt cho vừa TITLE_MAX. */
+/** Tiêu đề lấy từ YouTube / TikTok: bỏ hashtag (#shorts #caycanh…), gom khoảng trắng, cắt cho vừa TITLE_MAX. */
 export function cleanVideoTitle(raw: string) {
   const s = raw.replace(/(^|\s)#[^\s#]+/gu, ' ').replace(/\s+/g, ' ').trim().replace(/[\s|·•,;:–-]+$/u, '');
   if (s.length <= TITLE_MAX) return s;
@@ -191,7 +232,7 @@ export function postState(p: { status: PostStatus; publishedAt: Date | string | 
 
 export type PostDraft = {
   kind: PostKind; category: string; title: string; excerpt: string; body: PostBlock[];
-  coverFile: string | null; youtubeId: string | null; reviewerName: string; seoDescription: string;
+  coverFile: string | null; youtubeId: string | null; tiktokId: string | null; reviewerName: string; seoDescription: string;
 };
 
 export type Check = { ok: boolean; label: string; /** Thiếu thì không đăng được. */ required?: boolean };
@@ -216,7 +257,9 @@ export function postChecks(p: PostDraft, pesticideSlugs: ReadonlySet<string>): C
       : { ok: len <= 70, label: len <= 70 ? `Tiêu đề ${len} ký tự (tốt cho SEO)` : `Tiêu đề ${len} ký tự — Google chỉ hiện ~70 ký tự đầu` },
   ];
   if (p.kind === 'video') {
-    out.push({ ok: !!p.youtubeId, required: true, label: p.youtubeId ? 'Có link video YouTube' : 'Chưa dán link video YouTube' });
+    const has = !!(p.youtubeId || p.tiktokId);
+    out.push({ ok: has, required: true, label: has ? `Có link video ${p.tiktokId ? 'TikTok' : 'YouTube'}` : 'Chưa dán link video YouTube / TikTok' });
+    if (p.tiktokId) out.push({ ok: !!p.coverFile, label: p.coverFile ? 'Có ảnh bìa' : 'Chưa có ảnh bìa (thẻ video TikTok sẽ hiện nền trơn)' });
   } else {
     const hasText = p.body.some((b) => b.type === 'p' && b.text.trim());
     out.push({ ok: hasText, required: true, label: hasText ? 'Có nội dung bài' : 'Chưa có đoạn văn nào trong bài' });

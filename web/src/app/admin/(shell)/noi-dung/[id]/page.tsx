@@ -26,7 +26,7 @@ export default async function AdminPostPage({ params, searchParams }: Props) {
     initial = {
       slug: '', status: 'draft', publishedAt: null, kind: sp.loai === 'video' ? 'video' : 'article',
       category: isCategory(sp.chuyen_muc) ? sp.chuyen_muc : 'cham-soc', title: '', excerpt: '', body: [],
-      coverFile: null, youtubeId: null, videoVertical: false, videoSeconds: null, authorName: me.name ?? '',
+      coverFile: null, youtubeId: null, tiktokId: null, videoVertical: false, videoSeconds: null, authorName: me.name ?? '',
       reviewerName: '', reviewerTitle: '', diseases: [], tags: [], seoDescription: '', featured: false,
     };
   } else {
@@ -36,7 +36,7 @@ export default async function AdminPostPage({ params, searchParams }: Props) {
     initial = {
       id: p.id, slug: p.slug, status: p.status, publishedAt: p.publishedAt?.toISOString() ?? null, updatedAt: p.updatedAt.toISOString(),
       updatedBy: p.updatedBy, kind: p.kind, category: p.category, title: p.title, excerpt: p.excerpt, body: p.body,
-      coverFile: p.coverFile, youtubeId: p.youtubeId, videoVertical: p.videoVertical, videoSeconds: p.videoSeconds,
+      coverFile: p.coverFile, youtubeId: p.youtubeId, tiktokId: p.tiktokId, videoVertical: p.videoVertical, videoSeconds: p.videoSeconds,
       authorName: p.authorName, reviewerName: p.reviewerName, reviewerTitle: p.reviewerTitle, diseases: p.diseases, tags: p.tags,
       seoDescription: p.seoDescription, featured: p.featured,
     };

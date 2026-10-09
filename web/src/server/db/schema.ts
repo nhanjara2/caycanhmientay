@@ -211,6 +211,8 @@ export const posts = pgTable('posts', {
   /** Tên file ảnh bìa trong post_images. */
   coverFile: text('cover_file'),
   youtubeId: text('youtube_id'),
+  /** Mã video TikTok (dãy số trong link …/video/<mã>) — video loại "video" có youtube_id hoặc tiktok_id, không cả hai. */
+  tiktokId: text('tiktok_id'),
   /** Video dọc (YouTube Shorts) → khung 9:16. */
   videoVertical: boolean('video_vertical').notNull().default(false),
   videoSeconds: integer('video_seconds'),

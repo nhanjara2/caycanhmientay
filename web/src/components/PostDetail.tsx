@@ -2,13 +2,13 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound, permanentRedirect } from 'next/navigation';
 import { after } from 'next/server';
-import { CATEGORIES, categoryOf, plainText, postPath, postState, SECTIONS, sectionOf, tableOfContents, type PostSection } from '@/lib/posts';
+import { CATEGORIES, categoryOf, plainText, postPath, postState, SECTIONS, sectionOf, tableOfContents, tiktokPlayer, type PostSection } from '@/lib/posts';
 import { getCurrentUser } from '@/server/auth';
 import { getProducts } from '@/server/catalog';
 import { allDiseases } from '@/server/diseases';
 import { addPostView, getPost, publishedPosts, type PostFull } from '@/server/posts';
 import { PostHelpful, ShareButton } from './PostClient';
-import { PostBody, PostLinks, postDate, YouTube } from './PostParts';
+import { PostBody, PostLinks, postDate, TikTok, YouTube } from './PostParts';
 
 export type PostPageProps = { params: Promise<{ slug: string }>; searchParams: Promise<{ 'xem-truoc'?: string }> };
 
@@ -59,11 +59,11 @@ export async function PostDetail({ section, ...props }: PostPageProps & { sectio
   const edited = p.updatedAt.getTime() - p.publishedAt.getTime() > 86_400_000;
 
   const base = site();
-  const ld = p.kind === 'video' && p.youtubeId
+  const ld = p.kind === 'video' && (p.youtubeId || p.tiktokId)
     ? {
       '@context': 'https://schema.org', '@type': 'VideoObject', name: p.title, description: describe(p) || p.title,
       thumbnailUrl: p.thumb ? (p.thumb.startsWith('/') ? base + p.thumb : p.thumb) : undefined,
-      uploadDate: p.publishedAt.toISOString(), embedUrl: `https://www.youtube.com/embed/${p.youtubeId}`,
+      uploadDate: p.publishedAt.toISOString(), embedUrl: p.tiktokId ? tiktokPlayer(p.tiktokId) : `https://www.youtube.com/embed/${p.youtubeId}`,
       duration: p.videoSeconds ? `PT${p.videoSeconds}S` : undefined,
     }
     : {
@@ -118,7 +118,8 @@ export async function PostDetail({ section, ...props }: PostPageProps & { sectio
           <span className="acts"><ShareButton title={p.title} /></span>
         </div>
 
-        {p.kind === 'video' && p.youtubeId
+        {p.kind === 'video' && p.tiktokId ? <TikTok id={p.tiktokId} title={p.title} />
+          : p.kind === 'video' && p.youtubeId
           ? <YouTube id={p.youtubeId} title={p.title} vertical={p.videoVertical} />
           : p.coverFile && <div className="ar-cover app-ar-cover"><img src={p.thumb!} alt={p.title} /></div>}
 

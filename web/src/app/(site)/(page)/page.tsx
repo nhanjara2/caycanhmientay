@@ -154,7 +154,7 @@ export default async function HomePage() {
   const news = posts.filter((p) => categoryOf(p.category)?.promo || categoryOf(p.category)?.section === 'news').slice(0, 5);
   // Video ngắn nổi bật: video admin đánh dấu Nổi bật trước, rồi mới nhất (publishedVideos đã xếp sẵn).
   const videos = allVideos.slice(0, 8);
-  const care = posts.filter((p) => !p.youtubeId && categoryOf(p.category)?.section === 'blog' && !categoryOf(p.category)?.promo).slice(0, 4);
+  const care = posts.filter((p) => p.kind === 'article' && categoryOf(p.category)?.section === 'blog' && !categoryOf(p.category)?.promo).slice(0, 4);
   const shownProjects = projects.filter((p) => p.images.length).slice(0, 3);
 
   return (

@@ -8,8 +8,9 @@ import { normalize, parseYoutubeId } from '@/lib/catalog';
 import { compressImage } from '@/lib/compress-image';
 import { money } from '@/lib/format';
 import {
-  blockingChecks, BLOCK_NAMES, CATEGORIES, durationLabel, isShortsUrl, MAX_BLOCK_PRODUCTS, NOTE_TITLE, postChecks, postImageUrl,
-  postPath, postState, PRODUCTS_TITLE, safeHref, SECTIONS, sectionOf, SEO_MAX, STATE_LABELS, youtubeThumb,
+  blockingChecks, BLOCK_NAMES, CATEGORIES, durationLabel, isShortsUrl, isTiktokShortLink, MAX_BLOCK_PRODUCTS, NOTE_TITLE, parseTiktokId,
+  postChecks, postImageUrl, postPath, postState, PRODUCTS_TITLE, safeHref, SECTIONS, sectionOf, SEO_MAX, STATE_LABELS, tiktokOembed,
+  tiktokPlayer, youtubeThumb,
   type BlockType, type PostBlock, type PostKind, type PostStatus,
 } from '@/lib/posts';
 import { Icon, Thumb } from '../Icon';
@@ -18,7 +19,7 @@ import { Select } from '@/components/Select';
 export type EditorPost = {
   id?: number; slug: string; status: PostStatus; publishedAt: string | null; updatedAt?: string; updatedBy?: string | null;
   kind: PostKind; category: string; title: string; excerpt: string; body: PostBlock[];
-  coverFile: string | null; youtubeId: string | null; videoVertical: boolean; videoSeconds: number | null;
+  coverFile: string | null; youtubeId: string | null; tiktokId: string | null; videoVertical: boolean; videoSeconds: number | null;
   authorName: string; reviewerName: string; reviewerTitle: string; diseases: string[]; tags: string[];
   seoDescription: string; featured: boolean;
 };
@@ -91,7 +92,8 @@ export function PostEditor({ initial, role, products, diseases, people, stats }:
   const [items, setItems] = useState<Item[]>(() => initial.body.map((b) => ({ k: keyRef.current++, b })));
   const [publishAt, setPublishAt] = useState(toLocalInput(initial.publishedAt));
   const [tagsText, setTagsText] = useState(initial.tags.join(', '));
-  const [ytText, setYtText] = useState(initial.youtubeId ? `https://youtu.be/${initial.youtubeId}` : '');
+  const [ytText, setYtText] = useState(initial.tiktokId ? tiktokPlayer(initial.tiktokId) : initial.youtubeId ? `https://youtu.be/${initial.youtubeId}` : '');
+  const latestLink = useRef(ytText);
   const [active, setActive] = useState<number | null>(null);
   const [focusKey, setFocusKey] = useState<number | null>(null);
   const [dirty, setDirty] = useState(false);
@@ -149,7 +151,8 @@ export function PostEditor({ initial, role, products, diseases, people, stats }:
 
   const payload = (cur = v) => ({
     id: cur.id, kind: cur.kind, category: cur.category, title: cur.title, excerpt: cur.excerpt, body,
-    coverFile: cur.coverFile, youtubeId: cur.kind === 'video' ? cur.youtubeId : null, videoVertical: cur.videoVertical,
+    coverFile: cur.coverFile, youtubeId: cur.kind === 'video' ? cur.youtubeId : null, tiktokId: cur.kind === 'video' ? cur.tiktokId : null,
+    videoVertical: cur.videoVertical,
     videoSeconds: cur.videoSeconds, authorName: cur.authorName, reviewerName: cur.reviewerName, reviewerTitle: cur.reviewerTitle,
     diseases: cur.diseases, tags, seoDescription: cur.seoDescription, featured: cur.featured,
     slug: cur.status !== 'published' && cur.slug ? cur.slug : undefined,
@@ -292,24 +295,46 @@ export function PostEditor({ initial, role, products, diseases, people, stats }:
               {v.kind === 'video' && (
                 <div className="pe-video">
                   <div className="ad-f">
-                    <label htmlFor="pe-yt">Link video YouTube <i>*</i></label>
-                    <input id="pe-yt" className="vx-input" value={ytText} placeholder="https://youtube.com/shorts/… hoặc https://youtu.be/…"
+                    <label htmlFor="pe-yt">Link video YouTube hoặc TikTok <i>*</i></label>
+                    <input id="pe-yt" className="vx-input" value={ytText} placeholder="https://youtube.com/shorts/… hoặc https://vt.tiktok.com/…"
                       onChange={(e) => {
                         const t = e.target.value;
                         setYtText(t);
-                        const id = parseYoutubeId(t);
-                        setV((x) => ({ ...x, youtubeId: id, videoVertical: id && isShortsUrl(t) ? true : x.videoVertical }));
+                        latestLink.current = t;
+                        const yt = parseYoutubeId(t);
+                        const tt = yt ? null : parseTiktokId(t);
+                        setV((x) => ({ ...x, youtubeId: yt, tiktokId: tt, videoVertical: tt || (yt && isShortsUrl(t)) ? true : x.videoVertical }));
                         touch();
-                        // Hỏi YouTube: video dọc hay ngang, và điền sẵn tiêu đề nếu còn trống (chỉ khi có quyền đăng — action kiểm tra quyền).
-                        if (id && isAdmin && id !== v.youtubeId) {
-                          lookupVideosAction(t).then((r) => {
-                            const it = r.ok ? r.items[0] : undefined;
-                            if (it && !it.error) setV((x) => (x.youtubeId !== id ? x : { ...x, videoVertical: it.vertical, title: x.title.trim() ? x.title : it.title }));
-                          }).catch(() => {});
-                        }
+                        // Hỏi YouTube / TikTok: mở link rút gọn TikTok, video dọc hay ngang, điền sẵn tiêu đề nếu còn trống
+                        // (chỉ khi có quyền đăng — action kiểm tra quyền). TikTok: máy chủ không lấy được tên thì trình duyệt hỏi lại.
+                        if (!isAdmin || (!yt && !tt && !isTiktokShortLink(t)) || (yt && yt === v.youtubeId) || (tt && tt === v.tiktokId)) return;
+                        lookupVideosAction(t).then(async (r) => {
+                          const it = r.ok ? r.items[0] : undefined;
+                          if (!it || it.error || !it.videoId || latestLink.current !== t) return;
+                          const title = it.title || (it.source === 'tiktok' ? (await tiktokOembed(it.url))?.title ?? '' : '');
+                          setV((x) => (latestLink.current !== t ? x : {
+                            ...x, youtubeId: it.source === 'youtube' ? it.videoId : null, tiktokId: it.source === 'tiktok' ? it.videoId : null,
+                            videoVertical: it.vertical, title: x.title.trim() ? x.title : title,
+                          }));
+                        }).catch(() => {});
                       }} />
-                    {ytText && !v.youtubeId && <span className="vx-err">Link chưa đúng — dán link YouTube (video thường hoặc Shorts)</span>}
+                    {ytText && !v.youtubeId && !v.tiktokId && (isTiktokShortLink(ytText)
+                      ? <span className="hint">Đang mở link TikTok rút gọn… Nếu không được: mở link trên trình duyệt, chép link đầy đủ (có /video/…) rồi dán lại.</span>
+                      : <span className="vx-err">Link chưa đúng — dán link YouTube (video thường hoặc Shorts) hoặc link video TikTok</span>)}
                   </div>
+                  {v.tiktokId && (
+                    <div className="pe-video__row">
+                      <span className="pe-yt pe-yt--v pe-tt">TikTok</span>
+                      <div className="ad-fcol">
+                        <span className="hint">Video TikTok phát bằng trình phát của TikTok. TikTok không cho lấy ảnh cố định — hãy <b>tải ảnh bìa</b> (khung Ảnh bìa bên phải) để thẻ video có ảnh.</span>
+                        <div className="ad-f">
+                          <label htmlFor="pe-sec-tt">Thời lượng (giây)</label>
+                          <input id="pe-sec-tt" className="vx-input" type="number" min={1} max={36000} value={v.videoSeconds ?? ''} placeholder="60"
+                            onChange={(e) => set('videoSeconds', e.target.value ? Math.max(1, Math.min(36000, Math.round(+e.target.value))) : null)} />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   {v.youtubeId && (
                     <div className="pe-video__row">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -400,6 +425,8 @@ export function PostEditor({ initial, role, products, diseases, people, stats }:
                 <img src={postImageUrl(v.coverFile)} alt="Ảnh bìa" className="pe-cover" />
               ) : v.kind === 'video' && v.youtubeId ? (
                 <span className="hint">Đang dùng ảnh của video YouTube. Tải ảnh riêng nếu muốn.</span>
+              ) : v.kind === 'video' && v.tiktokId ? (
+                <span className="hint">Video TikTok cần ảnh bìa (ảnh dọc, chụp màn hình video là được) — chưa có thì thẻ video là nền đen.</span>
               ) : (
                 <span className="hint">Ảnh ngang 16:9, hiện đầu bài và trên thẻ bài. Chưa có thì hiện hình minh họa.</span>
               )}

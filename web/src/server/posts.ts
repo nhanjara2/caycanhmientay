@@ -1,7 +1,7 @@
 import 'server-only';
 import { connection } from 'next/server';
 import { cache } from 'react';
-import { and, desc, eq, inArray, lt, lte, ne, notInArray, sql, type SQL } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNull, lt, lte, ne, notInArray, or, sql, type SQL } from 'drizzle-orm';
 import * as z from 'zod';
 import { normalize } from '@/lib/catalog';
 import {
@@ -21,7 +21,7 @@ export const MAX_POST_IMAGES = 60;
 // Cột cho thẻ bài / danh sách (không lấy nội dung bài — nhẹ để nạp cả danh sách).
 const cardCols = {
   id: P.id, slug: P.slug, kind: P.kind, category: P.category, title: P.title, excerpt: P.excerpt,
-  coverFile: P.coverFile, youtubeId: P.youtubeId, videoVertical: P.videoVertical, videoSeconds: P.videoSeconds,
+  coverFile: P.coverFile, youtubeId: P.youtubeId, tiktokId: P.tiktokId, videoVertical: P.videoVertical, videoSeconds: P.videoSeconds,
   readMinutes: P.readMinutes, authorName: P.authorName, reviewerName: P.reviewerName, reviewerTitle: P.reviewerTitle,
   tags: P.tags, diseases: P.diseases, featured: P.featured, status: P.status, publishedAt: P.publishedAt,
   updatedAt: P.updatedAt, views: P.views, helpfulYes: P.helpfulYes, helpfulNo: P.helpfulNo, updatedBy: P.updatedBy,
@@ -49,11 +49,11 @@ export const publishedPosts = cache(async () => {
 
 /** Video đang hiện (trang Video ngắn, trang chủ): video Nổi bật trước, sau đó mới nhất trước. */
 export async function publishedVideos(): Promise<ShortVideo[]> {
-  const videos = (await publishedPosts()).filter((p) => p.kind === 'video' && p.youtubeId);
+  const videos = (await publishedPosts()).filter((p) => p.kind === 'video' && (p.youtubeId || p.tiktokId));
   return [...videos.filter((p) => p.featured), ...videos.filter((p) => !p.featured)].map((p) => ({
     id: p.id, slug: p.slug, href: postPath(p), category: p.category, categoryName: categoryOf(p.category)?.name ?? '', title: p.title,
-    youtubeId: p.youtubeId!, vertical: p.videoVertical, seconds: p.videoSeconds, thumb: p.thumb ?? youtubeThumb(p.youtubeId!),
-    zoomThumb: !p.coverFile && !p.videoVertical,
+    ...(p.tiktokId ? { source: 'tiktok' as const, videoId: p.tiktokId } : { source: 'youtube' as const, videoId: p.youtubeId! }),
+    vertical: p.videoVertical, seconds: p.videoSeconds, thumb: p.thumb, zoomThumb: !p.coverFile && !p.tiktokId && !p.videoVertical,
   }));
 }
 
@@ -99,9 +99,10 @@ export async function countPostsInReview() {
 }
 
 /** Bài đã dùng các video này (mọi trạng thái) — thêm nhanh video không tạo trùng. */
-export async function postsByYoutubeId(ids: string[]) {
-  if (!ids.length) return [];
-  return db.select({ id: P.id, youtubeId: P.youtubeId, title: P.title, status: P.status }).from(P).where(inArray(P.youtubeId, ids));
+export async function postsByVideo(youtube: string[], tiktok: string[]) {
+  if (!youtube.length && !tiktok.length) return [];
+  return db.select({ id: P.id, youtubeId: P.youtubeId, tiktokId: P.tiktokId, title: P.title, status: P.status }).from(P)
+    .where(or(youtube.length ? inArray(P.youtubeId, youtube) : undefined, tiktok.length ? inArray(P.tiktokId, tiktok) : undefined));
 }
 
 export async function getPostAdmin(id: number) {
@@ -149,6 +150,7 @@ export const PostInputSchema = z.object({
   body: z.array(BlockSchema).max(300, 'Bài quá dài (tối đa 300 khối)'),
   coverFile: z.string().max(60).nullable(),
   youtubeId: z.string().regex(/^[\w-]{11}$/, 'Link YouTube chưa đúng').nullable(),
+  tiktokId: z.string().regex(/^\d{8,25}$/, 'Link TikTok chưa đúng').nullable(),
   videoVertical: z.boolean(),
   videoSeconds: z.number().int().min(1).max(36_000).nullable(),
   authorName: line(60),
@@ -229,19 +231,21 @@ export async function savePost(v: PostInput, intent: Intent, user: SessionUser):
     const files = new Set(cur ? (await tx.select({ file: PI.file }).from(PI).where(eq(PI.postId, cur.id))).map((r) => r.file) : []);
     const body = cleanBody(v.body, files);
     const coverFile = v.coverFile && files.has(v.coverFile) ? v.coverFile : null;
-    const youtubeId = v.kind === 'video' ? v.youtubeId : null;
+    // Một video chỉ một nguồn: có TikTok thì bỏ YouTube.
+    const tiktokId = v.kind === 'video' ? v.tiktokId : null;
+    const youtubeId = v.kind === 'video' && !tiktokId ? v.youtubeId : null;
 
     const status: PostStatus =
       intent === 'publish' ? 'published' : intent === 'unpublish' ? 'draft' : intent === 'review' ? 'review' : (cur?.status ?? 'draft');
     if (status === 'published') {
-      const bad = blockingChecks(postChecks({ ...v, body, coverFile, youtubeId }, pesticides));
+      const bad = blockingChecks(postChecks({ ...v, body, coverFile, youtubeId, tiktokId }, pesticides));
       if (bad.length) return { ok: false, error: `Chưa đăng được: ${bad.map((c) => c.label.toLowerCase()).join('; ')}` };
     }
     // Đăng mà để trống lịch đăng = đăng ngay.
     const publishedAt = v.publishAt ? new Date(v.publishAt) : intent === 'publish' ? new Date() : null;
 
     const data = {
-      kind: v.kind, category: v.category, title: v.title, excerpt: v.excerpt, body, coverFile, youtubeId,
+      kind: v.kind, category: v.category, title: v.title, excerpt: v.excerpt, body, coverFile, youtubeId, tiktokId,
       videoVertical: v.kind === 'video' && v.videoVertical, videoSeconds: v.kind === 'video' ? v.videoSeconds : null,
       readMinutes: readMinutes(v.title, v.excerpt, body), authorName: v.authorName, reviewerName: v.reviewerName,
       reviewerTitle: v.reviewerName ? v.reviewerTitle : '', diseases: [...new Set(v.diseases)], tags: v.tags,
@@ -285,6 +289,14 @@ export async function addPostImage(postId: number, img: SavedImage, user: Sessio
   if (n >= MAX_POST_IMAGES) return { ok: false as const, error: `Mỗi bài tối đa ${MAX_POST_IMAGES} ảnh` };
   await db.insert(PI).values({ postId, file: img.file, mime: img.mime, data: img.data });
   return { ok: true as const, file: img.file, url: postImageUrl(img.file) };
+}
+
+/** Ảnh bìa tự lấy (ảnh video TikTok khi thêm nhanh): chỉ gắn khi bài chưa có ảnh bìa. */
+export async function attachAutoCover(postId: number, img: SavedImage) {
+  await db.transaction(async (tx) => {
+    await tx.insert(PI).values({ postId, file: img.file, mime: img.mime, data: img.data });
+    await tx.update(P).set({ coverFile: img.file }).where(and(eq(P.id, postId), isNull(P.coverFile)));
+  });
 }
 
 export const readPostImage = async (name: string) =>
