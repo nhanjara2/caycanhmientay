@@ -40,6 +40,15 @@ export type Unit = { label: string; price: number; oldPrice?: number; combo2?: n
 export const isQuote = (u: Pick<Unit, 'price'>) => u.price <= 0;
 export const QUOTE_TEXT = 'Liên hệ báo giá';
 
+/** Số thứ tự quy cách rẻ nhất có giá (bỏ "Liên hệ báo giá"); không quy cách nào có giá thì 0. Thẻ sản phẩm hiện giá này, trang sản phẩm chọn sẵn quy cách này. */
+export const cheapestOption = (options: Unit[]) =>
+  options.reduce((b, o, i) => (!isQuote(o) && (isQuote(options[b]) || o.price < options[b].price) ? i : b), 0);
+
+/** Thứ tự hiện quy cách ở trang sản phẩm: giá thấp → cao, "Liên hệ báo giá" cuối. Chỉ đổi thứ tự hiện —
+ *  số thứ tự trong database giữ nguyên vì đơn hàng / giỏ hàng tham chiếu theo đó (vd. quy cách "Mini" gộp vào sau cỡ lớn). */
+export const optionOrder = (options: Unit[]) =>
+  options.map((_, i) => i).sort((a, b) => (isQuote(options[a]) ? 1 : 0) - (isQuote(options[b]) ? 1 : 0) || options[a].price - options[b].price);
+
 export type Product = {
   slug: string;
   sku: string;

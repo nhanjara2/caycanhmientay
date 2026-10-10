@@ -1605,11 +1605,10 @@ button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .vx-pcard .app-pcard__heart svg { width: 1.125rem; height: 1.125rem; fill: none; }
 .vx-pcard .app-pcard__heart[aria-pressed="true"] { color: var(--sale); }
 .vx-pcard .app-pcard__heart[aria-pressed="true"] svg { fill: currentColor; }
-.vx-pcard .app-pcard__chips { display: flex; flex-wrap: wrap; gap: 0.375rem; min-width: 0; }   /* nhiều chip thì xuống hàng, không tràn khỏi thẻ */
-.vx-pcard .app-pcard__chips .vx-chip { white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
-.app-pcard__one { font-size: 0.875rem; line-height: 1.35; font-weight: 600; color: var(--primary-hover); background: var(--primary-soft); border-radius: var(--radius-md); padding: 0.375rem 0.625rem; }
-/* nhiều quy cách / nhãn dài: không chọn trên thẻ, chỉ ghi số quy cách (chọn ở trang sản phẩm) */
-.app-pcard__optn { font-size: 0.875rem; line-height: 1.35; font-weight: 600; color: var(--primary-hover); background: var(--primary-soft); border-radius: var(--radius-md); padding: 0.375rem 0.625rem; }
+/* Thẻ không còn chọn quy cách / nút thêm vào giỏ (10/10/2026): link phủ cả thẻ, tim nằm trên lớp phủ; giá dồn xuống đáy cho thẳng hàng giữa các thẻ */
+.app-pcard__cover { position: absolute; inset: 0; z-index: 1; border-radius: inherit; }
+.vx-pcard .app-pcard__heart { z-index: 2; }
+.vx-pcard > .vx-price { margin-top: auto; }
 
 /* Trang chi tiết sản phẩm: cột ảnh dính, kính lúp phóng to ảnh, thu gọn thông tin dài */
 @media (min-width: 48em) {
@@ -1652,6 +1651,58 @@ button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
   .vx-pdpage .vx-article h2 { font-size: 1.375rem; line-height: 1.35; }
   .vx-pdpage .vx-article h3 { font-size: 1.125rem; line-height: 1.4; }
   .vx-pdpage .vx-expert b { font-size: 0.9375rem; }
+}
+
+/* ---- Khối mua trang sản phẩm kiểu Shopee (BuyBox, 10/10/2026) ----
+   Khung giá nền nhạt → các hàng "nhãn | nội dung" (Giá theo số lượng, Mã giảm giá, Vận chuyển, Quy cách, Số lượng) → Thêm vào giỏ hàng | Mua ngay.
+   Máy tính / tablet: nhãn cột trái 8.5rem; điện thoại: nhãn nằm trên. Ô quy cách: tên + giá, ô đang chọn viền xanh + dấu ✓ góc dưới phải. */
+.app-pp { display: flex; flex-wrap: wrap; align-items: center; column-gap: 0.875rem; row-gap: 0.25rem; padding: 0.875rem 1.125rem; border-radius: var(--radius-md); background: #f2f8f4; }
+.app-pp .vx-buy__price b { font-size: 2rem; line-height: 1.2; }
+.app-pp .vx-buy__old s { font-size: 1.0625rem; }
+.app-pp__opt { flex-basis: 100%; font-size: 0.875rem; line-height: 1.4; color: var(--ink-muted); }
+.app-pp__opt b { color: var(--ink); font-weight: 600; }
+.app-prows { display: flex; flex-direction: column; gap: 1rem; padding: 0.25rem 0; }
+.app-prow { display: grid; grid-template-columns: 8.5rem minmax(0, 1fr); gap: 1rem; align-items: start; }
+.app-prow__k { padding-top: 0.5rem; font-size: 0.9375rem; line-height: 1.4; color: var(--ink-muted); }
+.app-prow__v { min-width: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.app-prow__v .app-tiers { margin: 0; }
+/* Giá theo số lượng thành 3 ô ngang (Mua 1 / Combo 2 / Sỉ công trình) cho gọn; ô đang áp dụng tô xanh */
+.app-tiers--tiles { grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); grid-auto-flow: column; gap: 0.5rem; padding: 0; border: 0; background: none; }
+.app-tiers--tiles .app-tiers__row { flex-direction: column; justify-content: flex-start; align-items: flex-start; gap: 0.125rem; padding: 0.5rem 0.625rem; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.app-tiers--tiles .app-tiers__row > b { flex: 1 1 auto; text-align: left; }
+.app-tiers--tiles .app-tiers__row[data-on] { border-color: var(--primary); }
+.app-prow__note { font-size: 0.875rem; line-height: 1.45; color: var(--ink-muted); }
+.app-prow__note b { color: var(--ink); }
+.app-vtags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0; padding: 0; list-style: none; }
+.app-vtag { display: inline-flex; flex-wrap: wrap; align-items: baseline; column-gap: 0.375rem; padding: 0.3125rem 0.625rem; border: 1px dashed var(--sale); border-radius: var(--radius-sm); background: #fff5ee; color: var(--sale); font-size: 0.9375rem; line-height: 1.35; }
+.app-vtag b { font-weight: 700; letter-spacing: .01em; }
+.app-vtag small { font-size: 0.875rem; color: var(--ink-muted); }
+.app-vopts { display: grid; grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); gap: 0.5rem; }
+.app-vopt { position: relative; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 0.125rem; min-height: 3.5rem; padding: 0.5rem 0.75rem; border: 1px solid var(--field-border, #a9b8ae); border-radius: var(--radius-sm); background: var(--surface); color: var(--ink); font: inherit; text-align: left; cursor: pointer; overflow: hidden; }
+.app-vopt:hover { border-color: var(--primary); }
+.app-vopt:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.app-vopt__l { font-size: 0.9375rem; line-height: 1.3; font-weight: 600; overflow-wrap: anywhere; }
+.app-vopt small { font-size: 0.875rem; line-height: 1.3; color: var(--ink-muted); }
+.app-vopt[aria-pressed="true"] { border-color: var(--primary); box-shadow: inset 0 0 0 1px var(--primary); background: #f2f8f4; }
+.app-vopt[aria-pressed="true"] .app-vopt__l { color: var(--primary-hover); }
+.app-vopt[aria-pressed="true"] small { color: var(--primary-hover); font-weight: 600; }
+.app-vopt[aria-pressed="true"]::after { content: '✓'; position: absolute; right: 0; bottom: 0; width: 1.375rem; height: 1.375rem; display: flex; align-items: flex-end; justify-content: flex-end; padding: 0 0.125rem 0.0625rem 0; box-sizing: border-box; background: var(--primary); clip-path: polygon(100% 0, 100% 100%, 0 100%); color: #fff; font-size: 0.6875rem; line-height: 1; font-weight: 700; }
+.app-vone { align-self: flex-start; padding: 0.4375rem 0.875rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-sunken); font-size: 0.9375rem; line-height: 1.4; font-weight: 600; }
+.app-qtyrow { flex-direction: row; flex-wrap: wrap; align-items: center; column-gap: 0.875rem; }
+.app-qtyrow .vx-stepper { border-color: var(--field-border, #a9b8ae); }
+.vx-stepper button:disabled { opacity: .35; cursor: default; }
+/* Thêm vào giỏ hàng (viền) bên trái, Mua ngay + số tiền (nền xanh) bên phải; điện thoại 1 cột: Mua ngay lên trên */
+.app-buycta { align-items: stretch; }
+.app-buycta .vx-btn { min-height: 3.5rem; }
+.app-buycta__buy { flex-direction: column; gap: 0; line-height: 1.2; }
+.app-buycta__buy small { font-size: 0.875rem; font-weight: 600; opacity: .92; }
+@media (max-width: 47.9375em) {
+  .app-pp { padding: 0.75rem 0.875rem; }
+  .app-prows { gap: 0.875rem; }
+  .app-prow { grid-template-columns: minmax(0, 1fr); gap: 0.375rem; }
+  .app-prow__k { padding-top: 0; font-weight: 600; color: var(--ink); }
+  .app-vopts { grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr)); }
+  .app-buycta__buy { order: -1; }
 }
 
 /* ---- Thanh danh mục ngang + bảng xổ (CategoryNav, 08/10/2026) ----
@@ -2214,9 +2265,6 @@ body[data-buybar] .app-site .app-fab { bottom: 6.25rem; }
   .app-site .vx-seg .vx-chip { padding: 0.5rem 0.875rem; font-size: 0.9375rem; line-height: 1.3; }
   /* Thẻ sản phẩm 2 cột: hàng nhãn (xuất xứ + -x%) rộng bằng khung ảnh, nút "Thêm vào giỏ" vừa 1 dòng */
   .app-site .vx-pcard__tags { left: var(--space-3); right: var(--space-3); gap: 2px; }
-  .app-site .vx-pcard__foot .vx-btn { padding-inline: 0.375rem; font-size: 0.9375rem; }
-  .app-site .vx-pcard .vx-seg { display: flex; flex-wrap: wrap; gap: 0.375rem; }
-  .app-site .vx-pcard .vx-seg .vx-chip { padding: 0.375rem 0.5rem; font-size: 0.875rem; white-space: normal; text-align: center; }
   .app-site .vx-opt { grid-template-columns: minmax(0, 1fr); gap: 0.375rem; }
   .app-site .vx-opt .vx-seg { flex-wrap: wrap; gap: 0.5rem; }
   .app-site .vx-stepper { border: 1.5px solid var(--field-border); }

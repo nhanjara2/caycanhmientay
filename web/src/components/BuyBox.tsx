@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { discountPct, isQuote, QUOTE_TEXT, type Product } from '@/lib/catalog';
+import { cheapestOption, discountPct, isQuote, optionOrder, QUOTE_TEXT, type Product } from '@/lib/catalog';
 import { useAuth } from '@/lib/auth';
 import { useCart } from '@/lib/cart';
 import { SALES_PHONE, ZALO_URL } from '@/lib/contact';
@@ -20,7 +20,8 @@ import { Icon, Thumb } from './Icon';
 import { WishlistHeart } from './WishlistHeart';
 import { Select } from './Select';
 
-/** Khối mua bên phải trang chi tiết: tên → meta → giá → chọn đơn vị/số lượng → CTA → khuyến mãi → mô tả ngắn → SpecTable. */
+/** Khối mua bên phải trang chi tiết (bố cục kiểu Shopee): tên → meta → khung giá → các hàng có nhãn
+ *  (giá theo số lượng, mã giảm giá, vận chuyển, quy cách, số lượng) → Thêm vào giỏ / Mua ngay → khuyến mãi → mô tả ngắn → SpecTable. */
 export function BuyBox({ product: p, category, wishlisted = false }: {
   product: Product;
   /** Tên danh mục / nhóm con (đọc từ database ở trang). */
@@ -35,7 +36,9 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
   const partnerPct = partner?.discount ?? 0;
   const partnerType = partner?.type;
   const router = useRouter();
-  const [opt, setOpt] = useState(0);
+  // Quy cách hiện theo giá thấp → cao; chọn sẵn quy cách rẻ nhất (khớp giá "Từ …" ở thẻ sản phẩm)
+  const order = optionOrder(p.options);
+  const [opt, setOpt] = useState(() => cheapestOption(p.options));
   const [qty, setQty] = useState(1);
   const u = p.options[opt];
   const quote = isQuote(u);
@@ -66,6 +69,19 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
     add(p, opt, qty);
     router.push('/gio-hang');
   };
+  const stepper = (cls: string) => (
+    <span className={cls}>
+      <button type="button" aria-label="Giảm" disabled={qty <= 1} onClick={() => setQty((q) => Math.max(1, q - 1))}>−</button>
+      <span aria-live="polite">{qty}</span>
+      <button type="button" aria-label="Tăng" disabled={qty >= 99} onClick={() => setQty((q) => Math.min(99, q + 1))}>+</button>
+    </span>
+  );
+  const contactLinks = (callCls: string, zaloCls: string, short = false) => (
+    <>
+      <a href={`tel:${SALES_PHONE}`} className={callCls}><Icon name="phone" />{short ? 'Gọi' : 'Gọi báo giá'}</a>
+      <a href={ZALO_URL} target="_blank" rel="noreferrer" className={zaloCls}>{!short && <Icon name="chat" />}Hỏi giá qua Zalo</a>
+    </>
+  );
 
   return (
     <div className="vx-buy">
@@ -85,70 +101,96 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
         ) : <a href="#danh-gia">Chưa có đánh giá</a>}
         ·<span>Đã bán {compact(p.sold)}</span>
       </div>
-      <div className="vx-buy__price">
-        {quote ? <b className="app-quote">{QUOTE_TEXT}</b> : <><b>{money(u.price)}</b><span>/ {p.unit}</span></>}
-      </div>
-      {u.oldPrice && !quote && (
-        <div className="vx-buy__old">
-          <s>{money(u.oldPrice)}</s>
-          <span className="vx-badge vx-badge--sale">-{pct}%</span>
+      <div className="app-pp">
+        <div className="vx-buy__price">
+          {quote ? <b className="app-quote">{QUOTE_TEXT}</b> : <><b>{money(u.price)}</b><span>/ {p.unit}</span></>}
         </div>
-      )}
-      {!quote && (
-        <div className="app-tiers" aria-label="Giá theo số lượng">
-          <div className="app-tiers__row" data-on={!(combo && qty >= 2) || undefined}><span>Mua 1 {unit}</span><b>{money(u.price)}</b></div>
-          {combo > 0 && (
-            <div className="app-tiers__row" data-on={qty >= 2 || undefined}>
-              <span>Combo 2 {unit}</span><b>{money(combo)}<small>≈ {money(Math.round(combo / 2))} / {unit}</small></b>
-            </div>
-          )}
-          <div className="app-tiers__row">
-            <span>Giá sỉ công trình</span><b><Link href={quoteHref}>Liên hệ báo giá</Link></b>
+        {u.oldPrice && !quote && (
+          <div className="vx-buy__old">
+            <s>{money(u.oldPrice)}</s>
+            <span className="vx-badge vx-badge--sale">-{pct}%</span>
           </div>
-          {(vouchers.length > 0 || partnerPct > 0) && (
-            <small>
-              {vouchers.length > 0 && <>Mã giảm thêm: {vouchers.map((v, i) => (
-                <span key={v.code}>{i > 0 && ' · '}<b>{v.code}</b> {voucherShort(v)}{v.minOrder > 0 && ` đơn từ ${money(v.minOrder)}`}</span>
-              ))}. </>}
-              {partnerPct > 0 && <>Bạn được chiết khấu thêm <b>{partnerPct}%</b>.</>}
-            </small>
-          )}
+        )}
+        {p.options.length > 1 && <small className="app-pp__opt">Giá cho quy cách <b>{u.label}</b></small>}
+      </div>
+      <div className="app-prows">
+        {!quote && (
+          <div className="app-prow">
+            <span className="app-prow__k">Giá theo số lượng</span>
+            <div className="app-prow__v">
+              <div className="app-tiers app-tiers--tiles" aria-label="Giá theo số lượng">
+                <div className="app-tiers__row" data-on={!(combo && qty >= 2) || undefined}><span>Mua 1 {unit}</span><b>{money(u.price)}</b></div>
+                {combo > 0 && (
+                  <div className="app-tiers__row" data-on={qty >= 2 || undefined}>
+                    <span>Combo 2 {unit}</span><b>{money(combo)}<small>≈ {money(Math.round(combo / 2))} / {unit}</small></b>
+                  </div>
+                )}
+                <div className="app-tiers__row">
+                  <span>Giá sỉ công trình</span><b><Link href={quoteHref}>Liên hệ báo giá</Link></b>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        {!quote && (vouchers.length > 0 || partnerPct > 0) && (
+          <div className="app-prow">
+            <span className="app-prow__k">Mã giảm giá</span>
+            <div className="app-prow__v">
+              {vouchers.length > 0 && (
+                <ul className="app-vtags">
+                  {vouchers.map((v) => (
+                    <li key={v.code} className="app-vtag">
+                      <b>{v.code}</b><span>{voucherShort(v)}</span>
+                      {v.minOrder > 0 && <small>đơn từ {moneyShort(v.minOrder)}</small>}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {partnerPct > 0 && <small className="app-prow__note">Bạn được chiết khấu đối tác thêm <b>{partnerPct}%</b>.</small>}
+            </div>
+          </div>
+        )}
+        <div className="app-prow">
+          <span className="app-prow__k">Vận chuyển</span>
+          <div className="app-prow__v"><DeliverToNote ship={p.ship} /></div>
         </div>
-      )}
-      {p.options.length > 1 && (
-        <div className="vx-opt">
-          <span>Chọn quy cách</span>
-          <span className="vx-seg" style={{ flexWrap: 'wrap' }}>
-            {p.options.map((o, i) => (
-              <button key={o.label} type="button" className="vx-chip" aria-pressed={i === opt} onClick={() => setOpt(i)}>
-                {o.label}
-              </button>
-            ))}
-          </span>
+        <div className="app-prow">
+          <span className="app-prow__k" id="buy-opt">{p.options.length > 1 ? `Chọn quy cách (${p.options.length})` : 'Quy cách'}</span>
+          <div className="app-prow__v">
+            {p.options.length > 1 ? (
+              <div className="app-vopts" role="group" aria-labelledby="buy-opt">
+                {order.map((i) => {
+                  const o = p.options[i];
+                  return (
+                    <button key={o.label} type="button" className="app-vopt" aria-pressed={i === opt} onClick={() => setOpt(i)}>
+                      <span className="app-vopt__l">{o.label}</span>
+                      <small>{isQuote(o) ? 'Liên hệ báo giá' : money(o.price)}</small>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : <span className="app-vone">{u.label}</span>}
+          </div>
         </div>
-      )}
-      {!quote && <div className="vx-opt">
-        <span>Chọn số lượng</span>
-        <span className="vx-stepper" style={{ justifySelf: 'start' }}>
-          <button type="button" aria-label="Giảm" onClick={() => setQty((q) => Math.max(1, q - 1))}>−</button>
-          <span>{qty}</span>
-          <button type="button" aria-label="Tăng" onClick={() => setQty((q) => q + 1)}>+</button>
-        </span>
-      </div>}
-      <DeliverToNote ship={p.ship} />
+        {!quote && (
+          <div className="app-prow">
+            <span className="app-prow__k">Số lượng</span>
+            <div className="app-prow__v app-qtyrow">{stepper('vx-stepper')}</div>
+          </div>
+        )}
+      </div>
       {quote ? (
         <div className="vx-buy__cta" ref={ctaRef}>
-          <a href={`tel:${SALES_PHONE}`} className="vx-btn vx-btn--primary vx-btn--lg"><Icon name="phone" />Gọi báo giá</a>
-          <a href={ZALO_URL} target="_blank" rel="noreferrer" className="vx-btn vx-btn--soft vx-btn--lg"><Icon name="chat" />Hỏi giá qua Zalo</a>
+          {contactLinks('vx-btn vx-btn--primary vx-btn--lg', 'vx-btn vx-btn--soft vx-btn--lg')}
         </div>
       ) : (
-        <div className="vx-buy__cta" ref={ctaRef}>
-          <button type="button" className="vx-btn vx-btn--primary vx-btn--lg" onClick={buyNow}>
-            Mua ngay
-          </button>
-          <button type="button" className="vx-btn vx-btn--soft vx-btn--lg" onClick={() => add(p, opt, qty)}>
+        <div className="vx-buy__cta app-buycta" ref={ctaRef}>
+          <button type="button" className="vx-btn vx-btn--outline vx-btn--lg app-buycta__add" onClick={() => add(p, opt, qty)}>
             <Icon name="cart" />
-            Thêm vào giỏ
+            Thêm vào giỏ hàng
+          </button>
+          <button type="button" className="vx-btn vx-btn--primary vx-btn--lg app-buycta__buy" onClick={buyNow}>
+            <span>Mua ngay</span><small>{money(payNow)}</small>
           </button>
         </div>
       )}
@@ -169,21 +211,14 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
           <label className="app-buybar__opt">
             <span className="app-sr">Chọn quy cách</span>
             <Select value={opt} onChange={(e) => setOpt(Number(e.target.value))}>
-              {p.options.map((o, i) => <option key={o.label} value={i}>{o.label}</option>)}
+              {order.map((i) => <option key={p.options[i].label} value={i}>{p.options[i].label}</option>)}
             </Select>
           </label>
         )}
-        {!quote && (
-          <span className="vx-stepper app-buybar__qty">
-            <button type="button" aria-label="Giảm" onClick={() => setQty((q) => Math.max(1, q - 1))}>−</button>
-            <span>{qty}</span>
-            <button type="button" aria-label="Tăng" onClick={() => setQty((q) => q + 1)}>+</button>
-          </span>
-        )}
+        {!quote && stepper('vx-stepper app-buybar__qty')}
         {quote ? (
           <div className="app-buybar__acts">
-            <a href={`tel:${SALES_PHONE}`} className="vx-btn vx-btn--outline vx-btn--lg app-buybar__call"><Icon name="phone" />Gọi</a>
-            <a href={ZALO_URL} target="_blank" rel="noreferrer" className="vx-btn vx-btn--primary vx-btn--lg app-buybar__buy">Hỏi giá qua Zalo</a>
+            {contactLinks('vx-btn vx-btn--outline vx-btn--lg app-buybar__call', 'vx-btn vx-btn--primary vx-btn--lg app-buybar__buy', true)}
           </div>
         ) : (
           <div className="app-buybar__acts">
@@ -222,6 +257,9 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
     </div>
   );
 }
+
+/** "1 triệu", "1,5 triệu" cho số tròn trăm nghìn từ 1 triệu; còn lại ghi đủ. */
+const moneyShort = (n: number) => (n >= 1e6 && n % 1e5 === 0 ? `${String(n / 1e6).replace('.', ',')} triệu` : money(n));
 
 /** "−10%" / "−50.000đ" — mức giảm ngắn của mã ở bảng giá. */
 const voucherShort = (v: PublicVoucher) => (v.discountType === 'percent' ? `−${v.discountValue}%` : `−${money(v.discountValue)}`);
