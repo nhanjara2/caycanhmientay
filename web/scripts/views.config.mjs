@@ -102,7 +102,6 @@ export const views = [
   // Dịch vụ / Cây văn phòng / Đặt lịch khảo sát đã gỡ 09/10/2026 (shop chỉ bán sỉ); Đối tác sỉ (/doi-tac) và Báo giá sỉ (/bao-gia-si) viết tay.
 
   // Admin — khung AdminShell ở src/app/admin/(shell)/layout.tsx. Tổng quan, báo cáo, đơn hàng, khách hàng, khuyến mãi, đánh giá, yêu cầu dịch vụ, bài viết & video đã viết tay với dữ liệu thật.
-  { name: 'AdminPOSView', from: 'AdminPOS' },
 
   // App nhân viên (web mobile)
   { name: 'StaffWarehouseView', from: 'StaffWarehouseApp' },

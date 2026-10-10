@@ -320,9 +320,6 @@ a.vx-chip[aria-current="true"] { background: var(--primary-soft); border-color: 
 .dd-sym .img--photo { overflow: hidden; }
 .dd-sym .img--photo > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 /* Ghi công ảnh minh họa nạp sẵn (lib/seed-disease-images.ts) */
-.dd-sym .dd-credit { color: var(--ink-muted); font-size: 0.875rem; line-height: 1.3; }
-.dd-credit-note { margin: 0; color: var(--ink-muted); font-size: 0.875rem; line-height: 1.5; }
-.dd-credit-note a { color: var(--primary-hover); font-weight: 600; display: inline-flex; align-items: center; min-height: 2.75rem; }
 #danh-sach { scroll-margin-top: 140px; }
 
 /* Thẻ sản phẩm: viền khung ảnh theo loại (ProductCard) */
@@ -631,9 +628,6 @@ a.vx-chip[aria-current="true"] { background: var(--primary-soft); border-color: 
   .app-admin .ad-store small { font-size: 0.75rem; }
 }
 
-/* Quà tài khoản mới ở trang thanh toán (VoucherInput): thẻ .vx-voucher có nút "Dùng" thay cho ô chép 24px */
-.vx-voucher.app-vgift { grid-template-columns: 40px minmax(0, 1fr) auto; gap: var(--space-2); padding: var(--space-2) var(--space-3); margin-bottom: 4px; border-color: var(--sale); background: var(--warning-soft); }
-.app-vgift .vx-voucher__ic { width: 40px; height: 40px; }
 
 /* ---- Đánh giá sản phẩm (components/ProductReviews.tsx, admin /admin/danh-gia) ---- */
 .rvw-form { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-4); border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-sunken); }
@@ -713,10 +707,6 @@ textarea.vx-input.app-qf-items { min-height: 9rem; font-size: 0.9375rem; line-he
 .vx-freeship.app-minorder { padding: 10px 12px; border: 1px solid #f59e0b; border-radius: var(--radius-md); background: #fff7e6; color: var(--ink); }
 .app-minorder .bar i { background: #d97706; }
 /* Trang sản phẩm: dòng "Giá sỉ · đơn tối thiểu" dưới giá */
-.app-wsnote { display: flex; gap: 6px; align-items: flex-start; margin: 2px 0 0; font-size: 0.875rem; line-height: 1.45; color: var(--ink-muted); }
-.app-wsnote .vx-ico { flex: none; margin-top: 2px; color: var(--primary); }
-.app-wsnote b { color: var(--ink); }
-.app-wsnote a { color: var(--primary-hover); font-weight: 600; }
 /* Trang sản phẩm: bảng giá (giá lẻ / combo 2 cây / giá sỉ công trình liên hệ) — BuyBox */
 .app-tiers { display: grid; gap: 2px; margin: 4px 0 0; padding: 6px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); }
 .app-tiers__row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 6px 8px; border-radius: var(--radius-sm, 6px); font-size: 0.9375rem; line-height: 1.4; }
@@ -755,7 +745,6 @@ p.pt-signup__co { color: var(--ink); font-weight: 600; }
 .app-qf-add { width: 84px; min-height: 84px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border: 2px dashed var(--border); border-radius: var(--radius-md); background: var(--surface); color: var(--ink-muted); font: inherit; font-size: 0.6875rem; cursor: pointer; }
 .app-qf-add:hover { border-color: var(--primary); color: var(--primary); }
 .app-qf-actions { display: flex; justify-content: flex-end; gap: 8px; }
-.vx-slots2.app-qf-slots { grid-auto-flow: column; grid-template-rows: auto auto; grid-template-columns: repeat(var(--days, 4), minmax(0, 1fr)); }
 .app-qf-done { align-items: center; text-align: center; padding: var(--space-6); }
 .app-qf-done p { margin: 0; max-width: 520px; color: var(--ink-muted); line-height: 1.375rem; }
 .app-qf-done p b { color: var(--ink); }
@@ -784,7 +773,6 @@ a.app-kb-card[data-dragging="true"] { opacity: .45; }
   .kb.app-kb { grid-template-columns: repeat(var(--kb-cols, 5), 78vw); scroll-snap-type: x mandatory; padding-bottom: 4px; }
   .app-kb .kb-col { scroll-snap-align: start; }
   .app-qf-actions { flex-direction: column-reverse; }
-  .vx-slots2.app-qf-slots { grid-auto-flow: row; grid-template-rows: none; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .app-qf-actions .vx-btn { width: 100%; }
   .ad-title .acts .app-select.ad-sel, .ad-title .acts label.ad-sel { flex: 1 1 140px; }
 }
@@ -1377,26 +1365,9 @@ button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 
 /* Trang landing (Đối tác sỉ /doi-tac — components/PartnerPage, LandingParts): phần thêm cho các khối của ServicesHubLayout */
 .sv-sec > p.sub { margin: -0.5rem auto 0; max-width: 46rem; }
-.sv-crumb { padding: var(--space-3) var(--space-6) 0; }
-.sv-title { margin: 0; text-align: center; font-size: 1.75rem; line-height: 2.25rem; }
-.sv-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); max-width: 62rem; margin: 0 auto; width: 100%; }
-.sv-opt { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-6); display: flex; flex-direction: column; gap: var(--space-3); }
-.sv-opt > b { font-size: 1.25rem; line-height: 1.75rem; }
-.sv-opt > p { margin: 0; color: var(--ink-muted); font-size: 0.9375rem; line-height: 1.5rem; }
-.sv-opt .vx-btn { margin-top: auto; }
-.sv-opt__ic { width: 3rem; height: 3rem; border-radius: var(--radius-md); background: var(--primary-soft); color: var(--primary-hover); display: grid; place-items: center; }
-.sv-opt__ic .vx-ico { width: 1.5rem; height: 1.5rem; }
 .sv-check { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.9375rem; line-height: 1.5rem; }
 .sv-check li { display: flex; gap: 0.625rem; align-items: flex-start; }
 .sv-check .vx-ico { width: 1.125rem; height: 1.125rem; margin-top: 0.1875rem; color: var(--primary); }
-.sv-split { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); max-width: 62rem; margin: 0 auto; width: 100%; }
-.sv-panel { background: var(--surface); border-radius: var(--radius-lg); padding: var(--space-6); display: flex; flex-direction: column; gap: var(--space-3); }
-.sv-panel h2 { margin: 0; font-size: 1.125rem; line-height: 1.75rem; text-align: left; }
-.sv-panel > p { margin: 0; color: var(--ink-muted); font-size: 0.9375rem; line-height: 1.5rem; }
-.sv-panel .acts { display: flex; flex-wrap: wrap; gap: var(--space-2); }
-.sv-panel--wide { max-width: 62rem; margin: 0 auto; width: 100%; box-sizing: border-box; }
-.sv-note { margin: 0; color: var(--ink-muted); font-size: 0.9375rem; line-height: 1.5rem; }
-.sv-note a { color: var(--primary); font-weight: 600; }
 .sv-faq { max-width: 52rem; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: var(--space-2); }
 .sv-faq details { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); }
 .sv-faq summary { cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); min-height: 2.75rem; padding: 0.625rem var(--space-4); font-weight: 600; font-size: 0.9375rem; line-height: 1.5rem; }
@@ -1409,10 +1380,6 @@ button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .sv-cta a:not(.vx-btn) { color: inherit; font-weight: 700; text-decoration: underline; }
 .sv-step .t { display: flex; flex-direction: column; align-items: center; gap: 6px; }
 @media (max-width: 47.9375em) {
-  .sv-crumb { padding: var(--space-3) var(--space-3) 0; }
-  .sv-title { font-size: 1.375rem; line-height: 1.875rem; }
-  .sv-two, .sv-split { grid-template-columns: minmax(0, 1fr); }
-  .sv-opt, .sv-panel { padding: var(--space-4); }
   /* Các bước xếp dọc (5 cột trên màn 390px làm chữ quá nhỏ): biểu tượng bên trái, chữ bên phải */
   .sv-sec .sv-steps { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
   .sv-sec .sv-step { flex-direction: row; align-items: flex-start; text-align: left; gap: var(--space-3); font-size: 0.9375rem; line-height: 1.5; }
@@ -1583,22 +1550,15 @@ button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .pa-banner__t { flex: 1; min-width: 0; display: flex; flex-direction: column; color: var(--ink-muted); }
 .pa-banner__t b { color: var(--ink); font-size: 1rem; }
 .pa-banner__go { flex: none; display: inline-flex; align-items: center; gap: 0.25rem; min-height: 2.75rem; padding: 0 var(--space-4); border-radius: var(--radius-pill); background: var(--primary); color: var(--on-primary); font-weight: 600; }
-.pa-promo__kinds { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); }
-.pa-promo__kinds a { display: flex; align-items: center; gap: var(--space-2); min-height: 3rem; padding: 0 var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-md); color: var(--ink); text-decoration: none; font-weight: 600; font-size: 0.9375rem; background: var(--surface); }
-.pa-promo__kinds a:hover { border-color: var(--primary); color: var(--primary-hover); }
-.pa-promo__kinds .vx-ico { flex: none; width: 1.375rem; height: 1.375rem; color: var(--primary); }
-.pa-promo p b { color: var(--ink); }
 @media (max-width: 47.9375em) {
   .pa-banner { flex-wrap: wrap; }
   .pa-banner__t { flex-basis: calc(100% - 3.5rem); }
   .pa-banner__go { flex: 1 1 100%; justify-content: center; }
-  .pa-promo__kinds { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 /* "Liên hệ báo giá" — quy cách chưa có giá (giá 0): thay số tiền ở thẻ sản phẩm, trang sản phẩm */
 .app-quote { font-size: 1.0625rem; font-weight: 700; color: var(--primary-hover); }
 .vx-buy__price .app-quote { font-size: 1.5rem; }
-/* Bộ chọn quy cách trên thẻ sản phẩm (ProductCard): chip cho nhãn ngắn; nhãn dài → 1 dòng chữ (1 quy cách) hoặc ô chọn rộng hết thẻ */
 /* Tim yêu thích trên thẻ sản phẩm: góc dưới phải khung ảnh (khung ảnh vuông = rộng thẻ − 2 lề) */
 .app-pcard__mediawrap { position: relative; }
 .vx-pcard .app-pcard__heart { top: auto; right: 0.5rem; bottom: 0.5rem; width: 2.5rem; height: 2.5rem; color: var(--ink-muted); border: 0; cursor: pointer; }
@@ -1637,7 +1597,6 @@ button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 @media (min-width: 48em) {
   .vx-pdpage .vx-buy__title { font-size: 1.5rem; line-height: 1.3; }
   .vx-pdpage .vx-buy__brand, .vx-pdpage .vx-buy__meta, .vx-pdpage .vx-promo__head, .vx-pdpage .vx-promo__row, .vx-pdpage .vx-gal__note, .vx-pdpage .vx-note, .vx-pdpage .vx-expert p { font-size: 0.875rem; line-height: 1.45; }
-  .vx-pdpage .vx-opt { font-size: 0.9375rem; }
   .vx-pdpage .vx-stepper button { width: 2.25rem; height: 2.25rem; font-size: 1.125rem; }
   .vx-pdpage .vx-lead { font-size: 1rem; line-height: 1.6; }
   .vx-pdpage .vx-spec-t { font-size: 0.9375rem; line-height: 1.5; }
@@ -1939,7 +1898,7 @@ a.app-mm__card:hover .app-mm__name { color: var(--primary); }
 .dn-empty p { margin: 0; font-size: 0.9375rem; line-height: 1.55; color: var(--ink-muted); }
 .dn-empty .acts { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .dn-empty__ic, .dn-cap__ic, .dn-way__ic { width: 3rem; height: 3rem; flex: none; border-radius: var(--radius-md); background: var(--primary-soft); color: var(--primary-hover); display: grid; place-items: center; }
-.dn-empty__ic .vx-ico, .dn-cap__ic .vx-ico, .dn-way__ic .vx-ico, .dn-sol__ic .vx-ico { width: 1.5rem; height: 1.5rem; }
+.dn-empty__ic .vx-ico, .dn-cap__ic .vx-ico, .dn-way__ic .vx-ico { width: 1.5rem; height: 1.5rem; }
 
 .dn-quotes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: 1.25rem; }
 .dn-quote { margin: 0; display: flex; flex-direction: column; gap: 1rem; padding: 1.5rem; background: var(--surface); border-radius: var(--radius-lg); border-left: 4px solid var(--primary); }
@@ -1950,29 +1909,19 @@ a.app-mm__card:hover .app-mm__name { color: var(--primary); }
 .dn-quote--big { background: var(--primary-soft); }
 .dn-quote--big blockquote { font-size: 1.125rem; }
 
-.dn-caps, .dn-sols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem; }
+.dn-caps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem; }
 .dn-cap { display: flex; flex-direction: column; gap: 0.5rem; padding: 1.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); }
 .dn-cap__ic { margin-bottom: 0.25rem; }
 .dn-cap b, .dn-way b { font-size: 1.0625rem; line-height: 1.4; }
-.dn-cap p, .dn-sol p, .dn-way p { margin: 0; font-size: 0.9375rem; line-height: 1.6; color: var(--ink-muted); }
-.dn-cap > a, .dn-sol a { display: inline-flex; align-items: center; gap: 0.25rem; min-height: 2.75rem; margin-top: auto; font-size: 0.9375rem; font-weight: 600; color: var(--primary); }
-.dn-sol { display: flex; gap: 1rem; padding: 1.25rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); }
-.dn-sol > div { display: flex; flex-direction: column; gap: 0.375rem; min-width: 0; }
-.dn-sol__ic { flex: none; width: 2.75rem; height: 2.75rem; border-radius: 50%; background: var(--primary); color: var(--on-primary); display: grid; place-items: center; }
-.dn-sol b { font-size: 1rem; line-height: 1.4; }
+.dn-cap p, .dn-way p { margin: 0; font-size: 0.9375rem; line-height: 1.6; color: var(--ink-muted); }
+.dn-cap > a { display: inline-flex; align-items: center; gap: 0.25rem; min-height: 2.75rem; margin-top: auto; font-size: 0.9375rem; font-weight: 600; color: var(--primary); }
 
-.sv-steps.dn-steps { grid-template-columns: repeat(6, minmax(0, 1fr)); }
-.dn-steps .sv-step { font-size: 0.875rem; line-height: 1.45; }
-.dn-steps .sv-step b { font-size: 0.9375rem; }
-.dn-steps__n { font-size: inherit; color: var(--primary); }
 
 .dn-ways { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem; }
 .dn-way { display: flex; flex-direction: column; gap: 0.625rem; min-width: 0; padding: 1.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); }
 .dn-way--main { border: 2px solid var(--primary); }
 .dn-way p a { color: var(--primary); font-weight: 600; white-space: nowrap; }
 .dn-way .vx-btn { margin-top: auto; align-self: flex-start; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
-.dn-prep { display: flex; flex-direction: column; gap: 0.75rem; padding: 1.25rem 1.5rem; background: var(--surface); border: 1px dashed var(--border); border-radius: var(--radius-lg); }
-.dn-prep b { font-size: 1rem; }
 
 .dn-legal { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 1.5rem; align-items: start; }
 .dn-legal dl { margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
@@ -2056,10 +2005,8 @@ a.app-mm__card:hover .app-mm__name { color: var(--primary); }
   .dn-hero__media, .dn-hero__art { max-width: 40rem; width: 100%; }
   .dn-nav { position: static; }
   .dn-nav__cta { display: none; }
-  .dn-grid, .dn-caps, .dn-sols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dn-grid, .dn-caps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dn-ways, .dn-legal { grid-template-columns: minmax(0, 1fr); }
-  .sv-steps.dn-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 1.5rem; }
-  .dn-steps .sv-step:nth-child(4)::before { display: none; }
   .dn-card--wide { flex-direction: column; }
   .dn-card--wide .dn-card__media { flex: none; min-height: 0; aspect-ratio: 16 / 9; }
   .dn-card--wide .dn-card__media img { position: static; }
@@ -2079,17 +2026,11 @@ a.app-mm__card:hover .app-mm__name { color: var(--primary); }
   .dn-nav__links a { padding: 0 0.75rem; }
   .dn-sec { padding: 2rem var(--space-3); gap: 1.25rem; }
   .dn-head h2 { font-size: 1.5rem; }
-  .dn-grid, .dn-caps, .dn-sols { grid-template-columns: minmax(0, 1fr); }
+  .dn-grid, .dn-caps { grid-template-columns: minmax(0, 1fr); }
   .dn-card--wide .dn-card__body { padding: 1rem 1.25rem 1.25rem; }
   .dn-card--wide .dn-card__title { font-size: 1.25rem; }
   .dn-cap, .dn-way { padding: 1.25rem; }
-  .sv-steps.dn-steps { grid-template-columns: minmax(0, 1fr); gap: 0.75rem; }
-  .dn-steps .sv-step { flex-direction: row; align-items: flex-start; text-align: left; gap: 0.75rem; }
-  .dn-steps .sv-step::before { display: none; }
-  .dn-steps .sv-step .t { align-items: flex-start; gap: 2px; }
-  .dn-steps .sv-step > span { flex: none; }
   .dn-way .vx-btn { align-self: stretch; }
-  .dn-prep { padding: 1rem 1.25rem; }
   .dn-legal dl { grid-template-columns: minmax(0, 1fr); }
   .dn-tablewrap { background: none; border: 0; border-radius: 0; overflow: visible; }
   .dn-table, .dn-table tbody, .dn-table tr, .dn-table td { display: block; }
@@ -2296,7 +2237,7 @@ body[data-buybar] .app-site .app-fab { bottom: 6.25rem; }
   .app-site .vx-item__name { font-size: 1rem; line-height: 1.35; }
   .app-site .vx-item__price b { font-size: 1.0625rem; line-height: 1.3; }
   .app-site .vx-item__qty { font-size: 0.9375rem; }
-  .app-site .vx-buy__brand, .app-site .vx-buy__meta, .app-site .vx-crumb, .app-site .vx-steps, .app-site .vx-lines, .app-site .vx-check, .app-site .vx-label-row > b, .app-site .vx-group-head b, .app-site .vx-note, .app-site .vx-promo__head, .app-site .vx-promo__row, .app-site .vx-opt, .app-site .vx-fnews span, .app-site .ck, .app-site .ck-row, .app-site .au-head p, .app-site .au-resend, .app-site .vx-quick__item, .app-site .vx-strip__item { font-size: 0.9375rem; line-height: 1.4; }
+  .app-site .vx-buy__brand, .app-site .vx-buy__meta, .app-site .vx-crumb, .app-site .vx-steps, .app-site .vx-lines, .app-site .vx-check, .app-site .vx-label-row > b, .app-site .vx-group-head b, .app-site .vx-note, .app-site .vx-promo__head, .app-site .vx-promo__row, .app-site .vx-fnews span, .app-site .ck, .app-site .ck-row, .app-site .au-head p, .app-site .au-resend, .app-site .vx-quick__item, .app-site .vx-strip__item { font-size: 0.9375rem; line-height: 1.4; }
   .app-site .vx-buy__title { font-size: 1.5rem; line-height: 1.3; }
   .app-site .vx-spec-t { font-size: 1rem; line-height: 1.45; }
   .app-site .vx-spec-t dd a { font-size: 0.9375rem; }
@@ -2307,7 +2248,7 @@ body[data-buybar] .app-site .app-fab { bottom: 6.25rem; }
   .app-site .vx-flegal { font-size: 0.875rem; }
   .app-site .app-pcard__new { font-size: 0.8125rem; line-height: 1.3; padding: 0.1875rem 0.625rem; }
   /* Chữ phụ 11–13px trong các khối thiết kế (Dịch vụ, Doanh nghiệp, Cây Tết, Thư viện bệnh cây, Hệ thống cửa hàng, bài viết) → 14px */
-  .app-site .vx-perk span, .app-site .vx-feat p, .app-site .vx-dlist small, .app-site .ar-cta span, .app-site .vx-dtile p, .app-site .vx-dtile small, .app-site .bz-perks div, .app-site .vx-sres__item small, .app-site .vx-sres__item .row span, .app-site .vx-sres__item .row, .app-site .vx-sres__head, .app-site .vx-sinfo span, .app-site .sv-step, .app-site .nw-box a, .app-site .nw-box small, .app-site span.cond, .app-site span.note, .app-site span.from, .app-site span.sub, .app-site span.old, .app-site span.cat, .app-site span.tag, .app-site .dd-sym div, .app-site .dd-step small, .app-site .dd-cmp div, .app-site .dd-cmp b, .app-site .dd-facts div, .app-site .vx-meta span, .app-site .au-why div, .app-site .sv-gal em, .app-site .sv-quote small, .app-site .sv-proof span, .app-site .cp-steps span, .app-site .cp-steps b, .app-site .cp-count span, .app-site .vx-expert p, .app-site .qf-opt small, .app-site .vx-freeship span, .app-site .vx-topics small, .app-site .vx-trust small, .app-site .vx-trust b, .app-site .app-qa__bar small, .app-site .vx-ship-banner span, .app-site .vx-ship-banner b, .app-site .vx-sect span, .app-site .vx-fl label, .app-site .vx-part small, .app-site .vx-pmap__art small, .app-site .vx-slot, .app-site .vx-open, .app-site .vx-closed, .app-site .fs-slot, .app-site .app-cta-alt, .app-site .ad-f label, .app-site .vx-or { font-size: 0.875rem; line-height: 1.4; }
+  .app-site .vx-perk span, .app-site .vx-feat p, .app-site .vx-dlist small, .app-site .ar-cta span, .app-site .vx-dtile p, .app-site .vx-dtile small, .app-site .bz-perks div, .app-site .vx-sres__item small, .app-site .vx-sres__item .row span, .app-site .vx-sres__item .row, .app-site .vx-sres__head, .app-site .vx-sinfo span, .app-site .sv-step, .app-site .nw-box a, .app-site .nw-box small, .app-site span.cond, .app-site span.note, .app-site span.from, .app-site span.sub, .app-site span.old, .app-site span.cat, .app-site span.tag, .app-site .dd-sym div, .app-site .dd-step small, .app-site .dd-cmp div, .app-site .dd-cmp b, .app-site .dd-facts div, .app-site .vx-meta span, .app-site .au-why div, .app-site .sv-proof span, .app-site .cp-steps span, .app-site .cp-steps b, .app-site .cp-count span, .app-site .vx-expert p, .app-site .qf-opt small, .app-site .vx-freeship span, .app-site .vx-topics small, .app-site .vx-trust small, .app-site .vx-trust b, .app-site .app-qa__bar small, .app-site .vx-ship-banner span, .app-site .vx-ship-banner b, .app-site .vx-sect span, .app-site .vx-fl label, .app-site .vx-part small, .app-site .vx-pmap__art small, .app-site .vx-slot, .app-site .vx-open, .app-site .vx-closed, .app-site .fs-slot, .app-site .app-cta-alt, .app-site .ad-f label, .app-site .vx-or { font-size: 0.875rem; line-height: 1.4; }
   .app-site .vx-slot { min-height: 2.75rem; }
   /* Nút / vùng chạm ≥ 44px */
   .app-site .vx-chip { min-height: 2.75rem; padding: 0.5rem 1rem; font-size: 0.9375rem; line-height: 1.3; border: 1.5px solid var(--field-border); }
@@ -2315,8 +2256,6 @@ body[data-buybar] .app-site .app-fab { bottom: 6.25rem; }
   .app-site .vx-seg .vx-chip { padding: 0.5rem 0.875rem; font-size: 0.9375rem; line-height: 1.3; }
   /* Thẻ sản phẩm 2 cột: hàng nhãn (xuất xứ + -x%) rộng bằng khung ảnh, nút "Thêm vào giỏ" vừa 1 dòng */
   .app-site .vx-pcard__tags { left: var(--space-3); right: var(--space-3); gap: 2px; }
-  .app-site .vx-opt { grid-template-columns: minmax(0, 1fr); gap: 0.375rem; }
-  .app-site .vx-opt .vx-seg { flex-wrap: wrap; gap: 0.5rem; }
   .app-site .vx-stepper { border: 1.5px solid var(--field-border); }
   .app-site .vx-stepper button { width: 48px; height: 48px; font-size: 1.5rem; }
   /* px: vùng chạm cố định, không phình theo cỡ chữ làm tràn hàng */

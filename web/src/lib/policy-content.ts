@@ -563,29 +563,12 @@ const DIEU_KHOAN: Section[] = [
 
 // ---- Nguồn ảnh minh họa --------------------------------------------------------------------------------------
 
+// Nơi DUY NHẤT trên web ghi tác giả + giấy phép ảnh mượn (trang sản phẩm, trang bệnh cây không ghi lại). Danh sách từng ảnh
+// do chinh-sach/[slug]/page.tsx nối vào từ lib/seed-product-images.ts và lib/seed-disease-images.ts.
 const NGUON_ANH: Section[] = [
   { h: 'Ảnh minh họa', blocks: [
-    'Một số sản phẩm đang dùng ảnh minh họa từ Wikimedia Commons theo giấy phép mở (Creative Commons hoặc phạm vi công cộng), không phải ảnh chụp sản phẩm thực tế. Sản phẩm giao cho khách có thể khác ảnh; ảnh sẽ được thay bằng ảnh shop tự chụp.',
-  ] },
-  { h: 'Tác giả và giấy phép', blocks: [
-    { ul: [
-      'Philodendron Birkin chậu sứ Ø15: ảnh của Yercaud-elango, CC BY 4.0, nguồn https://commons.wikimedia.org/wiki/File:Philodendron_birkin-5-R.M.Nagar-bengaluru-India.jpg',
-      'Trầu bà Nam Mỹ chậu treo: ảnh của Ra Boe, CC BY-SA 3.0 de, nguồn https://commons.wikimedia.org/wiki/File:Wikipedia_13._Fotoworkshop_Botanischer_Garten_Erlangen_2013_by-RaBoe_137.jpg',
-      'Kim tiền chậu men xanh: ảnh của Dbwolfe, CC BY-SA 4.0, nguồn https://commons.wikimedia.org/wiki/File:Zamioculcas_zamiifolia_Chameleon_1.jpg',
-      'Lan hồ điệp 2 cành màu trắng: ảnh của Alvesgaspar, CC BY-SA 4.0, nguồn https://commons.wikimedia.org/wiki/File:Phalaenopsis_July_2020-2.jpg',
-      'Combo sen đá mix 6 chậu mini: ảnh của brewbooks from near Seattle, USA, CC BY-SA 2.0, nguồn https://commons.wikimedia.org/wiki/File:Flickr_-_brewbooks_-_Succulent_Pot.jpg',
-      'Chế phẩm sinh học Trichoderma trị nấm, thối rễ: ảnh của Vicenny, CC BY-SA 4.0, nguồn https://commons.wikimedia.org/wiki/File:Trichoderma_asperellum.jpg',
-      'Thuốc trừ nấm bệnh Mancozeb 80WP: ảnh của Safapalanadan94, CC BY-SA 4.0, nguồn https://commons.wikimedia.org/wiki/File:Knapsack_sprayer.jpg',
-      'Dầu khoáng trừ rệp sáp, nhện đỏ: ảnh của Theornamentalist, CC BY-SA 3.0, nguồn https://commons.wikimedia.org/wiki/File:Wikibooks_planting-water.jpg',
-      'Phân bón lá kích hoa cho lan: ảnh của PumpkinSky, CC BY-SA 3.0, nguồn https://commons.wikimedia.org/wiki/File:White_Orchid_1_NBG.jpg',
-      'Phân tan chậm NPK 14-14-14 cho kiểng lá: ảnh của Rasbak, CC BY-SA 3.0, nguồn https://commons.wikimedia.org/wiki/File:Kalkammonsalpeter.jpg',
-      'Phân trùn quế nguyên chất: ảnh của Red58bill, CC BY 3.0, nguồn https://commons.wikimedia.org/wiki/File:Worm.casts.jpg',
-      'Đất trộn sẵn chuyên kiểng lá, thoát nước tốt: ảnh của Không rõ tác giả, phạm vi công cộng, nguồn https://commons.wikimedia.org/wiki/File:Pro-Mix_Potting_Soil.jpg',
-      'Viên nén xơ dừa ươm hạt (100 viên): ảnh của MatiasMiika, CC BY 3.0, nguồn https://commons.wikimedia.org/wiki/File:Brick_of_coco_coir.JPG',
-      'Kéo cắt tỉa cành lưỡi thép SK5: ảnh của KoS, phạm vi công cộng, nguồn https://commons.wikimedia.org/wiki/File:Secateur_ouvert.jpg',
-      'Hạt giống rau muống lá tre: ảnh của Wee Hong, CC BY-SA 4.0, nguồn https://commons.wikimedia.org/wiki/File:Ipomoea_aquatica_at_Organic_Unit,_FP,_UPM.jpg',
-      'Video nền mai vàng ở trang Cây Tết: video của Lê Hoàng Khanh Lê, giấy phép Pexels (dùng miễn phí), nguồn https://www.pexels.com/video/close-up-on-yellow-flowers-11142501/',
-    ] },
+    'Sản phẩm và bài bệnh cây chưa có ảnh shop tự chụp đang tạm dùng ảnh minh họa theo giấy phép mở (Creative Commons hoặc phạm vi công cộng), có nhãn "Ảnh minh họa" trên ảnh. Cây giao cho khách có thể khác ảnh về kích thước, dáng và màu; ảnh sẽ được thay dần bằng ảnh shop tự chụp.',
+    'Tác giả, giấy phép và đường dẫn tới ảnh gốc của từng ảnh được liệt kê bên dưới.',
   ] },
 ];
 

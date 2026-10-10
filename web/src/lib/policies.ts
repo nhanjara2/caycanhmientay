@@ -30,7 +30,7 @@ export const policies: Policy[] = [
   { slug: 'huong-dan-mua-hang', title: 'Hướng dẫn mua hàng', group: POLICY_GROUPS[2], updated: '26/09/2026', description: 'Các bước đặt hàng trên website Cây Cảnh Miền Tây.' },
   { slug: 'tich-diem', title: 'Thể lệ tích điểm thành viên', group: POLICY_GROUPS[2], updated: '26/09/2026', description: 'Cách tích điểm thành viên khi mua hàng tại Cây Cảnh Miền Tây.' },
   { slug: 'dieu-khoan', title: 'Điều khoản sử dụng', group: POLICY_GROUPS[2], updated: '07/10/2026', description: 'Điều khoản khi truy cập website và mua hàng tại Cây Cảnh Miền Tây: tài khoản, đặt hàng, nội dung, trách nhiệm.' },
-  { slug: 'nguon-anh', title: 'Nguồn ảnh minh họa', group: POLICY_GROUPS[2], updated: '07/10/2026', description: 'Tác giả và giấy phép của ảnh, video minh họa đang dùng trên website Cây Cảnh Miền Tây.' },
+  { slug: 'nguon-anh', title: 'Nguồn ảnh minh họa', group: POLICY_GROUPS[2], updated: '10/10/2026', description: 'Tác giả và giấy phép của ảnh minh họa đang dùng trên website Cây Cảnh Miền Tây.' },
 ];
 
 export const getPolicy = (slug: string) => policies.find((p) => p.slug === slug);

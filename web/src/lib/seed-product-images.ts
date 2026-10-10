@@ -1,8 +1,8 @@
 // Ảnh minh họa tạm cho sản phẩm cây cảnh chưa có ảnh: ảnh giấy phép mở trên Wikimedia Commons (đúng loài hoặc loài gần
 // giống), đã cắt khung vuông và thu nhỏ 1000×1000. File ở web/seed/san-pham/, được `seedProductImages` (server/db/seed.ts) nạp
 // vào product_images MỘT lần khi chạy db:setup, chỉ cho sản phẩm còn chưa có ảnh. `file` = md5 nội dung ảnh → tên cố định, nên
-// trang sản phẩm nhận ra ảnh minh họa (thay dấu "Ảnh thật" bằng "Ảnh minh họa" + ghi công) và /chinh-sach/nguon-anh liệt kê
-// nguồn. Chủ shop xóa ảnh minh họa trong admin rồi tải ảnh tự chụp lên là thay xong; ảnh tự tải có tên ngẫu nhiên → không ghi công.
+// trang sản phẩm nhận ra ảnh minh họa (thay dấu "Ảnh thật" bằng "Ảnh minh họa") và /chinh-sach/nguon-anh liệt kê nguồn —
+// nơi duy nhất ghi tác giả + giấy phép. Chủ shop xóa ảnh minh họa trong admin rồi tải ảnh tự chụp lên là thay xong; ảnh tự tải có tên ngẫu nhiên → không ghi công.
 
 export type SeedProductImage = {
   /** Slug sản phẩm. */
@@ -422,10 +422,7 @@ export const SEED_PRODUCT_IMAGES: SeedProductImage[] = [
     author: 'No machine-readable author provided. Alberto Salguero assumed (based on copyright claims).', license: 'CC BY-SA 3.0', url: 'https://commons.wikimedia.org/wiki/File:Senecio_rowleyanus.jpg' },
 ];
 
-const byFile = new Map(SEED_PRODUCT_IMAGES.map((x) => [x.file, x]));
+const files = new Set(SEED_PRODUCT_IMAGES.map((x) => x.file));
 
-/** Ảnh minh họa nạp sẵn thì trả về tác giả (rút gọn) + giấy phép để ghi dưới ảnh; ảnh shop tự tải lên → undefined. */
-export function productImageCredit(file?: string) {
-  const x = file ? byFile.get(file) : undefined;
-  return x && { author: x.author.split(',')[0], license: x.license, url: x.url };
-}
+/** Ảnh minh họa nạp sẵn (không phải ảnh shop tự tải lên) → trang sản phẩm hiện nhãn "Ảnh minh họa" thay dấu "Ảnh thật". */
+export const isStockProductImage = (file?: string) => !!file && files.has(file);

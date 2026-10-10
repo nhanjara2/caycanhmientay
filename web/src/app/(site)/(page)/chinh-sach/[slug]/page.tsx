@@ -28,7 +28,7 @@ function diseaseCredits(): Section {
     id: 'anh-benh-cay',
     h: 'Ảnh triệu chứng bệnh cây',
     blocks: [
-      'Ảnh minh họa triệu chứng trong Thư viện bệnh cây lấy từ Wikimedia Commons theo giấy phép mở, chụp trên nhiều loại cây khác nhau. Ảnh đã được cắt khung 4:3 và thu nhỏ; giấy phép CC BY-SA áp dụng cho bản đã chỉnh sửa.',
+      'Ảnh triệu chứng trong Thư viện bệnh cây chụp trên nhiều loại cây khác nhau. Ảnh đã được cắt khung 4:3 và thu nhỏ; giấy phép CC BY-SA áp dụng cho bản đã chỉnh sửa.',
       { ul: SEED_DISEASE_IMAGES.map((x) => `${names.get(x.disease) ?? x.disease} — ${x.symptom}: ảnh của ${x.author}, ${x.license}, nguồn ${x.url}`) },
     ],
   };
@@ -40,7 +40,7 @@ function productCredits(): Section {
     id: 'anh-san-pham',
     h: 'Ảnh minh họa sản phẩm cây cảnh',
     blocks: [
-      'Các sản phẩm cây cảnh chưa có ảnh shop tự chụp đang tạm dùng ảnh minh họa đúng loài (hoặc loài gần giống) từ Wikimedia Commons theo giấy phép mở. Ảnh đã được cắt khung vuông và thu nhỏ; giấy phép CC BY-SA áp dụng cho bản đã chỉnh sửa. Cây giao cho khách có thể khác ảnh về kích thước, dáng và màu.',
+      'Ảnh đúng loài (hoặc loài gần giống), đã được cắt khung vuông và thu nhỏ; giấy phép CC BY-SA áp dụng cho bản đã chỉnh sửa.',
       { ul: SEED_PRODUCT_IMAGES.map((x) => `${x.name}: ảnh của ${x.author}, ${x.license}, nguồn ${x.url}`) },
     ],
   };

@@ -1,7 +1,6 @@
 // Ảnh minh họa triệu chứng nạp sẵn cho bài bệnh mẫu: ảnh giấy phép mở trên Wikimedia Commons, đã cắt khung 4:3 và thu nhỏ
 // 1000×750. File ảnh nằm ở web/seed/benh-cay/, được `seedDiseaseImages` (server/db/seed.ts) nạp vào bảng disease_images
-// MỘT lần khi chạy db:setup. `file` = md5 nội dung ảnh → tên cố định, nên trang bệnh tra được tác giả để ghi công
-// (diseaseImageCredit) và trang /chinh-sach/nguon-anh liệt kê đủ nguồn. Ảnh admin tự tải lên có tên ngẫu nhiên → không ghi công.
+// MỘT lần khi chạy db:setup. Tác giả + giấy phép chỉ ghi ở trang /chinh-sach/nguon-anh (trang bệnh không ghi lại).
 
 export type SeedDiseaseImage = {
   /** Slug bài bệnh. */
@@ -110,11 +109,3 @@ export const SEED_DISEASE_IMAGES: SeedDiseaseImage[] = [
   { disease: 'chay-re-do-phan', symptom: 'Mép và chóp lá cháy nâu đều trên nhiều lá cùng lúc', source: 'chay-re-do-phan-1.jpg', file: '4d8e0c2d9ca48224a4398ae434e66e0b.jpg',
     author: 'Fenrisulfir', license: 'CC BY-SA 3.0', url: 'https://commons.wikimedia.org/wiki/File:Fertilizer-Burn.jpg' },
 ];
-
-const byFile = new Map(SEED_DISEASE_IMAGES.map((x) => [x.file, x]));
-
-/** Nguồn ảnh minh họa (chỉ ảnh nạp sẵn); tên tác giả ngắn gọn để ghi dưới ảnh. */
-export function diseaseImageCredit(file?: string) {
-  const x = file ? byFile.get(file) : undefined;
-  return x && { author: x.author.split(',')[0], license: x.license, url: x.url };
-}
