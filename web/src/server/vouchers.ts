@@ -3,7 +3,7 @@ import { and, desc, eq, ne, or, sql } from 'drizzle-orm';
 import * as z from 'zod';
 import { money } from '@/lib/format';
 import { fmtDate } from '@/lib/order-labels';
-import { voucherStatus, WELCOME_CODE, WELCOME_DAYS, welcomeText, type WelcomeOffer, type WelcomeProgram } from '@/lib/voucher-labels';
+import { discountOf, voucherStatus, WELCOME_CODE, WELCOME_DAYS, welcomeText, type VoucherKind, type WelcomeOffer, type WelcomeProgram } from '@/lib/voucher-labels';
 import { db, schema } from './db';
 import type { Tx } from './inventory';
 import { notifyEvent } from './notify';
@@ -18,6 +18,7 @@ export const VoucherInputSchema = z.object({
   id: z.coerce.number().int().positive().optional(),
   code: z.string().trim().min(3, 'Mã tối thiểu 3 ký tự').max(30).regex(/^[A-Za-z0-9]+$/, 'Mã chỉ gồm chữ và số, không dấu cách'),
   label: z.string().trim().min(3, 'Nhập tên hiển thị').max(120),
+  kind: z.enum(['discount', 'ship']).default('discount'),
   discountType: z.enum(['percent', 'amount']),
   discountValue: z.coerce.number().int().min(1, 'Nhập giá trị giảm'),
   maxDiscount: z.coerce.number().int().min(0).optional(),
@@ -28,6 +29,7 @@ export const VoucherInputSchema = z.object({
   endsAt: ymd.optional(),
   active: z.boolean().default(true),
 }).superRefine((v, ctx) => {
+  if (v.kind === 'ship' && v.discountType !== 'amount') ctx.addIssue({ code: 'custom', path: ['discountType'], message: 'Mã miễn phí giao nhập số tiền giảm phí giao tối đa' });
   if (v.discountType === 'percent' && v.discountValue > 100) ctx.addIssue({ code: 'custom', path: ['discountValue'], message: 'Phần trăm tối đa 100' });
   if (v.startsAt && v.endsAt && v.startsAt > v.endsAt) ctx.addIssue({ code: 'custom', path: ['endsAt'], message: 'Ngày kết thúc phải sau ngày bắt đầu' });
 });
@@ -36,6 +38,7 @@ export type VoucherInput = z.infer<typeof VoucherInputSchema>;
 const toRow = (input: VoucherInput) => ({
   code: input.code.toUpperCase(),
   label: input.label,
+  kind: input.kind,
   discountType: input.discountType,
   discountValue: input.discountValue,
   maxDiscount: input.discountType === 'percent' ? (input.maxDiscount || null) : null,
@@ -73,8 +76,8 @@ export const getVoucher = async (id: number) => (await db.select().from(vouchers
 export async function listVouchers() {
   return db.select({
     v: vouchers,
-    used: sql<number>`(select count(*) from ${orders} o where o.voucher_code = ${vouchers.code} and o.status <> 'cancelled')`.mapWith(Number),
-    revenue: sql<number>`coalesce((select sum(o.total) from ${orders} o where o.voucher_code = ${vouchers.code} and o.status <> 'cancelled'), 0)`.mapWith(Number),
+    used: sql<number>`(select count(*) from ${orders} o where (o.voucher_code = ${vouchers.code} or o.ship_voucher_code = ${vouchers.code}) and o.status <> 'cancelled')`.mapWith(Number),
+    revenue: sql<number>`coalesce((select sum(o.total) from ${orders} o where (o.voucher_code = ${vouchers.code} or o.ship_voucher_code = ${vouchers.code}) and o.status <> 'cancelled'), 0)`.mapWith(Number),
   }).from(vouchers).orderBy(desc(vouchers.id));
 }
 
@@ -83,23 +86,26 @@ export async function listActiveVouchers() {
   const now = new Date();
   const rows = await db.select({
     v: vouchers,
-    used: sql<number>`(select count(*) from ${orders} o where o.voucher_code = ${vouchers.code} and o.status <> 'cancelled')`.mapWith(Number),
+    used: sql<number>`(select count(*) from ${orders} o where (o.voucher_code = ${vouchers.code} or o.ship_voucher_code = ${vouchers.code}) and o.status <> 'cancelled')`.mapWith(Number),
   }).from(vouchers)
     .where(and(eq(vouchers.active, true), sql`(${vouchers.endsAt} is null or ${vouchers.endsAt} >= ${now})`, sql`(${vouchers.startsAt} is null or ${vouchers.startsAt} <= ${now})`))
     .orderBy(desc(vouchers.id));
   return rows.filter((r) => r.v.usageLimit == null || r.used < r.v.usageLimit).map((r) => r.v);
 }
 
-export type VoucherCheck = { ok: true; code: string; discount: number } | { ok: false; error: string };
+export type VoucherCheck = { ok: true; code: string; kind: VoucherKind; discount: number } | { ok: false; error: string };
+
+/** Đơn nào đã dùng mã này (mã giảm tiền hàng nằm ở voucher_code, mã miễn phí giao ở ship_voucher_code; mã không trùng nhau giữa hai loại). */
+const usedCode = (code: string) => or(eq(orders.voucherCode, code), eq(orders.shipVoucherCode, code));
 
 /**
- * Kiểm tra mã còn dùng được không + tính số tiền giảm trên subtotal hiện tại.
+ * Kiểm tra mã còn dùng được không + tính số tiền giảm: mã giảm tiền hàng tính trên `subtotal`, mã miễn phí giao giảm tối đa bằng `shipFee`.
  * `lock: true` khóa dòng mã (FOR UPDATE) trong transaction tạo đơn để 2 đơn cùng lúc không vượt quá usageLimit.
  */
 export async function checkVoucher(
   executor: Tx | typeof db,
   rawCode: string,
-  ctx: { subtotal: number; userId: number | null; phone: string },
+  ctx: { subtotal: number; shipFee?: number; userId: number | null; phone: string },
   opts: { lock?: boolean } = {},
 ): Promise<VoucherCheck> {
   const code = rawCode.trim().toUpperCase();
@@ -120,19 +126,19 @@ export async function checkVoucher(
 
   if (v.usageLimit != null) {
     const [{ n }] = await executor.select({ n: sql<number>`count(*)`.mapWith(Number) }).from(orders)
-      .where(and(eq(orders.voucherCode, v.code), ne(orders.status, 'cancelled')));
+      .where(and(usedCode(v.code), ne(orders.status, 'cancelled')));
     if (n >= v.usageLimit) return { ok: false, error: 'Mã đã hết lượt sử dụng' };
   }
   const [{ n: mine }] = await executor.select({ n: sql<number>`count(*)`.mapWith(Number) }).from(orders)
     .where(and(
-      eq(orders.voucherCode, v.code), ne(orders.status, 'cancelled'),
+      usedCode(v.code), ne(orders.status, 'cancelled'),
       ctx.userId ? or(eq(orders.userId, ctx.userId), eq(orders.phone, ctx.phone)) : eq(orders.phone, ctx.phone),
     ));
   if (mine >= v.perCustomerLimit) return { ok: false, error: 'Bạn đã dùng hết lượt cho mã này' };
 
-  const raw = v.discountType === 'percent' ? Math.round((ctx.subtotal * v.discountValue) / 100) : v.discountValue;
-  const discount = Math.min(raw, v.maxDiscount ?? raw, ctx.subtotal);
-  return { ok: true, code: v.code, discount };
+  const discount = discountOf(v, ctx.subtotal, ctx.shipFee ?? 0);
+  if (v.kind === 'ship' && discount <= 0) return { ok: false, error: 'Đơn này không có phí giao nên không cần mã miễn phí giao' };
+  return { ok: true, code: v.code, kind: v.kind, discount };
 }
 
 // ---- Quà tài khoản mới (luật chung ở lib/voucher-labels.ts) ----------------------------------

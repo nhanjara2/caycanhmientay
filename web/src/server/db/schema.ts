@@ -305,13 +305,16 @@ export const projectImages = pgTable('project_images', {
 // ---- Khuyến mãi ------------------------------------------------------------------------------
 
 export const VOUCHER_DISCOUNT_TYPES = ['percent', 'amount'] as const;
+/** 'discount' = giảm tiền hàng; 'ship' = giảm phí giao (miễn phí giao tối đa `discountValue` đồng). Mỗi đơn dùng tối đa một mã mỗi loại. */
+export const VOUCHER_KINDS = ['discount', 'ship'] as const;
 
-/** Mã giảm giá khách tự nhập lúc thanh toán. Một đơn dùng tối đa một mã. */
+/** Mã giảm giá khách chọn / nhập lúc thanh toán. Một đơn dùng tối đa một mã giảm tiền hàng + một mã miễn phí giao. */
 export const vouchers = pgTable('vouchers', {
   id: serial('id').primaryKey(),
   /** Luôn lưu chữ hoa; không đổi sau khi tạo. */
   code: text('code').notNull().unique(),
   label: text('label').notNull(),
+  kind: text('kind', { enum: VOUCHER_KINDS }).notNull().default('discount'),
   discountType: text('discount_type', { enum: VOUCHER_DISCOUNT_TYPES }).notNull(),
   /** Phần trăm (1–100) hoặc số tiền (đ) tùy discountType. */
   discountValue: integer('discount_value').notNull(),
@@ -370,6 +373,9 @@ export const orders = pgTable('orders', {
   /** Chụp lại mã + số tiền giảm lúc đặt — không ràng buộc khóa ngoại, mã đổi/tắt sau đó không ảnh hưởng đơn cũ. */
   voucherCode: text('voucher_code'),
   voucherDiscount: integer('voucher_discount').notNull().default(0),
+  /** Mã miễn phí giao (vouchers.kind = 'ship') và số tiền phí giao được giảm — chụp lại lúc đặt. */
+  shipVoucherCode: text('ship_voucher_code'),
+  shipVoucherDiscount: integer('ship_voucher_discount').notNull().default(0),
   /** Chiết khấu đối tác sỉ chụp lại lúc đặt (tiền, không phải %). */
   partnerDiscount: integer('partner_discount').notNull().default(0),
   /** Tiền giảm do mua combo 2 cây (giá lẻ × 2 − giá combo, mỗi cặp cùng quy cách) — chụp lại lúc đặt. */

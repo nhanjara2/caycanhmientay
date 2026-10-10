@@ -62,7 +62,7 @@ export default async function PromotionsPage() {
           <div className="pm-vouchers">
             {vouchers.map((v) => (
               <div key={v.id} className="vx-voucher pm-voucher">
-                <span className="vx-voucher__ic sale"><Icon name={v.code === WELCOME_CODE ? 'gift' : 'tag'} /></span>
+                <span className={`vx-voucher__ic ${v.kind === 'ship' ? 'ship' : 'sale'}`}><Icon name={v.code === WELCOME_CODE ? 'gift' : v.kind === 'ship' ? 'truck' : 'tag'} /></span>
                 <span className="vx-voucher__body">
                   <b>{v.label}</b>
                   <span className="cond">

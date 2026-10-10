@@ -62,8 +62,8 @@ export async function buildReport(range: ReportRange) {
       coalesce(sum(o.total) filter (where o.created_at < ${F}), 0)::float8 as prev_revenue,
       (count(*) filter (where o.created_at < ${F}))::int as prev_orders,
       (count(distinct ${CUSTOMER}) filter (where o.created_at < ${F}))::int as prev_buyers,
-      (count(*) filter (where o.created_at >= ${F} and o.voucher_code is not null))::int as voucher_orders,
-      coalesce(sum(o.voucher_discount) filter (where o.created_at >= ${F}), 0)::float8 as voucher_discount
+      (count(*) filter (where o.created_at >= ${F} and (o.voucher_code is not null or o.ship_voucher_code is not null)))::int as voucher_orders,
+      coalesce(sum(o.voucher_discount + o.ship_voucher_discount) filter (where o.created_at >= ${F}), 0)::float8 as voucher_discount
     from orders o
     where ${SALE} and o.created_at >= ${PF} and o.created_at < ${T}`);
 
@@ -213,7 +213,7 @@ export async function ordersInRange(range: ReportRange, limit = 5000) {
   }>(sql`
     select o.code, to_char(o.created_at at time zone ${TZ}, 'YYYY-MM-DD HH24:MI') as created, o.customer_name as customer, o.phone,
            o.status, o.payment_method as method, o.paid, o.delivery, o.subtotal::int, (o.plant_ship + o.supply_ship)::int as ship,
-           (o.voucher_discount + o.partner_discount + o.combo_discount)::int as discount, o.voucher_code as voucher, o.total::int
+           (o.voucher_discount + o.ship_voucher_discount + o.partner_discount + o.combo_discount)::int as discount, concat_ws(' + ', o.voucher_code, o.ship_voucher_code) as voucher, o.total::int
     from orders o where o.kind = 'sale' and o.created_at >= ${at(from)} and o.created_at < ${at(to)}
     order by o.created_at desc limit ${limit}`);
 }

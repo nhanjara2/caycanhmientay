@@ -59,6 +59,8 @@ export type Totals = {
   plantShip: number;
   supplyShip: number;
   voucherDiscount: number;
+  /** Mã miễn phí giao: số tiền phí giao được giảm (không quá tổng phí giao). */
+  shipVoucherDiscount: number;
   /** Chiết khấu đối tác sỉ (% riêng của tài khoản, tính trên tiền hàng). */
   partnerDiscount: number;
   total: number;
@@ -102,9 +104,16 @@ export function computeTotals(lines: PricedLine[], delivery: 'ship' | 'pickup' =
     comboDiscount,
     goods,
     voucherDiscount,
+    shipVoucherDiscount: 0,
     partnerDiscount,
     total: Math.max(0, goods + plantShip + supplyShip - voucherDiscount - partnerDiscount),
     hasPesticide: lines.some((l) => l.pesticide),
     lines: priced,
   };
+}
+
+/** Trừ thêm mã khách đã chọn (mã giảm tiền hàng + mã miễn phí giao) vào tổng đã tính — giỏ hàng, thanh toán hiển thị; server tự tính lại khi tạo đơn. */
+export function withVouchers(t: Totals, discount: number, shipDiscount: number): Totals {
+  const ship = Math.min(shipDiscount, t.plantShip + t.supplyShip);
+  return { ...t, voucherDiscount: discount, shipVoucherDiscount: ship, total: Math.max(0, t.total + t.voucherDiscount - discount - ship) };
 }

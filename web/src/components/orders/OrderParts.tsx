@@ -167,6 +167,7 @@ export function OrderDetail({ o }: { o: OrderFull }) {
             {o.original > o.subtotal && <div><span>Giảm giá trực tiếp</span><b className="neg">-{money(o.original - o.subtotal)}</b></div>}
             {plantShip && <div><span>Phí giao cây sống</span>{o.plantShip ? <b>{money(o.plantShip)}</b> : <b className="pos">Miễn phí</b>}</div>}
             {supplyShip && <div><span>Phí giao vật tư</span>{o.supplyShip ? <b>{money(o.supplyShip)}</b> : <b className="pos">Miễn phí</b>}</div>}
+            {o.shipVoucherDiscount > 0 && <div><span>Mã miễn phí giao {o.shipVoucherCode}</span><b className="neg">-{money(o.shipVoucherDiscount)}</b></div>}
             {o.voucherDiscount > 0 && <div><span>Mã giảm giá {o.voucherCode}</span><b className="neg">-{money(o.voucherDiscount)}</b></div>}
             {o.comboDiscount > 0 && <div><span>Combo 2 cây</span><b className="neg">-{money(o.comboDiscount)}</b></div>}
             {o.partnerDiscount > 0 && <div><span>Chiết khấu đối tác</span><b className="neg">-{money(o.partnerDiscount)}</b></div>}

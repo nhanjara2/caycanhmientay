@@ -35,7 +35,7 @@ export default async function AdminVouchersPage() {
                   <tr key={v.id}>
                     <td>
                       {isAdmin ? <Link className="code app-rowlink" href={`/admin/khuyen-mai/${v.id}`}>{v.code}</Link> : <b className="code">{v.code}</b>}
-                      <small>{v.label}</small>
+                      <small>{v.kind === 'ship' && <span className="vx-badge vx-badge--info">Miễn phí giao</span>} {v.label}</small>
                       {v.code === WELCOME_CODE && <small><span className="vx-badge vx-badge--info">Quà tài khoản mới</span> tự tặng khi đăng nhập lần đầu, dùng trong {WELCOME_DAYS} ngày</small>}
                     </td>
                     <td data-label="Giá trị">{voucherValueText(v, money)}</td>

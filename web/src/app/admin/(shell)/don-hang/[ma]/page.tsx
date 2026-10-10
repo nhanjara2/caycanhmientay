@@ -90,6 +90,7 @@ export default async function AdminOrderDetailPage({ params }: Props) {
                 {o.original > o.subtotal && <div><span>Đã giảm</span><b className="neg">-{money(o.original - o.subtotal)}</b></div>}
                 <div><span>Phí giao cây</span><b>{money(o.plantShip)}</b></div>
                 <div><span>Phí giao vật tư</span><b>{money(o.supplyShip)}</b></div>
+                {o.shipVoucherDiscount > 0 && <div><span>Mã miễn phí giao {o.shipVoucherCode}</span><b className="neg">-{money(o.shipVoucherDiscount)}</b></div>}
                 {o.voucherDiscount > 0 && <div><span>Mã giảm giá {o.voucherCode}</span><b className="neg">-{money(o.voucherDiscount)}</b></div>}
                 {o.comboDiscount > 0 && <div><span>Combo 2 cây</span><b className="neg">-{money(o.comboDiscount)}</b></div>}
                 {o.partnerDiscount > 0 && <div><span>Chiết khấu đối tác</span><b className="neg">-{money(o.partnerDiscount)}</b></div>}

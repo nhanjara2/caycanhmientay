@@ -37,6 +37,8 @@ export const PlaceOrderSchema = z.object({
   /** Địa chỉ chọn từ sổ địa chỉ (nếu có) — để kiểm tra vùng giao cây sống theo ghim bản đồ. */
   addressId: z.number().int().positive().optional(),
   voucherCode: z.string().trim().max(30).optional(),
+  /** Mã miễn phí giao (dùng kèm được với mã giảm tiền hàng). */
+  shipVoucherCode: z.string().trim().max(30).optional(),
 }).superRefine((v, ctx) => {
   if (v.delivery === 'ship' && !v.address) ctx.addIssue({ code: 'custom', path: ['address'], message: 'Vui lòng nhập địa chỉ nhận hàng' });
 });
@@ -159,23 +161,20 @@ async function createOrderTx(
   if (!code) return { ok: false as const, error: 'Không tạo được mã đơn, vui lòng thử lại' };
 
   // Chốt lại mã giảm giá ngay trước khi tạo đơn (khóa dòng mã) để 2 đơn cùng lúc không vượt quá lượt cho phép.
-  let voucherCode: string | null = null;
-  let voucherDiscount = 0;
-  if (input.voucherCode) {
-    const phone = normalizePhone(input.phone);
-    const check = await checkVoucher(tx, input.voucherCode, { subtotal: totals.goods, userId: user?.id ?? null, phone }, { lock: true });
-    if (!check.ok) throw new InvalidVoucher(check.error);
-    voucherCode = check.code;
-    voucherDiscount = check.discount;
-  }
-  const total = Math.max(0, totals.total - voucherDiscount);
+  const picked = await pickVouchers(tx, [input.voucherCode, input.shipVoucherCode], totals, user, normalizePhone(input.phone), true);
+  if (picked.errors.length) throw new InvalidVoucher(picked.errors[0].error);
+  const voucherCode = picked.discount?.code ?? null;
+  const voucherDiscount = picked.discount?.discount ?? 0;
+  const shipVoucherCode = picked.ship?.code ?? null;
+  const shipVoucherDiscount = picked.ship?.discount ?? 0;
+  const total = Math.max(0, totals.total - voucherDiscount - shipVoucherDiscount);
 
   const [order] = await tx.insert(orders).values({
     code, userId: user?.id ?? null, customerName: input.name, phone: normalizePhone(input.phone),
     delivery: input.delivery, address: input.delivery === 'ship' ? input.address : null,
     slot: slot?.text ?? null, slotDate: slot?.date ?? null, slotKey: slot?.key ?? null, note: input.note || null, paymentMethod: input.payment,
     original: totals.original, subtotal: totals.subtotal, plantShip: totals.plantShip, supplyShip: totals.supplyShip,
-    voucherCode, voucherDiscount, partnerDiscount: totals.partnerDiscount, comboDiscount: totals.comboDiscount, total,
+    voucherCode, voucherDiscount, shipVoucherCode, shipVoucherDiscount, partnerDiscount: totals.partnerDiscount, comboDiscount: totals.comboDiscount, total,
   }).returning({ id: orders.id });
 
   for (const { p, u, it } of lines) {
@@ -192,14 +191,36 @@ async function createOrderTx(
   return { ok: true as const, code };
 }
 
-/** Xem trước mã giảm giá ở trang thanh toán (chưa chốt lượt dùng — chốt thật khi tạo đơn ở createOrderTx). */
-export async function previewVoucher(code: string, items: PlaceOrderInput['items'], user: SessionUser | null, phone: string) {
+export type PickedVoucher = { code: string; discount: number };
+export type PickedVouchers = { discount: PickedVoucher | null; ship: PickedVoucher | null; errors: { code: string; error: string }[] };
+
+/**
+ * Kiểm từng mã rồi xếp theo loại: mỗi đơn tối đa một mã giảm tiền hàng + một mã miễn phí giao
+ * (mã miễn phí giao giảm tối đa bằng phí giao của đơn). Mã không dùng được nằm ở `errors`.
+ */
+async function pickVouchers(
+  executor: Tx | typeof db, codes: (string | undefined)[], totals: ReturnType<typeof computeTotals>,
+  user: SessionUser | null, phone: string, lock = false,
+): Promise<PickedVouchers> {
+  const out: PickedVouchers = { discount: null, ship: null, errors: [] };
+  const ctx = { subtotal: totals.goods, shipFee: totals.plantShip + totals.supplyShip, userId: user?.id ?? null, phone };
+  for (const code of [...new Set(codes.map((c) => c?.trim().toUpperCase()).filter((c): c is string => !!c))]) {
+    const r = await checkVoucher(executor, code, ctx, { lock });
+    if (!r.ok) out.errors.push({ code, error: r.error });
+    else if (out[r.kind]) out.errors.push({ code, error: r.kind === 'ship' ? 'Mỗi đơn chỉ dùng một mã miễn phí giao' : 'Mỗi đơn chỉ dùng một mã giảm giá (dùng kèm được một mã miễn phí giao)' });
+    else out[r.kind] = { code: r.code, discount: r.discount };
+  }
+  return out;
+}
+
+/** Xem trước các mã khách chọn ở trang thanh toán (chưa chốt lượt dùng — chốt thật khi tạo đơn ở createOrderTx). */
+export async function previewVouchers(codes: string[], items: PlaceOrderInput['items'], user: SessionUser | null, phone: string, delivery: 'ship' | 'pickup'): Promise<PickedVouchers> {
   const products = new Map((await getProducts([...new Set(items.map((i) => i.slug))])).map((p) => [p.slug, p]));
   const lines = items
     .map((it) => { const p = products.get(it.slug); const u = p?.options[it.option]; return p && u ? { p, u, it } : null; })
     .filter((x): x is { p: Product; u: Unit; it: PlaceOrderInput['items'][number] } => x !== null);
-  const totals = computeTotals(lines.map(pricedLine), 'ship', 0, await getShippingConfig());
-  return checkVoucher(db, code, { subtotal: totals.goods, userId: user?.id ?? null, phone: phone ? normalizePhone(phone) : '' });
+  const totals = computeTotals(lines.map(pricedLine), delivery, 0, await getShippingConfig());
+  return pickVouchers(db, codes, totals, user, phone ? normalizePhone(phone) : '');
 }
 
 // ---- Đọc đơn ---------------------------------------------------------------------------------

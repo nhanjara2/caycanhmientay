@@ -13,7 +13,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 const ymd = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : '');
 
 const EMPTY: VoucherFormValue = {
-  code: '', label: '', discountType: 'percent', discountValue: '', maxDiscount: '', minOrder: '',
+  code: '', label: '', kind: 'discount', discountType: 'percent', discountValue: '', maxDiscount: '', minOrder: '',
   usageLimit: '', perCustomerLimit: '1', startsAt: '', endsAt: '', active: true,
 };
 
@@ -27,7 +27,7 @@ export default async function AdminVoucherPage({ params }: Props) {
     const v = Number.isInteger(num) && num > 0 ? await getVoucher(num) : undefined;
     if (!v) notFound();
     initial = {
-      id: v.id, code: v.code, label: v.label, discountType: v.discountType,
+      id: v.id, code: v.code, label: v.label, kind: v.kind, discountType: v.discountType,
       discountValue: String(v.discountValue), maxDiscount: v.maxDiscount ? String(v.maxDiscount) : '',
       minOrder: v.minOrder ? String(v.minOrder) : '', usageLimit: v.usageLimit ? String(v.usageLimit) : '',
       perCustomerLimit: String(v.perCustomerLimit), startsAt: ymd(v.startsAt), endsAt: ymd(v.endsAt), active: v.active,

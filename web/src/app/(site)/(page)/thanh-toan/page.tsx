@@ -18,12 +18,13 @@ import { PAY_LABEL, PAY_LOGO } from '@/lib/order-labels';
 import { useAuth } from '@/lib/auth';
 import { useCart } from '@/lib/cart';
 import { useDeliverTo } from '@/lib/deliver-to';
-import { computeTotals } from '@/lib/pricing';
+import { computeTotals, withVouchers } from '@/lib/pricing';
+import { clearVoucherPick, useAppliedVouchers } from '@/lib/voucher-pick';
 import { useShipping } from '@/lib/shipping-client';
 import type { DayOption } from '@/lib/shipping';
 import { plantZone, type StorePoint } from '@/lib/stock';
 import { addrComplete, composeFull } from '@/lib/vn-provinces';
-import { VoucherInput, type AppliedVoucher } from '@/components/VoucherInput';
+import { VoucherBox } from '@/components/VoucherBox';
 
 // Logo lấy theo PAY_LOGO (public/images/pay/); cards: dải logo nhỏ dưới tên
 const PAYMENTS: { key: keyof typeof PAY_LABEL; label: string; note?: string; icon: IconName; cards?: [string, string][] }[] = [
@@ -66,10 +67,11 @@ export default function CheckoutPage() {
   const [saved, setSaved] = useState<AddressDTO[]>([]);
   const [savedId, setSavedId] = useState<number | null>(null);
   const [stores, setStores] = useState<StorePoint[]>([]);
-  const [voucher, setVoucher] = useState<AppliedVoucher | null>(null);
   const [editing, setEditing] = useState<AddressDTO | Omit<AddressDTO, 'id'> | null>(null);
   const [askPhone, setAskPhone] = useState(false);
   const blankAddress = useNewAddress();
+  // Mã khách chọn trong hộp "Ưu đãi dành cho bạn" (mang từ giỏ hàng sang); đổi cách nhận hàng thì server tính lại
+  const vouchers = useAppliedVouchers({ items: lines.map((l) => ({ slug: l.slug, option: l.option, qty: l.qty })), phone, delivery, enabled: ready });
 
   useEffect(() => { deliveryStoresAction().then(setStores).catch(() => {}); }, []);
   const loadSlots = () => slotOptionsAction().then(setDays).catch(() => setDays([]));
@@ -116,7 +118,10 @@ export default function CheckoutPage() {
 
   // Nhận tại vườn thì không tính phí giao. Server tính lại đúng công thức này (kể cả mã giảm giá) khi tạo đơn.
   // Combo 2 cây tính ngay ở đây; server tính lại khi tạo đơn.
-  const totals = computeTotals(lines.map((l) => ({ ...l.snap, qty: l.qty })), delivery, voucher?.discount ?? 0, rules, user?.partner?.discount ?? 0);
+  const totals = withVouchers(
+    computeTotals(lines.map((l) => ({ ...l.snap, qty: l.qty })), delivery, 0, rules, user?.partner?.discount ?? 0),
+    vouchers.applied.discount?.discount ?? 0, vouchers.applied.ship?.discount ?? 0,
+  );
 
   // Khung đã chọn còn dùng được (chưa kín / chưa qua giờ) → gửi lên server
   const chosen = (() => {
@@ -163,7 +168,8 @@ export default function CheckoutPage() {
       payment: pay,
       safetyAck: safety,
       addressId: delivery === 'ship' && savedId !== null ? savedId : undefined,
-      voucherCode: voucher?.code,
+      voucherCode: vouchers.applied.discount?.code,
+      shipVoucherCode: vouchers.applied.ship?.code,
     }).catch(() => ({ ok: false as const, error: 'Không gửi được đơn. Vui lòng kiểm tra mạng và thử lại.' }));
     setBusy(false);
     if (!r.ok) {
@@ -172,6 +178,7 @@ export default function CheckoutPage() {
       if ('needsPhone' in r && r.needsPhone) setAskPhone(true);
       return;
     }
+    clearVoucherPick();
     clear();
     router.push(`/dat-hang-thanh-cong?ma=${r.code}`);
   };
@@ -310,15 +317,7 @@ export default function CheckoutPage() {
           </div>
         </div>
 
-        <OrderSummary totals={totals}>
-          <VoucherInput
-            items={lines.map((l) => ({ slug: l.slug, option: l.option, qty: l.qty }))}
-            phone={phone}
-            subtotal={totals.goods}
-            applied={voucher}
-            onApply={setVoucher}
-            onRemove={() => setVoucher(null)}
-          />
+        <OrderSummary totals={totals} voucher={<VoucherBox state={vouchers} goods={totals.goods} shipFee={totals.plantShip + totals.supplyShip} />}>
           {totals.hasPesticide && (
             <label className="vx-check">
               <input type="checkbox" checked={safety} onChange={(e) => setSafety(e.target.checked)} />

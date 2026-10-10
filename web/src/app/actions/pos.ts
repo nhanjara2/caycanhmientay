@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import * as z from 'zod';
 import { requireAccess } from '@/server/auth';
-import { previewVoucher } from '@/server/orders';
+import { previewVouchers } from '@/server/orders';
 import { createPosOrder, PosOrderSchema, posCustomer } from '@/server/pos';
 
 // Bán tại quầy: nhân viên có quyền "Bán tại quầy" toàn quyền (Quản lý, CSKH).
@@ -23,7 +23,10 @@ export async function posVoucherAction(code: unknown, items: unknown, phone: unk
   }).safeParse({ code, items, phone });
   if (!p.success) return { ok: false as const, error: 'Nhập mã và chọn sản phẩm trước' };
   if (!p.data.phone) return { ok: false as const, error: 'Nhập số điện thoại khách để dùng mã giảm giá' };
-  return previewVoucher(p.data.code, p.data.items, null, p.data.phone);
+  // Bán tại quầy không có phí giao: chỉ mã giảm tiền hàng dùng được (mã miễn phí giao bị từ chối kèm lý do)
+  const r = await previewVouchers([p.data.code], p.data.items, null, p.data.phone, 'pickup');
+  if (r.discount) return { ok: true as const, code: r.discount.code, discount: r.discount.discount };
+  return { ok: false as const, error: r.errors[0]?.error ?? 'Mã giảm giá không dùng được' };
 }
 
 export async function createPosOrderAction(input: unknown) {

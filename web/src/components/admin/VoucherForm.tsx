@@ -4,12 +4,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition, type FormEvent } from 'react';
 import { saveVoucherAction } from '@/app/actions/vouchers';
-import { WELCOME_CODE, WELCOME_DAYS, type DiscountType } from '@/lib/voucher-labels';
+import { WELCOME_CODE, WELCOME_DAYS, type DiscountType, type VoucherKind } from '@/lib/voucher-labels';
 
 export type VoucherFormValue = {
   id?: number;
   code: string;
   label: string;
+  kind: VoucherKind;
   discountType: DiscountType;
   discountValue: string;
   maxDiscount: string;
@@ -39,6 +40,7 @@ export function VoucherForm({ initial }: { initial: VoucherFormValue }) {
       id: v.id,
       code: v.code,
       label: v.label,
+      kind: v.kind,
       discountType: v.discountType,
       discountValue: Number(digits(v.discountValue) || 0),
       maxDiscount: v.discountType === 'percent' && v.maxDiscount ? Number(digits(v.maxDiscount)) : undefined,
@@ -76,7 +78,7 @@ export function VoucherForm({ initial }: { initial: VoucherFormValue }) {
       <div className="ad-card">
         <div className="ad-card__b" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div className="ad-f">
-            <label htmlFor="vc-code">Mã (khách nhập lúc thanh toán)</label>
+            <label htmlFor="vc-code">Mã (khách chọn trong hộp ưu đãi hoặc nhập lúc thanh toán)</label>
             <input
               id="vc-code" className="vx-input" style={{ textTransform: 'uppercase' }} maxLength={30}
               value={v.code} disabled={Boolean(v.id)}
@@ -90,15 +92,25 @@ export function VoucherForm({ initial }: { initial: VoucherFormValue }) {
             <input id="vc-label" className="vx-input" maxLength={120} value={v.label} onChange={(e) => set('label', e.target.value)} placeholder="Giảm 10% đơn từ 300.000đ" required />
           </div>
           <div className="ad-f">
-            <label>Loại giảm giá</label>
+            <label>Mã giảm vào đâu</label>
             <div className="vx-seg">
-              <button type="button" className="vx-chip" aria-pressed={v.discountType === 'percent'} onClick={() => set('discountType', 'percent')}>Phần trăm (%)</button>
-              <button type="button" className="vx-chip" aria-pressed={v.discountType === 'amount'} onClick={() => set('discountType', 'amount')}>Số tiền cố định (đ)</button>
+              <button type="button" className="vx-chip" aria-pressed={v.kind === 'discount'} onClick={() => set('kind', 'discount')}>Giảm tiền hàng</button>
+              <button type="button" className="vx-chip" aria-pressed={v.kind === 'ship'} onClick={() => setV((x) => ({ ...x, kind: 'ship', discountType: 'amount', maxDiscount: '' }))}>Miễn phí giao (giảm phí giao)</button>
             </div>
+            <span className="vx-help">Mỗi đơn khách chọn được 1 mã giảm tiền hàng + 1 mã miễn phí giao. Mã miễn phí giao giảm tối đa bằng phí giao của đơn, không dùng được khi đơn đã miễn phí giao hoặc nhận tại vườn.</span>
           </div>
+          {v.kind === 'discount' && (
+            <div className="ad-f">
+              <label>Loại giảm giá</label>
+              <div className="vx-seg">
+                <button type="button" className="vx-chip" aria-pressed={v.discountType === 'percent'} onClick={() => set('discountType', 'percent')}>Phần trăm (%)</button>
+                <button type="button" className="vx-chip" aria-pressed={v.discountType === 'amount'} onClick={() => set('discountType', 'amount')}>Số tiền cố định (đ)</button>
+              </div>
+            </div>
+          )}
           <div className="ad-frow">
             <div className="ad-f">
-              <label htmlFor="vc-value">{v.discountType === 'percent' ? 'Phần trăm giảm' : 'Số tiền giảm'}</label>
+              <label htmlFor="vc-value">{v.kind === 'ship' ? 'Giảm phí giao tối đa (đ)' : v.discountType === 'percent' ? 'Phần trăm giảm' : 'Số tiền giảm'}</label>
               <input id="vc-value" className="vx-input" inputMode="numeric" value={v.discountValue} onChange={(e) => set('discountValue', digits(e.target.value))} placeholder={v.discountType === 'percent' ? '10' : '20.000'} required />
             </div>
             {v.discountType === 'percent' && (
@@ -134,7 +146,7 @@ export function VoucherForm({ initial }: { initial: VoucherFormValue }) {
           </div>
           <label className="vx-check">
             <input type="checkbox" checked={v.active} onChange={(e) => set('active', e.target.checked)} />
-            Bật mã này (khách nhập được ngay khi trong thời gian áp dụng)
+            Bật mã này (hiện trong hộp ưu đãi của khách ngay khi trong thời gian áp dụng)
           </label>
         </div>
       </div>

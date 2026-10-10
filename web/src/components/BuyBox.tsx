@@ -137,14 +137,17 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
             <span className="app-prow__k">Mã giảm giá</span>
             <div className="app-prow__v">
               {vouchers.length > 0 && (
-                <ul className="app-vtags">
-                  {vouchers.map((v) => (
-                    <li key={v.code} className="app-vtag">
-                      <b>{v.code}</b><span>{voucherShort(v)}</span>
-                      {v.minOrder > 0 && <small>đơn từ {moneyShort(v.minOrder)}</small>}
-                    </li>
-                  ))}
-                </ul>
+                <>
+                  <ul className="app-vtags">
+                    {vouchers.map((v) => (
+                      <li key={v.code} className="app-vtag" data-kind={v.kind}>
+                        <b>{v.kind === 'ship' ? `Freeship ${money(v.discountValue)}` : `Giảm ${voucherShort(v)}`}</b>
+                        {v.minOrder > 0 && <small>đơn từ {moneyShort(v.minOrder)}</small>}
+                      </li>
+                    ))}
+                  </ul>
+                  <small className="app-prow__note">Chọn mã ở giỏ hàng — mỗi đơn dùng được 1 mã miễn phí giao + 1 mã giảm giá.</small>
+                </>
               )}
               {partnerPct > 0 && <small className="app-prow__note">Bạn được chiết khấu đối tác thêm <b>{partnerPct}%</b>.</small>}
             </div>
@@ -261,8 +264,8 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
 /** "1 triệu", "1,5 triệu" cho số tròn trăm nghìn từ 1 triệu; còn lại ghi đủ. */
 const moneyShort = (n: number) => (n >= 1e6 && n % 1e5 === 0 ? `${String(n / 1e6).replace('.', ',')} triệu` : money(n));
 
-/** "−10%" / "−50.000đ" — mức giảm ngắn của mã ở bảng giá. */
-const voucherShort = (v: PublicVoucher) => (v.discountType === 'percent' ? `−${v.discountValue}%` : `−${money(v.discountValue)}`);
+/** "10%" / "50.000đ" — mức giảm ngắn của mã ở hàng Mã giảm giá. */
+const voucherShort = (v: PublicVoucher) => (v.discountType === 'percent' ? `${v.discountValue}%` : money(v.discountValue));
 
 /** Mô tả + bảng thông số dài (cây có 15–17 thông số) thì thu gọn, nút "Xem tất cả thông tin" mở ra. */
 function MoreInfo({ children }: { children: ReactNode }) {

@@ -6,7 +6,7 @@ import { type CartLine, type Totals, useCart } from '@/lib/cart';
 import type { LinePrice } from '@/lib/pricing';
 import { useShipping } from '@/lib/shipping-client';
 import { money } from '@/lib/format';
-import { voucherDiscount, voucherTiers, voucherValueText } from '@/lib/voucher-labels';
+import { voucherTiers, voucherValueText } from '@/lib/voucher-labels';
 import { usePublicVouchers } from '@/lib/vouchers-client';
 import { Art, Icon } from './Icon';
 
@@ -40,7 +40,7 @@ export function CartList({ editable }: { editable: boolean }) {
         <Icon name="truck" />
         <span>
           <b>Miễn phí vận chuyển</b> cho đơn vật tư từ {money(rules.supply.freeFrom)} · Mua 2 cây cùng loại có giá combo
-          {vouchers.length > 0 && <> · Đơn từ {money(vouchers[0].minOrder)} có mã giảm giá</>}
+          {vouchers.length > 0 && <> · Đơn từ {money(vouchers[0].minOrder)} có mã ưu đãi</>}
         </span>
       </div>
       {plants.length > 0 && (
@@ -108,12 +108,13 @@ function Item({ l, pr, editable, setQty, remove }: {
   );
 }
 
-/** OrderSummary: khối tổng tiền cột phải, dính khi cuộn. `voucherHint` (giỏ hàng): gợi ý mã giảm giá dùng được / mua thêm để dùng mã cao hơn. */
-export function OrderSummary({ totals: t, voucherHint = false, children }: { totals: Totals; voucherHint?: boolean; children: ReactNode }) {
+/** OrderSummary: khối tổng tiền cột phải, dính khi cuộn. `voucher` = dòng "Ưu đãi dành cho bạn" (VoucherBox) mở hộp chọn mã;
+ *  `voucherHint` (giỏ hàng): thêm gợi ý mua thêm để dùng mã giảm cao hơn. */
+export function OrderSummary({ totals: t, voucherHint = false, voucher, children }: { totals: Totals; voucherHint?: boolean; voucher?: ReactNode; children: ReactNode }) {
   const { rules } = useShipping();
   const vouchers = usePublicVouchers();
   const plantLeft = t.plantSubtotal > 0 && t.plantShip > 0 ? rules.plant.freeFrom - t.plantSubtotal : 0;
-  const saved = t.directDiscount + t.comboDiscount + t.voucherDiscount + t.partnerDiscount;
+  const saved = t.directDiscount + t.comboDiscount + t.voucherDiscount + t.shipVoucherDiscount + t.partnerDiscount;
   const tiers = voucherHint ? voucherTiers(vouchers, t.goods) : { best: null, next: null };
   return (
     <aside className="vx-sum">
@@ -123,16 +124,12 @@ export function OrderSummary({ totals: t, voucherHint = false, children }: { tot
         {t.comboDiscount > 0 && <div><span>Combo 2 cây</span><b className="neg">-{money(t.comboDiscount)}</b></div>}
         {t.plantSubtotal > 0 && <div><span>Phí giao cây sống</span>{t.plantShip ? <b>{money(t.plantShip)}</b> : <b className="pos">Miễn phí</b>}</div>}
         {t.supplySubtotal > 0 && <div><span>Phí giao vật tư</span>{t.supplyShip ? <b>{money(t.supplyShip)}</b> : <b className="pos">Miễn phí</b>}</div>}
+        {t.shipVoucherDiscount > 0 && <div><span>Mã miễn phí giao</span><b className="neg">-{money(t.shipVoucherDiscount)}</b></div>}
         {t.voucherDiscount > 0 && <div><span>Mã giảm giá</span><b className="neg">-{money(t.voucherDiscount)}</b></div>}
         {t.partnerDiscount > 0 && <div><span>Chiết khấu đối tác</span><b className="neg">-{money(t.partnerDiscount)}</b></div>}
         {saved > 0 && <div><span>Tiết kiệm được</span><b className="neg">{money(saved)}</b></div>}
       </div>
-      {tiers.best && (
-        <div className="vx-note app-vhint" role="status">
-          <Icon name="gift" />
-          <div>Đơn này dùng được mã <b>{tiers.best.code}</b> — giảm <b>{money(voucherDiscount(tiers.best, t.goods))}</b>. Nhập mã ở bước thanh toán.</div>
-        </div>
-      )}
+      {voucher}
       {tiers.next && (
         <div className="vx-freeship app-minorder" role="status">
           <span>Mua thêm <b>{money(tiers.next.minOrder - t.goods)}</b> để dùng mã <b>{tiers.next.code}</b> — {voucherValueText(tiers.next, money).toLowerCase()}</span>

@@ -6,11 +6,18 @@ import { refreshCartAction } from '@/app/actions/orders';
 import { EmptyState } from '@/components/Blocks';
 import { CartList, OrderSummary, Steps } from '@/components/CartParts';
 import { Icon } from '@/components/Icon';
+import { VoucherBox } from '@/components/VoucherBox';
+import { useAuth } from '@/lib/auth';
 import { useCart } from '@/lib/cart';
 import { WHOLESALE_QUOTE_URL } from '@/lib/partners';
+import { withVouchers } from '@/lib/pricing';
+import { useAppliedVouchers } from '@/lib/voucher-pick';
 
 export default function CartPage() {
   const { lines, totals, ready, replace } = useCart();
+  const { user } = useAuth();
+  // Khách chọn mã ngay ở giỏ (hộp "Ưu đãi dành cho bạn"); mã đã chọn theo sang trang thanh toán
+  const vouchers = useAppliedVouchers({ items: lines.map(({ slug, option, qty }) => ({ slug, option, qty })), phone: user?.phone ?? '', delivery: 'ship', enabled: ready });
   const [notice, setNotice] = useState('');
   const refreshed = useRef(false);
 
@@ -54,7 +61,11 @@ export default function CartPage() {
         {notice && <div className="vx-note" role="status"><Icon name="alert" /><div>{notice}</div></div>}
         <CartList editable />
       </div>
-      <OrderSummary totals={totals} voucherHint>
+      <OrderSummary
+        totals={withVouchers(totals, vouchers.applied.discount?.discount ?? 0, vouchers.applied.ship?.discount ?? 0)}
+        voucherHint
+        voucher={<VoucherBox state={vouchers} goods={totals.goods} shipFee={totals.plantShip + totals.supplyShip} />}
+      >
         <Link href="/thanh-toan" className="vx-btn vx-btn--primary vx-btn--lg vx-btn--block">Tiến hành đặt hàng</Link>
         <Link href={WHOLESALE_QUOTE_URL} className="vx-btn vx-btn--outline vx-btn--block">Gửi danh sách, nhận báo giá sỉ</Link>
         <Link href="/danh-muc" className="vx-btn vx-btn--ghost vx-btn--block">Tiếp tục mua sắm</Link>

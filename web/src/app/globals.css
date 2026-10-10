@@ -1705,6 +1705,56 @@ button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
   .app-buycta__buy { order: -1; }
 }
 
+/* ---- Hộp "Ưu đãi dành cho bạn" (VoucherBox, 10/10/2026) ----
+   Dòng mở hộp trong khối tổng tiền (giỏ hàng, thanh toán) + hộp chọn 1 mã miễn phí giao + 1 mã giảm giá (thiết kế VoucherModal).
+   Điện thoại: hộp trượt từ đáy, cao tối đa 92% màn hình, chân hộp (tổng tiết kiệm + Áp dụng) luôn thấy. */
+.app-ventry { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 0.625rem; width: 100%; min-height: 3.5rem; padding: 0.5rem 0.75rem; border: 1px dashed var(--sale); border-radius: var(--radius-md); background: #fff5ee; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.app-ventry:hover { background: #ffeee2; }
+.app-ventry:focus-visible { outline: 2px solid var(--sale); outline-offset: 2px; }
+.app-ventry__ic { display: grid; place-items: center; width: 2.25rem; height: 2.25rem; border-radius: 50%; background: var(--sale); color: #fff; }
+.app-ventry__ic .vx-ico { width: 1.125rem; height: 1.125rem; }
+.app-ventry__t { display: flex; flex-direction: column; min-width: 0; }
+.app-ventry__t b { font-size: 0.9375rem; line-height: 1.35; }
+.app-ventry__t small { font-size: 0.875rem; line-height: 1.35; color: var(--ink-muted); overflow-wrap: anywhere; }
+.app-ventry__t small.hot { color: var(--sale); font-weight: 600; }
+.app-ventry__t small.on { color: var(--primary-hover); font-weight: 600; }
+.app-ventry__go { display: inline-flex; align-items: center; gap: 0.125rem; font-size: 0.9375rem; font-weight: 600; color: var(--sale); white-space: nowrap; }
+.app-ventry__go .vx-ico { width: 1rem; height: 1rem; }
+.app-ventry[data-on] { border-style: solid; border-color: var(--primary); background: #f2f8f4; }
+.app-ventry[data-on] .app-ventry__ic { background: var(--primary); }
+.app-ventry[data-on] .app-ventry__go { color: var(--primary-hover); }
+/* có mã dùng được mà chưa chọn: biểu tượng "thở" nhẹ 3 nhịp để khách thấy */
+.app-ventry[data-hot] .app-ventry__ic { animation: app-ventry-pulse 1.6s ease-out .6s 3; }
+@keyframes app-ventry-pulse { 0% { box-shadow: 0 0 0 0 rgba(194, 65, 12, .45); } 100% { box-shadow: 0 0 0 0.75rem rgba(194, 65, 12, 0); } }
+@media (prefers-reduced-motion: reduce) { .app-ventry[data-hot] .app-ventry__ic { animation: none; } }
+.app-vdrop { font-size: 0.875rem; }
+.app-vmodal .vx-modal { max-width: 34rem; max-height: calc(100dvh - 2rem); overflow: hidden; }
+.app-vmodal .vx-modal__body { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+.app-vmodal .vx-modal__body > * { flex: none; }   /* ô nhập mã không bị bóp dẹt khi danh sách dài */
+.app-vmodal .vx-vlist { max-height: none; overflow: visible; gap: var(--space-3); }
+.app-vmodal .vx-code input { font-size: 1rem; min-height: 2.75rem; }
+.app-vmodal .vx-code button { min-height: 2.75rem; font-size: 0.9375rem; }
+.app-vgroup { display: flex; flex-direction: column; gap: var(--space-2); }
+.app-vgroup .vx-vgroup { margin: 0; font-size: 0.875rem; }
+.app-vgroup .vx-vgroup span { font-weight: 500; }
+.app-vnote, .app-vempty { margin: 0; font-size: 0.875rem; line-height: 1.45; color: var(--ink-muted); }
+.app-vpick { width: 100%; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.app-vpick:hover:not([aria-disabled="true"]) { border-color: var(--primary); }
+.app-vpick:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.app-vpick[aria-disabled="true"] { cursor: default; }
+.app-vpick .vx-voucher__body { font-size: 0.875rem; line-height: 1.4; }
+.app-vpick .vx-voucher__body b { font-size: 1rem; line-height: 1.35; }
+.app-vpick .vx-voucher__body .left .bar { width: 100%; max-width: 12rem; }
+.app-vpick .vx-voucher__tag { font-size: 0.75rem; line-height: 1.3; padding: 1px 8px; }
+.app-vpick .vx-vcheck { width: 1.5rem; height: 1.5rem; }
+.app-vmodal .vx-vfoot__sum { font-size: 0.9375rem; }
+.app-vtag[data-kind="ship"] { border-color: var(--primary); background: #f2f8f4; color: var(--primary-hover); }
+@media (max-width: 47.9375em) {
+  .app-modal.app-vmodal { place-items: end center; padding: 0; }
+  .app-vmodal .vx-modal { max-width: none; max-height: 92dvh; border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+  .app-vmodal .vx-modal__foot { padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px)); }
+}
+
 /* ---- Thanh danh mục ngang + bảng xổ (CategoryNav, 08/10/2026) ----
    Hàng trắng cuối đầu trang (máy tính ≥ 1024px), chỉ ở trang không có menu trái (.app-shop) — trang chủ / danh mục / tìm kiếm
    đã có SidebarMenu. Rê chuột hoặc bấm ▾: cột trái nhóm con, bên phải sản phẩm bán chạy (/api/mega-menu). --header-h cao thêm hàng này. */
