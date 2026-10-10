@@ -89,7 +89,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  // Chiết khấu đối tác sỉ đã duyệt hiện ngay trong giỏ (server tính lại khi đặt).
+  // Combo 2 cây, chiết khấu đối tác đã duyệt hiện ngay trong giỏ (server tính lại khi đặt).
   const partnerPct = useAuth().user?.partner?.discount ?? 0;
   const totals = useMemo(() => computeTotals(lines.map((l) => ({ ...l.snap, qty: l.qty })), 'ship', 0, rules, partnerPct), [lines, rules, partnerPct]);
 

@@ -22,12 +22,7 @@ export type ShippingConfig = {
   daysAhead: number;
   /** Ngày nghỉ lễ, Tết: không nhận khung giờ giao. */
   closed: { date: string; note: string }[];
-  /** Bán sỉ: tiền hàng tối thiểu mỗi đơn đặt trên web (đồng, trước chiết khấu); 0 = không giới hạn. Không áp dụng bán tại quầy. */
-  minOrder: number;
 };
-
-/** Đơn sỉ tối thiểu mặc định (09/10/2026, shop chuyển sang chỉ bán sỉ) — chủ shop đổi ở Cài đặt giao hàng. */
-export const DEFAULT_MIN_ORDER = 3_000_000;
 
 /** Phí 35k / 20k, miễn phí từ 800k / 300k. Mặc định giao toàn quốc, không hẹn khung giờ; bật giới hạn vùng (30 km) và khung giờ (2 khung × 2 ngày) ở Cài đặt giao hàng khi shop có xe giao riêng. */
 export const DEFAULT_SHIPPING: ShippingConfig = {
@@ -40,7 +35,6 @@ export const DEFAULT_SHIPPING: ShippingConfig = {
   cap: { sang: [20, 20, 20, 20, 20, 20, 20], chieu: [20, 20, 20, 20, 20, 20, 20] },
   daysAhead: 2,
   closed: [],
-  minOrder: DEFAULT_MIN_ORDER,
 };
 
 export const WEEKDAYS = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'] as const;
@@ -63,7 +57,6 @@ export const ShippingConfigSchema = z.object({
   cap: z.record(z.string(), z.array(z.number().int().min(0, 'Số đơn không được âm').max(999, 'Số đơn tối đa 999')).length(7)),
   daysAhead: z.number().int().min(1, 'Cho khách chọn giao trong ít nhất 1 ngày').max(14, 'Tối đa 14 ngày'),
   closed: z.array(z.object({ date: ymd, note: z.string().trim().max(60) })).max(80, 'Tối đa 80 ngày nghỉ'),
-  minOrder: money('Đơn tối thiểu').default(DEFAULT_MIN_ORDER),
 }).superRefine((v, ctx) => {
   const keys = new Set<string>();
   v.slots.forEach((s, i) => {

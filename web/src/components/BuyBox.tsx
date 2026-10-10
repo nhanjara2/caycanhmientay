@@ -10,8 +10,11 @@ import { SALES_PHONE, ZALO_URL } from '@/lib/contact';
 import { compact, money } from '@/lib/format';
 import { starsText } from '@/lib/reviews';
 import { WHOLESALE_QUOTE_URL } from '@/lib/partners';
+import { computeTotals } from '@/lib/pricing';
 import { seoNameOf } from '@/lib/seo-name';
 import { useShipping } from '@/lib/shipping-client';
+import type { PublicVoucher } from '@/lib/voucher-labels';
+import { usePublicVouchers } from '@/lib/vouchers-client';
 import { DeliverToNote } from './DeliverTo';
 import { Icon, Thumb } from './Icon';
 import { WishlistHeart } from './WishlistHeart';
@@ -26,7 +29,8 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
   wishlisted?: boolean;
 }) {
   const { add } = useCart();
-  const { minOrder } = useShipping();
+  const { rules } = useShipping();
+  const vouchers = usePublicVouchers();
   const partner = useAuth().user?.partner;
   const partnerPct = partner?.discount ?? 0;
   const partnerType = partner?.type;
@@ -36,6 +40,11 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
   const u = p.options[opt];
   const quote = isQuote(u);
   const pct = discountPct(u);
+  // Giá theo số lượng: 1 cây = giá lẻ, mỗi 2 cây cùng quy cách = giá combo; giá sỉ công trình liên hệ báo giá
+  const unit = p.unit.toLowerCase();
+  const combo = u.combo2 && u.combo2 < 2 * u.price ? u.combo2 : 0;
+  const payNow = quote ? 0 : computeTotals([{ ...u, qty, ship: p.ship }], 'pickup', 0, rules).goods;
+  const quoteHref = partnerType ? `${WHOLESALE_QUOTE_URL}?loai=${partnerType}` : WHOLESALE_QUOTE_URL;
 
   // Khi nút "Mua ngay" đã cuộn khỏi màn hình (kể cả khuất sau đầu trang dính) thì hiện thanh mua dính ở đáy — mọi cỡ màn (trang sản phẩm dài ~6 màn hình).
   const ctaRef = useRef<HTMLDivElement>(null);
@@ -82,18 +91,29 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
       {u.oldPrice && !quote && (
         <div className="vx-buy__old">
           <s>{money(u.oldPrice)}</s>
-          <span className="vx-badge vx-badge--sale">-{money(u.oldPrice - u.price)}</span>
+          <span className="vx-badge vx-badge--sale">-{pct}%</span>
         </div>
       )}
       {!quote && (
-        <p className="app-wsnote">
-          <Icon name="box" size={16} />
-          <span>
-            Giá sỉ{partnerPct > 0 && <> · bạn được chiết khấu thêm <b>{partnerPct}%</b></>}
-            {minOrder > 0 && <> · đơn tối thiểu {money(minOrder)} (tính cả giỏ)</>}
-            {' · '}<Link href={partnerType ? `${WHOLESALE_QUOTE_URL}?loai=${partnerType}` : WHOLESALE_QUOTE_URL}>Báo giá số lượng lớn</Link>
-          </span>
-        </p>
+        <div className="app-tiers" aria-label="Giá theo số lượng">
+          <div className="app-tiers__row" data-on={!(combo && qty >= 2) || undefined}><span>Mua 1 {unit}</span><b>{money(u.price)}</b></div>
+          {combo > 0 && (
+            <div className="app-tiers__row" data-on={qty >= 2 || undefined}>
+              <span>Combo 2 {unit}</span><b>{money(combo)}<small>≈ {money(Math.round(combo / 2))} / {unit}</small></b>
+            </div>
+          )}
+          <div className="app-tiers__row">
+            <span>Giá sỉ công trình</span><b><Link href={quoteHref}>Liên hệ báo giá</Link></b>
+          </div>
+          {(vouchers.length > 0 || partnerPct > 0) && (
+            <small>
+              {vouchers.length > 0 && <>Mã giảm thêm: {vouchers.map((v, i) => (
+                <span key={v.code}>{i > 0 && ' · '}<b>{v.code}</b> {voucherShort(v)}{v.minOrder > 0 && ` đơn từ ${money(v.minOrder)}`}</span>
+              ))}. </>}
+              {partnerPct > 0 && <>Bạn được chiết khấu thêm <b>{partnerPct}%</b>.</>}
+            </small>
+          )}
+        </div>
       )}
       {p.options.length > 1 && (
         <div className="vx-opt">
@@ -172,7 +192,7 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
               <Icon name="cart" />Thêm vào giỏ
             </button>
             <button type="button" className="vx-btn vx-btn--primary vx-btn--lg app-buybar__buy" onClick={buyNow}>
-              <span>Mua ngay</span><small>{money(u.price * qty)}</small>
+              <span>Mua ngay</span><small>{money(payNow)}</small>
             </button>
           </div>
         )}
@@ -202,6 +222,9 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
     </div>
   );
 }
+
+/** "−10%" / "−50.000đ" — mức giảm ngắn của mã ở bảng giá. */
+const voucherShort = (v: PublicVoucher) => (v.discountType === 'percent' ? `−${v.discountValue}%` : `−${money(v.discountValue)}`);
 
 /** Mô tả + bảng thông số dài (cây có 15–17 thông số) thì thu gọn, nút "Xem tất cả thông tin" mở ra. */
 function MoreInfo({ children }: { children: ReactNode }) {

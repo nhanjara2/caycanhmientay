@@ -18,7 +18,7 @@ import { PAY_LABEL, PAY_LOGO } from '@/lib/order-labels';
 import { useAuth } from '@/lib/auth';
 import { useCart } from '@/lib/cart';
 import { useDeliverTo } from '@/lib/deliver-to';
-import { computeTotals, minOrderShort } from '@/lib/pricing';
+import { computeTotals } from '@/lib/pricing';
 import { useShipping } from '@/lib/shipping-client';
 import type { DayOption } from '@/lib/shipping';
 import { plantZone, type StorePoint } from '@/lib/stock';
@@ -51,7 +51,7 @@ export default function CheckoutPage() {
   // Địa chỉ gõ / chọn tại chỗ (khi không dùng địa chỉ trong sổ): `address` là chuỗi ghép từ các ô này
   const [addr, setAddr] = useState<AddrValue>(EMPTY_ADDR);
   const typeAddr = (v: AddrValue) => { setAddr(v); setAddress(composeFull(v)); };
-  const { rules, plantZoneKm, plantZoneEnabled, slotsEnabled, minOrder } = useShipping();
+  const { rules, plantZoneKm, plantZoneEnabled, slotsEnabled } = useShipping();
   // Khung giờ lấy từ Cài đặt giao hàng (còn chỗ / đã kín / đã qua giờ); chọn = "ngày|mã khung"
   const [days, setDays] = useState<DayOption[] | null>(null);
   const [slot, setSlot] = useState<string | null>(null);
@@ -115,9 +115,8 @@ export default function CheckoutPage() {
   }
 
   // Nhận tại vườn thì không tính phí giao. Server tính lại đúng công thức này (kể cả mã giảm giá) khi tạo đơn.
+  // Combo 2 cây tính ngay ở đây; server tính lại khi tạo đơn.
   const totals = computeTotals(lines.map((l) => ({ ...l.snap, qty: l.qty })), delivery, voucher?.discount ?? 0, rules, user?.partner?.discount ?? 0);
-  // Bán sỉ: chưa đủ đơn tối thiểu thì không cho đặt (server cũng chặn).
-  const short = minOrderShort(totals.subtotal, minOrder);
 
   // Khung đã chọn còn dùng được (chưa kín / chưa qua giờ) → gửi lên server
   const chosen = (() => {
@@ -141,7 +140,7 @@ export default function CheckoutPage() {
   const savedAddr = saved.find((a) => a.id === savedId);
   const zone = savedAddr?.lat != null && savedAddr.lng != null ? plantZone({ lat: savedAddr.lat, lng: savedAddr.lng }, stores, plantZoneKm) : null;
   const outOfZone = plantZoneEnabled && delivery === 'ship' && lines.some((l) => l.snap.ship === 'plant') && zone !== null && !zone.inZone;
-  const valid = !Object.values(errors).some(Boolean) && !outOfZone && !short;
+  const valid = !Object.values(errors).some(Boolean) && !outOfZone;
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -315,7 +314,7 @@ export default function CheckoutPage() {
           <VoucherInput
             items={lines.map((l) => ({ slug: l.slug, option: l.option, qty: l.qty }))}
             phone={phone}
-            subtotal={totals.subtotal}
+            subtotal={totals.goods}
             applied={voucher}
             onApply={setVoucher}
             onRemove={() => setVoucher(null)}
@@ -328,8 +327,7 @@ export default function CheckoutPage() {
           )}
           {err('safety')}
           {serverError && <div className="vx-note" role="alert"><Icon name="alert" /><div>{serverError}</div></div>}
-          <button type="submit" className="vx-btn vx-btn--primary vx-btn--lg vx-btn--block" disabled={busy || short > 0}>{busy ? 'Đang đặt hàng…' : short > 0 ? 'Chưa đủ đơn tối thiểu' : 'Đặt hàng'}</button>
-          {short > 0 && <Link href="/gio-hang" className="vx-btn vx-btn--outline vx-btn--block">Quay lại giỏ hàng để thêm sản phẩm</Link>}
+          <button type="submit" className="vx-btn vx-btn--primary vx-btn--lg vx-btn--block" disabled={busy}>{busy ? 'Đang đặt hàng…' : 'Đặt hàng'}</button>
           <p className="vx-terms">
             Bằng việc đặt hàng, bạn đồng ý với <a>Điều khoản dịch vụ</a> và <a>Chính sách đổi trả cây</a> của Cây Cảnh Miền Tây
           </p>

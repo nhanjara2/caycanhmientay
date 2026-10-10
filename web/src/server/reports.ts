@@ -213,7 +213,7 @@ export async function ordersInRange(range: ReportRange, limit = 5000) {
   }>(sql`
     select o.code, to_char(o.created_at at time zone ${TZ}, 'YYYY-MM-DD HH24:MI') as created, o.customer_name as customer, o.phone,
            o.status, o.payment_method as method, o.paid, o.delivery, o.subtotal::int, (o.plant_ship + o.supply_ship)::int as ship,
-           o.voucher_discount::int as discount, o.voucher_code as voucher, o.total::int
+           (o.voucher_discount + o.partner_discount + o.combo_discount)::int as discount, o.voucher_code as voucher, o.total::int
     from orders o where o.kind = 'sale' and o.created_at >= ${at(from)} and o.created_at < ${at(to)}
     order by o.created_at desc limit ${limit}`);
 }

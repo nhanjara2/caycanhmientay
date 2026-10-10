@@ -9,8 +9,7 @@ import { ProductGrid } from '@/components/ProductCard';
 import { ProjectCard } from '@/components/ProjectParts';
 import { ShortVideos } from '@/components/ShortVideos';
 import type { Product } from '@/lib/catalog';
-import { money } from '@/lib/format';
-import { bannerImageUrl, slotOf, type Banner } from '@/lib/home-banners';
+import { bannerImageUrl, homeBg, slotOf, type Banner } from '@/lib/home-banners';
 import { PARTNER_IMAGE, PARTNER_INFO, PARTNER_TYPES, WHOLESALE_QUOTE_URL, WHOLESALE_URL } from '@/lib/partners';
 import { categoryOf, SECTIONS, VIDEO_PAGE } from '@/lib/posts';
 import { WARRANTY_DAYS } from '@/lib/warranty-labels';
@@ -20,7 +19,6 @@ import { allDiseases } from '@/server/diseases';
 import { liveBanners } from '@/server/home-banners';
 import { publishedPosts, publishedVideos } from '@/server/posts';
 import { publishedProjects } from '@/server/projects';
-import { getShippingConfig } from '@/server/shipping';
 import '@/styles/home.css';
 
 // Trang chủ (từ 09/10/2026): trang giới thiệu nhiều ảnh — banner sự kiện chủ shop tự tải ở /admin/trang-chu,
@@ -59,31 +57,31 @@ function seasonNow() {
 }
 
 export default async function HomePage() {
-  const [banners, products, flash, categories, counts, posts, allVideos, projects, diseases, cfg] = await Promise.all([
+  const [banners, products, flash, categories, counts, posts, allVideos, projects, diseases] = await Promise.all([
     liveBanners(), allProducts(), flashProducts(), menuCategories(), categoryCounts(),
-    publishedPosts(), publishedVideos(), publishedProjects(), allDiseases(), getShippingConfig(),
+    publishedPosts(), publishedVideos(), publishedProjects(), allDiseases(),
   ]);
   // Mỗi vị trí chỉ hiện tối đa `max` ảnh đầu (BANNER_SLOTS).
   const inSlot = (slot: Banner['slot']) => banners.filter((b) => b.slot === slot).slice(0, slotOf(slot).max).map(fromBanner);
-  const minOrder = cfg.minOrder > 0 ? `Đơn từ ${money(cfg.minOrder)}` : 'Không giới hạn đơn tối thiểu';
+  const minOrder = 'Mua 2 cây có giá combo, giá sỉ công trình liên hệ báo giá';
 
   // ---- Khung đầu trang: ảnh chủ shop tải lên; chưa có thì dựng từ ảnh thật của shop ----
   const season = seasonNow();
   const diseaseImgs = diseases.flatMap((d) => d.symptoms).flatMap((s) => (s.image ? [s.image] : []));
   const diseaseImg = diseaseImgs[0];
-  // Băng ảnh rộng dựng sẵn: mỗi ảnh một màu nền riêng (ảnh làm mờ phủ lên) để nền cả khoảng trên đổi theo.
+  // Băng ảnh rộng dựng sẵn: mỗi ảnh một ảnh nền riêng (public/images/home-bg) để nền cả khoảng trên đổi theo.
   const fallbackTop: Slide[] = [
     {
-      key: 'top-tet', badge: 'Mùa cây Tết 2027', tone: 'sun', showText: true, image: '/videos/mai-vang.jpg', bg: { color: '#7f1d1d', blur: true },
+      key: 'top-tet', badge: 'Mùa cây Tết 2027', tone: 'sun', showText: true, image: '/videos/mai-vang.jpg', bg: homeBg('le-hoi'),
       title: 'Mai, quất, cây Tết — đặt sớm, giữ hàng giá sỉ', subtitle: 'Cho cửa hàng, công trình, quà tặng doanh nghiệp', cta: 'Xem cây Tết', href: '/cay-tet',
     },
     {
-      key: 'top-mua', badge: season.name, tone: 'green', showText: true, bg: { color: season.key === 'mưa' ? '#134e5e' : '#7c4a03', blur: true },
+      key: 'top-mua', badge: season.name, tone: 'green', showText: true, bg: homeBg('bau-troi'),
       image: diseaseImgs.length ? `/api/disease-images/${diseaseImgs[1] ?? diseaseImgs[0]}` : PARTNER_IMAGE.landscape,
       title: `${season.name}: phòng bệnh sớm, không mất cả lô cây`, subtitle: 'Tra bệnh theo triệu chứng, chọn đúng thuốc, đúng liều', cta: 'Bắt bệnh cho cây', href: '/benh-cay',
     },
     {
-      key: 'top-vuon', badge: 'Vườn ươm miền Tây', tone: 'green', showText: true, image: PARTNER_IMAGE.landscape, bg: { color: '#14532d', blur: true },
+      key: 'top-vuon', badge: 'Vườn ươm miền Tây', tone: 'green', showText: true, image: PARTNER_IMAGE.landscape, bg: homeBg('la-xanh'),
       title: 'Xem cây tận vườn trước khi lấy sỉ', subtitle: 'Hệ thống vườn ươm, cửa hàng khắp miền Tây', cta: 'Tìm vườn gần bạn', href: '/he-thong-cua-hang',
     },
   ];
@@ -173,7 +171,7 @@ export default async function HomePage() {
 
       <div className="hm-body">
         <section className="hm-sec">
-          <HomeHead icon="leaf" title="Mua sỉ theo danh mục" sub="Ảnh thật từng nhóm hàng — bấm vào để xem giá sỉ, quy cách" href="/danh-muc" more="Tất cả sản phẩm" />
+          <HomeHead icon="leaf" title="Mua sỉ theo danh mục" sub="Ảnh thật từng nhóm hàng — bấm vào để xem giá, quy cách" href="/danh-muc" more="Tất cả sản phẩm" />
           <CategoryMosaic items={mosaic} />
         </section>
 
@@ -216,7 +214,7 @@ export default async function HomePage() {
 
         {wall.length === 9 && (
           <section className="hm-sec">
-            <HomeHead icon="tree" title="Ảnh thật từ vườn" sub="Cây chụp tại vườn ươm — bấm vào ảnh để xem giá sỉ, quy cách" href="/danh-muc/cay-canh" />
+            <HomeHead icon="tree" title="Ảnh thật từ vườn" sub="Cây chụp tại vườn ươm — bấm vào ảnh để xem giá, quy cách" href="/danh-muc/cay-canh" />
             <PhotoWall products={wall} />
           </section>
         )}

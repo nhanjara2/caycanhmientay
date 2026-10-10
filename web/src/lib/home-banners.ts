@@ -55,6 +55,14 @@ export type Banner = {
   sort: number;
 };
 
+/**
+ * Nền dựng sẵn phía sau khung đầu trang (`public/images/home-bg/`, máy tính 1920px + điện thoại 720×900).
+ * Ảnh nào chưa có nền riêng và chưa có "Ảnh nền sự kiện" thì lấy lần lượt theo thứ tự ảnh — qua ảnh mới là nền đổi theo.
+ */
+const HOME_BG = ['la-xanh', 'bau-troi', 'le-hoi', 'xanh-duong'] as const;
+export const homeBg = (n: (typeof HOME_BG)[number]) => ({ image: `/images/home-bg/${n}.webp`, imageMobile: `/images/home-bg/${n}-mb.webp` });
+export const HOME_BACKGROUNDS = HOME_BG.map(homeBg);
+
 export const BG_COLOR = /^#[0-9a-f]{6}$/i;
 export const BANNER_IMAGE_FILE = /^[a-f0-9]{32}\.(jpg|png|webp)$/;
 export const bannerImageUrl = (file: string) => `/api/banner-images/${file}`;

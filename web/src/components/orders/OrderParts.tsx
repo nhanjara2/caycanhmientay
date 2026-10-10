@@ -168,6 +168,7 @@ export function OrderDetail({ o }: { o: OrderFull }) {
             {plantShip && <div><span>Phí giao cây sống</span>{o.plantShip ? <b>{money(o.plantShip)}</b> : <b className="pos">Miễn phí</b>}</div>}
             {supplyShip && <div><span>Phí giao vật tư</span>{o.supplyShip ? <b>{money(o.supplyShip)}</b> : <b className="pos">Miễn phí</b>}</div>}
             {o.voucherDiscount > 0 && <div><span>Mã giảm giá {o.voucherCode}</span><b className="neg">-{money(o.voucherDiscount)}</b></div>}
+            {o.comboDiscount > 0 && <div><span>Combo 2 cây</span><b className="neg">-{money(o.comboDiscount)}</b></div>}
             {o.partnerDiscount > 0 && <div><span>Chiết khấu đối tác</span><b className="neg">-{money(o.partnerDiscount)}</b></div>}
           </div>
           <div className="vx-total"><b>Thành tiền</b><span className="amt" style={{ fontSize: '1.25rem' }}>{money(o.total)}</span></div>

@@ -71,7 +71,7 @@ export async function GET(req: Request) {
   od.columns = [
     { header: 'Mã đơn', width: 14 }, { header: 'Ngày đặt', width: 17 }, { header: 'Khách', width: 24 }, { header: 'SĐT', width: 14 },
     { header: 'Trạng thái', width: 14 }, { header: 'Thanh toán', width: 26 }, { header: 'Đã thu tiền', width: 12 }, { header: 'Nhận hàng', width: 14 },
-    { header: 'Tiền hàng (đ)', width: 14 }, { header: 'Phí giao (đ)', width: 12 }, { header: 'Giảm mã (đ)', width: 12 }, { header: 'Mã giảm giá', width: 14 },
+    { header: 'Tiền hàng (đ)', width: 14 }, { header: 'Phí giao (đ)', width: 12 }, { header: 'Giảm giá: mã, combo, đối tác (đ)', width: 16 }, { header: 'Mã giảm giá', width: 14 },
     { header: 'Tổng (đ)', width: 14 },
   ];
   head(od);

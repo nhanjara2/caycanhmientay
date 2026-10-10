@@ -4,11 +4,9 @@ import { Breadcrumb } from '@/components/Blocks';
 import { CategoryBlock } from '@/components/CategoryBlock';
 import { FlashSale } from '@/components/FlashSale';
 import { Icon, type IconName } from '@/components/Icon';
-import { money } from '@/lib/format';
 import { WHOLESALE_QUOTE_URL, WHOLESALE_URL } from '@/lib/partners';
 import { flashProducts, productsIn } from '@/server/catalog';
 import { menuCategories } from '@/server/categories';
-import { getShippingConfig } from '@/server/shipping';
 
 // Lối tắt theo nhóm hàng đối tác hay lấy (09/10/2026 shop chuyển sang chỉ bán sỉ).
 const COLLECTIONS: { label: string; icon: IconName; q?: string; hot?: boolean; href?: string }[] = [
@@ -36,10 +34,9 @@ export const metadata: Metadata = { title: 'Tất cả sản phẩm' };
 
 /** Trang danh mục tổng (trước 09/10/2026 là trang chủ): lối tắt nhóm hàng, Flash sale, mỗi danh mục một khối sản phẩm. */
 export default async function AllProductsPage() {
-  const [flash, blocks, cfg] = await Promise.all([
+  const [flash, blocks] = await Promise.all([
     flashProducts(),
     menuCategories().then((list) => Promise.all(list.map(async (c) => ({ category: c, products: await productsIn(c.slug) })))),
-    getShippingConfig(),
   ]);
   const total = blocks.reduce((n, b) => n + b.products.length, 0);
   return (
@@ -59,8 +56,8 @@ export default async function AllProductsPage() {
       </nav>
 
       <Link href={WHOLESALE_URL} className="vx-banner app-plain">
-        <b>Giá sỉ cho đối tác dịch vụ, công trình, buôn bán</b>
-        <span>{cfg.minOrder > 0 ? `Đơn từ ${money(cfg.minOrder)} · ` : ''}Đăng ký đối tác để nhận chiết khấu riêng</span>
+        <b>Mua 2 cây cùng loại có giá combo · giá sỉ công trình liên hệ báo giá</b>
+        <span>Đối tác dịch vụ, công trình, buôn bán đăng ký để nhận chiết khấu riêng</span>
       </Link>
 
       <nav className="vx-quick" aria-label="Lối tắt">

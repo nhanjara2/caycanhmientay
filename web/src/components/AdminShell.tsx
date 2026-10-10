@@ -70,7 +70,7 @@ export const ADMIN_NAV: { group: string; items: { href: string; label: string; i
   ] },
   { group: 'HỆ THỐNG', items: [
     { href: '/admin/cua-hang', label: 'Cửa hàng', icon: 'inbound' },
-    { href: '/admin/cai-dat-giao-hang', label: 'Đơn sỉ & giao hàng', icon: 'map' },
+    { href: '/admin/cai-dat-giao-hang', label: 'Cài đặt giao hàng', icon: 'map' },
     { href: '/admin/phan-quyen', label: 'Phân quyền', icon: 'gear' },
   ] },
 ];

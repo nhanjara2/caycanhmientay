@@ -8,12 +8,9 @@ import { CartList, OrderSummary, Steps } from '@/components/CartParts';
 import { Icon } from '@/components/Icon';
 import { useCart } from '@/lib/cart';
 import { WHOLESALE_QUOTE_URL } from '@/lib/partners';
-import { minOrderShort } from '@/lib/pricing';
-import { useShipping } from '@/lib/shipping-client';
 
 export default function CartPage() {
   const { lines, totals, ready, replace } = useCart();
-  const short = minOrderShort(totals.subtotal, useShipping().minOrder);
   const [notice, setNotice] = useState('');
   const refreshed = useRef(false);
 
@@ -25,7 +22,7 @@ export default function CartPage() {
       .then((r) => {
         const priceChanged = r.lines.some((n) => {
           const old = lines.find((l) => l.slug === n.slug && l.option === n.option);
-          return old && old.snap.price !== n.snap.price;
+          return old && (old.snap.price !== n.snap.price || old.snap.combo2 !== n.snap.combo2 || old.snap.oldPrice !== n.snap.oldPrice);
         });
         if (r.changed || priceChanged) {
           replace(r.lines);
@@ -43,7 +40,7 @@ export default function CartPage() {
         <EmptyState
           icon="cart"
           title="Giỏ hàng đang trống"
-          text="Chọn cây và vật tư với giá sỉ, hoặc gửi danh sách cần mua để shop báo giá."
+          text="Chọn cây và vật tư — mua 2 cây cùng loại có giá combo. Cần số lượng lớn cho công trình thì gửi danh sách để shop báo giá sỉ."
           action={<Link className="vx-btn vx-btn--primary" href="/danh-muc/cay-canh">Xem cây cảnh</Link>}
         />
       </div>
@@ -57,10 +54,8 @@ export default function CartPage() {
         {notice && <div className="vx-note" role="status"><Icon name="alert" /><div>{notice}</div></div>}
         <CartList editable />
       </div>
-      <OrderSummary totals={totals}>
-        {short > 0
-          ? <button type="button" className="vx-btn vx-btn--primary vx-btn--lg vx-btn--block" disabled>Chưa đủ đơn tối thiểu</button>
-          : <Link href="/thanh-toan" className="vx-btn vx-btn--primary vx-btn--lg vx-btn--block">Tiến hành đặt hàng</Link>}
+      <OrderSummary totals={totals} voucherHint>
+        <Link href="/thanh-toan" className="vx-btn vx-btn--primary vx-btn--lg vx-btn--block">Tiến hành đặt hàng</Link>
         <Link href={WHOLESALE_QUOTE_URL} className="vx-btn vx-btn--outline vx-btn--block">Gửi danh sách, nhận báo giá sỉ</Link>
         <Link href="/danh-muc" className="vx-btn vx-btn--ghost vx-btn--block">Tiếp tục mua sắm</Link>
       </OrderSummary>

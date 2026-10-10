@@ -3,7 +3,6 @@ import { PartnerPage } from '@/components/PartnerPage';
 import { getCurrentUser } from '@/server/auth';
 import { getPartnerProfile } from '@/server/partners';
 import { publishedProjects } from '@/server/projects';
-import { getShippingConfig } from '@/server/shipping';
 
 export const metadata: Metadata = {
   title: 'Đối tác sỉ — cây cảnh & vật tư giá sỉ',
@@ -12,7 +11,7 @@ export const metadata: Metadata = {
 
 export default async function Page() {
   const user = await getCurrentUser();
-  const [projects, cfg, p] = await Promise.all([publishedProjects(), getShippingConfig(), user ? getPartnerProfile(user.id) : null]);
+  const [projects, p] = await Promise.all([publishedProjects(), user ? getPartnerProfile(user.id) : null]);
   const profile = p ? { type: p.type, company: p.company ?? '', taxCode: p.taxCode ?? '', area: p.area ?? '' } : null;
-  return <PartnerPage projects={projects} minOrder={cfg.minOrder} profile={profile} />;
+  return <PartnerPage projects={projects} profile={profile} />;
 }

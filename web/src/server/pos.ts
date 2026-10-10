@@ -1,6 +1,7 @@
 import 'server-only';
 import { and, asc, eq, gt, or, sql } from 'drizzle-orm';
 import * as z from 'zod';
+import type { Unit } from '@/lib/catalog';
 import { computeTotals } from '@/lib/pricing';
 import { todayVN } from '@/lib/stock';
 import { isPhone, normalizePhone, staffName, type SessionUser } from './auth';
@@ -8,7 +9,7 @@ import { allProducts, getProducts } from './catalog';
 import { db, schema } from './db';
 import { applyStock, listStores, type Tx } from './inventory';
 import { notifyEvent } from './notify';
-import { newOrderCode } from './orders';
+import { itemPrice, newOrderCode, pricedLine } from './orders';
 import { getShippingConfig } from './shipping';
 import { checkVoucher } from './vouchers';
 
@@ -16,6 +17,8 @@ const { orders, orderItems, orderEvents, stockLots, users } = schema;
 
 export type PosItem = {
   slug: string; idx: number; sku: string; name: string; label: string | null; price: number; oldPrice: number | null;
+  /** Giá combo 2 cây — màn POS tính tiền bằng computeTotals như giỏ hàng (server tính lại khi thanh toán). */
+  combo2: number | null;
   category: string; icon: string; image: string | null; stock: number; pesticide: boolean; ship: 'plant' | 'supply';
 };
 
@@ -31,7 +34,7 @@ export async function posCatalog(storeId: number): Promise<PosItem[]> {
   const stock = new Map(lots.map((l) => [`${l.slug}|${l.idx}`, l.n]));
   // quy cách chưa có giá (Liên hệ báo giá) không bán ở quầy
   return products.flatMap((p) => p.options.flatMap((o, idx): PosItem[] => o.price <= 0 ? [] : [{
-    slug: p.slug, idx, sku: `${p.sku}-${idx + 1}`, name: p.name, label: p.options.length > 1 ? o.label : null, price: o.price, oldPrice: o.oldPrice ?? null,
+    slug: p.slug, idx, sku: `${p.sku}-${idx + 1}`, name: p.name, label: p.options.length > 1 ? o.label : null, price: o.price, oldPrice: o.oldPrice ?? null, combo2: o.combo2 ?? null,
     category: p.category, icon: p.icon, image: p.images?.[0] ?? null, stock: stock.get(`${p.slug}|${idx}`) ?? 0,
     pesticide: !!p.pesticide, ship: p.ship,
   }]));
@@ -73,7 +76,7 @@ export async function createPosOrder(input: PosOrderInput, staff: SessionUser): 
   if (!store) return { ok: false, error: 'Cửa hàng không hợp lệ' };
   const phone = input.phone ? normalizePhone(input.phone) : '';
   const products = new Map((await getProducts([...new Set(input.items.map((i) => i.slug))])).map((p) => [p.slug, p]));
-  const lines: { p: NonNullable<ReturnType<typeof products.get>>; u: { label: string; price: number; oldPrice?: number }; it: PosOrderInput['items'][number] }[] = [];
+  const lines: { p: NonNullable<ReturnType<typeof products.get>>; u: Unit; it: PosOrderInput['items'][number] }[] = [];
   for (const it of input.items) {
     const p = products.get(it.slug);
     const u = p?.options[it.option];
@@ -84,30 +87,30 @@ export async function createPosOrder(input: PosOrderInput, staff: SessionUser): 
   if (lines.some((l) => l.p.pesticide) && !input.safetyAck) return { ok: false, error: 'Bán thuốc BVTV: xác nhận đã dặn khách đọc hướng dẫn an toàn' };
   if (input.voucherCode && !phone) return { ok: false, error: 'Nhập số điện thoại khách để dùng mã giảm giá' };
 
-  const totals = computeTotals(lines.map(({ p, u, it }) => ({ price: u.price, oldPrice: u.oldPrice, qty: it.qty, ship: p.ship, pesticide: p.pesticide })), 'pickup', 0, await getShippingConfig());
+  const totals = computeTotals(lines.map(pricedLine), 'pickup', 0, await getShippingConfig());
   const actor = staffName(staff);
   try {
     return await db.transaction(async (tx: Tx): Promise<PosResult> => {
       const owner = phone ? (await tx.select({ id: users.id, name: users.name }).from(users).where(eq(users.phone, phone)))[0] : undefined;
       let voucherCode: string | null = null, voucherDiscount = 0;
       if (input.voucherCode) {
-        const v = await checkVoucher(tx, input.voucherCode, { subtotal: totals.subtotal, userId: owner?.id ?? null, phone }, { lock: true });
+        const v = await checkVoucher(tx, input.voucherCode, { subtotal: totals.goods, userId: owner?.id ?? null, phone }, { lock: true });
         if (!v.ok) throw new PosError(v.error);
         voucherCode = v.code; voucherDiscount = v.discount;
       }
-      const total = Math.max(0, totals.subtotal - voucherDiscount);
+      const total = Math.max(0, totals.goods - voucherDiscount);
       const code = await newOrderCode(tx);
       if (!code) throw new PosError('Không tạo được mã đơn, vui lòng thử lại');
       const [order] = await tx.insert(orders).values({
         code, userId: owner?.id ?? null, status: 'delivered', customerName: input.name || owner?.name || 'Khách lẻ', phone,
         delivery: 'pickup', note: `Bán tại quầy · ${store.name}`, paymentMethod: PAY[input.payment], paid: true,
-        original: totals.original, subtotal: totals.subtotal, plantShip: 0, supplyShip: 0, voucherCode, voucherDiscount, total,
+        original: totals.original, subtotal: totals.subtotal, plantShip: 0, supplyShip: 0, voucherCode, voucherDiscount, comboDiscount: totals.comboDiscount, total,
         channel: 'pos', storeId: store.id,
       }).returning({ id: orders.id });
       for (const { p, u, it } of lines) {
         await tx.insert(orderItems).values({
           orderId: order.id, productSlug: p.slug, optionIdx: it.option, name: p.name, label: u.label, unit: p.unit,
-          icon: p.icon, ship: p.ship, price: u.price, oldPrice: u.oldPrice ?? null, qty: it.qty,
+          icon: p.icon, ship: p.ship, ...itemPrice(u), qty: it.qty,
         });
         if (await applyStock(tx, p.slug, it.option, -it.qty, 'order', actor, code, { storeId: store.id }) === null) {
           const [{ n }] = await tx.select({ n: sql<number>`coalesce(sum(${stockLots.qty}), 0)`.mapWith(Number) }).from(stockLots)

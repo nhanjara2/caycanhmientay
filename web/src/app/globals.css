@@ -709,7 +709,7 @@ textarea.vx-input.app-qf-items { min-height: 9rem; font-size: 0.9375rem; line-he
 .app-qf-ways p { margin: 0 0 8px; font-size: 0.875rem; line-height: 1.5; color: var(--ink-muted); }
 .app-qf-ways a { color: var(--primary); font-weight: 600; }
 @media (max-width: 47.9375em) { .qf-opts.app-qf-opts3 { grid-template-columns: minmax(0, 1fr); } }
-/* Giỏ / thanh toán: thanh "đơn sỉ tối thiểu" (vx-freeship tô cam) */
+/* Giỏ hàng: thanh gợi ý "mua thêm … để dùng mã …" (vx-freeship tô cam) */
 .vx-freeship.app-minorder { padding: 10px 12px; border: 1px solid #f59e0b; border-radius: var(--radius-md); background: #fff7e6; color: var(--ink); }
 .app-minorder .bar i { background: #d97706; }
 /* Trang sản phẩm: dòng "Giá sỉ · đơn tối thiểu" dưới giá */
@@ -717,6 +717,25 @@ textarea.vx-input.app-qf-items { min-height: 9rem; font-size: 0.9375rem; line-he
 .app-wsnote .vx-ico { flex: none; margin-top: 2px; color: var(--primary); }
 .app-wsnote b { color: var(--ink); }
 .app-wsnote a { color: var(--primary-hover); font-weight: 600; }
+/* Trang sản phẩm: bảng giá (giá lẻ / combo 2 cây / giá sỉ công trình liên hệ) — BuyBox */
+.app-tiers { display: grid; gap: 2px; margin: 4px 0 0; padding: 6px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); }
+.app-tiers__row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 6px 8px; border-radius: var(--radius-sm, 6px); font-size: 0.9375rem; line-height: 1.4; }
+.app-tiers__row > span { color: var(--ink-muted); }
+.app-tiers__row > b { flex: none; color: var(--ink); text-align: right; }
+.app-tiers__row > b a { color: var(--primary-hover); }
+.app-tiers__row > b small { display: block; font-size: 0.875rem; font-weight: 400; color: var(--ink-muted); }
+.app-tiers__row[data-on] { background: var(--primary-soft); }
+.app-tiers__row[data-on] > span { color: var(--primary-hover); font-weight: 600; }
+.app-tiers > small { padding: 4px 8px 2px; font-size: 0.875rem; line-height: 1.45; color: var(--ink-muted); }
+.app-tiers > small b { color: var(--ink); }
+.app-tiers > small a { color: var(--primary-hover); font-weight: 600; }
+/* Giỏ hàng: nhãn combo 2 cây / gợi ý mua thêm dưới tên sản phẩm */
+.app-tier { display: block; width: fit-content; max-width: 100%; margin-top: 4px; padding: 2px 8px; border-radius: 999px; background: var(--primary-soft); color: var(--primary-hover); font-size: 0.8125rem; font-weight: 600; line-height: 1.45; }
+.app-tier--hint { padding: 0; background: none; color: var(--ink-muted); font-weight: 400; }
+.app-site .app-tier { font-size: 0.875rem; }
+/* Admin form sản phẩm: 5 ô giá mỗi quy cách (vườn / gốc / lẻ / combo / gạch ngang) — đủ rộng cho số tiền 7 chữ số */
+.ad-table .app-pricein { min-width: 6rem; }
+.ad-table .app-optlabel { min-width: 8.5rem; }
 /* Đăng ký đối tác (/doi-tac#dang-ky, components/PartnerSignup) */
 .pt-signup { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4); max-width: 64rem; padding: 1.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-sizing: border-box; }
 .pt-signup > div:not(.pt-signup__acts):not(.qf-opts):not(.ad-frow):not(.app-qf-actions) { flex: 1 1 18rem; min-width: 0; display: flex; flex-direction: column; gap: 4px; }

@@ -7,6 +7,7 @@ import { createPosOrderAction, posCustomerAction, posVoucherAction } from '@/app
 import { Icon, Thumb, type IconName } from '@/components/Icon';
 import { normalize } from '@/lib/catalog';
 import { money } from '@/lib/format';
+import { computeTotals, type ShipRules } from '@/lib/pricing';
 import type { PosItem } from '@/server/pos';
 import { Select } from './Select';
 
@@ -19,8 +20,10 @@ const PAYS: { key: Pay; label: string; icon: IconName }[] = [
 const digits = (s: string) => s.replace(/\D/g, '');
 
 /** AdminPOS: bán tại quầy toàn màn hình — tìm / quét mã, chọn món, nhận ra khách theo SĐT, mã giảm giá, thanh toán (F9), in hóa đơn. */
-export function PosScreen({ stores, storeId, items, categories, cashier }: {
+export function PosScreen({ stores, storeId, items, categories, cashier, rules }: {
   stores: Store[]; storeId: number; items: PosItem[]; categories: { slug: string; name: string }[]; cashier: string;
+  /** Phí giao (POS luôn nhận tại quầy nên không tính) — truyền để tính combo 2 cây bằng cùng hàm với giỏ hàng. */
+  rules: ShipRules;
 }) {
   const router = useRouter();
   const [query, setQuery] = useState('');
@@ -44,8 +47,8 @@ export function PosScreen({ stores, storeId, items, categories, cashier }: {
   const byKey = useMemo(() => new Map(items.map((i) => [key(i), i])), [items]);
   const lines = Object.entries(cart).flatMap(([k, qty]) => { const it = byKey.get(k); return it ? [{ it, qty }] : []; });
   const count = lines.reduce((a, l) => a + l.qty, 0);
-  const subtotal = lines.reduce((a, l) => a + l.it.price * l.qty, 0);
-  const total = Math.max(0, subtotal - discount);
+  const totals = computeTotals(lines.map((l) => ({ ...l.it, oldPrice: l.it.oldPrice ?? undefined, qty: l.qty })), 'pickup', 0, rules);
+  const total = Math.max(0, totals.goods - discount);
   const hasPesticide = lines.some((l) => l.it.pesticide);
   const givenN = Number(digits(given) || 0);
   const change = pay === 'cash' && givenN > total ? givenN - total : 0;
@@ -191,18 +194,22 @@ export function PosScreen({ stores, storeId, items, categories, cashier }: {
           </div>
 
           <div className="pos-lines">
-            {lines.map(({ it, qty }) => (
-              <div className="pos-line" key={key(it)}>
-                <span>{it.name}{it.label ? ` · ${it.label}` : ''}<small>{money(it.price)}</small></span>
-                <span className="vx-stepper"><button type="button" aria-label="Giảm" onClick={() => add(it, -1)}>−</button><span>{qty}</span><button type="button" aria-label="Tăng" disabled={qty >= it.stock} onClick={() => add(it, 1)}>+</button></span>
-                <b>{money(it.price * qty)}</b>
-              </div>
-            ))}
+            {lines.map(({ it, qty }, i) => {
+              const lp = totals.lines[i];
+              return (
+                <div className="pos-line" key={key(it)}>
+                  <span>{it.name}{it.label ? ` · ${it.label}` : ''}<small>{money(it.price)}{lp.combos ? ` · combo 2 ×${lp.combos}` : ''}</small></span>
+                  <span className="vx-stepper"><button type="button" aria-label="Giảm" onClick={() => add(it, -1)}>−</button><span>{qty}</span><button type="button" aria-label="Tăng" disabled={qty >= it.stock} onClick={() => add(it, 1)}>+</button></span>
+                  <b>{money(lp.total)}</b>
+                </div>
+              );
+            })}
             {!lines.length && <p style={{ padding: 16, color: 'var(--ink-muted)', margin: 0 }}>Chạm sản phẩm bên trái hoặc quét mã để thêm vào đơn.</p>}
           </div>
 
           <div className="pos-sum">
-            <div className="r"><span>Tạm tính ({count} món)</span><b>{money(subtotal)}</b></div>
+            <div className="r"><span>Tạm tính ({count} món)</span><b>{money(totals.subtotal)}</b></div>
+            {totals.comboDiscount > 0 && <div className="r"><span>Combo 2 cây</span><b style={{ color: 'var(--sale)' }}>-{money(totals.comboDiscount)}</b></div>}
             <div className="app-pos-voucher">
               <input className="vx-input" placeholder="Mã giảm giá (cần SĐT khách)" value={voucher} maxLength={30} onChange={(e) => { setVoucher(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '')); setDiscount(0); setVoucherMsg(''); }} />
               <button type="button" className="vx-btn vx-btn--outline vx-btn--sm" disabled={!voucher || !lines.length || pending} onClick={applyVoucher}>Áp dụng</button>

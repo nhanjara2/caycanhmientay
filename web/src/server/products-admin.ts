@@ -87,14 +87,23 @@ export const ProductInputSchema = z.object({
   options: z.array(z.object({
     label: z.string().trim().min(1, 'Nhập tên quy cách').max(40),
     // 0 = chưa có giá → web hiện "Liên hệ báo giá", khách không đặt online được
-    price: money.refine((v) => v === 0 || v >= 1000, 'Giá bán tối thiểu 1.000đ (hoặc 0 = Liên hệ báo giá)'),
+    price: money.refine((v) => v === 0 || v >= 1000, 'Giá lẻ tối thiểu 1.000đ (hoặc 0 = Liên hệ báo giá)'),
     oldPrice: money.nullable(),
+    // Giá tại vườn, giá gốc (chỉ admin thấy), combo 2 cây — form tự tính từ giá tại vườn theo lib/pricing.ts, sửa tay được
+    garden: money.nullable().default(null),
+    cost: money.nullable().default(null),
+    combo2: money.nullable().default(null),
     stock: z.number().int().min(0).max(100_000).optional(), // chỉ dùng khi tạo quy cách mới
   })).min(1, 'Cần ít nhất 1 quy cách').max(10),
 }).superRefine((v, ctx) => {
   v.options.forEach((o, i) => {
-    if (o.oldPrice !== null && o.price === 0) ctx.addIssue({ code: 'custom', path: ['options', i, 'oldPrice'], message: `Quy cách “${o.label}”: chưa có giá (Liên hệ báo giá) thì bỏ trống giá gốc` });
-    else if (o.oldPrice !== null && o.oldPrice <= o.price) ctx.addIssue({ code: 'custom', path: ['options', i, 'oldPrice'], message: `Quy cách “${o.label}”: giá gốc phải lớn hơn giá bán` });
+    const at = (k: string, message: string) => ctx.addIssue({ code: 'custom', path: ['options', i, k], message: `Quy cách “${o.label}”: ${message}` });
+    if (o.price === 0) {
+      if (o.oldPrice !== null || o.combo2 !== null) at('price', 'chưa có giá lẻ (Liên hệ báo giá) thì bỏ trống giá combo và giá gạch ngang');
+      return;
+    }
+    if (o.oldPrice !== null && o.oldPrice <= o.price) at('oldPrice', 'giá gạch ngang phải lớn hơn giá lẻ');
+    if (o.combo2 !== null && o.combo2 > 2 * o.price) at('combo2', 'giá combo 2 cây không được cao hơn 2 lần giá lẻ');
   });
   if (v.pesticide) {
     const have = new Set(v.specs.map(([k]) => k));
@@ -214,10 +223,10 @@ export async function saveProduct(input: ProductInput, actor: string): Promise<S
       }).where(eq(products.slug, input.slug!));
       for (const [idx, o] of input.options.entries()) {
         if (idx < existing.options.length) {
-          await tx.update(productOptions).set({ label: o.label, price: o.price, oldPrice: o.oldPrice })
+          await tx.update(productOptions).set({ label: o.label, price: o.price, oldPrice: o.oldPrice, garden: o.garden, cost: o.cost, combo2: o.combo2 })
             .where(and(eq(productOptions.productSlug, input.slug!), eq(productOptions.idx, idx)));
         } else {
-          await tx.insert(productOptions).values({ productSlug: input.slug!, idx, label: o.label, price: o.price, oldPrice: o.oldPrice, stock: 0 });
+          await tx.insert(productOptions).values({ productSlug: input.slug!, idx, label: o.label, price: o.price, oldPrice: o.oldPrice, garden: o.garden, cost: o.cost, combo2: o.combo2, stock: 0 });
           if (o.stock) await applyStock(tx, input.slug!, idx, o.stock, 'import', actor, 'Tồn đầu kỳ');
         }
       }
@@ -236,7 +245,7 @@ export async function saveProduct(input: ProductInput, actor: string): Promise<S
   await db.transaction(async (tx) => {
     await tx.insert(products).values({ slug, sku, ...values, flashTotal: input.flash ? 50 : null, flashSold: input.flash ? 0 : null });
     for (const [idx, o] of input.options.entries()) {
-      await tx.insert(productOptions).values({ productSlug: slug, idx, label: o.label, price: o.price, oldPrice: o.oldPrice, stock: 0 });
+      await tx.insert(productOptions).values({ productSlug: slug, idx, label: o.label, price: o.price, oldPrice: o.oldPrice, garden: o.garden, cost: o.cost, combo2: o.combo2, stock: 0 });
       if (o.stock) await applyStock(tx, slug, idx, o.stock, 'import', actor, 'Tồn đầu kỳ');
     }
   });

@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { formatPhone, LEGAL, SALES_PHONE, SHOP_ADDRESS, SHOP_EMAIL, ZALO_URL } from '@/lib/contact';
-import { money } from '@/lib/format';
 import { PARTNER_IMAGE, PARTNER_INFO, PARTNER_TYPES, WHOLESALE_QUOTE_URL, type PartnerType } from '@/lib/partners';
 import { projectImageUrl, projectPath, regionsOf, type Project } from '@/lib/projects';
 import { WARRANTY_DAYS } from '@/lib/warranty-labels';
@@ -54,7 +53,7 @@ const MAIL_BODY = [
 ].join('\n');
 const MAILTO = `mailto:${SHOP_EMAIL}?subject=${encodeURIComponent(MAIL_SUBJECT)}&body=${encodeURIComponent(MAIL_BODY)}`;
 
-export function PartnerPage({ projects, minOrder, profile }: { projects: Project[]; minOrder: number; profile: SignupProfile | null }) {
+export function PartnerPage({ projects, profile }: { projects: Project[]; profile: SignupProfile | null }) {
   const featured = projects.find((p) => p.featured && p.images.length) ?? projects.find((p) => p.images.length);
   const withPhotos = projects.filter((p) => p.images.length);
   const listOnly = projects.filter((p) => !p.images.length);
@@ -65,7 +64,6 @@ export function PartnerPage({ projects, minOrder, profile }: { projects: Project
     : FACTS;
   const logos = [...new Map(projects.filter((p) => p.clientLogo).map((p) => [p.clientLogo!, p])).values()];
   const quotes = projects.filter((p) => p.quote).slice(0, 3);
-  const minText = minOrder > 0 ? `Đơn tối thiểu ${money(minOrder)} tiền hàng` : 'Không giới hạn số lượng tối thiểu';
 
   return (
     <div className="dn-page">
@@ -93,7 +91,7 @@ export function PartnerPage({ projects, minOrder, profile }: { projects: Project
         ) : (
           <div className="sv-art sv-art--img dn-hero__art">
             <img src={PARTNER_IMAGE.project} alt="Khuôn viên trồng hàng cau vua, thảm cỏ và bồn cây cảnh quan" width={960} height={720} fetchPriority="high" />
-            <span className="tag"><b>Giá sỉ niêm yết trên web</b>{minText}</span>
+            <span className="tag"><b>Giá sỉ công trình</b>Gửi danh sách cây, shop báo giá</span>
           </div>
         )}
       </section>
@@ -141,8 +139,8 @@ export function PartnerPage({ projects, minOrder, profile }: { projects: Project
             <span className="dn-way__ic"><Icon name="cart" /></span>
             <b>Đặt hàng trên web</b>
             <p>
-              Giá trên web là <b>giá sỉ</b>. {minText}. Đối tác đã được duyệt có thể được <b>chiết khấu thêm</b> theo thỏa thuận —
-              chiết khấu tự trừ trong giỏ hàng khi đăng nhập.
+              Giá trên web là giá lẻ; mua 2 cây cùng loại có giá combo, đơn từ 1 triệu có mã giảm giá. Đối tác đã được duyệt có thể được
+              <b> chiết khấu thêm</b> theo thỏa thuận — chiết khấu tự trừ trong giỏ hàng khi đăng nhập. Số lượng lớn cho công trình: gửi danh sách để nhận <b>giá sỉ</b>.
             </p>
             <Link href="/danh-muc/cay-canh" className="vx-btn vx-btn--primary">Xem sản phẩm</Link>
           </div>
@@ -283,8 +281,8 @@ export function PartnerPage({ projects, minOrder, profile }: { projects: Project
       <div id="hoi-dap" className="dn-faq">
         <ServiceFaq
           items={[
-            { q: 'Có mức mua tối thiểu không?', a: minOrder > 0 ? <>Đơn đặt trên web cần tối thiểu <b>{money(minOrder)}</b> tiền hàng (tính trước chiết khấu). Đơn lớn hoặc quy cách đặc biệt thì gửi yêu cầu báo giá.</> : 'Không có mức tối thiểu cố định. Đơn lớn hoặc quy cách đặc biệt thì gửi yêu cầu báo giá.' },
-            { q: 'Giá trên web là giá lẻ hay giá sỉ?', a: 'Giá trên web là giá sỉ áp dụng chung cho mọi đối tác. Đối tác đã đăng ký và được duyệt có thể được chiết khấu thêm; chiết khấu tự trừ trong giỏ hàng khi bạn đăng nhập.' },
+            { q: 'Có mức mua tối thiểu không?', a: 'Không — mua 1 cây cũng đặt được trên web. Đơn số lượng lớn cho công trình hoặc quy cách đặc biệt thì gửi yêu cầu báo giá sỉ.' },
+            { q: 'Giá trên web là giá lẻ hay giá sỉ?', a: 'Giá hiện trên web là giá lẻ; mua 2 cây cùng quy cách có giá combo, đơn từ 1 triệu dùng được mã giảm giá. Giá sỉ công trình báo riêng theo danh sách bạn gửi. Đối tác đã đăng ký và được duyệt có thể được chiết khấu thêm; chiết khấu tự trừ trong giỏ hàng khi bạn đăng nhập.' },
             { q: 'Shop có nhận thi công, chăm sóc hay cho thuê cây không?', a: 'Không. Shop chỉ cung cấp cây và vật tư cho các đơn vị làm dịch vụ cảnh quan, công trình và buôn bán.' },
             { q: 'Có được xem cây trước khi đặt số lượng lớn không?', a: <>Được. Bạn có thể hẹn đến <Link href="/he-thong-cua-hang">vườn ươm tại Làng hoa Sa Đéc</Link> để xem và chọn cây; ở xa thì shop gửi ảnh cây thật qua Zalo trước khi giao.</> },
             { q: 'Shop có nhận báo giá theo bảng khối lượng (BOQ) không?', a: <>Có. Gửi qua <Link href={WHOLESALE_QUOTE_URL}>form báo giá</Link> (ảnh bảng khối lượng), email <a href={MAILTO}>{SHOP_EMAIL}</a> hoặc Zalo; dòng nào chưa có cây đúng quy cách sẽ được ghi chú và đề xuất cây thay thế.</> },

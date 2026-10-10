@@ -5,14 +5,16 @@ import { applyVoucherAction, welcomeOfferAction } from '@/app/actions/vouchers';
 import { useAuth } from '@/lib/auth';
 import { money } from '@/lib/format';
 import { fmtDate } from '@/lib/order-labels';
-import { welcomeText, type WelcomeOffer } from '@/lib/voucher-labels';
+import { voucherTiers, voucherValueText, welcomeText, type PublicVoucher, type WelcomeOffer } from '@/lib/voucher-labels';
+import { usePublicVouchers } from '@/lib/vouchers-client';
 import { Icon } from './Icon';
 
 export type AppliedVoucher = { code: string; discount: number };
 
 /**
  * Ô nhập mã giảm giá ở OrderSummary trang thanh toán — xem trước số tiền giảm, chốt thật lúc đặt hàng.
- * Khách có quà tài khoản mới thì hiện sẵn thẻ quà với nút "Dùng" (không phải gõ mã).
+ * Khách có quà tài khoản mới thì hiện sẵn thẻ quà với nút "Dùng" (không phải gõ mã); mã theo giá trị đơn (CAMON…) thì
+ * hiện mã giảm nhiều nhất đang dùng được + mã kế tiếp ("Mua thêm …").
  */
 export function VoucherInput({ items, phone, subtotal, applied, onApply, onRemove }: {
   items: { slug: string; option: number; qty: number }[];
@@ -34,6 +36,8 @@ export function VoucherInput({ items, phone, subtotal, applied, onApply, onRemov
     if (user) welcomeOfferAction().then(setOffer).catch(() => {});
   }, [user]);
   const gift = user && offer?.status === 'available' ? offer : null;
+  const tiers = voucherTiers(usePublicVouchers(), subtotal);
+  const suggest = [tiers.best, tiers.next].filter((v): v is PublicVoucher => v !== null);
 
   const apply = (raw: string) => {
     if (!raw.trim() || pending) return;
@@ -71,6 +75,22 @@ export function VoucherInput({ items, phone, subtotal, applied, onApply, onRemov
           </button>
         </div>
       )}
+      {suggest.map((v) => {
+        const need = v.minOrder - subtotal;
+        return (
+          <div key={v.code} className="vx-voucher app-vgift">
+            <span className="vx-voucher__ic"><Icon name="tag" /></span>
+            <span className="vx-voucher__body">
+              <b>{v.code}</b>
+              <span className="cond">{voucherValueText(v, money)}{v.minOrder > 0 && ` · đơn từ ${money(v.minOrder)}`}</span>
+              {need > 0 && <span className="exp">Mua thêm {money(need)} để dùng mã này</span>}
+            </span>
+            <button type="button" className="vx-btn vx-btn--sm vx-btn--primary" disabled={need > 0 || pending} onClick={() => apply(v.code)}>
+              Dùng
+            </button>
+          </div>
+        );
+      })}
       <div style={{ display: 'flex', gap: 8 }}>
         <input
           className="vx-input"

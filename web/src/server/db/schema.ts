@@ -145,13 +145,23 @@ export const productImages = pgTable('product_images', {
   createdAt: createdAt(),
 }, (t) => [index('product_images_slug_idx').on(t.productSlug, t.idx)]);
 
-/** Quy cách bán (Chậu sứ / Chỉ cây, Chai 500ml / Thùng…) — giá tính theo từng quy cách. */
+/**
+ * Quy cách bán (Chậu sứ / Chỉ cây, Chai 500ml / Thùng…) — giá tính theo từng quy cách.
+ * Các mức giá (lib/pricing.ts): giá tại vườn `garden` → giá gốc `cost` (hai giá này chỉ admin thấy) → giá lẻ `price` (giá bán)
+ * → combo 2 cây `combo2`; `oldPrice` = giá gạch ngang hiện cạnh giá lẻ. Giá sỉ công trình: liên hệ báo giá (không lưu).
+ */
 export const productOptions = pgTable('product_options', {
   productSlug: text('product_slug').notNull().references(() => products.slug, { onDelete: 'cascade' }),
   idx: integer('idx').notNull(),
   label: text('label').notNull(),
   price: integer('price').notNull(),
   oldPrice: integer('old_price'),
+  /** Giá tại vườn (giá mua) — chỉ admin thấy, không gửi xuống trình duyệt của khách. */
+  garden: integer('garden'),
+  /** Giá gốc = giá tại vườn + 10% — chỉ admin thấy. */
+  cost: integer('cost'),
+  /** Giá cho 2 cây cùng quy cách (mỗi cặp trong giỏ). */
+  combo2: integer('combo2'),
   stock: integer('stock').notNull().default(100),
 }, (t) => [primaryKey({ columns: [t.productSlug, t.idx] })]);
 
@@ -362,6 +372,8 @@ export const orders = pgTable('orders', {
   voucherDiscount: integer('voucher_discount').notNull().default(0),
   /** Chiết khấu đối tác sỉ chụp lại lúc đặt (tiền, không phải %). */
   partnerDiscount: integer('partner_discount').notNull().default(0),
+  /** Tiền giảm do mua combo 2 cây (giá lẻ × 2 − giá combo, mỗi cặp cùng quy cách) — chụp lại lúc đặt. */
+  comboDiscount: integer('combo_discount').notNull().default(0),
   total: integer('total').notNull(),
   createdAt: createdAt(),
   updatedAt: ts('updated_at').notNull().defaultNow(),

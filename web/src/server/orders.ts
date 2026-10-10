@@ -3,8 +3,7 @@ import { and, count, desc, eq, getTableColumns, ilike, inArray, ne, or, sql } fr
 import { randomInt } from 'node:crypto';
 import * as z from 'zod';
 import type { Product, Unit } from '@/lib/catalog';
-import { computeTotals, minOrderShort } from '@/lib/pricing';
-import { money } from '@/lib/format';
+import { computeTotals } from '@/lib/pricing';
 import { accountPhone, normalizePhone, isPhone, partnerPct, type SessionUser } from './auth';
 import { getProducts, mainImageOf } from './catalog';
 import { buildSlotOptions, dayLabel, slotTime, vnDate, type ShippingConfig } from '@/lib/shipping';
@@ -83,13 +82,8 @@ export async function createOrder(input: PlaceOrderInput, user: SessionUser | nu
     if (!opt || opt.stock < it.qty) return { ok: false, error: `“${p.name}” chỉ còn ${opt?.stock ?? 0} sản phẩm` };
   }
 
-  const totals = computeTotals(
-    lines.map(({ p, u, it }) => ({ price: u.price, oldPrice: u.oldPrice, qty: it.qty, ship: p.ship, pesticide: p.pesticide })),
-    input.delivery, 0, cfg, partnerPct(user),
-  );
-  // Bán sỉ: tiền hàng (trước chiết khấu) phải đạt mức tối thiểu ở Cài đặt giao hàng.
-  const short = minOrderShort(totals.subtotal, cfg.minOrder);
-  if (short) return { ok: false, error: `Đơn sỉ tối thiểu ${money(cfg.minOrder)} tiền hàng — vui lòng thêm ${money(short)} nữa.` };
+  // Combo 2 cây + chiết khấu đối tác — cùng công thức với giỏ hàng.
+  const totals = computeTotals(lines.map(pricedLine), input.delivery, 0, cfg, partnerPct(user));
 
   try {
     return await db.transaction((tx) => createOrderTx(tx, input, user, lines, totals, cfg));
@@ -100,6 +94,14 @@ export async function createOrder(input: PlaceOrderInput, user: SessionUser | nu
     throw e;
   }
 }
+
+/** Dòng hàng đưa vào computeTotals (giá lẻ, giá gạch ngang, combo 2 cây của quy cách). */
+export const pricedLine = ({ p, u, it }: { p: Product; u: Unit; it: { qty: number } }) => ({
+  price: u.price, oldPrice: u.oldPrice, combo2: u.combo2, qty: it.qty, ship: p.ship, pesticide: p.pesticide,
+});
+
+/** Giá ghi vào dòng đơn: giá lẻ + giá gạch ngang. Combo 2 cây không đổi đơn giá — tiền giảm ghi ở orders.combo_discount. */
+export const itemPrice = (u: Unit) => ({ price: u.price, oldPrice: u.oldPrice && u.oldPrice > u.price ? u.oldPrice : null });
 
 /** Ném ra trong transaction khi tồn không đủ, để hủy toàn bộ đơn. */
 class OutOfStock extends Error {
@@ -161,7 +163,7 @@ async function createOrderTx(
   let voucherDiscount = 0;
   if (input.voucherCode) {
     const phone = normalizePhone(input.phone);
-    const check = await checkVoucher(tx, input.voucherCode, { subtotal: totals.subtotal, userId: user?.id ?? null, phone }, { lock: true });
+    const check = await checkVoucher(tx, input.voucherCode, { subtotal: totals.goods, userId: user?.id ?? null, phone }, { lock: true });
     if (!check.ok) throw new InvalidVoucher(check.error);
     voucherCode = check.code;
     voucherDiscount = check.discount;
@@ -173,13 +175,13 @@ async function createOrderTx(
     delivery: input.delivery, address: input.delivery === 'ship' ? input.address : null,
     slot: slot?.text ?? null, slotDate: slot?.date ?? null, slotKey: slot?.key ?? null, note: input.note || null, paymentMethod: input.payment,
     original: totals.original, subtotal: totals.subtotal, plantShip: totals.plantShip, supplyShip: totals.supplyShip,
-    voucherCode, voucherDiscount, partnerDiscount: totals.partnerDiscount, total,
+    voucherCode, voucherDiscount, partnerDiscount: totals.partnerDiscount, comboDiscount: totals.comboDiscount, total,
   }).returning({ id: orders.id });
 
   for (const { p, u, it } of lines) {
     await tx.insert(orderItems).values({
       orderId: order.id, productSlug: p.slug, optionIdx: it.option, name: p.name, label: u.label, unit: p.unit,
-      icon: p.icon, ship: p.ship, price: u.price, oldPrice: u.oldPrice ?? null, qty: it.qty,
+      icon: p.icon, ship: p.ship, ...itemPrice(u), qty: it.qty,
     });
     if (await applyStock(tx, p.slug, it.option, -it.qty, 'order', user ? 'Khách hàng' : 'Khách vãng lai', code) === null) {
       throw new OutOfStock(p.name);
@@ -196,8 +198,8 @@ export async function previewVoucher(code: string, items: PlaceOrderInput['items
   const lines = items
     .map((it) => { const p = products.get(it.slug); const u = p?.options[it.option]; return p && u ? { p, u, it } : null; })
     .filter((x): x is { p: Product; u: Unit; it: PlaceOrderInput['items'][number] } => x !== null);
-  const totals = computeTotals(lines.map(({ p, u, it }) => ({ price: u.price, oldPrice: u.oldPrice, qty: it.qty, ship: p.ship, pesticide: p.pesticide })), 'ship', 0, await getShippingConfig());
-  return checkVoucher(db, code, { subtotal: totals.subtotal, userId: user?.id ?? null, phone: phone ? normalizePhone(phone) : '' });
+  const totals = computeTotals(lines.map(pricedLine), 'ship', 0, await getShippingConfig());
+  return checkVoucher(db, code, { subtotal: totals.goods, userId: user?.id ?? null, phone: phone ? normalizePhone(phone) : '' });
 }
 
 // ---- Đọc đơn ---------------------------------------------------------------------------------

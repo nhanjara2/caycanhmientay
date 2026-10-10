@@ -30,7 +30,11 @@ export type FengShui = {
   placement: string;
 };
 
-export type Unit = { label: string; price: number; oldPrice?: number };
+/**
+ * Quy cách bán. `price` = giá lẻ (giá bán), `oldPrice` = giá gạch ngang, `combo2` = giá 2 cây cùng quy cách.
+ * Giá tại vườn / giá gốc không có ở đây — chỉ admin đọc (server/products-admin.ts).
+ */
+export type Unit = { label: string; price: number; oldPrice?: number; combo2?: number };
 
 /** Giá 0 = chưa có giá: hiện "Liên hệ báo giá", khách gọi / Zalo hỏi giá, không cho vào giỏ hay đặt online. */
 export const isQuote = (u: Pick<Unit, 'price'>) => u.price <= 0;

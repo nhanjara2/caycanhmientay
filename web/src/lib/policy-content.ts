@@ -187,9 +187,9 @@ function giaoHang({ shipping: s }: PolicyContext): Section[] {
         `**Nhận tại vườn:** chọn **Nhận tại vườn** ở bước thanh toán, không tính phí giao. Vườn ươm Cây Cảnh Miền Tây tại ${SHOP_ADDRESS} ([bản đồ, giờ mở cửa](/he-thong-cua-hang)). Shop giữ hàng 3 ngày và nhắn Zalo khi cây sẵn sàng.`,
       ] },
     ] },
-    ...(s.minOrder > 0 ? [{ h: 'Đơn sỉ tối thiểu', blocks: [
-      `Shop bán sỉ: mỗi đơn đặt trên website cần tối thiểu **${money(s.minOrder)} tiền hàng** (tính trước chiết khấu đối tác và mã giảm giá). Giỏ hàng chưa đủ sẽ báo số tiền còn thiếu. Cần số lượng lớn hoặc quy cách đặc biệt, [gửi yêu cầu báo giá sỉ](/bao-gia-si).`,
-    ] } as Section] : []),
+    { h: 'Giá lẻ, combo 2 cây, giá sỉ công trình', blocks: [
+      'Mua 1 cây cũng đặt được, tính **giá lẻ**. Mỗi 2 cây cùng quy cách tính **giá combo 2 cây** — giỏ hàng tự tính, không cần nhập mã. Đơn có giá trị lớn dùng được [mã giảm giá đang áp dụng](/khuyen-mai) (nhập ở bước thanh toán, mỗi đơn một mã). Cần số lượng lớn cho công trình hoặc quy cách đặc biệt, [gửi yêu cầu báo giá sỉ](/bao-gia-si).',
+    ] },
     { h: 'Phí giao hàng', blocks: [
       { table: { head: ['Nhóm hàng', 'Phí giao', 'Miễn phí khi tiền hàng từ'], rows: [
         ['Cây sống', money(s.plant.fee), money(s.plant.freeFrom)],
@@ -342,7 +342,7 @@ const THANH_TOAN: Section[] = [
   ] },
   { h: 'Giá và giảm giá', blocks: [
     { ul: [
-      'Giá trên website là **giá sỉ**, bằng đồng Việt Nam. Giá, phí giao hàng, chiết khấu đối tác và mã giảm giá được tính lại lúc bạn bấm Đặt hàng; số tiền cần thanh toán hiện rõ trước khi xác nhận.',
+      'Giá hiện trên website là **giá lẻ**, bằng đồng Việt Nam; mua 2 cây cùng quy cách tính **giá combo 2 cây**. Giá sỉ công trình báo riêng theo [yêu cầu báo giá](/bao-gia-si). Giá, phí giao hàng, chiết khấu đối tác và mã giảm giá được tính lại lúc bạn bấm Đặt hàng; số tiền cần thanh toán hiện rõ trước khi xác nhận.',
       'Đối tác đã đăng ký và được shop duyệt ở [trang Đối tác sỉ](/doi-tac) có thể được chiết khấu riêng theo % tiền hàng; chiết khấu tự trừ khi đăng nhập và đặt hàng.',
       'Mã giảm giá nhập ở bước thanh toán, xem được số tiền giảm ngay. Mỗi mã có điều kiện riêng (đơn tối thiểu, số lượt, thời hạn, lượt dùng cho mỗi khách).',
       'Sản phẩm Flash sale có số lượng và thời gian giới hạn.',

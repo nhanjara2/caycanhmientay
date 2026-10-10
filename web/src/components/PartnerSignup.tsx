@@ -43,8 +43,8 @@ export function PartnerSignup({ profile }: { profile: SignupProfile | null }) {
           {p.status === 'approved'
             ? p.discount > 0
               ? <>Chiết khấu riêng <b>{p.discount}%</b> trên tiền hàng, tự trừ trong giỏ hàng mỗi khi bạn đăng nhập và đặt hàng.</>
-              : 'Bạn đặt hàng với giá sỉ trên web; mức chiết khấu riêng (nếu có) sẽ được shop cập nhật vào tài khoản.'
-            : `Loại đối tác: ${PARTNER_INFO[p.type].label}. Trong lúc chờ, bạn vẫn đặt hàng với giá sỉ trên web hoặc gửi danh sách để nhận báo giá.`}
+              : 'Bạn đặt hàng trên web như bình thường; mức chiết khấu riêng (nếu có) sẽ được shop cập nhật vào tài khoản. Đơn số lượng lớn gửi danh sách để nhận giá sỉ.'
+            : `Loại đối tác: ${PARTNER_INFO[p.type].label}. Trong lúc chờ, bạn vẫn đặt hàng trên web hoặc gửi danh sách để nhận báo giá sỉ.`}
         </p>
         {f.company && <p className="pt-signup__co">{f.company}{f.taxCode && ` · MST ${f.taxCode}`}{f.area && ` · ${f.area}`}</p>}
       </div>

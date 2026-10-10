@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
-import { isExternal } from '@/lib/home-banners';
+import { HOME_BACKGROUNDS, isExternal } from '@/lib/home-banners';
 import { Icon } from '../Icon';
 
 /** Một ảnh banner trang chủ — ảnh chủ shop tải lên hoặc ảnh dựng sẵn từ dữ liệu thật (sản phẩm, đối tác). */
@@ -22,11 +22,8 @@ export type Slide = {
   tone?: 'green' | 'sale' | 'sun';
   /** Ảnh đặt trong khung không cắt (ảnh sản phẩm vuông) thay vì phủ kín. */
   contain?: string[];
-  /**
-   * Nền phủ kín phía sau khung đầu trang khi ảnh này đang hiện (băng ảnh rộng trên cùng).
-   * `blur`: không có ảnh nền riêng — chính ảnh banner làm mờ, phủ lên màu `color`.
-   */
-  bg?: { image?: string; imageMobile?: string; color?: string; blur?: boolean };
+  /** Nền phủ kín phía sau khung đầu trang khi ảnh này đang hiện (băng ảnh rộng trên cùng). */
+  bg?: { image?: string; imageMobile?: string; color?: string };
 };
 
 /** Ảnh + chữ (nếu có) của một banner; cả ô là link khi có `href`. */
@@ -150,19 +147,26 @@ export function HomeCarousel({ slides, label, className = '', onIndex }: {
 /**
  * Khung đầu trang chủ (kiểu Long Châu): nền phủ kín bề ngang, băng ảnh rộng trên cùng, rồi ảnh lớn + tối đa 2 ảnh nhỏ bên phải.
  * Nền đổi theo băng ảnh rộng: mỗi ảnh một lớp nền (nền riêng chủ shop tải; không có thì ảnh nền sự kiện chung;
- * chưa có nữa thì chính ảnh đó làm mờ) — qua ảnh mới thì lớp nền của nó hiện dần lên, cả khoảng trên trang đổi theo.
+ * chưa có nữa thì nền dựng sẵn `HOME_BACKGROUNDS` lần lượt theo thứ tự ảnh) — qua ảnh mới thì lớp nền của nó hiện dần
+ * lên trên lớp cũ (lớp cũ giữ nguyên tới khi lớp mới rõ hẳn, không lộ nền xanh giữa chừng), cả khoảng trên trang đổi theo.
  * Không có băng ảnh rộng thì nền đổi theo ảnh lớn.
  */
 export function HomeHero({ tops, slides, sides, backdrop }: {
   tops: Slide[]; slides: Slide[]; sides: Slide[]; backdrop: { image: string; imageMobile: string | null } | null;
 }) {
-  const [i, setI] = useState(0);
+  const [{ i, prev }, setAt] = useState({ i: 0, prev: -1 });
   // Chỉ tải ảnh nền của ảnh đang hiện, ảnh kế tiếp và ảnh đã xem (khỏi tải hết 8 ảnh nền ngay khi vào trang).
   const [seen, setSeen] = useState(() => new Set([0, 1]));
   const onIndex = useCallback((k: number) => {
-    setI(k);
+    setAt((a) => (a.i === k ? a : { i: k, prev: a.i }));
     setSeen((s) => (s.has(k) && s.has(k + 1) ? s : new Set([...s, k, k + 1])));
   }, []);
+  // Lớp mới đã rõ hẳn (hiện dần .9s) thì thả lớp cũ — để lần sau quay lại ảnh đó nền vẫn hiện dần, không bật phắt lên.
+  useEffect(() => {
+    if (prev < 0) return;
+    const t = setTimeout(() => setAt((a) => ({ ...a, prev: -1 })), 1000);
+    return () => clearTimeout(t);
+  }, [i, prev]);
   const lead = tops.length ? tops : slides;
   const style = { '--hm-sides': sides.length } as CSSProperties;
   return (
@@ -175,24 +179,25 @@ export function HomeHero({ tops, slides, sides, backdrop }: {
           </picture>
         )}
         {lead.map((s, k) => {
-          const own = s.bg && !s.bg.blur ? s.bg : null;
-          const blur = !own && !backdrop ? s.contain?.[0] ?? s.image : null;
-          if (!own && !blur) return null;
+          // Có Ảnh nền sự kiện chung (vẽ ở trên) thì ảnh không có nền riêng dùng nền chung đó, không cần lớp riêng.
+          const own: Slide['bg'] = s.bg ?? (backdrop ? undefined : HOME_BACKGROUNDS[k % HOME_BACKGROUNDS.length]);
+          if (!own) return null;
           return (
             <div
               key={s.key}
-              className={blur ? 'hm-hero__layer hm-hero__layer--blur' : 'hm-hero__layer'}
+              className="hm-hero__layer"
               data-on={k === i || undefined}
+              data-prev={k === prev || undefined}
               // Có màu nền: ảnh nền giữ nguyên tỉ lệ, đặt sát trên, phần dưới là màu (như Long Châu); không màu thì ảnh phủ kín.
-              data-fit={(own?.image && own.color) || undefined}
-              style={s.bg?.color ? { background: s.bg.color } : undefined}
+              data-fit={(own.image && own.color) || undefined}
+              style={own.color ? { background: own.color } : undefined}
             >
-              {seen.has(k) && (own ? own.image && (
+              {seen.has(k) && own.image && (
                 <picture>
                   {own.imageMobile && <source media="(max-width: 47.9375em)" srcSet={own.imageMobile} />}
                   <img src={own.image} alt="" />
                 </picture>
-              ) : <img src={blur!} alt="" className="hm-hero__blur" />)}
+              )}
             </div>
           );
         })}

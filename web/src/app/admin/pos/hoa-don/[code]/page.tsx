@@ -56,6 +56,7 @@ export default async function ReceiptPage({ params }: Props) {
       <table>
         <tbody>
           <tr><td>Tạm tính</td><td className="n">{money(o.subtotal)}</td></tr>
+          {o.comboDiscount > 0 && <tr><td>Combo 2 cây</td><td className="n">-{money(o.comboDiscount)}</td></tr>}
           {o.voucherDiscount > 0 && <tr><td>Mã giảm giá {o.voucherCode}</td><td className="n">-{money(o.voucherDiscount)}</td></tr>}
           <tr className="tot"><td>Thành tiền</td><td className="n">{money(o.total)}</td></tr>
           <tr><td>Thanh toán</td><td className="n">{payNote.replace('Bán tại quầy · ', '') || PAY_LABEL[o.paymentMethod]}</td></tr>

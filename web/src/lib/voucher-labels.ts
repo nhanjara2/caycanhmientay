@@ -21,6 +21,28 @@ export function voucherValueText(v: { discountType: DiscountType; discountValue:
   return `Giảm ${money(v.discountValue)}`;
 }
 
+// ---- Mã công khai theo giá trị đơn (CAMON5…CAMON20) ------------------------------------------
+
+/** Mã đang áp dụng mà khách thấy ở giỏ / thanh toán / trang sản phẩm (không gồm quà tài khoản mới). */
+export type PublicVoucher = { code: string; label: string; discountType: DiscountType; discountValue: number; maxDiscount: number | null; minOrder: number };
+
+/** Số tiền ước giảm của mã trên tiền hàng `amount` (0 = chưa đủ đơn tối thiểu). Server kiểm tra lại lượt dùng khi đặt. */
+export function voucherDiscount(v: PublicVoucher, amount: number) {
+  if (amount < v.minOrder) return 0;
+  const raw = v.discountType === 'percent' ? Math.round((amount * v.discountValue) / 100) : v.discountValue;
+  return Math.min(raw, v.maxDiscount ?? raw, amount);
+}
+
+/** Mã giảm nhiều nhất đang dùng được + mã kế tiếp (đơn tối thiểu cao hơn, giảm nhiều hơn) để gợi ý "mua thêm …". */
+export function voucherTiers(list: PublicVoucher[], amount: number) {
+  const best = list.filter((v) => voucherDiscount(v, amount) > 0).sort((a, b) => voucherDiscount(b, amount) - voucherDiscount(a, amount))[0] ?? null;
+  const gain = best ? voucherDiscount(best, amount) : 0;
+  const next = list
+    .filter((v) => v.minOrder > amount && voucherDiscount(v, v.minOrder) > gain)
+    .sort((a, b) => a.minOrder - b.minOrder)[0] ?? null;
+  return { best, next };
+}
+
 // ---- Quà tài khoản mới ------------------------------------------------------------------------
 // Một mã dùng chung (dòng trong bảng vouchers, admin sửa số tiền / đơn tối thiểu / bật-tắt ở /admin/khuyen-mai),
 // nhưng chỉ tài khoản đã đăng nhập, trong WELCOME_DAYS ngày kể từ lần đăng nhập đầu tiên (users.created_at) mới dùng được.

@@ -331,7 +331,7 @@ function Result({ kind, answers, zones, choice, setChoice, setTier, edit, restar
           </div>
           <ul className="pa-total__notes">
             {missing > 0 && <li>{missing} vị trí chưa có cây trên web — kỹ sư báo giá riêng.</li>}
-            <li>Giá sỉ, chưa gồm phí giao{k.retail ? '' : ', đất, chậu, vật tư'}. Giá có thể đổi theo mùa và cỡ cây thực tế.</li>
+            <li>Giá lẻ, chưa gồm phí giao{k.retail ? '' : ', đất, chậu, vật tư'}; mua 2 cây cùng loại có giá combo, số lượng lớn gửi phương án để nhận giá sỉ. Giá có thể đổi theo mùa và cỡ cây thực tế.</li>
             {capped && <li>Giỏ hàng nhận tối đa {CART_MAX} cây mỗi loại; số lượng lớn hơn nên gửi phương án để kỹ sư báo giá sỉ.</li>}
           </ul>
           <div className="pa-acts">
