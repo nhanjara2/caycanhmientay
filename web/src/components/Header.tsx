@@ -12,14 +12,14 @@ import { Icon } from './Icon';
 
 /** Từ khóa chạy ngang dưới ô tìm kiếm (máy tính). Chọn tay theo cây đang bán — web chưa ghi lại lượt tìm của khách. */
 const TRENDING = [
-  'Kim tiền', 'Lưỡi hổ', 'Lan ý', 'Trầu bà', 'Kim ngân', 'Thiết mộc lan', 'Hồng môn', 'Phát tài', 'Sen đá',
-  'Vạn niên thanh', 'Monstera', 'Ngũ gia bì', 'Môn quan âm', 'Đại phú gia', 'Tùng bồng lai', 'Hoa giấy',
+  'Vạn lộc', 'Lưỡi hổ', 'Phú quý', 'Ngân hậu', 'Môn quan âm', 'Môn melo', 'Dạ lan thanh', 'Đuôi công', 'Đế vương',
+  'Bạch mã hoàng tử', 'Vạn niên thanh', 'Ngọc ngân', 'Dương xỉ', 'Tùng thơm', 'Giữ tiền', 'Tắc cẩm thạch',
 ];
 
 /** Chữ gợi ý trong ô tìm kiếm: gõ dần từng chữ, dừng một lúc, xóa rồi sang câu kế. Câu đầu = chữ máy chủ in sẵn. */
 const HINTS = [
   'Tìm cây, thuốc, phân bón, chậu…',
-  'Tìm cây kim tiền để bàn…',
+  'Tìm cây vạn lộc để bàn…',
   'Tìm cây văn phòng dễ chăm…',
   'Tìm cây sân vườn, công trình…',
   'Tìm thuốc trị nấm, rệp sáp…',
