@@ -3,7 +3,7 @@ import { and, asc, count, desc, eq, gte, ilike, lt, or, sql } from 'drizzle-orm'
 import * as z from 'zod';
 import { SLUG_RE, toSlug } from '@/lib/catalog';
 import {
-  addMonths, EXPENSE_MAX, FALLBACK_EXPENSE_CATEGORY, isRealYmd, lastDueMonth, MAX_EXPENSE_NOTE, MAX_EXPENSE_SUPPLIER, MONTH_RE, RECURRING_BACKFILL_MONTHS,
+  addMonths, EXPENSE_MAX, FALLBACK_EXPENSE_CATEGORY, GOODS_EXPENSE_CATEGORY, isRealYmd, lastDueMonth, MAX_EXPENSE_NOTE, MAX_EXPENSE_SUPPLIER, MONTH_RE, RECURRING_BACKFILL_MONTHS,
 } from '@/lib/expense-labels';
 import { todayVN } from '@/lib/stock';
 import { db, schema } from './db';
@@ -12,8 +12,8 @@ import type { SavedImage } from './uploads';
 
 const { expenses: E, expenseCategories: C, recurringExpenses: R, expensePhotos: P, stores, suppliers, purchaseReceipts: PR, purchaseReceiptLines: PL } = schema;
 
-// Chi phí cửa hàng: mọi khoản chi KHÔNG phải hàng nhập kho. Hàng nhập kho đã có phiếu nhập (server/receipts.ts) — báo cáo tự cộng tiền hàng nhập,
-// nên không ghi lại ở sổ chi phí (tránh tính hai lần).
+// Sổ chi phí của cửa hàng: mọi khoản tiền đã chi. Tiền mua cây / hàng về bán ghi ở nhóm GOODS_EXPENSE_CATEGORY — báo cáo cộng nhóm này
+// vào "Tiền mua hàng" cùng với phiếu nhập có giá nhập (server/receipts.ts). Một lần mua chỉ ghi MỘT nơi (sổ này hoặc giá nhập trên phiếu), ghi cả hai là tính hai lần.
 
 const VN_OFFSET = 7 * 3_600_000;
 const ymdOf = (ms: number) => new Date(ms + VN_OFFSET).toISOString().slice(0, 10);
@@ -62,6 +62,7 @@ export async function saveExpenseCategory(v: ExpenseCategoryInput): Promise<CatR
 export async function deleteExpenseCategory(slug: string): Promise<{ ok: true } | { ok: false; error: string }> {
   if (!SLUG_RE.test(slug)) return { ok: false, error: 'Yêu cầu không hợp lệ' };
   if (slug === FALLBACK_EXPENSE_CATEGORY) return { ok: false, error: 'Nhóm “Khác” là nhóm hệ thống, không xóa được' };
+  if (slug === GOODS_EXPENSE_CATEGORY) return { ok: false, error: 'Nhóm mua hàng là nhóm hệ thống, không xóa được. Hãy chuyển sang “Ẩn”.' };
   const used = (await expenseCategoryUsage())[slug] ?? 0;
   if (used) return { ok: false, error: `Nhóm này đang có ${used} khoản chi / chi định kỳ nên không xóa được. Hãy chuyển sang “Ẩn”.` };
   const r = await db.delete(C).where(eq(C.slug, slug)).returning({ slug: C.slug });
@@ -176,15 +177,19 @@ export async function expensesForExport(f: ExpenseFilter) {
 // ---- Tổng hợp theo kỳ (trang Chi phí + Báo cáo lãi lỗ) ---------------------------------------
 
 export type Finance = {
-  /** Chi phí khác (sổ chi phí). */
+  /** Chi phí khác: sổ chi phí, KHÔNG gồm nhóm mua hàng. */
   expenses: number;
+  /** Số khoản của `expenses` (không đếm nhóm mua hàng). */
   expenseCount: number;
-  /** Tiền hàng nhập (phiếu nhập: số lượng × giá nhập, chỉ các dòng đã ghi giá). */
+  /** Tiền mua hàng = nhóm mua hàng trong sổ chi phí (`goods`) + phiếu nhập (số lượng × giá nhập, chỉ các dòng đã ghi giá). */
   purchases: number;
+  /** Phần của `purchases` ghi trong sổ chi phí (nhóm mua hàng). */
+  goods: number;
   /** Số dòng phiếu nhập chưa ghi giá nhập (không cộng vào purchases). */
   uncosted: number;
+  /** Mọi nhóm của sổ chi phí, kể cả nhóm mua hàng. */
   byCategory: { slug: string; name: string; total: number }[];
-  /** Chi theo cửa hàng; id null = chi chung. */
+  /** Chi theo cửa hàng; id null = chi chung. `purchases` gồm cả nhóm mua hàng của sổ chi phí. */
   byStore: { id: number | null; name: string; expenses: number; purchases: number }[];
 };
 
@@ -195,7 +200,11 @@ export async function periodFinance(fromMs: number, toMs: number): Promise<Finan
   const [byCategory, byStoreExp, byStorePur, [unc], allStores] = await Promise.all([
     db.select({ slug: C.slug, name: C.name, total: sql`sum(${E.amount}::bigint)`.mapWith(Number) }).from(E).innerJoin(C, eq(C.slug, E.categorySlug))
       .where(inRange).groupBy(C.slug, C.name, C.sort).orderBy(desc(sql`sum(${E.amount})`), asc(C.sort)),
-    db.select({ id: E.storeId, total: sql`sum(${E.amount}::bigint)`.mapWith(Number), n: count() }).from(E).where(inRange).groupBy(E.storeId),
+    db.select({
+      id: E.storeId, n: sql`count(*) filter (where ${E.categorySlug} <> ${GOODS_EXPENSE_CATEGORY})`.mapWith(Number),
+      total: sql`coalesce(sum(${E.amount}::bigint) filter (where ${E.categorySlug} <> ${GOODS_EXPENSE_CATEGORY}), 0)`.mapWith(Number),
+      goods: sql`coalesce(sum(${E.amount}::bigint) filter (where ${E.categorySlug} = ${GOODS_EXPENSE_CATEGORY}), 0)`.mapWith(Number),
+    }).from(E).where(inRange).groupBy(E.storeId),
     db.select({ id: PL.storeId, total: sql`coalesce(sum(${PL.qty}::bigint * ${PL.unitCost}), 0)`.mapWith(Number) }).from(PL).innerJoin(PR, eq(PR.id, PL.receiptId))
       .where(and(gte(PR.createdAt, new Date(fromMs)), lt(PR.createdAt, new Date(toMs)))).groupBy(PL.storeId),
     db.select({ n: sql`count(*) filter (where ${PL.unitCost} is null)`.mapWith(Number) }).from(PL).innerJoin(PR, eq(PR.id, PL.receiptId))
@@ -204,13 +213,16 @@ export async function periodFinance(fromMs: number, toMs: number): Promise<Finan
   ]);
   const exp = new Map(byStoreExp.map((r) => [r.id, r.total]));
   const pur = new Map(byStorePur.map((r) => [r.id as number | null, r.total]));
+  for (const r of byStoreExp) if (r.goods) pur.set(r.id, (pur.get(r.id) ?? 0) + r.goods);
+  const goods = byStoreExp.reduce((a, r) => a + r.goods, 0);
   const ids: (number | null)[] = [...new Set<number | null>([...exp.keys(), ...pur.keys()])];
   const byStore = ids.map((id) => ({ id, name: id === null ? 'Chi chung' : (allStores.find((s) => s.id === id)?.name ?? `Cửa hàng ${id}`), expenses: exp.get(id) ?? 0, purchases: pur.get(id) ?? 0 }))
     .sort((a, b) => b.expenses + b.purchases - (a.expenses + a.purchases));
   return {
-    expenses: byCategory.reduce((a, c) => a + c.total, 0),
+    expenses: byStoreExp.reduce((a, r) => a + r.total, 0),
     expenseCount: byStoreExp.reduce((a, r) => a + r.n, 0),
     purchases: [...pur.values()].reduce((a, n) => a + n, 0),
+    goods,
     uncosted: unc?.n ?? 0,
     byCategory, byStore,
   };

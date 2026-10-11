@@ -6,6 +6,8 @@ export const MAX_EXPENSE_NOTE = 200;
 export const MAX_EXPENSE_SUPPLIER = 80;
 /** Nhóm hệ thống: nơi các khoản chi chưa biết xếp đâu — không xóa được. */
 export const FALLBACK_EXPENSE_CATEGORY = 'khac';
+/** Nhóm hệ thống: tiền mua cây / hàng về bán ghi thẳng vào sổ — báo cáo cộng vào "Tiền mua hàng" cùng phiếu nhập, không xóa được. */
+export const GOODS_EXPENSE_CATEGORY = 'mua-hang';
 /** Chi định kỳ chỉ cho ghi lùi tối đa chừng này tháng. */
 export const RECURRING_BACKFILL_MONTHS = 36;
 

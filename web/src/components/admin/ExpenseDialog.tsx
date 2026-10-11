@@ -5,7 +5,7 @@ import { useEffect, useState, useTransition, type FormEvent } from 'react';
 import { deleteExpenseAction, removeExpensePhotoAction, saveExpenseAction, uploadExpensePhotoAction } from '@/app/actions/expenses';
 import { Icon } from '@/components/Icon';
 import { compressImage } from '@/lib/compress-image';
-import { EXPENSE_MAX, MAX_EXPENSE_NOTE, MAX_EXPENSE_SUPPLIER } from '@/lib/expense-labels';
+import { EXPENSE_MAX, GOODS_EXPENSE_CATEGORY, MAX_EXPENSE_NOTE, MAX_EXPENSE_SUPPLIER } from '@/lib/expense-labels';
 import { Select } from '@/components/Select';
 
 export type ExpenseCategoryOpt = { slug: string; name: string; active: boolean };
@@ -125,7 +125,7 @@ export function ExpenseDialog({ initial, categories, stores, today, label, prima
               </div>
               <div className="vx-fl">
                 <label htmlFor="ex-note">Nội dung (mua gì, trả cho ai…)</label>
-                <input id="ex-note" value={v.note} maxLength={MAX_EXPENSE_NOTE} onChange={(e) => set('note', e.target.value)} placeholder="Ví dụ: Tiền điện tháng 9, mua 20 bao đất trộn…" />
+                <input id="ex-note" value={v.note} maxLength={MAX_EXPENSE_NOTE} onChange={(e) => set('note', e.target.value)} placeholder={v.category === GOODS_EXPENSE_CATEGORY ? 'Ví dụ: 50 cây kim tiền cao 40cm, vườn anh Ba' : 'Ví dụ: Tiền điện tháng 9, mua 20 bao đất trộn…'} />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
                 <div className="vx-fl">
@@ -151,7 +151,7 @@ export function ExpenseDialog({ initial, categories, stores, today, label, prima
                 </span>
               )}
               {dropPhoto && <span className="vx-help">Ảnh sẽ được bỏ khi bấm Lưu.</span>}
-              <span className="vx-help">Hàng nhập kho đã có phiếu nhập thì không ghi ở đây — báo cáo tự cộng tiền hàng nhập.</span>
+              {v.category === GOODS_EXPENSE_CATEGORY && <span className="vx-help">Lần mua đã ghi giá nhập ở phiếu nhập kho thì không ghi lại ở đây.</span>}
               {error && <span className="vx-err" role="alert">{error}</span>}
             </div>
             <div className="vx-modal__foot" style={{ display: 'flex', gap: 8 }}>

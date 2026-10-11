@@ -23,7 +23,7 @@ type Props = { searchParams: Promise<{ ky?: string; nhom?: string; kho?: string;
 const pct = (a: number, b: number) => (b ? (a / b) * 100 : 0);
 const fmtPct = (n: number) => `${(Math.round(n * 10) / 10).toString().replace('.', ',')}%`;
 
-/** Sổ chi phí: mọi khoản chi ngoài hàng nhập kho (mặt bằng, điện nước, nhân công…), chi định kỳ, nhóm chi. Chỉ Quản lý. */
+/** Sổ chi phí: mọi khoản đã chi (mua cây / hàng, mặt bằng, điện nước, nhân công…), chi định kỳ, nhóm chi. Chỉ Quản lý. */
 export default async function AdminExpensesPage({ searchParams }: Props) {
   await requireAccess('expenses');
   await materializeRecurring();
@@ -44,6 +44,8 @@ export default async function AdminExpensesPage({ searchParams }: Props) {
 
   const total = fin.expenses + fin.purchases;
   const top = fin.byCategory[0];
+  const ledger = fin.expenses + fin.goods;
+  const receipts = fin.purchases - fin.goods;
   const filtered = !!(category || store || q);
   const href = (p: { ky?: string }) => {
     const u = new URLSearchParams();
@@ -81,7 +83,7 @@ export default async function AdminExpensesPage({ searchParams }: Props) {
         </span>
       </div>
       <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--ink-muted)' }}>
-        Sổ này ghi các khoản chi <b>ngoài hàng nhập kho</b>. Tiền hàng nhập lấy tự động từ <Link href="/admin/nhap-hang" style={{ color: 'var(--primary)' }}>phiếu nhập</Link> (số lượng × giá nhập) — đừng ghi lại ở đây để khỏi tính hai lần.
+        Ghi mọi khoản đã chi. Tiền mua cây, mua hàng về bán: chọn nhóm <b>Mua cây – hàng hóa</b>. Lần mua nào đã ghi giá nhập ở <Link href="/admin/nhap-hang" style={{ color: 'var(--primary)' }}>phiếu nhập</Link> thì không ghi lại ở đây (tính hai lần).
       </p>
 
       <div className="ad-kpis">
@@ -91,19 +93,19 @@ export default async function AdminExpensesPage({ searchParams }: Props) {
           <small>{fin.expenseCount} khoản{prev ? <> · {prevText(fin.expenses, prev.expenses)}</> : null}</small>
         </div>
         <div className="ad-kpi">
-          <span><Icon name="box" />Tiền hàng nhập</span>
+          <span><Icon name="box" />Tiền mua hàng</span>
           <b>{shortMoney(fin.purchases)}</b>
-          <small>{fin.uncosted ? `${fin.uncosted} dòng phiếu nhập chưa ghi giá nhập` : prev ? prevText(fin.purchases, prev.purchases) : 'Từ phiếu nhập'}</small>
+          <small>{receipts ? `Sổ chi ${shortMoney(fin.goods)} + phiếu nhập ${shortMoney(receipts)}` : fin.uncosted && !fin.goods ? `${fin.uncosted} dòng phiếu nhập chưa ghi giá nhập` : prev ? prevText(fin.purchases, prev.purchases) : 'Nhóm Mua cây – hàng hóa + phiếu nhập'}</small>
         </div>
         <div className="ad-kpi">
           <span><Icon name="cash" />Tổng chi</span>
           <b>{shortMoney(total)}</b>
-          <small>{prev ? prevText(total, prev.expenses + prev.purchases) : 'Chi phí khác + hàng nhập'}</small>
+          <small>{prev ? prevText(total, prev.expenses + prev.purchases) : 'Chi phí khác + tiền mua hàng'}</small>
         </div>
         <div className="ad-kpi">
           <span><Icon name="alert" />Nhóm chi lớn nhất</span>
           <b style={{ fontSize: top ? '1.125rem' : undefined }}>{top ? top.name : '—'}</b>
-          <small>{top ? `${shortMoney(top.total)} · ${fmtPct(pct(top.total, fin.expenses))} chi phí khác` : 'Chưa có khoản chi trong kỳ'}</small>
+          <small>{top ? `${shortMoney(top.total)} · ${fmtPct(pct(top.total, ledger))} sổ chi` : 'Chưa có khoản chi trong kỳ'}</small>
         </div>
       </div>
 
@@ -157,7 +159,7 @@ export default async function AdminExpensesPage({ searchParams }: Props) {
             {list.rows.length > 0 && (
               <tfoot>
                 <tr>
-                  <td colSpan={4}><b>{filtered ? 'Tổng các khoản đang lọc' : 'Tổng chi phí khác trong kỳ'}</b> ({list.count} khoản)</td>
+                  <td colSpan={4}><b>{filtered ? 'Tổng các khoản đang lọc' : 'Tổng sổ chi trong kỳ'}</b> ({list.count} khoản)</td>
                   <td className="num"><b>{money(list.total)}</b></td>
                   <td colSpan={2} />
                 </tr>

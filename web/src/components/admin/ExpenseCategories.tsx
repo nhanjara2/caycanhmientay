@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState, useTransition, type FormEvent } from 'react';
 import { deleteExpenseCategoryAction, saveExpenseCategoryAction } from '@/app/actions/expenses';
-import { FALLBACK_EXPENSE_CATEGORY } from '@/lib/expense-labels';
+import { FALLBACK_EXPENSE_CATEGORY, GOODS_EXPENSE_CATEGORY } from '@/lib/expense-labels';
 
 export type ExpenseCategoryRow = { slug: string; name: string; active: boolean; used: number };
 
@@ -55,8 +55,8 @@ export function ExpenseCategories({ rows }: { rows: ExpenseCategoryRow[] }) {
                   {c.slug !== FALLBACK_EXPENSE_CATEGORY && (
                     <>
                       <button type="button" className="vx-btn vx-btn--outline vx-btn--sm" disabled={pending} onClick={() => run(() => saveExpenseCategoryAction({ slug: c.slug, name: c.name, active: !c.active }))}>{c.active ? 'Ẩn' : 'Hiện'}</button>{' '}
-                      <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" style={{ color: 'var(--danger)' }} disabled={pending || c.used > 0} title={c.used ? 'Nhóm đã có khoản chi — hãy ẩn thay vì xóa' : undefined}
-                        onClick={() => confirm(`Xóa nhóm “${c.name}”?`) && run(() => deleteExpenseCategoryAction(c.slug))}>Xóa</button>
+                      {c.slug !== GOODS_EXPENSE_CATEGORY && <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" style={{ color: 'var(--danger)' }} disabled={pending || c.used > 0} title={c.used ? 'Nhóm đã có khoản chi — hãy ẩn thay vì xóa' : undefined}
+                        onClick={() => confirm(`Xóa nhóm “${c.name}”?`) && run(() => deleteExpenseCategoryAction(c.slug))}>Xóa</button>}
                     </>
                   )}
                 </td>

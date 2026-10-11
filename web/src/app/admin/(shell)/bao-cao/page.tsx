@@ -113,7 +113,7 @@ export default async function AdminReportsPage({ searchParams }: Props) {
               <small>{r.orders} đơn trong kỳ</small>
             </div>
             <div className="ad-kpi">
-              <span><Icon name="box" />Tiền hàng nhập</span>
+              <span><Icon name="box" />Tiền mua hàng</span>
               <b>{shortMoney(f.purchases)}</b>
               <small>{f.uncosted ? `${f.uncosted} dòng phiếu nhập chưa ghi giá nên chưa tính` : <>Kỳ trước: {shortMoney(f.prev.purchases)}</>}</small>
             </div>
@@ -129,7 +129,7 @@ export default async function AdminReportsPage({ searchParams }: Props) {
             </div>
           </div>
           <span style={{ fontSize: '0.75rem', color: 'var(--ink-muted)' }}>
-            Lãi ước tính = doanh thu − tiền hàng nhập − chi phí khác, cùng kỳ. Doanh thu là đơn chưa hủy (kể cả chưa giao / chưa thu tiền); tiền hàng nhập là số lượng × giá nhập trên phiếu nhập trong kỳ — không phải giá vốn đúng số hàng đã bán.
+            Lãi ước tính = doanh thu − tiền mua hàng − chi phí khác, cùng kỳ. Doanh thu là đơn chưa hủy (kể cả chưa giao / chưa thu tiền); tiền mua hàng là nhóm Mua cây – hàng hóa của sổ chi phí + số lượng × giá nhập trên phiếu nhập trong kỳ — không phải giá vốn đúng số hàng đã bán.
           </span>
         </div>
       </div>

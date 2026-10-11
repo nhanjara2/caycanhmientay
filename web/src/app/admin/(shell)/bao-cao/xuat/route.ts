@@ -31,8 +31,8 @@ export async function GET(req: Request) {
   ov.addRows([
     ['Kỳ báo cáo', REPORT_RANGES[range], `${ymd(r.from)} → ${ymd(r.to - 86_400_000)}`],
     ['Doanh thu (đ)', r.revenue, r.prevRevenue],
-    ['Tiền hàng nhập — phiếu nhập (đ)', r.finance.purchases, r.finance.prev.purchases],
-    ['Chi phí khác — sổ chi phí (đ)', r.finance.expenses, r.finance.prev.expenses],
+    ['Tiền mua hàng — sổ chi phí + phiếu nhập (đ)', r.finance.purchases, r.finance.prev.purchases],
+    ['Chi phí khác (đ)', r.finance.expenses, r.finance.prev.expenses],
     ['Lãi / lỗ ước tính (đ)', r.finance.profit, r.finance.prev.profit],
     ['Số đơn', r.orders, r.prevOrders],
     ['Số khách mua', r.buyers, r.prevBuyers],

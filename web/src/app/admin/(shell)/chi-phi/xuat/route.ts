@@ -49,7 +49,8 @@ export async function GET(req: Request) {
   g.addRows([
     ['Kỳ', `${EXPENSE_RANGES[range]} (${fmtYmd(b.from)} → ${fmtYmd(b.to)}, không gồm ngày cuối)`],
     ['Chi phí khác', fin.expenses],
-    ['Tiền hàng nhập (phiếu nhập)', fin.purchases],
+    ['Tiền mua hàng — sổ chi phí', fin.goods],
+    ['Tiền mua hàng — phiếu nhập', fin.purchases - fin.goods],
     ['Tổng chi', fin.expenses + fin.purchases],
     [],
   ]);
