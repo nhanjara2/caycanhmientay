@@ -226,7 +226,7 @@ export function CategoryNav({ categories }: { categories: Category[] }) {
 }
 
 function MiniCard({ p }: { p: MegaProduct }) {
-  const pct = discountPct({ label: '', price: p.price, oldPrice: p.oldPrice ?? undefined });
+  const pct = discountPct({ price: p.price, oldPrice: p.oldPrice ?? undefined });
   return (
     <Link href={`/san-pham/${p.slug}`} className="app-mm__card" title={p.name}>
       <span className="app-mm__img">

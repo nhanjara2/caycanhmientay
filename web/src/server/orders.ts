@@ -2,7 +2,7 @@ import 'server-only';
 import { and, count, desc, eq, getTableColumns, ilike, inArray, ne, or, sql } from 'drizzle-orm';
 import { randomInt } from 'node:crypto';
 import * as z from 'zod';
-import type { Product, Unit } from '@/lib/catalog';
+import { optionOf, type Product, type Unit } from '@/lib/catalog';
 import { computeTotals } from '@/lib/pricing';
 import { accountPhone, normalizePhone, isPhone, partnerPct, type SessionUser } from './auth';
 import { getProducts, mainImageOf } from './catalog';
@@ -55,7 +55,7 @@ export async function createOrder(input: PlaceOrderInput, user: SessionUser | nu
   const lines: { p: Product; u: Unit; it: PlaceOrderInput['items'][number] }[] = [];
   for (const it of input.items) {
     const p = products.get(it.slug);
-    const u = p?.options[it.option];
+    const u = p && optionOf(p, it.option);
     if (!p || !u) return { ok: false, error: 'Có sản phẩm trong giỏ không còn bán. Vui lòng xem lại giỏ hàng.' };
     if (u.price <= 0) return { ok: false, error: `“${p.name}” chưa có giá bán online — vui lòng liên hệ shop để báo giá rồi bỏ khỏi giỏ.` };
     lines.push({ p, u, it });
@@ -217,7 +217,7 @@ async function pickVouchers(
 export async function previewVouchers(codes: string[], items: PlaceOrderInput['items'], user: SessionUser | null, phone: string, delivery: 'ship' | 'pickup'): Promise<PickedVouchers> {
   const products = new Map((await getProducts([...new Set(items.map((i) => i.slug))])).map((p) => [p.slug, p]));
   const lines = items
-    .map((it) => { const p = products.get(it.slug); const u = p?.options[it.option]; return p && u ? { p, u, it } : null; })
+    .map((it) => { const p = products.get(it.slug); const u = p && optionOf(p, it.option); return p && u ? { p, u, it } : null; })
     .filter((x): x is { p: Product; u: Unit; it: PlaceOrderInput['items'][number] } => x !== null);
   const totals = computeTotals(lines.map(pricedLine), delivery, 0, await getShippingConfig());
   return pickVouchers(db, codes, totals, user, phone ? normalizePhone(phone) : '');

@@ -59,7 +59,7 @@ export const advisorKeys = {
 
 // ---- Cây đang bán, rút gọn cho bộ tư vấn ---------------------------------------------------------
 
-export type AdvisorOption = { label: string; price: number; /** Chiều cao cm [thấp, cao]; null = không đọc được. */ h: [number, number] | null; snap: CartSnap };
+export type AdvisorOption = { /** Số thứ tự quy cách trong database (đưa vào giỏ theo số này). */ idx: number; label: string; price: number; /** Chiều cao cm [thấp, cao]; null = không đọc được. */ h: [number, number] | null; snap: CartSnap };
 
 export type AdvisorPlant = {
   slug: string; name: string; image?: string; icon: string; category: string; sub: string; inStock: boolean;
@@ -157,7 +157,7 @@ const OUTDOOR_SUBS = ['cay-san-vuon', 'cay-cong-trinh', 'cay-ban-cong'];
 export function toAdvisorPlant(p: Product): AdvisorPlant {
   const a = p.attrs ?? {};
   const base = parseHeight(specOf(p, 'Chiều cao', 'Kích thước')) ?? parseHeight(p.spec) ?? (a.kichThuoc ? SIZE_H[a.kichThuoc] ?? null : null);
-  const options: AdvisorOption[] = p.options.map((o, i) => ({ label: o.label, price: o.price, h: parseHeight(o.label) ?? base, snap: snapOf(p, i) }));
+  const options: AdvisorOption[] = p.options.map((o) => ({ idx: o.idx, label: o.label, price: o.price, h: parseHeight(o.label) ?? base, snap: snapOf(p, o.idx) }));
   const hMax = options.reduce<number | null>((m, o) => (o.h ? Math.max(m ?? 0, o.h[1]) : m), null);
   const outdoor = OUTDOOR_SUBS.includes(p.sub) || Boolean(a.viTri?.includes('ngoai-troi'));
 

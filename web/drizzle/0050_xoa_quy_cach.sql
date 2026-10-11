@@ -1,0 +1,1 @@
+ALTER TABLE "product_options" ADD COLUMN "deleted" boolean DEFAULT false NOT NULL;

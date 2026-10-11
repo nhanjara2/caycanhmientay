@@ -217,10 +217,11 @@ function Result({ kind, answers, zones, choice, setChoice, setTier, edit, restar
     const map = new Map<string, CartLine>();
     for (const { sl, pk } of chosen) {
       if (!pk) continue;
-      const key = `${pk.plant.slug}|${pk.option}`;
+      const o = pk.plant.options[pk.option];
+      const key = `${pk.plant.slug}|${o.idx}`;
       const cur = map.get(key);
       const qty = Math.min(CART_MAX, (cur?.qty ?? 0) + sl.qty);
-      map.set(key, { slug: pk.plant.slug, option: pk.option, qty, snap: pk.plant.options[pk.option].snap });
+      map.set(key, { slug: pk.plant.slug, option: o.idx, qty, snap: o.snap });
     }
     return [...map.values()];
   };

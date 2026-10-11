@@ -1,6 +1,6 @@
 import 'server-only';
 import { randomUUID } from 'node:crypto';
-import { desc, eq, inArray, isNotNull, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNotNull, sql } from 'drizzle-orm';
 import { db, schema, type DB } from './db';
 import { applyStock, type Tx } from './inventory';
 
@@ -54,7 +54,7 @@ export async function receiveGoods(tx: Tx, lines: ReceiptLineIn[], meta: Receipt
   if (!lines.length) throw new Error('Phiếu nhập không có dòng nào');
   const slugs = [...new Set(lines.map((l) => l.slug))];
   const info = await tx.select({ slug: products.slug, sku: products.sku, name: products.name, unit: products.unit, idx: productOptions.idx, label: productOptions.label })
-    .from(productOptions).innerJoin(products, eq(products.slug, productOptions.productSlug)).where(inArray(products.slug, slugs));
+    .from(productOptions).innerJoin(products, eq(products.slug, productOptions.productSlug)).where(and(inArray(products.slug, slugs), eq(productOptions.deleted, false)));
   const infoOf = new Map(info.map((i) => [`${i.slug}#${i.idx}`, i]));
   for (const l of lines) if (!infoOf.has(`${l.slug}#${l.idx}`)) throw new Error(`${l.ref ?? 'Dòng'}: không tìm thấy quy cách`);
 

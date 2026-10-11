@@ -163,6 +163,8 @@ export const productOptions = pgTable('product_options', {
   /** Giá cho 2 cây cùng quy cách (mỗi cặp trong giỏ). */
   combo2: integer('combo2'),
   stock: integer('stock').notNull().default(100),
+  /** Quy cách đã xóa: dòng giữ lại để số thứ tự `idx` không bao giờ dùng lại (đơn, kho, phiếu nhập, giỏ hàng, mã SKU-n tham chiếu theo idx). */
+  deleted: boolean('deleted').notNull().default(false),
 }, (t) => [primaryKey({ columns: [t.productSlug, t.idx] })]);
 
 // ---- Bệnh cây --------------------------------------------------------------------------------

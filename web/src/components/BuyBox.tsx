@@ -70,7 +70,7 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
     return () => document.body.removeAttribute('data-buybar');
   }, [bar]);
   const buyNow = () => {
-    add(p, opt, qty);
+    add(p, u.idx, qty);
     router.push('/gio-hang');
   };
   const stepper = (cls: string) => (
@@ -192,7 +192,7 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
         </div>
       ) : (
         <div className="vx-buy__cta app-buycta" ref={ctaRef}>
-          <button type="button" className="vx-btn vx-btn--outline vx-btn--lg app-buycta__add" onClick={() => add(p, opt, qty)}>
+          <button type="button" className="vx-btn vx-btn--outline vx-btn--lg app-buycta__add" onClick={() => add(p, u.idx, qty)}>
             <Icon name="cart" />
             Thêm vào giỏ hàng
           </button>
@@ -230,7 +230,7 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
         ) : (
           <div className="app-buybar__acts">
             <a href={`tel:${SALES_PHONE}`} className="vx-btn vx-btn--outline vx-btn--lg app-buybar__call"><Icon name="phone" />Gọi</a>
-            <button type="button" className="vx-btn vx-btn--outline vx-btn--lg app-buybar__add" onClick={() => add(p, opt, qty)}>
+            <button type="button" className="vx-btn vx-btn--outline vx-btn--lg app-buybar__add" onClick={() => add(p, u.idx, qty)}>
               <Icon name="cart" />Thêm vào giỏ
             </button>
             <button type="button" className="vx-btn vx-btn--primary vx-btn--lg app-buybar__buy" onClick={buyNow}>

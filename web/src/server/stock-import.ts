@@ -249,7 +249,7 @@ export async function parseStockImport(buf: Buffer): Promise<ImportParse> {
   const [stores, opts] = await Promise.all([
     listStores(),
     db.select({ slug: products.slug, sku: products.sku, name: products.name, category: products.category, pesticide: products.pesticide, idx: productOptions.idx, label: productOptions.label })
-      .from(productOptions).innerJoin(products, eq(products.slug, productOptions.productSlug)),
+      .from(productOptions).innerJoin(products, eq(products.slug, productOptions.productSlug)).where(eq(productOptions.deleted, false)),
   ]);
   return parseStockSheet(buf, stores, opts);
 }

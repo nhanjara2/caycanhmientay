@@ -23,7 +23,7 @@ export function ArticleProducts({ title, products }: { title: string; products: 
             {o && <b className="pr">{isQuote(o) ? QUOTE_TEXT : money(o.price)}{p.options.length > 1 && <small> · {o.label}</small>}</b>}
             {o && (isQuote(o)
               ? <Link href={`/san-pham/${p.slug}`} className="vx-btn vx-btn--outline">Xem & hỏi giá</Link>
-              : <button type="button" className="vx-btn vx-btn--primary" onClick={() => add(p, 0)}>Thêm vào giỏ</button>)}
+              : <button type="button" className="vx-btn vx-btn--primary" onClick={() => add(p, o.idx)}>Thêm vào giỏ</button>)}
           </div>
         );
       })}

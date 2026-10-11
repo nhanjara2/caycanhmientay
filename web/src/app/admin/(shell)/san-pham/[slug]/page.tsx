@@ -40,7 +40,7 @@ export default async function AdminProductPage({ params }: Props) {
         viTri: p.attrs.viTri ?? [], kichThuoc: p.attrs.kichThuoc ?? null, mau: p.attrs.mau ?? [],
         anhSang: p.attrs.anhSang ?? [], vaiTro: p.attrs.vaiTro ?? [], cham: p.attrs.cham ?? null, thuCung: p.attrs.thuCung ?? null, chiuGio: p.attrs.chiuGio ?? false,
       } : NO_ATTRS,
-      options: p.options.map((o) => ({ label: o.label, price: o.price, oldPrice: o.oldPrice, garden: o.garden, cost: o.cost, combo2: o.combo2, stock: o.stock })),
+      options: p.options.map((o) => ({ idx: o.idx, label: o.label, price: o.price, oldPrice: o.oldPrice, garden: o.garden, cost: o.cost, combo2: o.combo2, stock: o.stock })),
     };
   }
   return <ProductForm key={slug} initial={initial} categories={await getCategories()} canEdit={me.role === 'admin'} />;

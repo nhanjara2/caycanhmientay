@@ -1,5 +1,5 @@
 import 'server-only';
-import { and, asc, count, desc, eq, ilike, like, or, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gt, ilike, inArray, like, notInArray, or, sql } from 'drizzle-orm';
 import * as z from 'zod';
 import { ELEMENTS, findCategory, MAX_PRODUCT_IMAGES, normalize, parseYoutubeId, PRODUCT_ICONS, productImageUrl, specTemplate, type FengShui } from '@/lib/catalog';
 import { advisorKeys } from '@/lib/plant-advisor';
@@ -10,10 +10,10 @@ import { tracksLots } from '@/lib/stock';
 import { mainImageOf } from './catalog';
 import { getCategories } from './categories';
 import { db, schema } from './db';
-import { applyStock } from './inventory';
+import { applyStock, deleteLot } from './inventory';
 import type { SavedImage } from './uploads';
 
-const { products, productOptions, productImages, orderItems, stockLots, stockMoves } = schema;
+const { products, productOptions, productImages, orders, orderItems, stockLots, stockMoves } = schema;
 
 /** Thông số bắt buộc với thuốc BVTV (BRANDBOOK + AdminProductForm). */
 export const PESTICIDE_REQUIRED = ['Số đăng ký', 'Hoạt chất', 'Liều pha', 'Thời gian cách ly'] as const;
@@ -85,6 +85,8 @@ export const ProductInputSchema = z.object({
     };
   }),
   options: z.array(z.object({
+    /** Số thứ tự của quy cách đang có (khi sửa); không có = quy cách mới. Quy cách đang có mà không gửi lên = xóa. */
+    idx: z.number().int().min(0).max(100_000).optional(),
     label: z.string().trim().min(1, 'Nhập tên quy cách').max(40),
     // 0 = chưa có giá → web hiện "Liên hệ báo giá", khách không đặt online được
     price: money.refine((v) => v === 0 || v >= 1000, 'Giá lẻ tối thiểu 1.000đ (hoặc 0 = Liên hệ báo giá)'),
@@ -122,7 +124,7 @@ export async function listProductsAdmin({ q, category }: { q?: string; category?
     unit: products.unit, active: products.active, pesticide: products.pesticide, ship: products.ship, sold: products.sold,
     minPrice: sql`min(nullif(${productOptions.price}, 0))`.mapWith(Number), stock: sql`coalesce(sum(${productOptions.stock}), 0)`.mapWith(Number), variants: count(productOptions.idx),
   })
-    .from(products).leftJoin(productOptions, eq(productOptions.productSlug, products.slug))
+    .from(products).leftJoin(productOptions, and(eq(productOptions.productSlug, products.slug), eq(productOptions.deleted, false)))
     .where(and(category ? eq(products.category, category) : undefined, term ? or(ilike(products.name, term), ilike(products.sku, term)) : undefined))
     .groupBy(products.slug).orderBy(desc(products.active), asc(products.name));
   return rows;
@@ -131,7 +133,8 @@ export async function listProductsAdmin({ q, category }: { q?: string; category?
 export async function getProductAdmin(slug: string) {
   const [p] = await db.select().from(products).where(eq(products.slug, slug));
   if (!p) return undefined;
-  const options = await db.select().from(productOptions).where(eq(productOptions.productSlug, slug)).orderBy(asc(productOptions.idx));
+  // quy cách đã xóa không hiện lại trong form
+  const options = await db.select().from(productOptions).where(and(eq(productOptions.productSlug, slug), eq(productOptions.deleted, false))).orderBy(asc(productOptions.idx));
   return { ...p, options, images: await listProductImages(slug) };
 }
 
@@ -175,7 +178,8 @@ export async function moveProductImage(slug: string, id: number, to: 'first' | '
   });
 }
 
-export type SaveResult = { ok: true; slug: string } | { ok: false; error: string };
+/** `idxs`: số thứ tự (database) của từng quy cách, theo đúng thứ tự gửi lên — form dùng để lần lưu sau biết quy cách nào đã có. */
+export type SaveResult = { ok: true; slug: string; idxs: number[] } | { ok: false; error: string };
 
 /** Danh mục + nhóm con phải có thật; thông số đánh dấu bắt buộc trong danh mục / nhóm con phải có giá trị. */
 async function checkCategory(input: ProductInput): Promise<string | null> {
@@ -188,9 +192,9 @@ async function checkCategory(input: ProductInput): Promise<string | null> {
 }
 
 /** Hàng theo lô (thuốc BVTV, phân bón, hạt giống) phải có Số lô + Hạn dùng khi nhập kho, mà Tồn đầu kỳ không có hai thông tin đó. */
-function lotStockError(input: ProductInput, firstNew: number): string | null {
+function lotStockError(input: ProductInput, editing: boolean): string | null {
   if (!tracksLots({ pesticide: input.pesticide, category: input.category })) return null;
-  if (!input.options.some((o, i) => i >= firstNew && (o.stock ?? 0) > 0)) return null;
+  if (!input.options.some((o) => (!editing || o.idx === undefined) && (o.stock ?? 0) > 0)) return null;
   return 'Hàng theo lô (thuốc BVTV, phân bón, hạt giống) không nhập Tồn đầu kỳ ở đây. Để Tồn đầu kỳ = 0, lưu sản phẩm rồi nhập hàng ở trang Nhập hàng kèm Số lô và Hạn dùng.';
 }
 
@@ -211,30 +215,62 @@ export async function saveProduct(input: ProductInput, actor: string): Promise<S
   if (input.slug) {
     const existing = await getProductAdmin(input.slug);
     if (!existing) return { ok: false, error: 'Không tìm thấy sản phẩm' };
-    // Không xóa quy cách cũ: đơn hàng cũ tham chiếu theo thứ tự quy cách.
-    if (input.options.length < existing.options.length) return { ok: false, error: 'Không thể xóa quy cách đã có. Hãy ẩn sản phẩm hoặc đổi tên quy cách.' };
-    const lotBad = lotStockError(input, existing.options.length);
+    const slug = input.slug;
+    const lotBad = lotStockError(input, true);
     if (lotBad) return { ok: false, error: lotBad };
-    await db.transaction(async (tx) => {
+    return db.transaction(async (tx): Promise<SaveResult> => {
+      // Khóa dòng sản phẩm: hai người lưu cùng lúc không đánh trùng số thứ tự quy cách.
+      await tx.select({ slug: products.slug }).from(products).where(eq(products.slug, slug)).for('update');
+      const rows = await tx.select({ idx: productOptions.idx, label: productOptions.label, deleted: productOptions.deleted })
+        .from(productOptions).where(eq(productOptions.productSlug, slug));
+      const live = rows.filter((r) => !r.deleted);
+      const kept = input.options.flatMap((o) => (o.idx === undefined ? [] : [o.idx]));
+      if (new Set(kept).size !== kept.length || kept.some((i) => !live.some((r) => r.idx === i))) {
+        return { ok: false, error: 'Danh sách quy cách vừa thay đổi (có người khác sửa hoặc xóa). Tải lại trang rồi thử lại.' };
+      }
+      // Quy cách đang có mà form không gửi lên = admin bấm Xóa.
+      const removed = live.filter((r) => !kept.includes(r.idx));
+      if (removed.length) {
+        const open = await tx.select({ idx: orderItems.optionIdx, code: orders.code }).from(orderItems).innerJoin(orders, eq(orders.id, orderItems.orderId))
+          .where(and(eq(orderItems.productSlug, slug), inArray(orderItems.optionIdx, removed.map((r) => r.idx)), notInArray(orders.status, ['delivered', 'cancelled'])));
+        if (open.length) {
+          const r = removed.find((x) => x.idx === open[0].idx)!;
+          const codes = [...new Set(open.filter((o) => o.idx === r.idx).map((o) => o.code))];
+          return { ok: false, error: `Quy cách “${r.label}” đang có trong đơn chưa giao xong (${codes.slice(0, 3).join(', ')}${codes.length > 3 ? '…' : ''}). Giao xong hoặc hủy đơn rồi mới xóa được.` };
+        }
+      }
       await tx.update(products).set({
         ...values,
         flashTotal: input.flash ? (existing.flashTotal ?? 50) : null,
         flashSold: input.flash ? (existing.flashSold ?? 0) : null,
-      }).where(eq(products.slug, input.slug!));
-      for (const [idx, o] of input.options.entries()) {
-        if (idx < existing.options.length) {
-          await tx.update(productOptions).set({ label: o.label, price: o.price, oldPrice: o.oldPrice, garden: o.garden, cost: o.cost, combo2: o.combo2 })
-            .where(and(eq(productOptions.productSlug, input.slug!), eq(productOptions.idx, idx)));
+      }).where(eq(products.slug, slug));
+      // Số thứ tự mới nối sau số lớn nhất từng dùng (kể cả quy cách đã xóa) — không bao giờ dùng lại.
+      let next = Math.max(-1, ...rows.map((r) => r.idx)) + 1;
+      const idxs: number[] = [];
+      for (const o of input.options) {
+        const price = { label: o.label, price: o.price, oldPrice: o.oldPrice, garden: o.garden, cost: o.cost, combo2: o.combo2 };
+        if (o.idx !== undefined) {
+          await tx.update(productOptions).set(price).where(and(eq(productOptions.productSlug, slug), eq(productOptions.idx, o.idx)));
+          idxs.push(o.idx);
         } else {
-          await tx.insert(productOptions).values({ productSlug: input.slug!, idx, label: o.label, price: o.price, oldPrice: o.oldPrice, garden: o.garden, cost: o.cost, combo2: o.combo2, stock: 0 });
-          if (o.stock) await applyStock(tx, input.slug!, idx, o.stock, 'import', actor, 'Tồn đầu kỳ');
+          const idx = next++;
+          await tx.insert(productOptions).values({ productSlug: slug, idx, ...price, stock: 0 });
+          if (o.stock) await applyStock(tx, slug, idx, o.stock, 'import', actor, 'Tồn đầu kỳ');
+          idxs.push(idx);
         }
       }
+      // Xóa quy cách: hủy tồn còn lại (lịch sử kho ghi "Xóa quy cách"), rồi đánh dấu đã xóa. Dòng giữ lại vì đơn cũ, phiếu nhập,
+      // lịch sử kho, giỏ hàng của khách và mã SKU-n tham chiếu theo số thứ tự — các quy cách còn lại không đổi số.
+      for (const r of removed) {
+        const lots = await tx.select({ id: stockLots.id }).from(stockLots).where(and(eq(stockLots.productSlug, slug), eq(stockLots.optionIdx, r.idx), gt(stockLots.qty, 0)));
+        for (const lot of lots) await deleteLot(tx, lot.id, actor, 'Xóa quy cách');
+        await tx.update(productOptions).set({ deleted: true, stock: 0 }).where(and(eq(productOptions.productSlug, slug), eq(productOptions.idx, r.idx)));
+      }
+      return { ok: true, slug, idxs };
     });
-    return { ok: true, slug: input.slug };
   }
 
-  const lotBad = lotStockError(input, 0);
+  const lotBad = lotStockError(input, false);
   if (lotBad) return { ok: false, error: lotBad };
 
   let slug = slugify(input.name) || 'san-pham';
@@ -249,7 +285,7 @@ export async function saveProduct(input: ProductInput, actor: string): Promise<S
       if (o.stock) await applyStock(tx, slug, idx, o.stock, 'import', actor, 'Tồn đầu kỳ');
     }
   });
-  return { ok: true, slug };
+  return { ok: true, slug, idxs: input.options.map((_, i) => i) };
 }
 
 export async function setProductActive(slug: string, active: boolean) {

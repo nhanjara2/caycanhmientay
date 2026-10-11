@@ -6,6 +6,7 @@ import * as z from 'zod';
 import { getCurrentUser, requireAccess, requireStaff, staffName } from '@/server/auth';
 import { hasAccess } from '@/lib/permissions';
 import { getProducts } from '@/server/catalog';
+import { optionOf } from '@/lib/catalog';
 import { createOrder, LAST_ORDER_COOKIE, PlaceOrderSchema, setOrderPaid, setOrderStatus } from '@/server/orders';
 import { ORDER_STATUSES } from '@/server/db/schema';
 import { snapOf, type CartLine } from '@/lib/cart-snap';
@@ -31,7 +32,7 @@ export async function refreshCartAction(input: unknown) {
   const out: CartLine[] = [];
   for (const l of lines.data) {
     const p = products.get(l.slug);
-    if (!p || !p.options[l.option]) { changed = true; continue; }
+    if (!p || !optionOf(p, l.option)) { changed = true; continue; }
     out.push({ ...l, snap: snapOf(p, l.option) });
   }
   return { lines: out, changed };

@@ -34,13 +34,20 @@ export type FengShui = {
  * Quy cách bán. `price` = giá lẻ (giá bán), `oldPrice` = giá gạch ngang, `combo2` = giá 2 cây cùng quy cách.
  * Giá tại vườn / giá gốc không có ở đây — chỉ admin đọc (server/products-admin.ts).
  */
-export type Unit = { label: string; price: number; oldPrice?: number; combo2?: number };
+export type Unit = {
+  /** Số thứ tự trong database — giỏ hàng, đơn, kho tham chiếu theo số này. KHÔNG phải vị trí trong mảng `options`: quy cách đã xóa để lại khoảng trống. */
+  idx: number;
+  label: string; price: number; oldPrice?: number; combo2?: number;
+};
+
+/** Quy cách theo số thứ tự database (`Unit.idx`); undefined khi quy cách đã bị xóa. */
+export const optionOf = (p: { options: Unit[] }, idx: number) => p.options.find((o) => o.idx === idx);
 
 /** Giá 0 = chưa có giá: hiện "Liên hệ báo giá", khách gọi / Zalo hỏi giá, không cho vào giỏ hay đặt online. */
 export const isQuote = (u: Pick<Unit, 'price'>) => u.price <= 0;
 export const QUOTE_TEXT = 'Liên hệ báo giá';
 
-/** Số thứ tự quy cách rẻ nhất có giá (bỏ "Liên hệ báo giá"); không quy cách nào có giá thì 0. Thẻ sản phẩm hiện giá này, trang sản phẩm chọn sẵn quy cách này. */
+/** Vị trí trong mảng của quy cách rẻ nhất có giá (bỏ "Liên hệ báo giá"); không quy cách nào có giá thì 0. Thẻ sản phẩm hiện giá này, trang sản phẩm chọn sẵn quy cách này. */
 export const cheapestOption = (options: Unit[]) =>
   options.reduce((b, o, i) => (!isQuote(o) && (isQuote(options[b]) || o.price < options[b].price) ? i : b), 0);
 
@@ -192,4 +199,4 @@ const SEED_BATCH_END = Date.parse('2026-09-26T10:00:00Z');
 export const isNewProduct = (createdAt: Date, now = Date.now()) =>
   createdAt.getTime() > SEED_BATCH_END && now - createdAt.getTime() < NEW_DAYS * 86_400_000;
 
-export const discountPct = (u: Unit) => (u.oldPrice ? Math.round((1 - u.price / u.oldPrice) * 100) : 0);
+export const discountPct = (u: Pick<Unit, 'price' | 'oldPrice'>) => (u.oldPrice ? Math.round((1 - u.price / u.oldPrice) * 100) : 0);

@@ -15,7 +15,8 @@ import { ProductDeleteButton } from './ProductDeleteButton';
 import { ProductImages, type AdminImage } from './ProductImages';
 import { Select } from '@/components/Select';
 
-type Option = { label: string; garden: string; cost: string; price: string; combo2: string; oldPrice: string; stock: string; existingStock?: number };
+/** `idx` = số thứ tự trong database của quy cách đã lưu (chưa có = quy cách mới thêm, chưa lưu). */
+type Option = { idx?: number; label: string; garden: string; cost: string; price: string; combo2: string; oldPrice: string; stock: string; existingStock?: number };
 type PriceKey = 'garden' | 'cost' | 'price' | 'combo2' | 'oldPrice';
 export type ProductFormValue = {
   slug?: string;
@@ -49,7 +50,7 @@ export type ProductFormValue = {
     /** Tư vấn chọn cây (lib/plant-advisor.ts). */
     anhSang: string[]; vaiTro: string[]; cham: string | null; thuCung: string | null; chiuGio: boolean;
   };
-  options: { label: string; price: number; oldPrice: number | null; garden: number | null; cost: number | null; combo2: number | null; stock: number }[];
+  options: { idx?: number; label: string; price: number; oldPrice: number | null; garden: number | null; cost: number | null; combo2: number | null; stock: number }[];
 };
 
 /**
@@ -107,7 +108,7 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
   });
   const [opts, setOpts] = useState<Option[]>(
     initial.options.map((o) => ({
-      label: o.label, garden: o.garden ? fmt(String(o.garden)) : '', cost: o.cost ? fmt(String(o.cost)) : '',
+      idx: initial.slug ? o.idx : undefined, label: o.label, garden: o.garden ? fmt(String(o.garden)) : '', cost: o.cost ? fmt(String(o.cost)) : '',
       price: fmt(String(o.price)), combo2: o.combo2 ? fmt(String(o.combo2)) : '', oldPrice: o.oldPrice ? fmt(String(o.oldPrice)) : '',
       stock: '', existingStock: initial.slug ? o.stock : undefined,
     })),
@@ -157,6 +158,7 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
       images: undefined, // ảnh đã lưu riêng khi tải lên
       specs: v.specs.filter(([k, val]) => k.trim() && val.trim()),
       options: opts.map((o) => ({
+        idx: o.idx,
         label: o.label,
         price: Number(digits(o.price) || 0),
         oldPrice: num(o.oldPrice),
@@ -170,6 +172,9 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
       const r = await saveProductAction(payload).catch(() => ({ ok: false as const, error: 'Có lỗi, vui lòng thử lại' }));
       if (!r.ok) { setError(r.error); return; }
       setSaved(true);
+      // quy cách vừa tạo nhận số thứ tự từ máy chủ → lần lưu sau là sửa, không tạo trùng
+      setOpts((x) => (x.length === r.idxs.length ? x.map((o, i) => (o.idx === undefined
+        ? { ...o, idx: r.idxs[i], existingStock: lotted ? 0 : Number(digits(o.stock) || 0), stock: '' } : o)) : x));
       if (!v.slug) router.push(`/admin/san-pham/${r.slug}`);
       router.refresh();
     });
@@ -415,6 +420,12 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
                   <thead><tr><th>Quy cách</th><th>Giá tại vườn</th><th>Giá gốc</th><th>Giá lẻ (giá bán)</th><th>Combo 2 cây</th><th>Giá gạch ngang</th><th className="num">Tồn</th><th /></tr></thead>
                   <tbody>
                     {opts.map((o, i) => {
+                      const removeOpt = () => {
+                        // quy cách đã lưu: hỏi lại, và chỉ xóa thật khi bấm Lưu sản phẩm
+                        if (o.idx !== undefined && !confirm(`Xóa quy cách “${o.label}”?${o.existingStock ? `\nTồn kho ${o.existingStock} của quy cách này sẽ bị hủy.` : ''}\nBấm “Lưu sản phẩm” để hoàn tất.`)) return;
+                        setOpts((x) => x.filter((_, j) => j !== i));
+                        setSaved(false);
+                      };
                       const upd = (k: keyof Option, val: string) => { setOpts((x) => x.map((y, j) => (j === i ? { ...y, [k]: val } : y))); setSaved(false); };
                       const price = (k: PriceKey, label: string, hint: string) => (
                         <td data-label={label}>
@@ -422,7 +433,7 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
                         </td>
                       );
                       return (
-                        <tr key={i}>
+                        <tr key={o.idx ?? `moi-${i}`}>
                           <td data-label="Quy cách"><input className="vx-input app-optlabel" value={o.label} onChange={(e) => upd('label', e.target.value)} placeholder={kind === 'plant' ? 'Cao 40–60cm' : v.category === 'chau' ? '25x22cm' : 'Chai 500ml'} aria-label="Tên quy cách" /></td>
                           {price('garden', 'Giá tại vườn', 'Nhập giá vườn')}
                           {price('cost', 'Giá gốc', 'Tự tính')}
@@ -434,8 +445,8 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
                               ? <Link href="/admin/kho" title="Đổi tồn ở trang Kho">{o.existingStock}</Link>
                               : <input className="vx-input" inputMode="numeric" style={{ width: 80 }} value={lotted ? '' : o.stock} onChange={(e) => upd('stock', digits(e.target.value))} placeholder="0" disabled={lotted} title={lotted ? 'Hàng theo lô: nhập ở trang Nhập hàng kèm Số lô và Hạn dùng' : undefined} aria-label="Tồn đầu kỳ" />}
                           </td>
-                          <td>{o.existingStock === undefined && opts.length > 1 && (
-                            <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" onClick={() => setOpts((x) => x.filter((_, j) => j !== i))}>Xóa</button>
+                          <td data-m="foot end">{opts.length > 1 && (
+                            <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" onClick={removeOpt} aria-label={`Xóa quy cách ${o.label}`}>Xóa</button>
                           )}</td>
                         </tr>
                       );
@@ -450,7 +461,7 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
                     : <>{kind === 'plant' && <><b>Cây:</b> quy cách ghi kích thước của cây (Cao 40–60cm, 3 tầng, 15–20 lá…), không ghi chậu — chậu bán riêng ở danh mục Chậu (kích thước dài × cao, vd. 8x8cm). </>}
                       {v.category === 'chau' && <><b>Chậu:</b> quy cách ghi kích thước dài × cao (vd. 8x8cm, 25x22cm). </>}
                       <b>Giá:</b> chỉ cần nhập <b>Giá tại vườn</b>, các ô khác tự tính — Giá gốc = vườn + {PRICE_FORMULA.costPct}%, Giá lẻ = gốc + {PRICE_FORMULA.retailPct}%, Combo 2 cây = (lẻ × 2) − {PRICE_FORMULA.comboPct}%, Giá gạch ngang = lẻ + {PRICE_FORMULA.strikeMinPct}–{PRICE_FORMULA.strikeMaxPct}% (ngẫu nhiên, để hiện % giảm). Sửa tay ô nào thì các ô bên phải tính lại theo ô đó. Giá tại vườn và giá gốc chỉ quản trị thấy; giá sỉ công trình khách liên hệ báo giá.
-                      {' '}Giá lẻ để <b>0</b> (bỏ trống các giá khác) = web hiện “Liên hệ báo giá” (khách gọi / Zalo hỏi giá, không đặt online). Tồn đầu kỳ là số đang có sẵn. Hàng nhập thêm sau này làm ở <Link href="/admin/nhap-hang" style={{ color: 'var(--primary)', fontWeight: 600 }}>Nhập hàng</Link> (Excel) hoặc nút “Nhập / Kiểm kê” ở trang Kho.</>}
+                      {' '}Giá lẻ để <b>0</b> (bỏ trống các giá khác) = web hiện “Liên hệ báo giá” (khách gọi / Zalo hỏi giá, không đặt online). Tồn đầu kỳ là số đang có sẵn. <b>Xóa</b> quy cách: bấm Xóa rồi Lưu sản phẩm (tồn kho của quy cách đó bị hủy). Hàng nhập thêm sau này làm ở <Link href="/admin/nhap-hang" style={{ color: 'var(--primary)', fontWeight: 600 }}>Nhập hàng</Link> (Excel) hoặc nút “Nhập / Kiểm kê” ở trang Kho.</>}
                 </small>
               </div>
             </div>

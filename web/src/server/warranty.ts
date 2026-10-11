@@ -1,6 +1,6 @@
 import 'server-only';
 import { randomBytes } from 'node:crypto';
-import { and, desc, eq, inArray, ne, or, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, ne, or, sql } from 'drizzle-orm';
 import * as z from 'zod';
 import type { SessionUser } from './auth';
 import { mainImageOf } from './catalog';
@@ -281,10 +281,10 @@ export async function decideWarranty(input: z.infer<typeof DecideSchema>, actor:
       if (input.resolution === 'rescue' && input.gift) {
         const [p] = await tx.select().from(schema.products).where(eq(schema.products.slug, RESCUE_GIFT_SLUG));
         const [opt] = p ? await tx.select().from(schema.productOptions)
-          .where(and(eq(schema.productOptions.productSlug, p.slug), eq(schema.productOptions.idx, 0))) : [];
+          .where(and(eq(schema.productOptions.productSlug, p.slug), eq(schema.productOptions.deleted, false))).orderBy(asc(schema.productOptions.idx)).limit(1) : [];
         if (!p || !opt) throw new DecideError('Không tìm thấy vật tư tặng (Trichoderma). Bỏ chọn “Tặng vật tư” để tiếp tục.');
         replacement = await createWarrantyOrder(tx, src, w.userId, [{
-          slug: p.slug, idx: 0, name: p.name, label: opt.label, unit: p.unit, icon: p.icon, ship: p.ship, oldPrice: opt.price, qty: 1,
+          slug: p.slug, idx: opt.idx, name: p.name, label: opt.label, unit: p.unit, icon: p.icon, ship: p.ship, oldPrice: opt.price, qty: 1,
         }], `Tặng vật tư cứu cây — bảo hành ${code} (đơn gốc ${src.code})`, actor);
       }
       if (input.resolution === 'refund') {

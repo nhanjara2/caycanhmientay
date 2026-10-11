@@ -22,7 +22,7 @@ export async function megaMenuData(): Promise<MegaMenuData> {
       sold: P.sold, createdAt: P.createdAt, image: mainImageOf(P.slug),
     }).from(P).where(eq(P.active, true)),
     db.select({ slug: O.productSlug, price: O.price, oldPrice: O.oldPrice, stock: O.stock })
-      .from(O).innerJoin(P, and(eq(P.slug, O.productSlug), eq(P.active, true))).orderBy(asc(O.idx)),
+      .from(O).innerJoin(P, and(eq(P.slug, O.productSlug), eq(P.active, true))).where(eq(O.deleted, false)).orderBy(asc(O.idx)),
     db.select({ slug: OI.productSlug, qty: sql<number>`sum(${OI.qty})`.mapWith(Number) })
       .from(OI).innerJoin(Ord, eq(Ord.id, OI.orderId))
       .where(and(eq(Ord.kind, 'sale'), ne(Ord.status, 'cancelled'), gt(Ord.createdAt, since)))

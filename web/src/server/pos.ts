@@ -1,7 +1,7 @@
 import 'server-only';
 import { and, asc, eq, gt, or, sql } from 'drizzle-orm';
 import * as z from 'zod';
-import type { Unit } from '@/lib/catalog';
+import { optionOf, type Unit } from '@/lib/catalog';
 import { computeTotals } from '@/lib/pricing';
 import { todayVN } from '@/lib/stock';
 import { isPhone, normalizePhone, staffName, type SessionUser } from './auth';
@@ -33,9 +33,9 @@ export async function posCatalog(storeId: number): Promise<PosItem[]> {
   ]);
   const stock = new Map(lots.map((l) => [`${l.slug}|${l.idx}`, l.n]));
   // quy cách chưa có giá (Liên hệ báo giá) không bán ở quầy
-  return products.flatMap((p) => p.options.flatMap((o, idx): PosItem[] => o.price <= 0 ? [] : [{
-    slug: p.slug, idx, sku: `${p.sku}-${idx + 1}`, name: p.name, label: p.options.length > 1 ? o.label : null, price: o.price, oldPrice: o.oldPrice ?? null, combo2: o.combo2 ?? null,
-    category: p.category, icon: p.icon, image: p.images?.[0] ?? null, stock: stock.get(`${p.slug}|${idx}`) ?? 0,
+  return products.flatMap((p) => p.options.flatMap((o): PosItem[] => o.price <= 0 ? [] : [{
+    slug: p.slug, idx: o.idx, sku: `${p.sku}-${o.idx + 1}`, name: p.name, label: p.options.length > 1 ? o.label : null, price: o.price, oldPrice: o.oldPrice ?? null, combo2: o.combo2 ?? null,
+    category: p.category, icon: p.icon, image: p.images?.[0] ?? null, stock: stock.get(`${p.slug}|${o.idx}`) ?? 0,
     pesticide: !!p.pesticide, ship: p.ship,
   }]));
 }
@@ -79,7 +79,7 @@ export async function createPosOrder(input: PosOrderInput, staff: SessionUser): 
   const lines: { p: NonNullable<ReturnType<typeof products.get>>; u: Unit; it: PosOrderInput['items'][number] }[] = [];
   for (const it of input.items) {
     const p = products.get(it.slug);
-    const u = p?.options[it.option];
+    const u = p && optionOf(p, it.option);
     if (!p || !u) return { ok: false, error: 'Có sản phẩm không còn bán — tải lại trang bán hàng' };
     if (u.price <= 0) return { ok: false, error: `“${p.name}” chưa có giá — điền giá ở trang Sản phẩm trước khi bán` };
     lines.push({ p, u, it });

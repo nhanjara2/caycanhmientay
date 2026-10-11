@@ -1,11 +1,14 @@
 // Dữ liệu sản phẩm mẫu — chỉ dùng để nạp database lần đầu (src/server/db/seed.ts).
-import type { Product } from './catalog';
+import type { Product, Unit } from './catalog';
 
 const plantSpecs = (h: string, pot: string, light: string, water: string, origin: string, pet: string): [string, string][] => [
   ['Chiều cao', h], ['Chậu', pot], ['Ánh sáng', light], ['Tưới nước', water], ['Nguồn gốc', origin], ['An toàn thú cưng', pet],
 ];
 
-export const seedProducts: Product[] = [
+/** Sản phẩm mẫu chưa có số thứ tự quy cách — seed.ts đánh số theo thứ tự trong mảng. */
+export type SeedProduct = Omit<Product, 'options'> & { options: Omit<Unit, 'idx'>[] };
+
+export const seedProducts: SeedProduct[] = [
   {
     attrs: { viTri: ['trong-nha', 'van-phong'], kichThuoc: 'vua', mau: ['xanh'] },
     slug: 'monstera-deliciosa-chau-su-trang', sku: 'MT-10482', name: 'Cây Monstera Deliciosa chậu sứ trắng',

@@ -150,6 +150,9 @@ export const INVENTORY_TABS = {
 } as const;
 export type InventoryTab = keyof typeof INVENTORY_TABS;
 
+/** Quy cách đã xóa (product_options.deleted) không hiện ở Kho, Nhập hàng. */
+const live = eq(productOptions.deleted, false);
+
 const expiringKeys = () => sql`(${productOptions.productSlug}, ${productOptions.idx}) in (
   select ${L.productSlug}, ${L.optionIdx} from ${L} where ${L.qty} > 0 and ${L.expiry} is not null and ${L.expiry} <= ${addDays(todayVN(), EXPIRY_WARN_DAYS)})`;
 
@@ -176,7 +179,7 @@ export async function listInventory({ tab = 'tat-ca', q }: { tab?: InventoryTab;
     idx: productOptions.idx, label: productOptions.label, price: productOptions.price, stock: productOptions.stock,
   })
     .from(productOptions).innerJoin(products, eq(products.slug, productOptions.productSlug))
-    .where(and(tabFilter(tab), term ? or(ilike(products.name, term), ilike(products.sku, term)) : undefined))
+    .where(and(live, tabFilter(tab), term ? or(ilike(products.name, term), ilike(products.sku, term)) : undefined))
     .orderBy(asc(productOptions.stock), asc(products.name));
   if (!rows.length) return [];
   const lots = await db.select().from(L).where(and(gt(L.qty, 0), inArray(L.productSlug, [...new Set(rows.map((r) => r.slug))])))
@@ -196,7 +199,7 @@ export async function inventorySummary() {
     skus: sql`count(*)`.mapWith(Number),
     low: sql`coalesce(sum(case when ${productOptions.stock} < ${MIN_STOCK} and ${productOptions.stock} > 0 then 1 else 0 end), 0)`.mapWith(Number),
     out: sql`coalesce(sum(case when ${productOptions.stock} = 0 then 1 else 0 end), 0)`.mapWith(Number),
-  }).from(productOptions);
+  }).from(productOptions).where(live);
   const today = todayVN();
   const [exp] = await db.select({
     expired: sql`coalesce(sum(case when ${L.expiry} < ${today} then 1 else 0 end), 0)`.mapWith(Number),
@@ -204,7 +207,7 @@ export async function inventorySummary() {
   }).from(L).where(and(gt(L.qty, 0), sql`${L.expiry} is not null`));
   const counts = Object.fromEntries(await Promise.all(
     (Object.keys(INVENTORY_TABS) as InventoryTab[]).map(async (t) => [t, (await db.select({ n: count() }).from(productOptions)
-      .innerJoin(products, eq(products.slug, productOptions.productSlug)).where(tabFilter(t)))[0]?.n ?? 0]),
+      .innerJoin(products, eq(products.slug, productOptions.productSlug)).where(and(live, tabFilter(t))))[0]?.n ?? 0]),
   )) as Record<InventoryTab, number>;
   return { value: r?.value ?? 0, skus: r?.skus ?? 0, low: r?.low ?? 0, out: r?.out ?? 0, expired: exp?.expired ?? 0, soon: exp?.soon ?? 0, counts };
 }
