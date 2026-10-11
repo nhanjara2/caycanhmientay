@@ -116,21 +116,19 @@
 .hm .hm-btn-light { min-height: 2.875rem; padding: 0 22px; background: var(--primary); color: #fff; font-size: 1rem; }
 .hm .hm-btn-light:hover { background: var(--primary-hover); }
 
-/* ---- Danh mục bằng ảnh ------------------------------------------------------------------------ */
-.hm-mosaic { display: grid; grid-template-columns: repeat(var(--hm-cols, 4), minmax(0, 1fr)); grid-auto-rows: 172px; grid-auto-flow: dense; gap: 12px; }
-.hm-mosaic:not([data-big]) { grid-auto-rows: 210px; }
-.hm-tile { position: relative; overflow: hidden; border-radius: 16px; background: var(--primary-soft); text-decoration: none; isolation: isolate; }
-.hm-tile--big { grid-column: span 2; grid-row: span 2; }
-.hm-tile img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease; }
-.hm-tile:hover img { transform: scale(1.06); }
-.hm-tile__art { position: absolute; inset: 0; display: grid; place-items: center; color: var(--primary); }
-.hm-tile__art svg { width: 38%; height: 38%; opacity: .55; }
-.hm-tile__txt { position: absolute; inset: auto 0 0; display: flex; flex-direction: column; padding: 40px 14px 12px; background: linear-gradient(0deg, rgba(10, 40, 20, .88), rgba(10, 40, 20, 0)); color: #fff; }
-.hm-tile__txt b { font-size: 1.0625rem; line-height: 1.25; }
-.hm-tile__txt small { font-size: 0.875rem; color: rgba(255, 255, 255, .88); }
-.hm-tile--big .hm-tile__txt { padding: 80px 22px 20px; }
-.hm-tile--big .hm-tile__txt b { font-size: 1.75rem; }
-.hm-tile--big .hm-tile__txt small { font-size: 1rem; }
+/* ---- Danh mục bằng ảnh: hàng ô nhỏ (ảnh vuông + tên bên dưới) — máy tính 9 ô một hàng (--hm-cols),
+   ít ô hơn thì canh giữa. flex chứ không grid để hàng chưa đủ ô vẫn nằm giữa. ------------------------- */
+.hm-mosaic { --hm-cols: 9; --hm-gap: 12px; display: flex; flex-wrap: wrap; justify-content: center; gap: 16px var(--hm-gap); }
+.hm-tile { flex: 0 0 calc((100% - (var(--hm-cols) - 1) * var(--hm-gap)) / var(--hm-cols) - 0.1px); min-width: 0; display: flex; flex-direction: column; gap: 8px; text-align: center; text-decoration: none; }
+.hm-tile__img { position: relative; display: block; overflow: hidden; aspect-ratio: 1; border-radius: 16px; background: var(--primary-soft); isolation: isolate; }
+.hm-tile__img img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease; }
+.hm-tile:hover .hm-tile__img img { transform: scale(1.06); }
+.hm-tile__art { display: grid; place-items: center; width: 100%; height: 100%; color: var(--primary); }
+.hm-tile__art svg { width: 44%; height: 44%; opacity: .55; }
+.hm-tile__txt { display: flex; flex-direction: column; gap: 2px; color: var(--ink); }
+.hm-tile__txt b { font-size: 0.9375rem; font-weight: 600; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.hm-tile:hover .hm-tile__txt b { color: var(--primary-hover); }
+.hm-tile__txt small { font-size: 0.875rem; line-height: 1.3; color: var(--ink-muted); }
 
 /* ---- Dải đối tác sỉ --------------------------------------------------------------------------- */
 .hm-partner { position: relative; overflow: hidden; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: center; gap: 28px; padding: 32px; border-radius: 24px; color: #fff;
@@ -148,22 +146,14 @@
 .hm-ptype > span svg { width: 22px; height: 22px; color: var(--sun); }
 .hm-ptype b { font-size: 1rem; line-height: 1.3; }
 
-/* ---- Ảnh thật từ vườn: 9 ảnh xếp khít lưới 4 × 4 ------------------------------------------------ */
-.hm-wall { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: 168px; gap: 12px; }
+/* ---- Ảnh thật từ vườn: 9 ảnh xếp khít lưới 6 × 2 (1 ảnh lớn 2 × 2 + 8 ảnh nhỏ) ------------------- */
+.hm-wall { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); grid-auto-rows: 148px; grid-auto-flow: dense; gap: 12px; }
 .hm-wall__item { position: relative; overflow: hidden; border-radius: 16px; background: var(--primary-soft); text-decoration: none; }
 .hm-wall__item img { width: 100%; height: 100%; object-fit: cover; transition: transform .6s ease; }
 .hm-wall__item:hover img { transform: scale(1.06); }
-.hm-wall__cap { position: absolute; inset: auto 0 0; padding: 32px 12px 10px; background: linear-gradient(0deg, rgba(10, 40, 20, .85), rgba(10, 40, 20, 0)); color: #fff; font-size: 0.875rem; font-weight: 600; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.hm-wall__item:nth-child(1) { grid-column: 1 / 3; grid-row: 1 / 3; }
-.hm-wall__item:nth-child(1) .hm-wall__cap { font-size: 1.125rem; padding: 60px 18px 16px; }
-.hm-wall__item:nth-child(2) { grid-column: 3; grid-row: 1; }
-.hm-wall__item:nth-child(3) { grid-column: 4; grid-row: 1 / 3; }
-.hm-wall__item:nth-child(4) { grid-column: 3; grid-row: 2; }
-.hm-wall__item:nth-child(5) { grid-column: 1; grid-row: 3; }
-.hm-wall__item:nth-child(6) { grid-column: 2 / 4; grid-row: 3; }
-.hm-wall__item:nth-child(7) { grid-column: 4; grid-row: 3 / 5; }
-.hm-wall__item:nth-child(8) { grid-column: 1; grid-row: 4; }
-.hm-wall__item:nth-child(9) { grid-column: 2 / 4; grid-row: 4; }
+.hm-wall__cap { position: absolute; inset: auto 0 0; padding: 28px 10px 8px; background: linear-gradient(0deg, rgba(10, 40, 20, .85), rgba(10, 40, 20, 0)); color: #fff; font-size: 0.875rem; font-weight: 600; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.hm-wall__item:nth-child(1) { grid-column: span 2; grid-row: span 2; }
+.hm-wall__item:nth-child(1) .hm-wall__cap { font-size: 1.0625rem; padding: 48px 16px 14px; }
 
 /* ---- Bệnh cây theo mùa ------------------------------------------------------------------------ */
 .hm-season { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 16px; padding: 16px; border-radius: var(--hm-r); background: linear-gradient(135deg, var(--primary-deep), #1d7040); }
@@ -232,8 +222,8 @@
   .hm-sides { grid-template-rows: none; grid-template-columns: repeat(var(--hm-sides, 2), minmax(0, 1fr)); }
   .hm-side { aspect-ratio: 2 / 1; }
   .hm-partner { grid-template-columns: minmax(0, 1fr); padding: 24px; }
-  .hm-mosaic { grid-auto-rows: 150px; }
-  .hm-wall { grid-auto-rows: 140px; }
+  .hm-mosaic { --hm-cols: 6; }
+  .hm-wall { grid-auto-rows: 120px; }
   .hm-season__cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .hm-news { grid-template-columns: minmax(0, 1fr); }
   .hm-projects { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -287,23 +277,19 @@
   .hm-head p { grid-column: 1 / -1; grid-row: 2; }
   .hm-sec--card { padding: 14px 10px; margin: 0 -6px; }
   .hm-sec--card .app-grid > :nth-child(n + 7) { display: none; }
-  .hm-mosaic, .hm-mosaic:not([data-big]) { grid-template-columns: repeat(min(var(--hm-cols), 2), minmax(0, 1fr)); grid-auto-rows: 128px; gap: 8px; }
-  /* 2 cột: số ô chẵn thì bỏ ô lớn để lưới kín */
-  .hm-mosaic:not([data-odd]) .hm-tile--big { grid-column: auto; grid-row: auto; }
-  .hm-mosaic:not([data-odd]) .hm-tile--big .hm-tile__txt { padding: 32px 10px 10px; }
-  .hm-mosaic:not([data-odd]) .hm-tile--big .hm-tile__txt b { font-size: 0.9375rem; }
-  .hm-mosaic:not([data-odd]) .hm-tile--big .hm-tile__txt small { font-size: 0.875rem; }
-  .hm-tile--big .hm-tile__txt b { font-size: 1.375rem; }
-  .hm-tile__txt { padding: 32px 10px 10px; }
-  .hm-tile__txt b { font-size: 0.9375rem; }
+  .hm-mosaic { --hm-cols: 3; --hm-gap: 8px; row-gap: 14px; }
+  .hm-tile { gap: 6px; }
+  .hm-tile__img { border-radius: 12px; }
   .hm-partner { padding: 20px 16px; gap: 20px; border-radius: var(--hm-r); }
   .hm-partner__acts .vx-btn { flex: 1 1 auto; }
   .hm-partner__types { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 -16px; padding: 0 16px 4px; scrollbar-width: none; }
   .hm-partner__types li { flex: 0 0 62%; scroll-snap-align: start; }
   .hm-ptype { aspect-ratio: 4 / 3; }
-  .hm-wall { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 132px; gap: 8px; }
-  .hm-wall__item:nth-child(n) { grid-column: auto; grid-row: auto; }
-  .hm-wall__item:nth-child(1) { grid-column: 1 / 3; grid-row: span 2; }
+  /* 3 cột × 4 hàng: ảnh lớn 2 × 2 + 8 ảnh nhỏ; ảnh nhỏ chỉ ghi tên 1 dòng cho khỏi che ảnh */
+  .hm-wall { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 104px; gap: 8px; }
+  .hm-wall__item { border-radius: 12px; }
+  .hm-wall__item:nth-child(n + 2) .hm-wall__cap { display: block; padding: 20px 8px 6px; white-space: nowrap; text-overflow: ellipsis; }
+  .hm-wall__item:nth-child(1) .hm-wall__cap { font-size: 1rem; padding: 36px 12px 10px; }
   .hm-season { padding: 12px; }
   .hm-season__intro { padding: 16px; }
   .hm-season__cards { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }

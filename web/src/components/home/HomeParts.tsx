@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import type { CSSProperties, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import type { Product } from '@/lib/catalog';
 import { diseaseImageUrl, type Disease } from '@/lib/diseases';
 import { postPath } from '@/lib/posts';
@@ -41,18 +41,16 @@ export function QuickLinks({ items }: { items: { label: string; sub: string; ico
 
 export type MosaicItem = { key: string; name: string; href: string; count: number; icon: IconName; image?: string };
 
-// Số cột + có ô lớn 2 × 2 hay không, theo số ô — để lưới luôn kín, không thừa chỗ trống.
-const LAYOUT: Record<number, [cols: number, big: boolean]> = { 5: [4, true], 6: [3, true], 7: [5, true], 8: [4, false], 9: [4, true] };
-
-/** Danh mục bằng ảnh: ô đầu lớn, các ô còn lại nhỏ; ảnh = ảnh sản phẩm bán chạy của nhóm đó. Tối đa 9 ô. */
+/** Danh mục bằng ảnh: hàng ô nhỏ — ảnh vuông (ảnh sản phẩm bán chạy của nhóm đó) + tên, số sản phẩm bên dưới.
+ *  Tối đa 9 ô; số ô một hàng là `--hm-cols` trong home.css (máy tính 9, tablet 6, điện thoại 3). */
 export function CategoryMosaic({ items }: { items: MosaicItem[] }) {
-  const n = items.length;
-  const [cols, big] = LAYOUT[n] ?? [n, false];
   return (
-    <div className="hm-mosaic" style={{ '--hm-cols': cols } as CSSProperties} data-big={big || undefined} data-odd={n % 2 === 1 || undefined}>
-      {items.map((m, i) => (
-        <Link key={m.key} href={m.href} className={i === 0 && big ? 'hm-tile hm-tile--big app-plain' : 'hm-tile app-plain'}>
-          {m.image ? <img src={m.image} alt="" loading="lazy" /> : <span className="hm-tile__art"><Art name={m.icon} /></span>}
+    <div className="hm-mosaic">
+      {items.map((m) => (
+        <Link key={m.key} href={m.href} className="hm-tile app-plain">
+          <span className="hm-tile__img">
+            {m.image ? <img src={m.image} alt="" loading="lazy" /> : <span className="hm-tile__art"><Art name={m.icon} /></span>}
+          </span>
           <span className="hm-tile__txt">
             <b>{m.name}</b>
             <small>{m.count} sản phẩm</small>
@@ -63,12 +61,12 @@ export function CategoryMosaic({ items }: { items: MosaicItem[] }) {
   );
 }
 
-/** Lưới ảnh "Từ vườn": ảnh thật của sản phẩm, ô to ô nhỏ xen kẽ; bấm vào ảnh mở sản phẩm. */
+/** Lưới ảnh "Từ vườn": ảnh thật của sản phẩm, 1 ô lớn + 8 ô nhỏ; bấm vào ảnh mở sản phẩm. */
 export function PhotoWall({ products }: { products: Product[] }) {
   return (
     <div className="hm-wall">
-      {products.map((p, i) => (
-        <Link key={p.slug} href={`/san-pham/${p.slug}`} className={`hm-wall__item hm-wall__item--${i % 7} app-plain`}>
+      {products.map((p) => (
+        <Link key={p.slug} href={`/san-pham/${p.slug}`} className="hm-wall__item app-plain">
           <img src={p.images![0]} alt={p.name} loading="lazy" />
           <span className="hm-wall__cap">{p.name}</span>
         </Link>
