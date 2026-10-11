@@ -1,18 +1,17 @@
 import 'server-only';
-import { and, desc, eq, gt, isNull, sql } from 'drizzle-orm';
+import { and, eq, isNull, ne, sql } from 'drizzle-orm';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { createHash, createHmac, randomBytes, randomInt, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 import { cache } from 'react';
 import { cleanGoogleAvatar } from '@/lib/avatar';
 import { hasAccess, homeFor, type Area } from '@/lib/permissions';
 import { MAX_PARTNER_DISCOUNT } from '@/lib/partners';
-import type { WelcomeOffer } from '@/lib/voucher-labels';
 import { db, schema } from './db';
 import type { Role } from './db/schema';
 import { announceWelcome } from './vouchers';
 
-const { users, sessions, otpCodes } = schema;
+const { users, sessions } = schema;
 
 /** Lần đăng nhập đầu tiên (vừa tạo tài khoản khách): tặng quà tài khoản mới. Lỗi ở đây không được chặn đăng nhập. */
 const welcomeNewCustomer = (user: { id: number; role: Role }) =>
@@ -20,10 +19,6 @@ const welcomeNewCustomer = (user: { id: number; role: Role }) =>
 
 export const SESSION_COOKIE = 'ccmt_session';
 const SESSION_DAYS = 30;
-const OTP_TTL_MS = 5 * 60 * 1000;
-const OTP_RESEND_MS = 60 * 1000;
-const OTP_MAX_PER_HOUR = 5;
-const OTP_MAX_ATTEMPTS = 5;
 
 function secret() {
   const s = process.env.AUTH_SECRET;
@@ -39,102 +34,29 @@ export const normalizePhone = (s: string) => s.replace(/[^\d+]/g, '').replace(/^
 export const isPhone = (s: string) => /^0(3|5|7|8|9)\d{8}$/.test(normalizePhone(s));
 export const maskPhone = (p: string) => (p ? `${p.slice(0, 4)} xxx ${p.slice(-3)}` : '');
 
-/** SĐT trong ADMIN_PHONES / email Google trong ADMIN_EMAILS (cách nhau bằng dấu phẩy) được cấp quyền admin khi đăng nhập. */
+/** Email Google trong ADMIN_EMAILS (cách nhau bằng dấu phẩy) được cấp quyền admin khi đăng nhập. */
 const envList = (name: string) => (process.env[name] ?? '').split(',').map((s) => s.trim()).filter(Boolean);
-const adminPhones = () => envList('ADMIN_PHONES').map(normalizePhone);
 const adminEmails = () => envList('ADMIN_EMAILS').map((e) => e.toLowerCase());
 /** Tài khoản được cấp quyền quản trị bằng biến môi trường (đăng nhập lại là tự lên admin) — không hạ quyền / gỡ được trên giao diện. */
-export const isConfigAdmin = (u: { phone: string | null; email: string | null }) =>
-  (!!u.phone && adminPhones().includes(u.phone)) || (!!u.email && adminEmails().includes(u.email.toLowerCase()));
-
-// ---- OTP -------------------------------------------------------------------------------------
-
-export type OtpRequestResult = { ok: true; devCode?: string } | { ok: false; error: string; retryAfter?: number };
-
-export async function requestOtp(rawPhone: string): Promise<OtpRequestResult> {
-  if (!isPhone(rawPhone)) return { ok: false, error: 'Số điện thoại chưa đúng' };
-  const phone = normalizePhone(rawPhone);
-  const now = Date.now();
-
-  const recent = await db.select().from(otpCodes)
-    .where(and(eq(otpCodes.phone, phone), gt(otpCodes.createdAt, new Date(now - 60 * 60 * 1000))));
-  const last = recent.reduce<number>((m, r) => Math.max(m, r.createdAt.getTime()), 0);
-  if (now - last < OTP_RESEND_MS) {
-    return { ok: false, error: 'Vui lòng đợi trước khi gửi lại mã', retryAfter: Math.ceil((OTP_RESEND_MS - (now - last)) / 1000) };
-  }
-  if (recent.length >= OTP_MAX_PER_HOUR) return { ok: false, error: 'Bạn đã yêu cầu quá nhiều mã. Vui lòng thử lại sau 1 giờ.' };
-
-  const code = String(randomInt(0, 1_000_000)).padStart(6, '0');
-  // Mã mới thay mã cũ: mã cũ chưa dùng hết hiệu lực ngay.
-  await db.update(otpCodes).set({ consumedAt: new Date(now) }).where(and(eq(otpCodes.phone, phone), isNull(otpCodes.consumedAt)));
-  await db.insert(otpCodes).values({ phone, codeHash: hmac(`${phone}:${code}`), expiresAt: new Date(now + OTP_TTL_MS) });
-  await sendOtp(phone, code);
-  // Chạy dev, hoặc OTP_DEMO=1 khi chưa có nhà cung cấp OTP: trả mã về để thử nghiệm không cần Zalo/SMS.
-  return { ok: true, devCode: showCode() ? code : undefined };
-}
-
-/**
- * OTP_DEMO=1: hiện mã ngay trong hộp đăng nhập (chỉ để chạy thử trên Vercel khi chưa nối Zalo/SMS).
- * Ai biết SĐT cũng đăng nhập được — TẮT trước khi mở bán thật.
- */
-const showCode = () => process.env.NODE_ENV !== 'production' || process.env.OTP_DEMO === '1';
-
-/** Đăng nhập SĐT chỉ bật khi gửi được OTP (có nhà cung cấp) hoặc đang chạy thử; không thì chỉ có Google. */
-export const phoneLoginEnabled = () => showCode() || Boolean(process.env.OTP_PROVIDER);
-
-/** Gửi OTP qua Zalo ZNS, SMS dự phòng. TODO: nối nhà cung cấp thật (ZNS template, SMS brandname). */
-async function sendOtp(phone: string, code: string) {
-  if (!showCode() && !process.env.OTP_PROVIDER) {
-    throw new Error('Chưa cấu hình nhà cung cấp OTP (OTP_PROVIDER)');
-  }
-  console.info(`[OTP] ${maskPhone(phone)}: ${code}`);
-}
-
-/** welcome: quà tài khoản mới khi đây là lần đăng nhập đầu tiên (null nếu không). */
-export type VerifyResult = { ok: true; user: SessionUser; welcome: WelcomeOffer | null } | { ok: false; error: string };
-
-export async function verifyOtp(rawPhone: string, code: string): Promise<VerifyResult> {
-  const phone = normalizePhone(rawPhone);
-  if (!isPhone(phone) || !/^\d{6}$/.test(code)) return { ok: false, error: 'Mã xác thực chưa đúng' };
-
-  const [otp] = await db.select().from(otpCodes)
-    .where(and(eq(otpCodes.phone, phone), gt(otpCodes.expiresAt, new Date()), isNull(otpCodes.consumedAt)))
-    .orderBy(desc(otpCodes.id))
-    .limit(1);
-  if (!otp) return { ok: false, error: 'Mã đã hết hạn. Vui lòng gửi lại mã.' };
-  if (otp.attempts >= OTP_MAX_ATTEMPTS) return { ok: false, error: 'Nhập sai quá nhiều lần. Vui lòng gửi lại mã.' };
-
-  const a = Buffer.from(otp.codeHash, 'hex');
-  const b = Buffer.from(hmac(`${phone}:${code}`), 'hex');
-  if (a.length !== b.length || !timingSafeEqual(a, b)) {
-    await db.update(otpCodes).set({ attempts: sql`${otpCodes.attempts} + 1` }).where(eq(otpCodes.id, otp.id));
-    return { ok: false, error: 'Mã xác thực chưa đúng' };
-  }
-  // Chỉ một request dùng được mã (hai lần bấm cùng lúc không tạo hai phiên).
-  const used = await db.update(otpCodes).set({ consumedAt: new Date() })
-    .where(and(eq(otpCodes.id, otp.id), isNull(otpCodes.consumedAt))).returning({ id: otpCodes.id });
-  if (!used.length) return { ok: false, error: 'Mã đã được sử dụng. Vui lòng gửi lại mã.' };
-
-  // Tài khoản định danh bằng SĐT: chưa có thì tạo mới, có rồi thì đăng nhập vào tài khoản đó.
-  const created = await db.insert(users).values({ phone }).onConflictDoNothing({ target: users.phone }).returning({ id: users.id });
-  let [user] = await db.select().from(users).where(eq(users.phone, phone));
-  if (adminPhones().includes(phone) && user.role !== 'admin') {
-    [user] = await db.update(users).set({ role: 'admin' }).where(eq(users.id, user.id)).returning();
-  }
-  await createSession(user.id);
-  const welcome = created.length ? await welcomeNewCustomer(user) : null;
-  return { ok: true, user: toSessionUser(user), welcome };
-}
+export const isConfigAdmin = (u: { email: string | null }) => !!u.email && adminEmails().includes(u.email.toLowerCase());
 
 // ---- Đăng nhập Google (OAuth 2.0 + PKCE) ----------------------------------------------------
-// Miễn phí, không cần OTP: Google đã gắn → vào tài khoản đó; đang đăng nhập SĐT → gắn vào tài khoản hiện tại;
-// còn lại tạo tài khoản mới không có SĐT (SĐT nhập lúc đặt hàng). Không tự gắn theo email
-// (email trong hồ sơ chưa được xác thực).
+// Cách đăng nhập DUY NHẤT (11/10/2026 bỏ đăng nhập SĐT + OTP: shop không đăng ký dịch vụ gửi mã).
+// Google đã gắn → vào tài khoản đó; còn phiên của tài khoản SĐT cũ → gắn Google vào tài khoản đó;
+// email được Quản lý mời làm nhân viên → nhận quyền (pendingInvite); còn lại tạo tài khoản mới không có SĐT
+// (SĐT nhập lúc đặt hàng). Không tự gắn theo email trong hồ sơ (khách tự sửa được, chưa xác thực).
+
+/**
+ * Lời mời nhân viên đang chờ (inviteStaff trong server/staff.ts): dòng `users` chỉ có email + vai trò, chưa có Google
+ * lẫn SĐT nên chưa ai đăng nhập được vào — tức email ở dòng này do Quản lý gõ, không phải khách tự sửa trong hồ sơ.
+ */
+export const pendingInvite = (email: string) =>
+  and(isNull(users.googleSub), isNull(users.phone), ne(users.role, 'customer'), sql`lower(${users.email}) = ${email.toLowerCase()}`);
 
 const GOOGLE_FLOW_COOKIE = 'ccmt_google_flow';
 const GOOGLE_TTL_MS = 10 * 60 * 1000;
 
-type GoogleProfile = { sub: string; email: string; name: string | null; picture: string | null };
+export type GoogleProfile = { sub: string; email: string; name: string | null; picture: string | null };
 
 export const googleEnabled = () => Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
 const googleRedirectUri = (origin: string) => `${origin}/api/auth/google/callback`;
@@ -216,14 +138,42 @@ export async function finishGoogleLogin(origin: string, params: URLSearchParams)
   }
   const g: GoogleProfile = { sub: claims.sub, email: claims.email.toLowerCase(), name: claims.name?.trim() || null, picture: cleanGoogleAvatar(claims.picture) };
 
+  const { user, isNew } = await signInGoogleProfile(g, await getCurrentUser());
+  await createSession(user.id);
+  // Google chuyển trang về `next` nên không hiện được hộp chào: quà chỉ báo qua chuông thông báo.
+  if (isNew) await welcomeNewCustomer(user);
+  return { ok: true, next };
+}
+
+/**
+ * Tìm / tạo tài khoản cho một hồ sơ Google đã được Google xác thực (tách khỏi phần OAuth + cookie để kiểm thử được).
+ * `current` = tài khoản đang đăng nhập trên trình duyệt này (null nếu chưa).
+ */
+export async function signInGoogleProfile(g: GoogleProfile, current: SessionUser | null) {
   let [user] = await db.select().from(users).where(eq(users.googleSub, g.sub));
-  const current = user ? null : await getCurrentUser();
   if (!user && current && !current.googleSub) {
-    // Đang đăng nhập bằng SĐT: gắn Google vào tài khoản hiện tại.
+    // Còn phiên của tài khoản SĐT cũ (tạo trước khi bỏ OTP): gắn Google vào tài khoản đó để giữ đơn hàng, điểm.
     [user] = await db.update(users)
       .set({ googleSub: g.sub, name: current.name ?? g.name, email: current.email ?? g.email, avatarUrl: g.picture })
       .where(and(eq(users.id, current.id), isNull(users.googleSub)))
       .returning();
+  }
+  // Email Google (đã được Google xác thực) trùng lời mời nhân viên: chưa có tài khoản thì lời mời thành tài khoản;
+  // có rồi thì chuyển vai trò sang tài khoản đó rồi xóa lời mời (Quản lý giữ nguyên quyền).
+  const [invite] = await db.select().from(users).where(pendingInvite(g.email));
+  if (invite && !user) {
+    [user] = await db.update(users)
+      .set({ googleSub: g.sub, name: invite.name ?? g.name, avatarUrl: g.picture })
+      .where(and(eq(users.id, invite.id), pendingInvite(g.email)))
+      .returning();
+  } else if (invite && user) {
+    const target = user;
+    [user] = await db.transaction(async (tx) => {
+      const gone = await tx.delete(users).where(and(eq(users.id, invite.id), pendingInvite(g.email))).returning({ id: users.id });
+      if (!gone.length || target.role === 'admin') return [target];
+      return tx.update(users).set({ role: invite.role, staffRole: invite.staffRole, name: target.name ?? invite.name })
+        .where(eq(users.id, target.id)).returning();
+    });
   }
   let isNew = false;
   if (!user) {
@@ -238,10 +188,7 @@ export async function finishGoogleLogin(origin: string, params: URLSearchParams)
   if (adminEmails().includes(g.email) && user.role !== 'admin') {
     [user] = await db.update(users).set({ role: 'admin' }).where(eq(users.id, user.id)).returning();
   }
-  await createSession(user.id);
-  // Google chuyển trang về `next` nên không hiện được hộp chào: quà chỉ báo qua chuông thông báo.
-  if (isNew) await welcomeNewCustomer(user);
-  return { ok: true, next };
+  return { user, isNew };
 }
 
 // ---- Phiên đăng nhập -------------------------------------------------------------------------
@@ -275,7 +222,7 @@ const toSessionUser = ({ id, phone, contactPhone, email, googleSub, avatarUrl, n
 export const partnerPct = (u: Pick<SessionUser, 'partnerStatus' | 'partnerDiscount'> | null) =>
   u?.partnerStatus === 'approved' ? Math.max(0, Math.min(MAX_PARTNER_DISCOUNT, u.partnerDiscount)) : 0;
 
-/** SĐT để liên lạc: SĐT đã xác thực OTP, không có thì SĐT khách tự khai. */
+/** SĐT để liên lạc: SĐT đã xác thực OTP (tài khoản cũ, trước 11/10/2026), không có thì SĐT khách tự khai. */
 export const accountPhone = (u: Pick<SessionUser, 'phone' | 'contactPhone'>) => u.phone ?? u.contactPhone ?? null;
 
 /** Người dùng của request hiện tại (gọi nhiều lần trong một request chỉ truy vấn một lần). */

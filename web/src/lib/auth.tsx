@@ -2,17 +2,17 @@
 
 import { useRouter } from 'next/navigation';
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
-import { loginOptionsAction, logoutAction, meAction, requestOtpAction, verifyOtpAction } from '@/app/actions/auth';
+import { loginOptionsAction, logoutAction, meAction } from '@/app/actions/auth';
 import { clearAfterLogin } from './after-login';
-import type { WelcomeOffer, WelcomeProgram } from '@/lib/voucher-labels';
+import type { WelcomeProgram } from '@/lib/voucher-labels';
 import type { PublicUser } from '@/server/auth';
 
-// Đăng nhập Google hoặc SĐT + OTP (xem server/auth.ts). Phiên nằm trong cookie httpOnly do server đặt; client chỉ giữ bản hiển thị.
+// Đăng nhập bằng Google (xem server/auth.ts). Phiên nằm trong cookie httpOnly do server đặt; client chỉ giữ bản hiển thị.
 
 export type User = PublicUser;
 
-/** Cách đăng nhập đang bật + lỗi Google vừa xảy ra (từ "?google=…") + quà tài khoản mới đang chạy. */
-export type LoginOptions = { google: boolean; phone: boolean; googleError: string; welcome: WelcomeProgram | null };
+/** Google đã bật chưa (`loaded` = server đã trả lời) + lỗi Google vừa xảy ra (từ "?google=…") + quà tài khoản mới đang chạy. */
+export type LoginOptions = { loaded: boolean; google: boolean; googleError: string; welcome: WelcomeProgram | null };
 
 const GOOGLE_ERRORS: Record<string, string> = {
   'chua-bat': 'Đăng nhập Google chưa được bật.',
@@ -27,9 +27,6 @@ type AuthCtx = {
   modalOpen: boolean;
   openLogin: () => void;
   closeLogin: () => void;
-  requestOtp: (phone: string) => ReturnType<typeof requestOtpAction>;
-  /** welcome: quà tài khoản mới nếu đây là lần đăng nhập đầu tiên. */
-  verifyOtp: (phone: string, code: string) => Promise<{ ok: boolean; error?: string; welcome?: WelcomeOffer | null }>;
   setUser: (u: User | null) => void;
   options: LoginOptions;
   logout: () => Promise<void>;
@@ -45,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [ready, setReady] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const [options, setOptions] = useState<LoginOptions>({ google: false, phone: true, googleError: '', welcome: null });
+  const [options, setOptions] = useState<LoginOptions>({ loaded: false, google: false, googleError: '', welcome: null });
 
   useEffect(() => {
     meAction().then(setUser).catch(() => setUser(null)).finally(() => setReady(true));
@@ -53,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // "?google=<lỗi>" do /api/auth/google gắn khi đăng nhập Google không thành. Đọc xong thì xóa khỏi URL.
     const g = params.get('google');
     loginOptionsAction()
-      .then((o) => setOptions({ ...o, googleError: g ? GOOGLE_ERRORS[g] ?? '' : '' }))
+      .then((o) => setOptions({ ...o, loaded: true, googleError: g ? GOOGLE_ERRORS[g] ?? '' : '' }))
       .catch(() => {});
     if (g) {
       params.delete('google');
@@ -70,14 +67,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     modalWasOpen.current = modalOpen;
   }, [modalOpen, user]);
 
-  const verifyOtp = useCallback(async (phone: string, code: string) => {
-    const r = await verifyOtpAction(phone, code);
-    if (!r.ok) return { ok: false, error: r.error };
-    setUser(r.user);
-    router.refresh(); // trang server (đơn hàng, tài khoản) đọc lại phiên mới
-    return { ok: true, welcome: r.welcome };
-  }, [router]);
-
   const logout = useCallback(async () => {
     await logoutAction();
     setUser(null);
@@ -87,8 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <Ctx.Provider
       value={{
-        user, ready, modalOpen, verifyOtp, logout, setUser, options,
-        requestOtp: requestOtpAction,
+        user, ready, modalOpen, logout, setUser, options,
         openLogin: () => setModalOpen(true),
         closeLogin: () => setModalOpen(false),
       }}

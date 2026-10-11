@@ -16,6 +16,7 @@ import { useShipping } from '@/lib/shipping-client';
 import type { PublicVoucher } from '@/lib/voucher-labels';
 import { usePublicVouchers } from '@/lib/vouchers-client';
 import { DeliverToNote } from './DeliverTo';
+import { FlashPriceBar } from './FlashSale';
 import { Icon, Thumb } from './Icon';
 import { WishlistHeart } from './WishlistHeart';
 import { Select } from './Select';
@@ -46,6 +47,9 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
   // Giá theo số lượng: 1 cây = giá lẻ, mỗi 2 cây cùng quy cách = giá combo; giá sỉ công trình liên hệ báo giá
   const unit = p.unit.toLowerCase();
   const combo = u.combo2 && u.combo2 < 2 * u.price ? u.combo2 : 0;
+  // % bớt thêm khi mua 2 (so với 2 lần giá lẻ) — sticker đỏ trên ô "Mua 2"
+  const comboPct = combo ? Math.round((1 - combo / (2 * u.price)) * 100) : 0;
+  const flash = !!p.flash && !quote;
   const payNow = quote ? 0 : computeTotals([{ ...u, qty, ship: p.ship }], 'pickup', 0, rules).goods;
   const quoteHref = partnerType ? `${WHOLESALE_QUOTE_URL}?loai=${partnerType}` : WHOLESALE_QUOTE_URL;
 
@@ -101,6 +105,9 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
         ) : <a href="#danh-gia">Chưa có đánh giá</a>}
         ·<span>Đã bán {compact(p.sold)}</span>
       </div>
+      {/* Sản phẩm Flash sale: dải đỏ đếm ngược liền trên khung giá (kiểu Shopee) */}
+      <div className={flash ? 'app-ppwrap app-ppwrap--flash' : 'app-ppwrap'}>
+      {flash && <FlashPriceBar />}
       <div className="app-pp">
         <div className="vx-buy__price">
           {quote ? <b className="app-quote">{QUOTE_TEXT}</b> : <><b>{money(u.price)}</b><span>/ {p.unit}</span></>}
@@ -112,6 +119,7 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
           </div>
         )}
         {p.options.length > 1 && <small className="app-pp__opt">Giá cho quy cách <b>{u.label}</b></small>}
+      </div>
       </div>
       <div className="app-prows">
         {!quote && (
@@ -126,6 +134,7 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
                 {combo > 0 && (
                   <button type="button" className="app-tiers__row" aria-pressed={qty >= 2} data-on={qty >= 2 || undefined} onClick={() => setQty((q) => Math.max(2, q))}>
                     <span>Mua 2 {unit}</span><b>{money(combo)}</b>
+                    {comboPct > 0 && <em className="app-tiers__off">-{comboPct}%</em>}
                   </button>
                 )}
                 <Link href={quoteHref} className="app-tiers__row app-tiers__row--link app-plain">
@@ -141,15 +150,8 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
             <div className="app-prow__v">
               {vouchers.length > 0 && (
                 <>
-                  <ul className="app-vtags">
-                    {vouchers.map((v) => (
-                      <li key={v.code} className="app-vtag" data-kind={v.kind}>
-                        <b>{v.kind === 'ship' ? `Freeship ${money(v.discountValue)}` : `Giảm ${voucherShort(v)}`}</b>
-                        {v.minOrder > 0 && <small>đơn từ {moneyShort(v.minOrder)}</small>}
-                      </li>
-                    ))}
-                  </ul>
-                  <small className="app-prow__note">Chọn mã ở giỏ hàng — mỗi đơn dùng được 1 mã miễn phí giao + 1 mã giảm giá.</small>
+                  <VoucherStrip vouchers={vouchers} />
+                  <small className="app-prow__note">Chọn mã ở giỏ hàng.</small>
                 </>
               )}
               {partnerPct > 0 && <small className="app-prow__note">Bạn được chiết khấu đối tác thêm <b>{partnerPct}%</b>.</small>}
@@ -163,19 +165,18 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
         <div className="app-prow">
           <span className="app-prow__k" id="buy-opt">{p.options.length > 1 ? `Chọn quy cách (${p.options.length})` : 'Quy cách'}</span>
           <div className="app-prow__v">
-            {p.options.length > 1 ? (
-              <div className="app-vopts" role="group" aria-labelledby="buy-opt">
-                {order.map((i) => {
-                  const o = p.options[i];
-                  return (
-                    <button key={o.label} type="button" className="app-vopt" aria-pressed={i === opt} onClick={() => setOpt(i)}>
-                      <span className="app-vopt__l">{o.label}</span>
-                      <small>{isQuote(o) ? 'Liên hệ báo giá' : money(o.price)}</small>
-                    </button>
-                  );
-                })}
-              </div>
-            ) : <span className="app-vone">{u.label}</span>}
+            {/* Chỉ có 1 quy cách vẫn hiện thành ô đã chọn sẵn (có dấu ✓), không ghi chữ trơn */}
+            <div className="app-vopts" role="group" aria-labelledby="buy-opt">
+              {order.map((i) => {
+                const o = p.options[i];
+                return (
+                  <button key={o.label} type="button" className="app-vopt" aria-pressed={i === opt} onClick={() => setOpt(i)}>
+                    <span className="app-vopt__l">{o.label}</span>
+                    <small>{isQuote(o) ? 'Liên hệ báo giá' : money(o.price)}</small>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
         {!quote && (
@@ -269,6 +270,70 @@ const moneyShort = (n: number) => (n >= 1e6 && n % 1e5 === 0 ? `${String(n / 1e6
 
 /** "10%" / "50.000đ" — mức giảm ngắn của mã ở hàng Mã giảm giá. */
 const voucherShort = (v: PublicVoucher) => (v.discountType === 'percent' ? `${v.discountValue}%` : money(v.discountValue));
+
+/** Thứ tự vé: mã miễn phí giao + mã giảm giá dễ đạt nhất (đơn tối thiểu thấp nhất) đứng đầu, còn lại theo đơn tối thiểu tăng dần. */
+function orderVouchers(list: PublicVoucher[]) {
+  const easy = [...list].sort((a, b) => a.minOrder - b.minOrder);
+  const first = (['ship', 'discount'] as const).flatMap((k) => easy.find((v) => v.kind === k) ?? []);
+  return [...first, ...easy.filter((v) => !first.includes(v))];
+}
+
+const STRIP_PAD = 44; // chỗ nút ‹ › che ở hai mép (px)
+
+/** Hàng vé mã giảm giá: một hàng cuộn ngang (vuốt được) + nút ‹ › hiện khi còn vé khuất — không xuống dòng. */
+function VoucherStrip({ vouchers }: { vouchers: PublicVoucher[] }) {
+  const ref = useRef<HTMLUListElement>(null);
+  const [edge, setEdge] = useState({ prev: false, next: false });
+  const list = orderVouchers(vouchers);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const update = () => {
+      const prev = el.scrollLeft > 4;
+      const next = el.scrollLeft + el.clientWidth < el.scrollWidth - 4;
+      setEdge((e) => (e.prev === prev && e.next === next ? e : { prev, next }));
+    };
+    update();
+    el.addEventListener('scroll', update, { passive: true });
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => { el.removeEventListener('scroll', update); ro.disconnect(); };
+  }, [vouchers.length]);
+
+  // Cuộn tới đúng mép một vé: › đưa vé đang bị khuất bên phải về đầu hàng, ‹ lùi lại gần một màn
+  const go = (dir: 1 | -1) => {
+    const el = ref.current;
+    if (!el) return;
+    const items = Array.from(el.children) as HTMLElement[];
+    const view = el.clientWidth - STRIP_PAD * 2;
+    const target = dir > 0
+      ? items.find((it) => it.offsetLeft + it.offsetWidth > el.scrollLeft + el.clientWidth - STRIP_PAD)
+      : items.find((it) => it.offsetLeft - STRIP_PAD >= el.scrollLeft - view);
+    let left = target ? target.offsetLeft - STRIP_PAD : el.scrollLeft + dir * view;
+    if (Math.abs(left - el.scrollLeft) < 8) left = el.scrollLeft + dir * view;
+    const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    el.scrollTo({ left: Math.max(0, left), behavior: calm ? 'auto' : 'smooth' });
+  };
+
+  return (
+    <div className="app-vstrip" data-prev={edge.prev || undefined} data-next={edge.next || undefined}>
+      <ul className="app-vtags" ref={ref}>
+        {list.map((v) => (
+          <li key={v.code} className="app-vtag" data-kind={v.kind}>
+            <span className="app-vtag__stub" aria-hidden="true"><Icon name={v.kind === 'ship' ? 'truck' : 'tag'} /></span>
+            <span className="app-vtag__body">
+              <b>{v.kind === 'ship' ? `Freeship ${money(v.discountValue)}` : `Giảm ${voucherShort(v)}`}</b>
+              {v.minOrder > 0 && <small>Đơn từ {moneyShort(v.minOrder)}</small>}
+            </span>
+          </li>
+        ))}
+      </ul>
+      {edge.prev && <button type="button" className="app-vstrip__nav app-vstrip__nav--prev" aria-label="Xem mã trước" onClick={() => go(-1)}><Icon name="chevron" /></button>}
+      {edge.next && <button type="button" className="app-vstrip__nav app-vstrip__nav--next" aria-label="Xem mã tiếp theo" onClick={() => go(1)}><Icon name="chevron" /></button>}
+    </div>
+  );
+}
 
 /** Mô tả + bảng thông số dài (cây có 15–17 thông số) thì thu gọn, nút "Xem tất cả thông tin" mở ra. */
 function MoreInfo({ children }: { children: ReactNode }) {

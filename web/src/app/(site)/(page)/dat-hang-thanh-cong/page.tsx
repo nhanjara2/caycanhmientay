@@ -25,7 +25,7 @@ export default async function OrderSuccessPage({ searchParams }: Props) {
         <div className="os-hero">
           <span className="os-check"><Icon name="receipt" /></span>
           <h1>Không xem được đơn hàng</h1>
-          <p>Đăng nhập bằng số điện thoại đã đặt hàng để xem đơn trong mục Đơn hàng của tôi.</p>
+          <p>Đăng nhập bằng tài khoản đã đặt hàng để xem đơn trong mục Đơn hàng của tôi.</p>
         </div>
         <div className="os-actions">
           <Link href="/tai-khoan/don-hang" className="vx-btn vx-btn--primary">Đơn hàng của tôi</Link>
@@ -64,8 +64,9 @@ export default async function OrderSuccessPage({ searchParams }: Props) {
             ? <span className="vx-badge vx-badge--success" style={{ alignSelf: 'flex-start' }}>Đã thanh toán</span>
             : <span className="vx-badge vx-badge--info" style={{ alignSelf: 'flex-start' }}>{order.paymentMethod === 'cod' ? 'Trả khi nhận hàng' : 'Chờ thanh toán'}</span>}
           <span style={{ color: 'var(--ink-muted)' }}>
-            Bạn được cộng <b style={{ color: 'var(--ink)' }}>{Math.floor(order.total / 10000)} điểm</b> sau khi nhận hàng
-            {user ? '.' : ' nếu đăng nhập bằng số điện thoại đặt hàng.'}
+            {user
+              ? <>Bạn được cộng <b style={{ color: 'var(--ink)' }}>{Math.floor(order.total / 10000)} điểm</b> sau khi nhận hàng.</>
+              : 'Lần sau đăng nhập trước khi đặt để theo dõi đơn và tích điểm.'}
           </span>
         </div>
       </div>

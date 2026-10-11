@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { StaffInvite, StaffRowActions } from '@/components/admin/StaffAdmin';
-import { Icon } from '@/components/Icon';
 import { AREAS, AREA_INFO, ASSIGNABLE_ROLES, STAFF_ROLE_INFO, STAFF_ROLES, type Level } from '@/lib/permissions';
 import { fmtDateTime } from '@/lib/order-labels';
 import { maskPhone, requireAccess } from '@/server/auth';
@@ -20,7 +19,6 @@ const initials = (name: string | null) => (name ?? '?').split(/\s+/).map((w) => 
 export default async function AdminRolesPage() {
   const me = await requireAccess('settings');
   const staff = await listStaff();
-  const demo = process.env.OTP_DEMO === '1';
 
   return (
     <div className="ad-body">
@@ -28,16 +26,6 @@ export default async function AdminRolesPage() {
         <h1>Phân quyền</h1>
         <span className="acts"><StaffInvite /></span>
       </div>
-
-      {demo && (
-        <div className="vx-note" role="alert">
-          <Icon name="alert" />
-          <div>
-            Website đang ở chế độ <b>chạy thử OTP</b> (mã đăng nhập hiện ngay trên màn hình): ai biết số điện thoại của nhân viên đều đăng nhập được.
-            Hãy tắt chế độ này (bỏ biến <code>OTP_DEMO</code>) và cấu hình gửi OTP thật trước khi bán chính thức.
-          </div>
-        </div>
-      )}
 
       <div className="ad-card">
         <div className="ad-card__h">
@@ -92,13 +80,18 @@ export default async function AdminRolesPage() {
                       </span>
                     </td>
                     <td data-label="Số điện thoại">{phone ? maskPhone(phone) : '—'}</td>
-                    <td data-label="Đăng nhập gần nhất">{s.lastLogin ? fmtDateTime(s.lastLogin) : <span style={{ color: 'var(--ink-muted)' }}>Chưa đăng nhập</span>}</td>
+                    <td data-label="Đăng nhập gần nhất">
+                      {s.login === 'phone'
+                        ? <span style={{ color: 'var(--danger)' }}>Tài khoản số điện thoại cũ — không đăng nhập được nữa. Gỡ quyền rồi mời lại bằng Gmail.</span>
+                        : s.lastLogin ? fmtDateTime(s.lastLogin) : <span style={{ color: 'var(--ink-muted)' }}>Đã mời, chưa đăng nhập</span>}
+                    </td>
                     <td data-label="Vai trò">
                       <StaffRowActions
                         id={s.id}
                         name={s.name ?? 'nhân viên này'}
                         role={s.effective}
                         locked={self || s.locked}
+                        invited={s.login === 'invited'}
                         lockReason={self ? `${STAFF_ROLE_INFO[s.effective].name} · tài khoản của bạn` : `${STAFF_ROLE_INFO[s.effective].name} · cấu hình hệ thống`}
                       />
                     </td>

@@ -61,24 +61,29 @@ export default async function PromotionsPage() {
         {vouchers.length > 0 ? (
           <div className="pm-vouchers">
             {vouchers.map((v) => (
-              <div key={v.id} className="vx-voucher pm-voucher">
-                <span className={`vx-voucher__ic ${v.kind === 'ship' ? 'ship' : 'sale'}`}><Icon name={v.code === WELCOME_CODE ? 'gift' : v.kind === 'ship' ? 'truck' : 'tag'} /></span>
-                <span className="vx-voucher__body">
-                  <b>{v.label}</b>
-                  <span className="cond">
-                    {voucherValueText(v, money)} · {v.minOrder > 0 ? `Đơn từ ${money(v.minOrder)}` : 'Không điều kiện đơn tối thiểu'}
-                  </span>
-                  {v.code === WELCOME_CODE && (
-                    <span className="cond">
-                      Dành cho tài khoản mới: đăng nhập để dùng, trong {WELCOME_DAYS} ngày kể từ lần đăng nhập đầu tiên, mỗi tài khoản / số điện thoại {v.perCustomerLimit} lần.
-                    </span>
-                  )}
-                  <span className="cond">
-                    Mã: <b className="pm-code">{v.code}</b>
-                    {v.endsAt && <span className="exp"> · Hết hạn {fmtDate(v.endsAt)}</span>}
-                  </span>
+              <div key={v.id} className="pm-voucher" data-kind={v.kind === 'ship' ? 'ship' : undefined}>
+                <span className="pm-voucher__stub" aria-hidden="true">
+                  <Icon name={v.code === WELCOME_CODE ? 'gift' : v.kind === 'ship' ? 'truck' : 'tag'} />
+                  <b>{v.kind === 'ship' ? 'Freeship' : v.code === WELCOME_CODE ? 'Quà mới' : 'Giảm giá'}</b>
                 </span>
-                <CopyVoucherCode code={v.code} text />
+                <span className="pm-voucher__body">
+                  <span className="pm-voucher__txt">
+                    <b>{v.label}</b>
+                    <span>
+                      {voucherValueText(v, money)} · {v.minOrder > 0 ? `Đơn từ ${money(v.minOrder)}` : 'Không điều kiện đơn tối thiểu'}
+                    </span>
+                    {v.code === WELCOME_CODE && (
+                      <span>
+                        Dành cho tài khoản mới: đăng nhập để dùng, trong {WELCOME_DAYS} ngày kể từ lần đăng nhập đầu tiên, mỗi tài khoản / số điện thoại {v.perCustomerLimit} lần.
+                      </span>
+                    )}
+                    <span>
+                      Mã: <b className="pm-code">{v.code}</b>
+                      {v.endsAt && <span className="exp"> · Hết hạn {fmtDate(v.endsAt)}</span>}
+                    </span>
+                  </span>
+                  <CopyVoucherCode code={v.code} text />
+                </span>
               </div>
             ))}
           </div>
@@ -91,7 +96,7 @@ export default async function PromotionsPage() {
           ))}
         </ol>
         <ul className="pm-rules">
-          <li>Mỗi đơn hàng dùng được <b>một mã</b>. Mã giảm tính trên tiền hàng sau khi đã trừ giá giảm của sản phẩm, chưa gồm phí giao.</li>
+          <li>Mỗi đơn hàng dùng được <b>một mã giảm giá và một mã miễn phí giao</b>. Mã giảm giá tính trên tiền hàng sau khi đã trừ giá giảm của sản phẩm, chưa gồm phí giao.</li>
           <li>Mỗi mã có điều kiện riêng (đơn tối thiểu, hạn dùng, số lượt) — xem ngay trên thẻ mã. Mã hết lượt hoặc hết hạn thì trang thanh toán sẽ báo rõ.</li>
           <li>Đơn có sản phẩm Flash sale không thanh toán khi nhận hàng. Đơn mua xong còn được tích điểm: xem <Link href="/chinh-sach/tich-diem">Thể lệ tích điểm</Link>.</li>
         </ul>

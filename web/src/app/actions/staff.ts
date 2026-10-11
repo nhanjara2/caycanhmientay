@@ -13,7 +13,7 @@ const refresh = () => revalidatePath('/admin/phan-quyen');
 export async function inviteStaffAction(input: unknown) {
   await requireStaff('admin');
   const p = z.object({
-    phone: z.string().trim().min(8, 'Nhập số điện thoại').max(20),
+    email: z.email('Email chưa đúng').max(120),
     name: z.string().trim().min(2, 'Nhập tên nhân viên').max(60),
     role,
   }).safeParse(input);

@@ -6,8 +6,11 @@ import { updateProfileAction } from '@/app/actions/auth';
 import { Avatar } from './Avatar';
 import { useAuth } from '@/lib/auth';
 
-/** ProfileForm: họ tên, email, SĐT. SĐT đã xác thực OTP là định danh tài khoản nên khóa; tài khoản Google tự khai SĐT (bắt buộc, không xác thực). */
-export function ProfileForm({ initial }: { initial: { name: string; email: string; phone: string; phoneVerified: boolean; initials: string; avatarUrl: string | null } }) {
+/**
+ * ProfileForm: họ tên, email, SĐT. Tài khoản Google tự khai SĐT (bắt buộc, không xác thực). Tài khoản SĐT cũ (tạo khi còn
+ * đăng nhập OTP) giữ SĐT đã xác thực, khóa không sửa — chưa gắn Google thì nhắc gắn, vì hết phiên này là không đăng nhập lại được.
+ */
+export function ProfileForm({ initial }: { initial: { name: string; email: string; phone: string; phoneVerified: boolean; hasGoogle: boolean; initials: string; avatarUrl: string | null } }) {
   const { setUser } = useAuth();
   const router = useRouter();
   const [name, setName] = useState(initial.name);
@@ -30,6 +33,14 @@ export function ProfileForm({ initial }: { initial: { name: string; email: strin
       <div className="vx-profile__head">Thông tin cá nhân</div>
       <form className="vx-profile__body" onSubmit={submit}>
         <div className="vx-profile__av"><Avatar initials={initial.initials} url={initial.avatarUrl} /></div>
+        {!initial.hasGoogle && (
+          <div className="vx-note" role="note">
+            <div>
+              Website đã bỏ đăng nhập bằng số điện thoại. Hãy liên kết tài khoản Google để lần sau vẫn vào được tài khoản này (đơn hàng, điểm giữ nguyên).
+              <a className="vx-btn vx-btn--primary" style={{ marginTop: 8 }} href="/api/auth/google?next=%2Ftai-khoan">Liên kết tài khoản Google</a>
+            </div>
+          </div>
+        )}
         <div className="vx-fl">
           <label htmlFor="pf-name">Họ và tên</label>
           <input id="pf-name" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" placeholder="Nhập họ và tên" />

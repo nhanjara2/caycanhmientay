@@ -18,7 +18,7 @@ export default async function ProfilePage() {
       </div>
       <div className="vx-acctgrid">
         <AccountSidebar />
-        <ProfileForm initial={{ name: user.name ?? '', email: user.email ?? '', phone: accountPhone(user) ?? '', phoneVerified: Boolean(user.phone), initials: publicUser(user).initials, avatarUrl: publicUser(user).avatarUrl }} />
+        <ProfileForm initial={{ name: user.name ?? '', email: user.email ?? '', phone: accountPhone(user) ?? '', phoneVerified: Boolean(user.phone), hasGoogle: Boolean(user.googleSub), initials: publicUser(user).initials, avatarUrl: publicUser(user).avatarUrl }} />
       </div>
     </div>
   );

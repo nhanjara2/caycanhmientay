@@ -363,6 +363,23 @@ a.vx-chip[aria-current="true"] { background: var(--primary-soft); border-color: 
 .vx-qr.app-qr { width: 112px; height: 112px; padding: 4px; background: #fff; }
 .vx-qr.app-qr img { display: block; width: 100%; height: 100%; }
 .app-fab-logo { display: block; width: 24px; height: 24px; }
+/* Nút Chat Zalo "reo" như chuông (11/10/2026): mỗi 5 giây logo lắc ~1 giây + một vòng sóng xanh tỏa ra quanh nút, để khách
+   để ý tới kênh nhắn tin. Chỉ lắc logo (lắc cả nút thì chữ rung khó đọc). Không gắn số tin nhắn giả. */
+.app-fab a.alt { animation: app-zalo-wave 5s ease-out infinite; }
+.app-fab a.alt .app-fab-logo { transform-origin: 50% 55%; animation: app-zalo-ring 5s ease-in-out infinite; }
+@keyframes app-zalo-ring {
+  0%, 78%, 100% { transform: none; }
+  81% { transform: rotate(-18deg) scale(1.15); }
+  85% { transform: rotate(16deg) scale(1.15); }
+  89% { transform: rotate(-13deg) scale(1.1); }
+  93% { transform: rotate(9deg) scale(1.05); }
+  97% { transform: rotate(-4deg); }
+}
+@keyframes app-zalo-wave {
+  0%, 78% { box-shadow: var(--shadow-pop), 0 0 0 0 rgba(0, 104, 255, .5); }
+  100% { box-shadow: var(--shadow-pop), 0 0 0 0.625rem rgba(0, 104, 255, 0); }
+}
+@media (prefers-reduced-motion: reduce) { .app-fab a.alt, .app-fab a.alt .app-fab-logo { animation: none; } }
 
 /* Thanh toán: địa chỉ đã lưu kèm nút Sửa (không lồng nút trong nút) */
 .app-addr-opt { position: relative; border-top: 1px solid var(--border); }
@@ -1333,9 +1350,24 @@ button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .pm-jump .vx-chip { text-decoration: none; }
 .pm-sec { display: flex; flex-direction: column; gap: var(--space-3); scroll-margin-top: calc(var(--header-h, 96px) + 0.75rem); }
 .pm-vouchers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
-.vx-voucher.pm-voucher { grid-template-columns: 3rem minmax(0, 1fr) auto; align-items: start; padding: var(--space-4); gap: var(--space-3); }
-.pm-voucher .vx-btn { align-self: center; white-space: nowrap; }
-.pm-code { color: var(--primary); letter-spacing: 0.02em; }
+/* Thẻ mã kiểu vé (11/10/2026, cùng kiểu .app-vtag ở trang sản phẩm): mã giảm giá đỏ, mã miễn phí giao xanh dương.
+   Khuyết tròn + răng cưa là hình tròn màu nền trang, cắt bằng overflow: hidden; viền là bóng trong. */
+.pm-voucher { --vt: #d0011b; --vt-soft: #fff1f2; --vt-line: #f3b9c0; --vt-stub: 5.75rem; position: relative; display: flex; align-items: stretch; min-height: 6.75rem; border-radius: 0.375rem 0.625rem 0.625rem 0.375rem; background: var(--vt-soft); box-shadow: inset 0 0 0 1px var(--vt-line); overflow: hidden; }
+.pm-voucher[data-kind="ship"] { --vt: #1565c0; --vt-soft: #eef5fe; --vt-line: #b7d2f2; }
+.pm-voucher::before, .pm-voucher::after { content: ""; position: absolute; left: calc(var(--vt-stub) - 0.5rem); width: 1rem; height: 1rem; border-radius: 50%; background: var(--surface-page, #fff); box-shadow: inset 0 0 0 1px var(--vt-line); z-index: 1; }
+.pm-voucher::before { top: -0.5rem; }
+.pm-voucher::after { bottom: -0.5rem; }
+.pm-voucher__stub { position: relative; flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.375rem; width: var(--vt-stub); padding: 0.5rem 0.375rem 0.5rem 0.625rem; background: var(--vt); color: #fff; border-right: 2px dashed rgba(255, 255, 255, .75); text-align: center; font-size: 0.9375rem; line-height: 1.25; }
+.pm-voucher__stub::before { content: ""; position: absolute; left: -0.25rem; top: 0.25rem; bottom: 0.25rem; width: 0.5rem; background: radial-gradient(circle at center, var(--surface-page, #fff) 0 0.21875rem, transparent 0.25rem) center / 0.5rem 0.75rem no-repeat space; }
+.pm-voucher__stub .vx-ico { width: 1.75rem; height: 1.75rem; }
+.pm-voucher__body { flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4) var(--space-3) 1.125rem; }
+.pm-voucher__txt { display: flex; flex-direction: column; gap: 0.25rem; min-width: 0; font-size: 0.875rem; line-height: 1.45; color: var(--ink-muted); }
+.pm-voucher__txt > b { font-size: 1.0625rem; line-height: 1.35; color: var(--vt); }
+.pm-voucher .exp { color: var(--ink); font-weight: 500; }
+.pm-voucher .vx-btn { white-space: nowrap; border-color: var(--vt); background: var(--vt); color: #fff; }
+.pm-voucher .vx-btn:hover { border-color: var(--vt); background: var(--vt); color: #fff; filter: brightness(.9); }
+.pm-voucher .vx-btn:focus-visible { outline: 2px solid var(--vt); outline-offset: 2px; }
+.pm-code { padding: 0.0625rem 0.4375rem; border: 1px dashed var(--vt); border-radius: var(--radius-sm); background: var(--surface, #fff); color: var(--vt); letter-spacing: 0.04em; }
 .pm-steps { list-style: none; margin: var(--space-2) 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); }
 .pm-steps li { display: flex; gap: var(--space-3); align-items: flex-start; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); font-size: 0.875rem; line-height: 1.375rem; color: var(--ink-muted); }
 .pm-steps li > span:last-child { display: flex; flex-direction: column; gap: 0.125rem; }
@@ -1359,9 +1391,11 @@ button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 @media (max-width: 47.9375em) {
   .pm-page { padding: var(--space-3) var(--space-3) var(--space-6); gap: var(--space-6); }
   .pm-head h1 { font-size: 1.5rem; line-height: 2rem; }
-  .vx-voucher.pm-voucher { grid-template-columns: 2.5rem minmax(0, 1fr); padding: var(--space-3); }
-  .vx-voucher.pm-voucher .vx-voucher__ic { width: 2.5rem; height: 2.5rem; }
-  .pm-voucher .vx-btn { grid-column: 1 / -1; width: 100%; justify-content: center; }
+  .pm-voucher { --vt-stub: 4.75rem; }
+  .pm-voucher__stub { font-size: 0.875rem; padding-inline: 0.5rem 0.25rem; }
+  .pm-voucher__stub .vx-ico { width: 1.5rem; height: 1.5rem; }
+  .pm-voucher__body { grid-template-columns: minmax(0, 1fr); padding: var(--space-3); }
+  .pm-voucher .vx-btn { width: 100%; min-height: 2.75rem; justify-content: center; }
   .pm-steps { grid-template-columns: minmax(0, 1fr); }
   .pm-contact { flex-direction: column; align-items: flex-start; padding: var(--space-4); }
   .pm-contact .vx-btn { margin-left: 0; width: 100%; justify-content: center; }
@@ -1625,6 +1659,25 @@ button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .app-pp .vx-buy__old s { font-size: 1.0625rem; }
 .app-pp__opt { flex-basis: 100%; font-size: 0.875rem; line-height: 1.4; color: var(--ink-muted); }
 .app-pp__opt b { color: var(--ink); font-weight: 600; }
+/* Sản phẩm Flash sale: dải đỏ → cam có đếm ngược nằm liền trên khung giá, khung giá nền hồng nhạt, giá màu đỏ */
+.app-ppflash { display: flex; flex-wrap: wrap; align-items: center; gap: 0.125rem 0.5rem; padding: 0.5rem 1.125rem; border-radius: var(--radius-md) var(--radius-md) 0 0; background: linear-gradient(90deg, #991b1b 0%, #b91c1c 45%, #c2410c 100%); color: #fff; font-size: 0.875rem; line-height: 1.4; }
+.app-ppflash__t { display: inline-flex; align-items: center; gap: 0.375rem; margin-right: auto; font-size: 1.125rem; font-weight: 800; font-style: italic; text-transform: uppercase; letter-spacing: .02em; white-space: nowrap; }
+.app-ppflash__t svg { width: 1.25rem; height: 1.25rem; color: #fde047; animation: app-flash-bolt 1.2s ease-in-out infinite; }
+.app-ppflash__end { display: inline-flex; align-items: center; gap: 0.5rem; white-space: nowrap; }
+.app-ppflash .vx-count b { background: #1c1917; font-size: 0.9375rem; line-height: 1.4rem; padding: 1px 6px; }
+.app-ppwrap--flash .app-pp { border-radius: 0 0 var(--radius-md) var(--radius-md); background: #fff1ee; }
+.app-ppwrap--flash .vx-buy__price b { color: #d0011b; }
+@media (prefers-reduced-motion: reduce) { .app-ppflash__t svg { animation: none; } }
+/* Khung giá hẹp (điện thoại, cột mua của tablet): theo bề rộng khung chứ không theo màn hình */
+.app-ppwrap--flash { container-type: inline-size; }
+@container (max-width: 26rem) {
+  .app-ppflash { gap: 0.375rem; padding: 0.5rem 0.625rem; }
+  .app-ppflash__t { font-size: 1rem; letter-spacing: 0; }
+  .app-ppflash__t svg { width: 1.125rem; height: 1.125rem; }
+  .app-ppflash__k > span { display: none; }
+  .app-ppflash__k::after { content: attr(data-short); }
+  .app-ppflash .vx-count b { min-width: 1.9em; font-size: 0.875rem; padding: 1px 4px; }
+}
 .app-prows { display: flex; flex-direction: column; gap: 1rem; padding: 0.25rem 0; }
 .app-prow { display: grid; grid-template-columns: 8.5rem minmax(0, 1fr); gap: 1rem; align-items: start; }
 .app-prow__k { padding-top: 0.5rem; font-size: 0.9375rem; line-height: 1.4; color: var(--ink-muted); }
@@ -1642,6 +1695,12 @@ button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .app-tiers--tiles .app-tiers__row[data-on] { box-shadow: inset 0 0 0 1px var(--primary); background: var(--primary-soft); }
 .app-tiers--tiles .app-tiers__row[data-on]::after { content: '✓'; position: absolute; right: 0; bottom: 0; width: 1.375rem; height: 1.375rem; display: flex; align-items: flex-end; justify-content: flex-end; padding: 0 0.125rem 0.0625rem 0; box-sizing: border-box; background: var(--primary); clip-path: polygon(100% 0, 100% 100%, 0 100%); color: #fff; font-size: 0.6875rem; font-weight: 700; line-height: 1; }
 .app-tiers--tiles .app-tiers__row--link > b { color: var(--primary-hover); }
+/* Sticker đỏ "-10%" nhô lên mép trên ô "Mua 2": mua 2 được bớt thêm bao nhiêu so với 2 lần giá lẻ */
+.app-tiers--tiles .app-tiers__row:has(.app-tiers__off) { overflow: visible; }
+.app-tiers--tiles .app-tiers__row:has(.app-tiers__off)::after { border-bottom-right-radius: calc(var(--radius-sm) - 1px); }
+.app-tiers__off { position: absolute; top: -0.625rem; right: 0.375rem; padding: 0.0625rem 0.4375rem; border-radius: 999px; background: #d0011b; color: #fff; font-size: 0.8125rem; font-style: normal; font-weight: 700; line-height: 1.35; box-shadow: 0 1px 3px rgba(208, 1, 27, .35); }
+/* Màn rất hẹp (≤ 359px): ô giá thu chữ + đệm cho giá 7 chữ số (1.062.000đ) không tràn khỏi ô */
+@media (max-width: 22.4375em) { .app-site .app-tiers--tiles .app-tiers__row { padding-inline: 0.375rem; font-size: 0.8125rem; letter-spacing: -0.01em; } }
 /* Tablet: cột nội dung chỉ ~210px, 3 ô không vừa → hàng này đưa nhãn lên trên như điện thoại */
 @media (min-width: 48em) and (max-width: 63.9375em) {
   .app-prow--stack-md { grid-template-columns: minmax(0, 1fr); gap: 0.375rem; }
@@ -1649,10 +1708,39 @@ button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 }
 .app-prow__note { font-size: 0.875rem; line-height: 1.45; color: var(--ink-muted); }
 .app-prow__note b { color: var(--ink); }
-.app-vtags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0; padding: 0; list-style: none; }
-.app-vtag { display: inline-flex; flex-wrap: wrap; align-items: baseline; column-gap: 0.375rem; padding: 0.3125rem 0.625rem; border: 1px dashed var(--sale); border-radius: var(--radius-sm); background: #fff5ee; color: var(--sale); font-size: 0.9375rem; line-height: 1.35; }
-.app-vtag b { font-weight: 700; letter-spacing: .01em; }
+/* Thẻ mã kiểu vé (11/10/2026): cuống màu đặc + mép răng cưa + 2 khuyết tròn ở đường xé.
+   Mã giảm giá đỏ, mã miễn phí giao xanh dương (data-kind="ship"). Khuyết / răng cưa là hình tròn tô màu nền
+   trang (--surface) rồi cắt bằng overflow: hidden — viền vẽ bằng bóng trong để hình tròn che được. */
+.app-vtags { display: flex; flex-wrap: wrap; gap: 0.5rem 0.625rem; margin: 0; padding: 0; list-style: none; }
+.app-vtag { --vt: #d0011b; --vt-soft: #fff1f2; --vt-line: #f3b9c0; --vt-stub: 2.5rem; position: relative; display: inline-flex; align-items: stretch; min-height: 2.875rem; border-radius: 0.25rem 0.375rem 0.375rem 0.25rem; background: var(--vt-soft); box-shadow: inset 0 0 0 1px var(--vt-line); color: var(--vt); font-size: 0.9375rem; line-height: 1.3; overflow: hidden; }
+.app-vtag[data-kind="ship"] { --vt: #1565c0; --vt-soft: #eef5fe; --vt-line: #b7d2f2; }
+.app-vtag::before, .app-vtag::after { content: ""; position: absolute; left: calc(var(--vt-stub) - 0.3125rem); width: 0.625rem; height: 0.625rem; border-radius: 50%; background: var(--surface, #fff); box-shadow: inset 0 0 0 1px var(--vt-line); z-index: 1; }
+.app-vtag::before { top: -0.3125rem; }
+.app-vtag::after { bottom: -0.3125rem; }
+.app-vtag__stub { position: relative; flex: none; display: grid; place-items: center; width: var(--vt-stub); padding-left: 0.125rem; background: var(--vt); color: #fff; border-right: 1px dashed rgba(255, 255, 255, .75); }
+.app-vtag__stub::before { content: ""; position: absolute; left: -0.1875rem; top: 0.125rem; bottom: 0.125rem; width: 0.375rem; background: radial-gradient(circle at center, var(--surface, #fff) 0 0.15625rem, transparent 0.1875rem) center / 0.375rem 0.5rem no-repeat space; }
+.app-vtag__stub .vx-ico { width: 1.25rem; height: 1.25rem; }
+.app-vtag__body { display: flex; flex-direction: column; justify-content: center; min-width: 0; padding: 0.3125rem 0.75rem 0.3125rem 0.625rem; }
+.app-vtag b { font-weight: 700; letter-spacing: .01em; white-space: nowrap; }
 .app-vtag small { font-size: 0.875rem; color: var(--ink-muted); }
+/* Hàng vé cuộn ngang ở trang sản phẩm (VoucherStrip trong BuyBox, 11/10/2026): một hàng, vuốt hoặc bấm nút ‹ ›;
+   mép còn vé khuất thì mờ dần + hiện nút (data-prev / data-next). */
+.app-vstrip { position: relative; min-width: 0; }
+.app-vstrip .app-vtags { position: relative; flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scroll-padding-inline: 2.75rem; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.app-vstrip .app-vtags::-webkit-scrollbar { display: none; }
+.app-vstrip .app-vtag { flex: none; scroll-snap-align: start; }
+.app-vstrip::before, .app-vstrip::after { content: ""; position: absolute; top: 0; bottom: 0; width: 2.75rem; pointer-events: none; opacity: 0; transition: opacity .15s; z-index: 2; }
+.app-vstrip::before { left: 0; background: linear-gradient(to left, transparent, var(--surface, #fff) 65%); }
+.app-vstrip::after { right: 0; background: linear-gradient(to right, transparent, var(--surface, #fff) 65%); }
+.app-vstrip[data-prev]::before, .app-vstrip[data-next]::after { opacity: 1; }
+.app-vstrip__nav { position: absolute; top: 50%; z-index: 3; display: grid; place-items: center; width: 2.25rem; height: 2.25rem; margin-top: -1.125rem; padding: 0; border: 1px solid var(--border); border-radius: 50%; background: var(--surface, #fff); color: var(--ink); box-shadow: 0 1px 4px rgba(0, 0, 0, .16); cursor: pointer; }
+.app-vstrip__nav::after { content: ""; position: absolute; inset: -0.3125rem; }
+.app-vstrip__nav:hover { border-color: var(--ink-muted); }
+.app-vstrip__nav:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.app-vstrip__nav .vx-ico { width: 1.125rem; height: 1.125rem; }
+.app-vstrip__nav--prev { left: 0; }
+.app-vstrip__nav--prev .vx-ico { transform: rotate(180deg); }
+.app-vstrip__nav--next { right: 0; }
 .app-vopts { display: grid; grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); gap: 0.5rem; }
 .app-vopt { position: relative; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 0.125rem; min-height: 3.5rem; padding: 0.5rem 0.75rem; border: 1px solid var(--field-border, #a9b8ae); border-radius: var(--radius-sm); background: var(--surface); color: var(--ink); font: inherit; text-align: left; cursor: pointer; overflow: hidden; }
 .app-vopt:hover { border-color: var(--primary); }
@@ -1663,7 +1751,6 @@ button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .app-vopt[aria-pressed="true"] .app-vopt__l { color: var(--primary-hover); }
 .app-vopt[aria-pressed="true"] small { color: var(--primary-hover); font-weight: 600; }
 .app-vopt[aria-pressed="true"]::after { content: '✓'; position: absolute; right: 0; bottom: 0; width: 1.375rem; height: 1.375rem; display: flex; align-items: flex-end; justify-content: flex-end; padding: 0 0.125rem 0.0625rem 0; box-sizing: border-box; background: var(--primary); clip-path: polygon(100% 0, 100% 100%, 0 100%); color: #fff; font-size: 0.6875rem; line-height: 1; font-weight: 700; }
-.app-vone { align-self: flex-start; padding: 0.4375rem 0.875rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-sunken); font-size: 0.9375rem; line-height: 1.4; font-weight: 600; }
 .app-qtyrow { flex-direction: row; flex-wrap: wrap; align-items: center; column-gap: 0.875rem; }
 .app-qtyrow .vx-stepper { border-color: var(--field-border, #a9b8ae); }
 .vx-stepper button:disabled { opacity: .35; cursor: default; }
@@ -1724,11 +1811,40 @@ button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .app-vpick .vx-voucher__tag { font-size: 0.75rem; line-height: 1.3; padding: 1px 8px; }
 .app-vpick .vx-vcheck { width: 1.5rem; height: 1.5rem; }
 .app-vmodal .vx-vfoot__sum { font-size: 0.9375rem; }
-.app-vtag[data-kind="ship"] { border-color: var(--primary); background: #f2f8f4; color: var(--primary-hover); }
+/* Hộp chọn mã: ô biểu tượng cùng màu với thẻ mã ở trang sản phẩm (giảm giá đỏ, miễn phí giao xanh dương) */
+.app-vpick:not([aria-disabled="true"]) .vx-voucher__ic.sale { background: #d0011b; color: #fff; }
+.app-vpick:not([aria-disabled="true"]) .vx-voucher__ic.ship { background: #1565c0; color: #fff; }
 @media (max-width: 47.9375em) {
   .app-modal.app-vmodal { place-items: end center; padding: 0; }
   .app-vmodal .vx-modal { max-width: none; max-height: 92dvh; border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
   .app-vmodal .vx-modal__foot { padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px)); }
+}
+
+/* ---- Xu hướng tìm kiếm: từ khóa chạy ngang dưới ô tìm ở đầu trang (TrendingSearches trong Header.tsx, 11/10/2026) ----
+   Chỉ máy tính >= 1024px (thay hàng .vx-keywords đứng yên cũ). Dải nằm trong form .vx-search, đặt tuyệt đối ngay dưới ô nên
+   rộng đúng bằng ô; hàng chính của đầu trang chừa đáy đúng bằng hàng từ khóa cũ (1rem chữ + 12px) -> --header-h không đổi. */
+.app-trend { display: none; }
+@media (min-width: 64em) {
+  .app-header .vx-header__main { padding-bottom: calc(var(--space-2) + 1rem + var(--space-3)); }
+  .app-header .vx-search { position: relative; }
+  .app-trend { position: absolute; top: calc(100% + var(--space-2)); left: 0; right: 0; display: flex; align-items: center; gap: var(--space-3); font-size: 0.75rem; line-height: 1rem; color: var(--on-deep-muted); white-space: nowrap; }
+  .app-trend__label { flex: none; padding-left: 18px; font-weight: 600; color: var(--on-deep); }
+  .app-trend__view { flex: 1; min-width: 0; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 1.25rem, #000 calc(100% - 1.25rem), transparent); mask-image: linear-gradient(90deg, transparent, #000 1.25rem, #000 calc(100% - 1.25rem), transparent); }
+  .app-trend__track { display: flex; width: max-content; margin: 0; padding: 0; list-style: none; animation: app-trend 48s linear infinite; }
+  .app-trend__view:hover .app-trend__track, .app-trend__view:focus-within .app-trend__track { animation-play-state: paused; }
+  .app-trend__track li { padding-right: 1.25rem; }
+  .app-trend__track a { display: inline-flex; align-items: center; gap: 0.25rem; color: inherit; text-decoration: none; }
+  .app-trend__track a .vx-ico { flex: none; width: 0.875rem; height: 0.875rem; color: var(--sun); }
+  .app-trend__track a:hover { color: var(--on-deep); text-decoration: underline; }
+}
+/* Ô tìm hẹp (1024–1199px): ẩn nhãn, nhường chỗ cho từ khóa (mỗi từ đã có biểu tượng xu hướng) */
+@media (min-width: 64em) and (max-width: 74.9375em) { .app-trend__label { display: none; } }
+@keyframes app-trend { to { transform: translateX(-50%); } }
+/* Giảm chuyển động: đứng yên, chỉ một bản danh sách, phần khuất kéo ngang được */
+@media (prefers-reduced-motion: reduce) {
+  .app-trend__track { animation: none; }
+  .app-trend__track li[aria-hidden] { display: none; }
+  .app-trend__view { overflow-x: auto; scrollbar-width: none; }
 }
 
 /* ---- Thanh danh mục ngang + bảng xổ (CategoryNav, 08/10/2026) ----
@@ -2391,3 +2507,56 @@ body[data-buybar] .app-site .app-fab { bottom: 6.25rem; }
   .app-site .vx-total s { display: block; margin: 0; }
 }
 /* <<< DỄ DÙNG ĐIỆN THOẠI */
+
+/* >>> HIỆU ỨNG SINH ĐỘNG (11/10/2026) — chỉ web khách (tiền tố .app-site; hộp thoại gắn vào <body> dùng body:has(.app-site)),
+   không đụng admin / POS / app nhân viên. Tất cả nằm trong prefers-reduced-motion: no-preference → máy bật giảm chuyển động
+   thì web đứng yên như cũ. Quy ước: ngắn (≤ 0,5 giây), nhẹ (dịch ≤ 16px), không lặp vô hạn, không giấu nội dung đang thấy.
+   Thêm hiệu ứng mới cho web khách thì viết vào khối này. */
+@media (prefers-reduced-motion: no-preference) {
+  /* 1. Đổi màu / bóng mượt cho mọi link và nút. :where() = độ ưu tiên 0, chỗ nào đã khai transition riêng thì giữ nguyên */
+  :where(.app-site) :where(a, button) { transition: color .15s ease, background-color .15s ease, border-color .15s ease, box-shadow .2s ease, transform .15s ease; }
+
+  /* 2. Nút nhún nhẹ khi bấm */
+  .app-site .vx-btn:active:not([disabled]), .app-site .app-fab a:active, .app-site .vx-cartbtn:active { transform: scale(.96); }
+
+  /* 3. Máy có chuột: thẻ nhấc lên + ảnh phóng nhẹ khi rê */
+  @media (hover: hover) {
+    .app-site .vx-pcard { transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease; }
+    .app-site .vx-pcard:hover { transform: translateY(-4px); box-shadow: 0 10px 24px rgba(12, 24, 16, .12); }
+    .app-site .vx-pcard__media > img, .app-site .vx-thumbimg > img { transition: transform .45s ease; }
+    .app-site .vx-pcard:hover .vx-pcard__media > img, .app-site a:hover > .vx-thumbimg > img, .app-site a:hover .vx-thumbimg > img { transform: scale(1.06); }
+    .app-site .vx-thumbimg { overflow: hidden; }
+    .app-site .vx-dtile, .app-site .pm-voucher, .app-site .dn-cap, .app-site .vx-social a { transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, background-color .15s ease; }
+    .app-site .vx-dtile:hover, .app-site .pm-voucher:hover, .app-site .dn-cap:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(12, 24, 16, .1); }
+    .app-site .vx-social a:hover { transform: translateY(-3px); }
+  }
+
+  /* 4. Khối hiện dần khi cuộn tới (components/ScrollReveal.tsx gắn / gỡ data-rv). Đặt SAU mục 3 để thắng transition của thẻ */
+  .app-site [data-rv] { opacity: 0; transform: translateY(1rem); }
+  .app-site [data-rv="in"] { opacity: 1; transform: none; transition: opacity .5s ease var(--rv-d, 0s), transform .5s cubic-bezier(.2, .7, .2, 1) var(--rv-d, 0s); }
+
+  /* 5. Thông báo "Đã thêm vào giỏ" trượt vào; số trên giỏ hàng nảy mỗi lần đổi (Header đặt key = số lượng) */
+  .app-site .app-toast .ts { animation: app-toast-in .3s cubic-bezier(.2, .8, .2, 1); }
+  .app-site .vx-cartbtn em { animation: app-bump .45s cubic-bezier(.3, 1.6, .5, 1); }
+
+  /* 6. Hộp thoại: nền mờ dần, hộp trồi nhẹ lên. Chỉ dịch dọc, không phóng to (bản đồ Leaflet trong hộp đo sai khi bị scale) */
+  body:has(.app-site) .app-modal { animation: app-fade-in .18s ease-out; }
+  body:has(.app-site) .app-modal > * { animation: app-rise-in .26s cubic-bezier(.2, .8, .2, 1); }
+
+  /* 7. Tim yêu thích nảy khi vừa lưu */
+  .app-site .wl-heart[aria-pressed="true"] svg { animation: app-bump .4s cubic-bezier(.3, 1.6, .5, 1); }
+}
+/* 8. Thanh tiến trình trên cùng khi chuyển trang (components/NavProgress.tsx đặt data-state + --p). Là tín hiệu "đang tải" chứ
+   không phải trang trí nên vẫn hiện khi máy bật giảm chuyển động — chỉ bỏ phần chạy mượt. Vàng → cam: thấy được trên cả đầu
+   trang xanh đậm lẫn nền trắng. */
+.app-navbar { position: fixed; top: 0; left: 0; right: 0; z-index: 90; height: 3px; pointer-events: none; opacity: 0; transition: opacity .25s ease .15s; }
+.app-navbar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--sun), #ff8a00); box-shadow: 0 0 8px rgba(255, 170, 0, .7); transform-origin: 0 50%; transform: scaleX(var(--p, 0)); transition: transform .3s ease-out; }
+.app-navbar[data-state="loading"] { opacity: 1; transition: none; }
+.app-navbar[data-state="done"] > i { transition-duration: .18s; }
+@media (prefers-reduced-motion: reduce) { .app-navbar, .app-navbar > i { transition: none; } }
+@keyframes app-toast-in { from { opacity: 0; transform: translateY(-0.75rem); } }
+@keyframes app-bump { 0% { transform: scale(.6); } 60% { transform: scale(1.25); } }
+@keyframes app-fade-in { from { opacity: 0; } }
+@keyframes app-rise-in { from { opacity: 0; transform: translateY(1rem); } }
+@media print { [data-rv] { opacity: 1 !important; transform: none !important; } }
+/* <<< HIỆU ỨNG SINH ĐỘNG */

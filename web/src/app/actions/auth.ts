@@ -8,32 +8,18 @@ import { welcomeProgram } from '@/server/vouchers';
 
 // Server action = endpoint công khai: luôn kiểm tra đầu vào và quyền ngay trong hàm.
 
-export async function requestOtpAction(phone: unknown) {
-  const p = z.string().max(20).safeParse(phone);
-  if (!p.success) return { ok: false as const, error: 'Số điện thoại chưa đúng' };
-  return auth.requestOtp(p.data);
-}
-
-export async function verifyOtpAction(phone: unknown, code: unknown) {
-  const p = z.object({ phone: z.string().max(20), code: z.string().max(6) }).safeParse({ phone, code });
-  if (!p.success) return { ok: false as const, error: 'Mã xác thực chưa đúng' };
-  const r = await auth.verifyOtp(p.data.phone, p.data.code);
-  if (!r.ok) return r;
-  return { ok: true as const, user: auth.publicUser(r.user), welcome: r.welcome };
-}
-
 export async function meAction() {
   const u = await auth.getCurrentUser();
   return u ? auth.publicUser(u) : null;
 }
 
 /**
- * Cách đăng nhập đang bật: Google (có GOOGLE_CLIENT_ID/SECRET), SĐT + OTP (gửi được OTP hoặc đang chạy thử)
- * + quà tài khoản mới đang chạy (null = không có) để hộp đăng nhập ghi đúng số tiền / điều kiện.
+ * Đăng nhập Google đã bật chưa (có GOOGLE_CLIENT_ID/SECRET) + quà tài khoản mới đang chạy (null = không có)
+ * để hộp đăng nhập ghi đúng số tiền / điều kiện.
  */
 export async function loginOptionsAction() {
   const welcome = await welcomeProgram().catch(() => null);
-  return { google: auth.googleEnabled(), phone: auth.phoneLoginEnabled(), welcome };
+  return { google: auth.googleEnabled(), welcome };
 }
 
 export async function logoutAction() {
@@ -53,7 +39,7 @@ export async function updateProfileAction(input: unknown) {
   if (!user) return { ok: false as const, error: 'Vui lòng đăng nhập' };
   const p = ProfileSchema.safeParse(input);
   if (!p.success) return { ok: false as const, error: p.error.issues[0].message };
-  // SĐT đã xác thực OTP thì giữ nguyên; tài khoản Google phải khai SĐT liên hệ (không cần xác thực).
+  // SĐT đã xác thực OTP (tài khoản cũ) thì giữ nguyên; tài khoản Google phải khai SĐT liên hệ (không cần xác thực).
   let contactPhone = user.contactPhone;
   if (!user.phone) {
     const ph = PhoneSchema.safeParse(p.data.phone ?? '');

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { OtpLoginBox } from '@/components/AuthModal';
+import { LoginBox } from '@/components/AuthModal';
 import { useAuth } from '@/lib/auth';
 
 export function AdminLogin({ loggedInAsCustomer }: { loggedInAsCustomer: boolean }) {
@@ -24,12 +24,11 @@ export function AdminLogin({ loggedInAsCustomer }: { loggedInAsCustomer: boolean
           </div>
         </div>
       ) : (
-        <OtpLoginBox
+        <LoginBox
           title="Quản trị Cây Cảnh Miền Tây"
-          subtitle="Đăng nhập bằng tài khoản nhân viên"
+          subtitle="Đăng nhập bằng tài khoản Google (Gmail) đã được quản lý cấp quyền"
           googleNext="/admin"
           perks={false}
-          onDone={() => { router.push('/admin'); router.refresh(); }}
         />
       )}
     </div>

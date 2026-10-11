@@ -82,7 +82,7 @@ const QUY_CHE: Section[] = [
   ] },
   { h: 'Quy định chung khi sử dụng website', blocks: [
     { ul: [
-      'Bạn xem sản phẩm và đặt hàng không cần tài khoản. Các chức năng như viết đánh giá, đặt câu hỏi, lưu yêu thích, gửi yêu cầu bảo hành hay xem Vườn của tôi cần đăng nhập bằng số điện thoại (mã OTP) hoặc tài khoản Google.',
+      'Bạn xem sản phẩm và đặt hàng không cần tài khoản. Các chức năng như viết đánh giá, đặt câu hỏi, lưu yêu thích, gửi yêu cầu bảo hành hay xem Vườn của tôi cần đăng nhập bằng tài khoản Google.',
       'Thông tin bạn cung cấp (họ tên, số điện thoại, địa chỉ) phải đúng sự thật để shop giao hàng và hỗ trợ bạn.',
       'Không được: đặt hàng giả; lập nhiều tài khoản để lấy quà, mã giảm giá nhiều lần; gửi nội dung quảng cáo, chứa số điện thoại hoặc đường link, xúc phạm, sai sự thật; can thiệp trái phép vào hệ thống hoặc thu thập dữ liệu hàng loạt.',
       'Shop có quyền từ chối phục vụ, hủy đơn hoặc khóa tài khoản khi phát hiện vi phạm.',
@@ -115,7 +115,7 @@ const QUY_CHE: Section[] = [
   ] },
   { h: 'Bảo đảm an toàn giao dịch', blocks: [
     { ul: [
-      'Tài khoản được xác thực bằng số điện thoại (mã OTP dùng một lần, hết hạn sau 5 phút) hoặc bằng tài khoản Google; phiên đăng nhập được bảo vệ bằng cookie riêng.',
+      'Tài khoản đăng nhập bằng tài khoản Google (website không giữ mật khẩu của bạn); phiên đăng nhập được bảo vệ bằng cookie riêng.',
       'Website không thu thập và không lưu số thẻ, mã CVV, mật khẩu hay mã OTP của ngân hàng. Shop không bao giờ nhờ bạn cung cấp những thông tin đó.',
       'Ảnh bạn gửi để bảo hành, xin báo giá chỉ bạn và nhân viên xử lý mới xem được.',
       'Nhân viên shop chỉ truy cập được phần việc của mình (chăm sóc khách hàng, kho, kỹ sư, giao hàng) theo phân quyền.',
@@ -251,7 +251,7 @@ const BAO_HANH: Section[] = [
   ] },
   { h: 'Cách gửi yêu cầu', blocks: [
     { ol: [
-      'Đăng nhập bằng số điện thoại đã đặt hàng, vào **Tài khoản → [Bảo hành cây](/tai-khoan/bao-hanh)**.',
+      'Đăng nhập bằng tài khoản đã đặt hàng, vào **Tài khoản → [Bảo hành cây](/tai-khoan/bao-hanh)**.',
       'Chọn cây cần bảo hành (chỉ hiện cây còn trong thời hạn).',
       'Chụp **3 ảnh** theo gợi ý: toàn cây (cả chậu), cận lá bệnh (mặt trên và mặt dưới), gốc và mặt đất. Cần ít nhất 1 ảnh. Sau đó chọn biểu hiện và mô tả thêm.',
       'Bấm **Gửi yêu cầu**. Bạn nhận mã yêu cầu dạng BH-0012 và theo dõi kết quả ngay trong trang này.',
@@ -410,7 +410,7 @@ const BAO_MAT: Section[] = [
   ] },
   { h: 'Dữ liệu chúng tôi thu thập', blocks: [
     { table: { head: ['Nhóm dữ liệu', 'Gồm', 'Khi nào'], rows: [
-      ['Tài khoản', 'Số điện thoại (xác thực bằng mã OTP), họ tên, email, ảnh đại diện nếu bạn đăng nhập Google', 'Khi đăng nhập, cập nhật hồ sơ'],
+      ['Tài khoản', 'Họ tên, email, ảnh đại diện từ tài khoản Google của bạn; số điện thoại bạn tự khai', 'Khi đăng nhập, cập nhật hồ sơ'],
       ['Giao nhận', 'Tên người nhận, số điện thoại, địa chỉ, vị trí ghim trên bản đồ, ghi chú cho người giao', 'Khi đặt hàng hoặc lưu sổ địa chỉ'],
       ['Giao dịch', 'Đơn hàng, sản phẩm đã mua, phương thức thanh toán, mã giảm giá, điểm thưởng', 'Khi đặt hàng. Website không lưu số thẻ'],
       ['Ảnh và nội dung bạn gửi', 'Ảnh bảo hành, ảnh hiện trạng sân vườn, ảnh và nội dung đánh giá, câu hỏi, câu trả lời', 'Khi bạn gửi'],
@@ -467,7 +467,7 @@ const BAO_MAT: Section[] = [
   { h: 'Biện pháp bảo mật', blocks: [
     { ul: [
       'Kết nối tới website được mã hóa (HTTPS).',
-      'Mã OTP chỉ dùng một lần, lưu dạng mã hóa và hết hạn sau 5 phút; phiên đăng nhập dùng cookie riêng, không đọc được bằng mã chạy trên trang.',
+      'Đăng nhập qua Google nên website không giữ mật khẩu của bạn; phiên đăng nhập dùng cookie riêng, không đọc được bằng mã chạy trên trang.',
       'Ảnh bảo hành, ảnh gửi kèm yêu cầu báo giá chỉ chủ tài khoản và nhân viên xử lý xem được.',
       'Nhân viên chỉ truy cập dữ liệu thuộc phần việc của mình theo phân quyền.',
       'Không hệ thống nào an toàn tuyệt đối. Nếu xảy ra sự cố ảnh hưởng dữ liệu của bạn, chúng tôi sẽ thông báo và xử lý theo quy định của pháp luật.',
@@ -517,7 +517,7 @@ const DIEU_KHOAN: Section[] = [
   ] },
   { h: 'Tài khoản', blocks: [
     { ul: [
-      'Bạn đăng nhập bằng số điện thoại (mã OTP) hoặc tài khoản Google. Số điện thoại và thông tin bạn khai phải đúng sự thật.',
+      'Bạn đăng nhập bằng tài khoản Google. Số điện thoại và thông tin bạn khai phải đúng sự thật.',
       'Bạn giữ bí mật thiết bị và tài khoản của mình, và chịu trách nhiệm cho hoạt động thực hiện bằng tài khoản đó. Phát hiện bị dùng trái phép, hãy báo shop ngay.',
       'Mỗi người nên dùng một tài khoản. Việc lập nhiều tài khoản để nhận quà hoặc mã giảm giá nhiều lần bị coi là vi phạm.',
     ] },

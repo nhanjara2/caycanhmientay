@@ -8,11 +8,11 @@ import { Select } from '@/components/Select';
 
 const ROLE_OPTIONS: StaffRole[] = ['manager', ...ASSIGNABLE_ROLES];
 
-/** Nút "Mời nhân viên" + biểu mẫu: SĐT, tên, vai trò. */
+/** Nút "Mời nhân viên" + biểu mẫu: email Google, tên, vai trò. */
 export function StaffInvite() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [role, setRole] = useState<StaffRole>('cskh');
   const [error, setError] = useState('');
@@ -24,10 +24,10 @@ export function StaffInvite() {
     setError('');
     setDone('');
     start(async () => {
-      const r = await inviteStaffAction({ phone, name, role }).catch(() => ({ ok: false as const, error: 'Có lỗi, vui lòng thử lại' }));
+      const r = await inviteStaffAction({ email: email.trim(), name, role }).catch(() => ({ ok: false as const, error: 'Có lỗi, vui lòng thử lại' }));
       if (!r.ok) { setError(r.error); return; }
-      setDone(`Đã thêm ${name}. Họ đăng nhập ở trang Quản trị bằng số ${phone} (nhận mã OTP).`);
-      setPhone(''); setName('');
+      setDone(`Đã thêm ${name}. Họ vào trang Quản trị, bấm "Tiếp tục với Google" và chọn ${email.trim()}.`);
+      setEmail(''); setName('');
       router.refresh();
     });
   };
@@ -47,8 +47,8 @@ export function StaffInvite() {
                 <input id="si-name" className="vx-input" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} placeholder="Lê Thị Thảo" autoComplete="off" />
               </div>
               <div className="vx-field">
-                <label htmlFor="si-phone">Số điện thoại đăng nhập</label>
-                <input id="si-phone" className="vx-input" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} maxLength={20} placeholder="09xx xxx xxx" autoComplete="off" />
+                <label htmlFor="si-email">Email Google (Gmail) đăng nhập</label>
+                <input id="si-email" className="vx-input" type="email" inputMode="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={120} placeholder="ten@gmail.com" autoComplete="off" />
               </div>
               <div className="vx-field">
                 <label htmlFor="si-role">Vai trò</label>
@@ -57,7 +57,7 @@ export function StaffInvite() {
                 </Select>
               </div>
             </div>
-            <p className="vx-help" style={{ margin: 0 }}>{STAFF_ROLE_INFO[role].hint}. Nhân viên đăng nhập bằng đúng số điện thoại này (mã OTP gửi về số đó).</p>
+            <p className="vx-help" style={{ margin: 0 }}>{STAFF_ROLE_INFO[role].hint}. Nhân viên đăng nhập bằng đúng tài khoản Google có email này.</p>
             {error && <span className="vx-err" role="alert">{error}</span>}
             {done && <span className="vx-ok" role="status" style={{ color: 'var(--success)', fontSize: '0.8125rem' }}>{done}</span>}
             <span className="acts" style={{ display: 'flex', gap: 8 }}>
@@ -71,7 +71,11 @@ export function StaffInvite() {
 }
 
 /** Ô đổi vai trò + nút gỡ quyền của một dòng nhân viên. `locked` = tài khoản cấu hình hệ thống / chính mình. */
-export function StaffRowActions({ id, name, role, locked, lockReason }: { id: number; name: string; role: StaffRole; locked: boolean; lockReason: string }) {
+export function StaffRowActions({ id, name, role, locked, lockReason, invited = false }: {
+  id: number; name: string; role: StaffRole; locked: boolean; lockReason: string;
+  /** Lời mời chưa ai nhận (chưa đăng nhập Google lần nào): gỡ = hủy lời mời. */
+  invited?: boolean;
+}) {
   const router = useRouter();
   const [value, setValue] = useState(role);
   const [error, setError] = useState('');
@@ -90,7 +94,7 @@ export function StaffRowActions({ id, name, role, locked, lockReason }: { id: nu
     });
   };
   const remove = () => {
-    if (!confirm(`Gỡ quyền nhân viên của ${name}? Tài khoản này sẽ trở lại là khách bình thường.`)) return;
+    if (!confirm(invited ? `Hủy lời mời ${name}?` : `Gỡ quyền nhân viên của ${name}? Tài khoản này sẽ trở lại là khách bình thường.`)) return;
     setError('');
     start(async () => {
       const r = await removeStaffAction(id).catch(() => ({ ok: false as const, error: 'Có lỗi, vui lòng thử lại' }));
@@ -104,7 +108,7 @@ export function StaffRowActions({ id, name, role, locked, lockReason }: { id: nu
       <Select className="vx-input" value={value} disabled={pending} aria-label={`Vai trò của ${name}`} onChange={(e) => change(e.target.value as StaffRole)}>
         {ROLE_OPTIONS.map((r) => <option key={r} value={r}>{STAFF_ROLE_INFO[r].name}</option>)}
       </Select>
-      <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" disabled={pending} onClick={remove}>Gỡ quyền</button>
+      <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" disabled={pending} onClick={remove}>{invited ? 'Hủy lời mời' : 'Gỡ quyền'}</button>
       {error && <span className="vx-err" role="alert">{error}</span>}
     </span>
   );
