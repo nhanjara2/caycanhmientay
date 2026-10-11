@@ -9,7 +9,7 @@ import { ProductGrid } from '@/components/ProductCard';
 import { ProjectCard } from '@/components/ProjectParts';
 import { ShortVideos } from '@/components/ShortVideos';
 import type { Product } from '@/lib/catalog';
-import { bannerImageUrl, homeBg, slotOf, type Banner } from '@/lib/home-banners';
+import { bannerImageUrl, slotOf, type Banner } from '@/lib/home-banners';
 import { PARTNER_IMAGE, PARTNER_INFO, PARTNER_TYPES, WHOLESALE_QUOTE_URL, WHOLESALE_URL } from '@/lib/partners';
 import { categoryOf, SECTIONS, VIDEO_PAGE } from '@/lib/posts';
 import { WARRANTY_DAYS } from '@/lib/warranty-labels';
@@ -69,19 +69,19 @@ export default async function HomePage() {
   const season = seasonNow();
   const diseaseImgs = diseases.flatMap((d) => d.symptoms).flatMap((s) => (s.image ? [s.image] : []));
   const diseaseImg = diseaseImgs[0];
-  // Băng ảnh rộng dựng sẵn: mỗi ảnh một ảnh nền riêng (public/images/home-bg) để nền cả khoảng trên đổi theo.
+  // Băng ảnh rộng dựng sẵn: không có nền riêng — nền cả khoảng trên là chính ảnh đó làm mờ (HomeHero).
   const fallbackTop: Slide[] = [
     {
-      key: 'top-tet', badge: 'Mùa cây Tết 2027', tone: 'sun', showText: true, image: '/videos/mai-vang.jpg', bg: homeBg('le-hoi'),
+      key: 'top-tet', badge: 'Mùa cây Tết 2027', tone: 'sun', showText: true, image: '/videos/mai-vang.jpg',
       title: 'Mai, quất, cây Tết — đặt sớm, giữ hàng giá sỉ', subtitle: 'Cho cửa hàng, công trình, quà tặng doanh nghiệp', cta: 'Xem cây Tết', href: '/cay-tet',
     },
     {
-      key: 'top-mua', badge: season.name, tone: 'green', showText: true, bg: homeBg('bau-troi'),
+      key: 'top-mua', badge: season.name, tone: 'green', showText: true,
       image: diseaseImgs.length ? `/api/disease-images/${diseaseImgs[1] ?? diseaseImgs[0]}` : PARTNER_IMAGE.landscape,
       title: `${season.name}: phòng bệnh sớm, không mất cả lô cây`, subtitle: 'Tra bệnh theo triệu chứng, chọn đúng thuốc, đúng liều', cta: 'Bắt bệnh cho cây', href: '/benh-cay',
     },
     {
-      key: 'top-vuon', badge: 'Vườn ươm miền Tây', tone: 'green', showText: true, image: PARTNER_IMAGE.landscape, bg: homeBg('la-xanh'),
+      key: 'top-vuon', badge: 'Vườn ươm miền Tây', tone: 'green', showText: true, image: PARTNER_IMAGE.landscape,
       title: 'Xem cây tận vườn trước khi lấy sỉ', subtitle: 'Hệ thống vườn ươm, cửa hàng khắp miền Tây', cta: 'Tìm vườn gần bạn', href: '/he-thong-cua-hang',
     },
   ];

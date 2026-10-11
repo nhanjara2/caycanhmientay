@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
-import { HOME_BACKGROUNDS, isExternal } from '@/lib/home-banners';
+import { isExternal } from '@/lib/home-banners';
 import { Icon } from '../Icon';
 
 /** Một ảnh banner trang chủ — ảnh chủ shop tải lên hoặc ảnh dựng sẵn từ dữ liệu thật (sản phẩm, đối tác). */
@@ -147,7 +147,7 @@ export function HomeCarousel({ slides, label, className = '', onIndex }: {
 /**
  * Khung đầu trang chủ (kiểu Long Châu): nền phủ kín bề ngang, băng ảnh rộng trên cùng, rồi ảnh lớn + tối đa 2 ảnh nhỏ bên phải.
  * Nền đổi theo băng ảnh rộng: mỗi ảnh một lớp nền (nền riêng chủ shop tải; không có thì ảnh nền sự kiện chung;
- * chưa có nữa thì nền dựng sẵn `HOME_BACKGROUNDS` lần lượt theo thứ tự ảnh) — qua ảnh mới thì lớp nền của nó hiện dần
+ * chưa có nữa thì chính ảnh đó phóng to, làm mờ) — qua ảnh mới thì lớp nền của nó hiện dần
  * lên trên lớp cũ (lớp cũ giữ nguyên tới khi lớp mới rõ hẳn, không lộ nền xanh giữa chừng), cả khoảng trên trang đổi theo.
  * Không có băng ảnh rộng thì nền đổi theo ảnh lớn.
  */
@@ -180,8 +180,9 @@ export function HomeHero({ tops, slides, sides, backdrop }: {
         )}
         {lead.map((s, k) => {
           // Có Ảnh nền sự kiện chung (vẽ ở trên) thì ảnh không có nền riêng dùng nền chung đó, không cần lớp riêng.
-          const own: Slide['bg'] = s.bg ?? (backdrop ? undefined : HOME_BACKGROUNDS[k % HOME_BACKGROUNDS.length]);
-          if (!own) return null;
+          if (!s.bg && backdrop) return null;
+          // Không có nền nào: lấy chính ảnh của banner (bản điện thoại nếu có) làm mờ.
+          const own: NonNullable<Slide['bg']> = s.bg ?? { image: s.image, imageMobile: s.imageMobile ?? undefined };
           return (
             <div
               key={s.key}
@@ -190,6 +191,7 @@ export function HomeHero({ tops, slides, sides, backdrop }: {
               data-prev={k === prev || undefined}
               // Có màu nền: ảnh nền giữ nguyên tỉ lệ, đặt sát trên, phần dưới là màu (như Long Châu); không màu thì ảnh phủ kín.
               data-fit={(own.image && own.color) || undefined}
+              data-blur={!s.bg || undefined}
               style={own.color ? { background: own.color } : undefined}
             >
               {seen.has(k) && own.image && (

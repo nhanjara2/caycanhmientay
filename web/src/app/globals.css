@@ -2364,7 +2364,6 @@ body[data-buybar] .app-site .app-fab { bottom: 6.25rem; }
   /* Trang sản phẩm: giá lớn 28px (trước 32), 3 ô "Giá theo số lượng" hẹp nên chữ 14px */
   .app-site .app-pp .vx-buy__price b { font-size: 1.75rem; }
   .app-site .app-tiers--tiles .app-tiers__row { font-size: 0.875rem; }
-  .app-site .app-tiers--tiles .app-tiers__row > b small { font-size: 0.8125rem; }
 }
 /* ---------- Điện thoại nhỏ (≤ 359px): thu hẹp đầu trang cho vừa 1 hàng khi đã đăng nhập ---------- */
 @media (max-width: 22.4375em) {

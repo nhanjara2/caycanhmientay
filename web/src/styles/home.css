@@ -18,6 +18,8 @@
 .hm-hero__layer[data-on] { z-index: 1; opacity: 1; }
 .hm-hero__layer[data-prev] { opacity: 1; transition: none; }
 .hm-hero__layer[data-fit] img { bottom: auto; height: auto; }
+/* Banner không có nền riêng: nền là chính ảnh banner làm mờ (tràn ra ngoài 3rem để mép mờ không lộ viền trong) */
+.hm-hero__layer[data-blur] img { inset: -3rem; width: calc(100% + 6rem); height: calc(100% + 6rem); object-position: center; filter: blur(2.5rem) saturate(1.15); }
 @media (prefers-reduced-motion: reduce) { .hm-hero__layer { transition: none; } }
 
 .hm-hero__grid { display: grid; gap: 16px; }
