@@ -3,7 +3,8 @@ import { and, count, desc, eq, getTableColumns, ilike, inArray, ne, or, sql } fr
 import { randomInt } from 'node:crypto';
 import * as z from 'zod';
 import { optionOf, type Product, type Unit } from '@/lib/catalog';
-import { computeTotals } from '@/lib/pricing';
+import { money } from '@/lib/format';
+import { computeTotals, minOrderShort } from '@/lib/pricing';
 import { accountPhone, normalizePhone, isPhone, partnerPct, type SessionUser } from './auth';
 import { getProducts, mainImageOf } from './catalog';
 import { buildSlotOptions, dayLabel, slotTime, vnDate, type ShippingConfig } from '@/lib/shipping';
@@ -86,6 +87,10 @@ export async function createOrder(input: PlaceOrderInput, user: SessionUser | nu
 
   // Combo 2 cây + chiết khấu đối tác — cùng công thức với giỏ hàng.
   const totals = computeTotals(lines.map(pricedLine), input.delivery, 0, cfg, partnerPct(user));
+
+  // Đơn giao hàng phải đủ tiền hàng tối thiểu (Cài đặt giao hàng); nhận tại vườn không giới hạn.
+  const short = minOrderShort(totals.goods, cfg.minOrder, input.delivery);
+  if (short) return { ok: false, error: `Đơn giao hàng cần tối thiểu ${money(cfg.minOrder)} tiền hàng — vui lòng mua thêm ${money(short)} hoặc chọn Nhận tại vườn.` };
 
   try {
     return await db.transaction((tx) => createOrderTx(tx, input, user, lines, totals, cfg));

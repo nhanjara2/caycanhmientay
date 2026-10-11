@@ -7,7 +7,7 @@ import { getShippingConfig, saveShippingConfig, slotOptions } from '@/server/shi
 /** Phí giao + giới hạn vùng cây sống + có hẹn khung giờ không, cho giỏ hàng / thanh toán (công khai, không có dữ liệu nhạy cảm). */
 export async function shippingRulesAction() {
   const c = await getShippingConfig();
-  return { rules: { plant: c.plant, supply: c.supply }, plantZoneKm: c.plantZoneKm, plantZoneEnabled: c.plantZoneEnabled, slotsEnabled: c.slotsEnabled };
+  return { rules: { plant: c.plant, supply: c.supply }, plantZoneKm: c.plantZoneKm, plantZoneEnabled: c.plantZoneEnabled, slotsEnabled: c.slotsEnabled, minOrder: c.minOrder };
 }
 
 /** Khung giờ giao còn chọn được (trang thanh toán). */

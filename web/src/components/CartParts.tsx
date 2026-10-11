@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { type CartLine, type Totals, useCart } from '@/lib/cart';
-import type { LinePrice } from '@/lib/pricing';
+import { minOrderShort, type LinePrice } from '@/lib/pricing';
 import { useShipping } from '@/lib/shipping-client';
 import { money } from '@/lib/format';
 import { voucherTiers, voucherValueText } from '@/lib/voucher-labels';
@@ -110,8 +110,10 @@ function Item({ l, pr, editable, setQty, remove }: {
 
 /** OrderSummary: khối tổng tiền cột phải, dính khi cuộn. `voucher` = dòng "Ưu đãi dành cho bạn" (VoucherBox) mở hộp chọn mã;
  *  `voucherHint` (giỏ hàng): thêm gợi ý mua thêm để dùng mã giảm cao hơn. */
-export function OrderSummary({ totals: t, voucherHint = false, voucher, children }: { totals: Totals; voucherHint?: boolean; voucher?: ReactNode; children: ReactNode }) {
-  const { rules } = useShipping();
+export function OrderSummary({ totals: t, voucherHint = false, voucher, delivery = 'ship', children }: { totals: Totals; voucherHint?: boolean; voucher?: ReactNode; delivery?: 'ship' | 'pickup'; children: ReactNode }) {
+  const { rules, minOrder } = useShipping();
+  // Đơn giao hàng cần đủ tiền hàng tối thiểu (Cài đặt giao hàng); nhận tại vườn không giới hạn.
+  const short = minOrderShort(t.goods, minOrder, delivery);
   const vouchers = usePublicVouchers();
   const plantLeft = t.plantSubtotal > 0 && t.plantShip > 0 ? rules.plant.freeFrom - t.plantSubtotal : 0;
   // Tổng tiền tính theo giá bán (giá lẻ). Giá gạch ngang chỉ để hiện % giảm ở từng sản phẩm — không cộng vào tổng,
@@ -131,7 +133,13 @@ export function OrderSummary({ totals: t, voucherHint = false, voucher, children
         {saved > 0 && <div><span>Tiết kiệm được</span><b className="neg">{money(saved)}</b></div>}
       </div>
       {voucher}
-      {tiers.next && (
+      {short > 0 && (
+        <div className="vx-freeship app-minorder" role="status">
+          <span>Đơn giao hàng từ <b>{money(minOrder)}</b> — mua thêm <b>{money(short)}</b> để được giao</span>
+          <div className="bar"><i style={{ width: `${Math.min(100, (t.goods / minOrder) * 100)}%` }} /></div>
+        </div>
+      )}
+      {!short && tiers.next && (
         <div className="vx-freeship app-minorder" role="status">
           <span>Mua thêm <b>{money(tiers.next.minOrder - t.goods)}</b> để dùng mã <b>{tiers.next.code}</b> — {voucherValueText(tiers.next, money).toLowerCase()}</span>
           <div className="bar"><i style={{ width: `${Math.min(100, (t.goods / tiers.next.minOrder) * 100)}%` }} /></div>

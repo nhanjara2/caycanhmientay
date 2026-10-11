@@ -20,6 +20,10 @@ export function strikeFromRetail(retail: number, rand = Math.random()) {
   return v > retail ? v : retail + (retail >= 10_000 ? 1000 : 100);
 }
 
+/** Còn thiếu bao nhiêu tiền hàng mới đủ đơn tối thiểu để giao (0 = đủ). Nhận tại vườn không áp dụng. */
+export const minOrderShort = (goods: number, minOrder: number, delivery: 'ship' | 'pickup' = 'ship') =>
+  (delivery === 'ship' && minOrder > 0 && goods < minOrder ? minOrder - goods : 0);
+
 // ---- Tính tiền giỏ / đơn -----------------------------------------------------------------------
 
 // Phí giao tách theo nhóm, như BRANDBOOK: cây sống giao riêng bằng xe, vật tư giao nhanh.

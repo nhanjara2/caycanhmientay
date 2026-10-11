@@ -281,7 +281,7 @@ export function PartnerPage({ projects, profile }: { projects: Project[]; profil
       <div id="hoi-dap" className="dn-faq">
         <ServiceFaq
           items={[
-            { q: 'Có mức mua tối thiểu không?', a: 'Không — mua 1 cây cũng đặt được trên web. Đơn số lượng lớn cho công trình hoặc quy cách đặc biệt thì gửi yêu cầu báo giá sỉ.' },
+            { q: 'Có mức mua tối thiểu không?', a: 'Đơn giao hàng đặt trên web có mức tiền hàng tối thiểu (ghi ở giỏ hàng và Chính sách giao hàng); nhận tại vườn thì mua 1 cây cũng được. Đơn số lượng lớn cho công trình hoặc quy cách đặc biệt thì gửi yêu cầu báo giá sỉ.' },
             { q: 'Giá trên web là giá lẻ hay giá sỉ?', a: 'Giá hiện trên web là giá lẻ; mua 2 cây cùng quy cách có giá combo, đơn từ 1 triệu dùng được mã giảm giá. Giá sỉ công trình báo riêng theo danh sách bạn gửi. Đối tác đã đăng ký và được duyệt có thể được chiết khấu thêm; chiết khấu tự trừ trong giỏ hàng khi bạn đăng nhập.' },
             { q: 'Shop có nhận thi công, chăm sóc hay cho thuê cây không?', a: 'Không. Shop chỉ cung cấp cây và vật tư cho các đơn vị làm dịch vụ cảnh quan, công trình và buôn bán.' },
             { q: 'Có được xem cây trước khi đặt số lượng lớn không?', a: <>Được. Bạn có thể hẹn đến <Link href="/he-thong-cua-hang">vườn ươm tại Làng hoa Sa Đéc</Link> để xem và chọn cây; ở xa thì shop gửi ảnh cây thật qua Zalo trước khi giao.</> },

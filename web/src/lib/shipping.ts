@@ -9,6 +9,8 @@ export type ShippingConfig = {
   /** Phí giao + ngưỡng miễn phí, tách theo nhóm: cây sống giao riêng bằng xe, vật tư giao nhanh. */
   plant: FeeRule;
   supply: FeeRule;
+  /** Đơn GIAO HÀNG cần tối thiểu bấy nhiêu tiền hàng (sau combo, trước mã giảm giá / chiết khấu); 0 = không giới hạn. Nhận tại vườn và bán tại quầy không áp dụng. */
+  minOrder: number;
   /** Bật = cây sống chỉ giao trong bán kính `plantZoneKm` quanh cửa hàng gần nhất. Tắt (mặc định) = giao cây sống toàn quốc qua đơn vị vận chuyển. */
   plantZoneEnabled: boolean;
   /** Bán kính (km) khi bật giới hạn vùng; vẫn lưu khi đang tắt. */
@@ -25,9 +27,12 @@ export type ShippingConfig = {
 };
 
 /** Phí 35k / 20k, miễn phí từ 800k / 300k. Mặc định giao toàn quốc, không hẹn khung giờ; bật giới hạn vùng (30 km) và khung giờ (2 khung × 2 ngày) ở Cài đặt giao hàng khi shop có xe giao riêng. */
+export const DEFAULT_MIN_ORDER = 300_000;
+
 export const DEFAULT_SHIPPING: ShippingConfig = {
   plant: { fee: 35000, freeFrom: 800000 },
   supply: { fee: 20000, freeFrom: 300000 },
+  minOrder: DEFAULT_MIN_ORDER,
   plantZoneEnabled: false,
   plantZoneKm: 30,
   slotsEnabled: false,
@@ -50,6 +55,7 @@ const ymd = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Ngày nghỉ chưa đúng')
 export const ShippingConfigSchema = z.object({
   plant: fee,
   supply: fee,
+  minOrder: money('Đơn tối thiểu').default(DEFAULT_MIN_ORDER),
   plantZoneEnabled: z.boolean().default(false),
   slotsEnabled: z.boolean().default(false),
   plantZoneKm: z.number().min(1, 'Vùng giao cây sống tối thiểu 1 km').max(500, 'Vùng giao cây sống tối đa 500 km'),

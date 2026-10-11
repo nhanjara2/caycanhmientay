@@ -18,7 +18,7 @@ import { PAY_LABEL, PAY_LOGO } from '@/lib/order-labels';
 import { useAuth } from '@/lib/auth';
 import { useCart } from '@/lib/cart';
 import { useDeliverTo } from '@/lib/deliver-to';
-import { computeTotals, withVouchers } from '@/lib/pricing';
+import { computeTotals, minOrderShort, withVouchers } from '@/lib/pricing';
 import { clearVoucherPick, useAppliedVouchers } from '@/lib/voucher-pick';
 import { useShipping } from '@/lib/shipping-client';
 import type { DayOption } from '@/lib/shipping';
@@ -52,7 +52,7 @@ export default function CheckoutPage() {
   // Địa chỉ gõ / chọn tại chỗ (khi không dùng địa chỉ trong sổ): `address` là chuỗi ghép từ các ô này
   const [addr, setAddr] = useState<AddrValue>(EMPTY_ADDR);
   const typeAddr = (v: AddrValue) => { setAddr(v); setAddress(composeFull(v)); };
-  const { rules, plantZoneKm, plantZoneEnabled, slotsEnabled } = useShipping();
+  const { rules, plantZoneKm, plantZoneEnabled, slotsEnabled, minOrder } = useShipping();
   // Khung giờ lấy từ Cài đặt giao hàng (còn chỗ / đã kín / đã qua giờ); chọn = "ngày|mã khung"
   const [days, setDays] = useState<DayOption[] | null>(null);
   const [slot, setSlot] = useState<string | null>(null);
@@ -145,7 +145,9 @@ export default function CheckoutPage() {
   const savedAddr = saved.find((a) => a.id === savedId);
   const zone = savedAddr?.lat != null && savedAddr.lng != null ? plantZone({ lat: savedAddr.lat, lng: savedAddr.lng }, stores, plantZoneKm) : null;
   const outOfZone = plantZoneEnabled && delivery === 'ship' && lines.some((l) => l.snap.ship === 'plant') && zone !== null && !zone.inZone;
-  const valid = !Object.values(errors).some(Boolean) && !outOfZone;
+  // Đơn giao hàng chưa đủ tiền hàng tối thiểu thì không đặt được (máy chủ cũng chặn); nhận tại vườn không giới hạn.
+  const short = minOrderShort(totals.goods, minOrder, delivery);
+  const valid = !Object.values(errors).some(Boolean) && !outOfZone && !short;
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -317,7 +319,7 @@ export default function CheckoutPage() {
           </div>
         </div>
 
-        <OrderSummary totals={totals} voucher={<VoucherBox state={vouchers} goods={totals.goods} shipFee={totals.plantShip + totals.supplyShip} />}>
+        <OrderSummary totals={totals} delivery={delivery} voucher={<VoucherBox state={vouchers} goods={totals.goods} shipFee={totals.plantShip + totals.supplyShip} />}>
           {totals.hasPesticide && (
             <label className="vx-check">
               <input type="checkbox" checked={safety} onChange={(e) => setSafety(e.target.checked)} />
@@ -326,7 +328,8 @@ export default function CheckoutPage() {
           )}
           {err('safety')}
           {serverError && <div className="vx-note" role="alert"><Icon name="alert" /><div>{serverError}</div></div>}
-          <button type="submit" className="vx-btn vx-btn--primary vx-btn--lg vx-btn--block" disabled={busy}>{busy ? 'Đang đặt hàng…' : 'Đặt hàng'}</button>
+          <button type="submit" className="vx-btn vx-btn--primary vx-btn--lg vx-btn--block" disabled={busy || short > 0}>{busy ? 'Đang đặt hàng…' : short > 0 ? 'Chưa đủ đơn tối thiểu để giao' : 'Đặt hàng'}</button>
+          {short > 0 && <Link href="/gio-hang" className="vx-btn vx-btn--outline vx-btn--block">Quay lại giỏ hàng để mua thêm</Link>}
           <p className="vx-terms">
             Bằng việc đặt hàng, bạn đồng ý với <a>Điều khoản dịch vụ</a> và <a>Chính sách đổi trả cây</a> của Cây Cảnh Miền Tây
           </p>

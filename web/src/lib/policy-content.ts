@@ -188,7 +188,7 @@ function giaoHang({ shipping: s }: PolicyContext): Section[] {
       ] },
     ] },
     { h: 'Giá lẻ, combo 2 cây, giá sỉ công trình', blocks: [
-      'Mua 1 cây cũng đặt được, tính **giá lẻ**. Mỗi 2 cây cùng quy cách tính **giá combo 2 cây** — giỏ hàng tự tính, không cần nhập mã. Đơn có giá trị lớn dùng được [mã giảm giá đang áp dụng](/khuyen-mai) (nhập ở bước thanh toán, mỗi đơn một mã). Cần số lượng lớn cho công trình hoặc quy cách đặc biệt, [gửi yêu cầu báo giá sỉ](/bao-gia-si).',
+      `${s.minOrder > 0 ? `Đơn **giao hàng** cần tối thiểu **${money(s.minOrder)} tiền hàng** (tính sau combo, chưa trừ mã giảm giá); **nhận tại vườn** thì mua 1 cây cũng được.` : 'Mua 1 cây cũng đặt được.'} Mỗi sản phẩm tính **giá lẻ**; mỗi 2 cây cùng quy cách tính **giá combo 2 cây** — giỏ hàng tự tính, không cần nhập mã. Đơn có giá trị lớn dùng được [mã giảm giá đang áp dụng](/khuyen-mai) (chọn ở giỏ hàng hoặc bước thanh toán). Cần số lượng lớn cho công trình hoặc quy cách đặc biệt, [gửi yêu cầu báo giá sỉ](/bao-gia-si).`,
     ] },
     { h: 'Phí giao hàng', blocks: [
       { table: { head: ['Nhóm hàng', 'Phí giao', 'Miễn phí khi tiền hàng từ'], rows: [

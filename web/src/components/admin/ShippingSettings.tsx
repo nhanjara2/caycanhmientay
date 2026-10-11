@@ -7,7 +7,7 @@ import { MAX_SLOTS, WEEKDAYS, type ShippingConfig } from '@/lib/shipping';
 import { Select } from '@/components/Select';
 
 type Form = {
-  plantFee: string; plantFree: string; supplyFee: string; supplyFree: string; zoneKm: string; zoneOn: boolean; slotsOn: boolean; daysAhead: string;
+  plantFee: string; plantFree: string; supplyFee: string; supplyFree: string; minOrder: string; zoneKm: string; zoneOn: boolean; slotsOn: boolean; daysAhead: string;
   slots: { key: string; from: string; to: string }[];
   cap: Record<string, string[]>;
   closed: { date: string; note: string }[];
@@ -16,7 +16,7 @@ type Form = {
 const digits = (s: string) => s.replace(/\D/g, '');
 const fmt = (n: number) => new Intl.NumberFormat('vi-VN').format(n);
 const toForm = (c: ShippingConfig): Form => ({
-  plantFee: String(c.plant.fee), plantFree: String(c.plant.freeFrom), supplyFee: String(c.supply.fee), supplyFree: String(c.supply.freeFrom),
+  plantFee: String(c.plant.fee), plantFree: String(c.plant.freeFrom), supplyFee: String(c.supply.fee), supplyFree: String(c.supply.freeFrom), minOrder: String(c.minOrder),
   zoneKm: String(c.plantZoneKm), zoneOn: c.plantZoneEnabled, slotsOn: c.slotsEnabled, daysAhead: String(c.daysAhead), slots: c.slots.map((s) => ({ ...s })),
   cap: Object.fromEntries(c.slots.map((s) => [s.key, (c.cap[s.key] ?? Array(7).fill(0)).map(String)])),
   closed: c.closed.map((x) => ({ ...x })),
@@ -51,6 +51,7 @@ export function ShippingSettings({ initial }: { initial: ShippingConfig }) {
     const payload = {
       plant: { fee: Number(f.plantFee || 0), freeFrom: Number(f.plantFree || 0) },
       supply: { fee: Number(f.supplyFee || 0), freeFrom: Number(f.supplyFree || 0) },
+      minOrder: Number(f.minOrder || 0),
       plantZoneEnabled: f.zoneOn,
       plantZoneKm: Number(f.zoneKm || 0),
       slotsEnabled: f.slotsOn,
@@ -68,7 +69,7 @@ export function ShippingSettings({ initial }: { initial: ShippingConfig }) {
     });
   };
 
-  const money = (k: 'plantFee' | 'plantFree' | 'supplyFee' | 'supplyFree', label: string, id: string) => (
+  const money = (k: 'plantFee' | 'plantFree' | 'supplyFee' | 'supplyFree' | 'minOrder', label: string, id: string) => (
     <div className="ad-f">
       <label htmlFor={id}>{label}</label>
       <input id={id} className="vx-input" inputMode="numeric" value={f[k]} onChange={(e) => edit((x) => ({ ...x, [k]: digits(e.target.value) }))} />
@@ -95,6 +96,12 @@ export function ShippingSettings({ initial }: { initial: ShippingConfig }) {
             <div className="ad-frow two" style={{ marginTop: 8 }}>
               {money('supplyFee', 'Phí giao (đ)', 'sh-sfee')}
               {money('supplyFree', 'Miễn phí giao từ đơn vật tư (đ)', 'sh-sfree')}
+            </div>
+          </div>
+          <div>
+            <b style={{ fontSize: '0.8125rem' }}>Đơn tối thiểu để giao hàng</b> <span className="vx-help">tiền hàng sau combo, chưa trừ mã giảm giá; nhận tại vườn và bán tại quầy không giới hạn; 0 = không giới hạn</span>
+            <div className="ad-frow two" style={{ marginTop: 8 }}>
+              {money('minOrder', 'Tiền hàng tối thiểu mỗi đơn giao (đ)', 'sh-min')}
             </div>
           </div>
           <div className="ad-f">
