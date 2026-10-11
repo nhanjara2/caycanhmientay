@@ -58,6 +58,7 @@ export const ADMIN_NAV: { group: string; items: { href: string; label: string; i
   { group: 'HÀNG HÓA', items: [
     { href: '/admin/san-pham', label: 'Sản phẩm', icon: 'plant' },
     { href: '/admin/danh-muc', label: 'Danh mục & thông số', icon: 'list' },
+    { href: '/admin/bang-gia', label: 'Bảng giá', icon: 'tag' },
     { href: '/admin/kho', label: 'Kho & tồn kho', icon: 'stock' },
     { href: '/admin/nhap-hang', label: 'Nhập hàng', icon: 'inbound' },
   ] },
