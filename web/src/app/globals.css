@@ -2319,23 +2319,35 @@ body[data-buybar] .app-site .app-fab { bottom: 6.25rem; }
 }
 /* ---------- Điện thoại (< 768px) ---------- */
 @media (max-width: 47.9375em) {
-  .app-site { --header-h: 7.25rem; --bar-h: 4.5rem; --field-border: #7f9488; padding-bottom: calc(var(--bar-h) + env(safe-area-inset-bottom, 0px)); font-size: 0.9375rem; line-height: 1.5; }
-  /* Đầu trang: nút có chữ dưới biểu tượng, vùng chạm ≥ 48px */
-  .app-site .vx-header__main { gap: 0.125rem 0.25rem; padding: 0.375rem 0.625rem 0.5rem; }
-  .app-site .vx-logo { min-height: 3rem; display: flex; align-items: center; }
-  .app-site .vx-hactions { gap: 0.125rem; }
-  .app-site .vx-hactions .app-hbtn { flex-direction: column; justify-content: center; gap: 0.125rem; min-width: 3rem; min-height: 3rem; padding: 0.125rem 0.25rem; font-size: 0.75rem; line-height: 0.875rem; }
+  .app-site { --header-h: 6rem; --bar-h: 4.5rem; --field-border: #7f9488; padding-bottom: calc(var(--bar-h) + env(safe-area-inset-bottom, 0px)); font-size: 0.9375rem; line-height: 1.5; }
+  /* Đầu trang điện thoại kiểu Long Châu (11/10/2026, chủ shop yêu cầu làm lại): hàng trên ☰ · logo + tên 2 dòng nằm giữa ·
+     chuông / tài khoản / giỏ hàng (biểu tượng không chữ, vùng chạm 44px; tên nút vẫn còn cho trình đọc màn hình),
+     hàng dưới ô tìm mảnh, nút tìm không tô nền. Cao 96px (trước 114px). Lưới 1fr auto 1fr: logo nằm đúng giữa khi đủ chỗ,
+     khi đã đăng nhập (3 nút bên phải) trên máy hẹp thì tự lệch trái vài px chứ không tràn. */
+  .app-site .app-header { background: linear-gradient(180deg, var(--primary-deep) 0%, color-mix(in srgb, var(--primary-deep) 78%, var(--primary)) 100%); }
+  .app-site .vx-header__main { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 0.125rem 0.25rem; padding: 0.125rem 0.75rem 0.5rem; }
+  .app-site .vx-header__main > .vx-search { grid-column: 1 / -1; }
+  .app-site .app-menubtn { justify-self: start; min-width: 2.75rem; min-height: 2.75rem; margin: 0 0 0 -0.5rem; padding: 0; }
+  .app-site .app-menubtn .vx-ico { width: 1.625rem; height: 1.625rem; }
+  .app-site .app-menubtn__t { display: none; }
+  .app-site .vx-logo { min-height: 2.75rem; display: flex; flex-wrap: nowrap; align-items: center; gap: 0.5rem; }
+  .app-site .app-logo-mark { height: 2.25rem; }
+  .app-site .app-logo-text { display: flex; flex-direction: column; line-height: 1.1; text-transform: uppercase; }
+  .app-site .app-logo-text span:first-child { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; }
+  .app-site .app-logo-text span:last-child { font-size: 1.125rem; font-weight: 800; letter-spacing: 0.01em; }
+  .app-site .vx-hactions { justify-self: end; flex-wrap: nowrap; gap: 0.125rem; margin: 0; }
+  .app-site .vx-hactions .app-hbtn { justify-content: center; min-width: 2.75rem; min-height: 2.75rem; padding: 0; }
   .app-site .vx-hactions .app-hbtn .vx-ico { width: 1.625rem; height: 1.625rem; }
-  .app-site .app-acc-label, .app-site .app-acc-label--sm { display: block; font-size: 0.75rem; line-height: 0.875rem; font-weight: 600; white-space: nowrap; }
-  .app-site .app-hbtn.app-bell { min-width: 2.75rem; }
-  .app-site .app-bell em { left: calc(50% + 0.125rem); top: 0.125rem; }
-  .app-site .vx-cartbtn { flex-direction: column; justify-content: center; gap: 0.125rem; min-width: 4rem; min-height: 3rem; padding: 0.25rem 0.5rem; border-radius: 16px; font-size: 0.75rem; line-height: 0.875rem; }
+  .app-site .app-acc-label, .app-site .app-acc-label--sm { display: block; position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .app-site .app-hbtn.app-bell { margin: 0; }
+  .app-site .app-bell em { left: calc(50% + 0.125rem); top: 0.25rem; }
+  .app-site .vx-cartbtn { justify-content: center; gap: 0; width: 2.75rem; height: 2.75rem; min-height: 0; margin-left: 0.25rem; padding: 0; border-radius: 50%; }
   .app-site .vx-cartbtn .vx-ico { width: 1.5rem; height: 1.5rem; }
-  .app-site .vx-hactions .vx-cartbtn .app-hide-sm { display: block; }
-  .app-site .vx-cartbtn em { top: 0; left: auto; right: 0.375rem; }
+  .app-site .vx-cartbtn em { top: -1px; left: auto; right: -4px; }
   .app-site .vx-search { padding: 0.125rem 0.125rem 0.125rem 1rem; }
-  .app-site .vx-search input { min-height: 2.75rem; }
-  .app-site .vx-search .vx-btn { min-width: 3.25rem; min-height: 2.75rem; }
+  .app-site .vx-search input { min-height: 2.25rem; }
+  .app-site .vx-search .vx-btn { min-width: 2.75rem; min-height: 2.25rem; padding: 0; background: transparent; color: var(--primary); box-shadow: none; }
+  .app-site .vx-search .vx-btn:hover { background: var(--primary-soft); }
   /* Thanh liên hệ dưới đáy (thay cho 2 nút tròn nổi che nội dung) */
   .app-site .app-fab { left: 0; right: 0; bottom: 0; flex-direction: row; align-items: stretch; gap: 0.625rem; padding: 0.5rem 0.75rem calc(0.5rem + env(safe-area-inset-bottom, 0px)); background: var(--surface); border-top: 1px solid var(--border); box-shadow: 0 -2px 12px rgba(12, 24, 16, .1); z-index: 30; }
   .app-site .app-fab a { flex: 1; flex-wrap: nowrap; justify-content: center; min-width: 0; min-height: 3.25rem; padding: 0.5rem 0.75rem; font-size: 0.9375rem; line-height: 1.2; text-align: center; white-space: normal; }
@@ -2488,11 +2500,13 @@ body[data-buybar] .app-site .app-fab { bottom: 6.25rem; }
 }
 /* ---------- Điện thoại nhỏ (≤ 359px): thu hẹp đầu trang cho vừa 1 hàng khi đã đăng nhập ---------- */
 @media (max-width: 22.4375em) {
-  .app-site .app-menubtn { min-width: 3.25rem; padding: 0.25rem 0.125rem; }
   .app-site .app-logo-mark { height: 1.75rem; }
-  .app-site .vx-hactions .app-hbtn { min-width: 2.75rem; padding-inline: 0.125rem; }
-  .app-site .app-hbtn.app-bell { min-width: 2.5rem; }
-  .app-site .vx-cartbtn { min-width: 3.625rem; padding-inline: 0.375rem; }
+  .app-site .vx-logo { gap: 0.375rem; }
+  .app-site .app-logo-text span:first-child { font-size: 0.6875rem; }
+  .app-site .app-logo-text span:last-child { font-size: 1rem; }
+  .app-site .vx-hactions { gap: 0; }
+  .app-site .vx-hactions .app-hbtn { min-width: 2.5rem; }
+  .app-site .vx-cartbtn { width: 2.5rem; height: 2.5rem; margin-left: 0.125rem; }
   .app-site .app-buybar .vx-btn { font-size: 0.875rem; padding-inline: 0.25rem; }
   .app-site .app-buybar .app-buybar__call { width: 3.5rem; }
   .app-site .app-buybar .app-buybar__buy { font-size: 0.9375rem; }

@@ -9,7 +9,7 @@ export const BANNER_SLOTS = [
   },
   {
     key: 'hero', name: 'Ảnh lớn đầu trang', max: 8,
-    size: '1600 × 800 px (tỉ lệ 2:1)', ratio: 2, mobile: { size: '1200 × 900 px (4:3)', ratio: 4 / 3 },
+    size: '1600 × 800 px (tỉ lệ 2:1)', ratio: 2, mobile: { size: '1200 × 600 px (2:1)', ratio: 2 },
     hint: 'Chạy vòng tự động, mỗi ảnh 6 giây. Ảnh sự kiện, mùa cây, chương trình giảm giá…',
   },
   {
@@ -43,7 +43,7 @@ export type Banner = {
   /** Hiện tiêu đề / mô tả / nút đè lên ảnh. Tắt khi ảnh đã có sẵn chữ. */
   showText: boolean;
   image: string;
-  /** Ảnh riêng cho điện thoại (tỉ lệ 4:3), không có thì cắt ảnh chính. */
+  /** Ảnh riêng cho điện thoại (ảnh lớn 2:1, băng rộng 12:5), không có thì cắt ảnh chính. */
   imageMobile: string | null;
   /** Nền riêng phía sau (chỉ băng ảnh rộng trên cùng): ảnh (máy tính / điện thoại) và / hoặc màu #rrggbb. */
   bgImage: string | null;

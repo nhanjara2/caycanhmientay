@@ -151,8 +151,10 @@ export function HomeCarousel({ slides, label, className = '', onIndex }: {
  * lên trên lớp cũ (lớp cũ giữ nguyên tới khi lớp mới rõ hẳn, không lộ nền xanh giữa chừng), cả khoảng trên trang đổi theo.
  * Không có băng ảnh rộng thì nền đổi theo ảnh lớn.
  */
-export function HomeHero({ tops, slides, sides, backdrop }: {
+export function HomeHero({ tops, slides, sides, sidesAuto, backdrop }: {
   tops: Slide[]; slides: Slide[]; sides: Slide[]; backdrop: { image: string; imageMobile: string | null } | null;
+  /** Ô ảnh nhỏ là ô dựng sẵn (chủ shop chưa tải): điện thoại ẩn vì trùng lối tắt ngay dưới. */
+  sidesAuto?: boolean;
 }) {
   const [{ i, prev }, setAt] = useState({ i: 0, prev: -1 });
   // Chỉ tải ảnh nền của ảnh đang hiện, ảnh kế tiếp và ảnh đã xem (khỏi tải hết 8 ảnh nền ngay khi vào trang).
@@ -208,7 +210,7 @@ export function HomeHero({ tops, slides, sides, backdrop }: {
       <div className="hm-hero__grid">
         <HomeCarousel slides={slides} label="Sự kiện & ưu đãi nổi bật" className="hm-car--hero" onIndex={tops.length ? undefined : onIndex} />
         {sides.length > 0 && (
-          <div className="hm-sides">
+          <div className="hm-sides" data-auto={sidesAuto || undefined}>
             {sides.map((s) => <div key={s.key} className={s.showText ? 'hm-side hm-side--text' : 'hm-side'}><SlideBody s={s} /></div>)}
           </div>
         )}

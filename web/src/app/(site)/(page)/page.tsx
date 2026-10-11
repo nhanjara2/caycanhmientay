@@ -164,6 +164,7 @@ export default async function HomePage() {
           tops={top.length ? top : fallbackTop}
           slides={hero.length ? hero : fallbackHero}
           sides={(sides.length ? sides : fallbackSides).slice(0, 2)}
+          sidesAuto={!sides.length}
           backdrop={backdrop ? { image: bannerImageUrl(backdrop.image), imageMobile: backdrop.imageMobile ? bannerImageUrl(backdrop.imageMobile) : null } : null}
         />
         <QuickLinks items={[...QUICK]} />
@@ -171,7 +172,7 @@ export default async function HomePage() {
 
       <div className="hm-body">
         <section className="hm-sec">
-          <HomeHead icon="leaf" title="Mua sỉ theo danh mục" sub="Ảnh thật từng nhóm hàng — bấm vào để xem giá, quy cách" href="/danh-muc" more="Tất cả sản phẩm" />
+          <HomeHead icon="leaf" title="Mua sỉ theo danh mục" sub="Ảnh thật từng nhóm hàng — bấm vào để xem giá, quy cách" href="/danh-muc" />
           <CategoryMosaic items={mosaic} />
         </section>
 

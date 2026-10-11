@@ -153,7 +153,8 @@ export function Header({ nav }: { nav?: ReactNode }) {
         </button>
         <Link href="/" className="vx-logo" aria-label="Cây Cảnh Miền Tây — về trang chủ">
           <Image src="/images/brand/logo-mark.png" alt="" width={362} height={239} className="app-logo-mark" priority />
-          <span className="app-logo-text">Cây Cảnh Miền Tây</span>
+          {/* Hai nửa tên: máy tính / tablet nằm một dòng, điện thoại xếp 2 dòng cạnh logo (kiểu Long Châu) */}
+          <span className="app-logo-text"><span>Cây Cảnh</span> <span>Miền Tây</span></span>
         </Link>
         <SearchBox below={<TrendingSearches />} />
         <DeliverToButton />
