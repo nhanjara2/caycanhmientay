@@ -3,6 +3,9 @@ export const SALES_PHONE = '0703005001';
 export const ZALO_URL = `https://zalo.me/${SALES_PHONE}`;
 export const FACEBOOK_URL = 'https://facebook.com/caycanhmientayy';
 export const YOUTUBE_URL = 'https://www.youtube.com/channel/UCLnO5s6HZWpud5z0S-Byqnw';
+/** Tên kênh của shop, ghi cạnh logo trên thẻ video ngắn. */
+export const YOUTUBE_NAME = 'Cây Cảnh Miền Tây';
+export const TIKTOK_NAME = 'caycanhmientay.com';
 /** Ảnh mã QR Zalo trong public/ (mở trang Zalo cá nhân của shop). */
 export const ZALO_QR = '/images/zalo-qr.png';
 

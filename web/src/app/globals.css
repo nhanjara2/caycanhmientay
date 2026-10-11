@@ -16,6 +16,11 @@ html { scroll-behavior: smooth; }
    và cho chữ/link dài (URL) tự xuống dòng thay vì đẩy rộng trang. */
 html, body { overflow-x: clip; }
 body { overflow-wrap: break-word; }
+/* Nền chung của web khách là TRẮNG (11/10/2026, chủ shop yêu cầu; design system là xám xanh #eef3ef).
+   Chỉ trang có `.app-site` (SiteChrome) — admin / POS / app nhân viên giữ nền xám xanh để thẻ trắng nổi lên. */
+body:has(.app-site) { --surface-page: #fff; }
+/* Nhãn % giảm giá (và nhãn Flash sale) trên web khách: nền đỏ #d0011b thay cam đậm --sale (11/10/2026, chủ shop yêu cầu) */
+body:has(.app-site) .vx-badge--sale { background: #d0011b; color: #fff; }
 /* iPhone Safari tự phóng to trang khi chạm vào ô nhập có chữ < 16px, sau đó trang lệch và phải kéo tới lui. */
 @media (max-width: 63.9375em) {
   input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), textarea, select, .app-select { font-size: max(16px, 1rem) !important; }  /* ≥ 16px dù khách đổi cỡ chữ: dưới mức đó iPhone tự phóng to khi chạm ô nhập */
@@ -37,7 +42,7 @@ a.vx-btn, a.vx-link { text-decoration: none; }
 .app-header { position: sticky; top: 0; z-index: 40; }
 .app-menubtn { display: none; background: none; border: 0; color: inherit; padding: 8px; margin: -8px 0 -8px -8px; cursor: pointer; }
 .app-menubtn .vx-ico { width: 24px; height: 24px; }
-.app-logo-mark { height: 34px; width: auto; object-fit: contain; flex-shrink: 0; }
+.app-logo-mark { height: 34px; width: auto; object-fit: contain; flex-shrink: 0; border-radius: 6px; background: white; }
 
 /* ShopLayout: sidebar 248px dính dưới header, nội dung tối đa 1200px */
 .app-shop { display: grid; grid-template-columns: 248px minmax(0, 1fr); background: var(--surface-page); }

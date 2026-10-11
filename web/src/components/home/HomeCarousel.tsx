@@ -31,7 +31,7 @@ export function SlideBody({ s, eager }: { s: Slide; eager?: boolean }) {
   const inner = (
     <>
       {s.contain?.length ? (
-        <span className="hm-collage" aria-hidden="true">
+        <span className={`hm-collage hm-tone--${s.tone ?? 'green'}`} aria-hidden="true">
           {s.contain.slice(0, 3).map((src) => <img key={src} src={src} alt="" loading={eager ? 'eager' : 'lazy'} />)}
         </span>
       ) : (

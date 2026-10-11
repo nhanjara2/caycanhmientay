@@ -14,7 +14,14 @@
 .shv-card:hover .shv-card__img--zoom img { transform: scale(1.4); }
 /* Video TikTok chưa có ảnh bìa */
 .shv-card__blank { position: absolute; inset: 0; background: radial-gradient(circle at 30% 20%, #25f4ee55, transparent 55%), radial-gradient(circle at 75% 85%, #fe2c5566, transparent 55%), #111; }
-.shv-card__src { position: absolute; top: 8px; left: 8px; z-index: 1; padding: 2px 8px; border-radius: 6px; background: rgba(0, 0, 0, .72); color: #fff; font-size: 0.875rem; font-weight: 700; line-height: 1.4; }
+/* Logo nguồn video (TikTok / YouTube) + tên kênh ở góc trên trái thẻ. Chữ co theo bề rộng thẻ (cqi) để tên kênh không bị cắt trên thẻ hẹp */
+.shv-card__img { container-type: inline-size; }
+.shv-card__src { position: absolute; top: 8px; left: 8px; z-index: 1; display: inline-flex; align-items: center; gap: 0.25em; max-width: calc(100% - 16px); padding: 0.28em 0.55em 0.28em 0.35em; border-radius: 999px; box-shadow: 0 1px 6px rgba(0, 0, 0, .35); font-size: 0.75rem; font-size: clamp(0.625rem, calc((100cqi - 16px) / 13.2), 0.875rem); font-weight: 700; line-height: 1.2; letter-spacing: -0.01em; white-space: nowrap; }
+.shv-card__src svg { display: block; flex-shrink: 0; width: 1.25em; height: 1.25em; }
+.shv-card__src span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.shv-card__src--tiktok { background: #000; color: #fff; }
+.shv-card__src--youtube { background: #fff; color: #111; }
+.shv-card__src--youtube svg { width: 1.5em; height: 1.5em; margin: -0.125em 0; }
 .shv-card__img::after { content: ''; position: absolute; inset: 55% 0 0; background: linear-gradient(transparent, rgba(0, 0, 0, .45)); pointer-events: none; }
 .shv-card__play { position: absolute; top: 50%; left: 50%; z-index: 1; display: grid; place-items: center; width: 3.25rem; height: 3.25rem; margin: -1.625rem 0 0 -1.625rem; border-radius: 50%; background: rgba(0, 0, 0, .45); border: 2px solid rgba(255, 255, 255, .85); transition: background .2s, transform .2s; }
 .shv-card__play svg { width: 1.375rem; height: 1.375rem; margin-left: 3px; fill: #fff; }
@@ -71,7 +78,7 @@ html:has(.shv-dlg[open]) { overflow: hidden; }
   /* Trang chủ: hàng vuốt ngang, thẻ sau ló ra một phần để khách biết còn video */
   .shv-row { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 -16px; padding: 0 16px; scrollbar-width: none; }
   .shv-row::-webkit-scrollbar { display: none; }
-  .shv-row > * { flex: 0 0 42%; scroll-snap-align: start; }
+  .shv-row > * { flex: 0 0 46%; scroll-snap-align: start; }
   .shv-row > :nth-child(n + 5) { display: flex; }
   .shv-page { padding: var(--space-3) var(--space-3) var(--space-6); }
   .shv-head h1 { font-size: 1.5rem; }
