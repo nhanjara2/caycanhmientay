@@ -116,9 +116,9 @@
 .hm .hm-btn-light { min-height: 2.875rem; padding: 0 22px; background: var(--primary); color: #fff; font-size: 1rem; }
 .hm .hm-btn-light:hover { background: var(--primary-hover); }
 
-/* ---- Danh mục bằng ảnh: hàng ô nhỏ (ảnh vuông + tên bên dưới) — máy tính 9 ô một hàng (--hm-cols),
+/* ---- Danh mục bằng ảnh: hàng ô (ảnh vuông + tên bên dưới) — máy tính / tablet 6 ô một hàng (--hm-cols),
    ít ô hơn thì canh giữa. flex chứ không grid để hàng chưa đủ ô vẫn nằm giữa. ------------------------- */
-.hm-mosaic { --hm-cols: 9; --hm-gap: 12px; display: flex; flex-wrap: wrap; justify-content: center; gap: 16px var(--hm-gap); }
+.hm-mosaic { --hm-cols: 6; --hm-gap: 16px; display: flex; flex-wrap: wrap; justify-content: center; gap: 16px var(--hm-gap); }
 .hm-tile { flex: 0 0 calc((100% - (var(--hm-cols) - 1) * var(--hm-gap)) / var(--hm-cols) - 0.1px); min-width: 0; display: flex; flex-direction: column; gap: 8px; text-align: center; text-decoration: none; }
 .hm-tile__img { position: relative; display: block; overflow: hidden; aspect-ratio: 1; border-radius: 16px; background: var(--primary-soft); isolation: isolate; }
 .hm-tile__img img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease; }
@@ -126,7 +126,7 @@
 .hm-tile__art { display: grid; place-items: center; width: 100%; height: 100%; color: var(--primary); }
 .hm-tile__art svg { width: 44%; height: 44%; opacity: .55; }
 .hm-tile__txt { display: flex; flex-direction: column; gap: 2px; color: var(--ink); }
-.hm-tile__txt b { font-size: 0.9375rem; font-weight: 600; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.hm-tile__txt b { font-size: 1rem; font-weight: 600; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .hm-tile:hover .hm-tile__txt b { color: var(--primary-hover); }
 .hm-tile__txt small { font-size: 0.875rem; line-height: 1.3; color: var(--ink-muted); }
 
@@ -222,7 +222,8 @@
   .hm-sides { grid-template-rows: none; grid-template-columns: repeat(var(--hm-sides, 2), minmax(0, 1fr)); }
   .hm-side { aspect-ratio: 2 / 1; }
   .hm-partner { grid-template-columns: minmax(0, 1fr); padding: 24px; }
-  .hm-mosaic { --hm-cols: 6; }
+  .hm-mosaic { --hm-gap: 12px; }
+  .hm-tile__txt b { font-size: 0.9375rem; }
   .hm-wall { grid-auto-rows: 120px; }
   .hm-season__cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .hm-news { grid-template-columns: minmax(0, 1fr); }

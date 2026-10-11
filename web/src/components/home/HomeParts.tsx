@@ -42,7 +42,7 @@ export function QuickLinks({ items }: { items: { label: string; sub: string; ico
 export type MosaicItem = { key: string; name: string; href: string; count: number; icon: IconName; image?: string };
 
 /** Danh mục bằng ảnh: hàng ô nhỏ — ảnh vuông (ảnh sản phẩm bán chạy của nhóm đó) + tên, số sản phẩm bên dưới.
- *  Tối đa 9 ô; số ô một hàng là `--hm-cols` trong home.css (máy tính 9, tablet 6, điện thoại 3). */
+ *  Tối đa 9 ô; số ô một hàng là `--hm-cols` trong home.css (máy tính + tablet 6, điện thoại 3). */
 export function CategoryMosaic({ items }: { items: MosaicItem[] }) {
   return (
     <div className="hm-mosaic">

@@ -115,19 +115,22 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
       </div>
       <div className="app-prows">
         {!quote && (
-          <div className="app-prow">
+          <div className="app-prow app-prow--stack-md">
             <span className="app-prow__k">Giá theo số lượng</span>
             <div className="app-prow__v">
-              <div className="app-tiers app-tiers--tiles" aria-label="Giá theo số lượng">
-                <div className="app-tiers__row" data-on={!(combo && qty >= 2) || undefined}><span>Mua 1 {unit}</span><b>{money(u.price)}</b></div>
+              {/* Ô bấm được: Mua 1 → số lượng 1, Combo 2 → số lượng 2 (đang ≥ 2 thì giữ); Giá sỉ → mở form báo giá */}
+              <div className="app-tiers app-tiers--tiles" role="group" aria-label="Giá theo số lượng">
+                <button type="button" className="app-tiers__row" aria-pressed={!(combo && qty >= 2)} data-on={!(combo && qty >= 2) || undefined} onClick={() => setQty(1)}>
+                  <span>Mua 1 {unit}</span><b>{money(u.price)}</b>
+                </button>
                 {combo > 0 && (
-                  <div className="app-tiers__row" data-on={qty >= 2 || undefined}>
+                  <button type="button" className="app-tiers__row" aria-pressed={qty >= 2} data-on={qty >= 2 || undefined} onClick={() => setQty((q) => Math.max(2, q))}>
                     <span>Combo 2 {unit}</span><b>{money(combo)}<small>≈ {money(Math.round(combo / 2))} / {unit}</small></b>
-                  </div>
+                  </button>
                 )}
-                <div className="app-tiers__row">
-                  <span>Giá sỉ công trình</span><b><Link href={quoteHref}>Liên hệ báo giá</Link></b>
-                </div>
+                <Link href={quoteHref} className="app-tiers__row app-tiers__row--link app-plain">
+                  <span>Giá sỉ công trình</span><b>Liên hệ báo giá</b>
+                </Link>
               </div>
             </div>
           </div>
