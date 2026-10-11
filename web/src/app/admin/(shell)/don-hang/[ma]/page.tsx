@@ -87,7 +87,6 @@ export default async function AdminOrderDetailPage({ params }: Props) {
             <div className="ad-card__b">
               <div className="vx-lines" style={{ fontSize: '0.8125rem' }}>
                 <div><span>Tạm tính</span><b>{money(o.subtotal)}</b></div>
-                {o.original > o.subtotal && <div><span>Đã giảm</span><b className="neg">-{money(o.original - o.subtotal)}</b></div>}
                 <div><span>Phí giao cây</span><b>{money(o.plantShip)}</b></div>
                 <div><span>Phí giao vật tư</span><b>{money(o.supplyShip)}</b></div>
                 {o.shipVoucherDiscount > 0 && <div><span>Mã miễn phí giao {o.shipVoucherCode}</span><b className="neg">-{money(o.shipVoucherDiscount)}</b></div>}

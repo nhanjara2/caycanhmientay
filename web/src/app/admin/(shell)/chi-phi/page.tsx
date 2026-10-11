@@ -67,7 +67,7 @@ export default async function AdminExpensesPage({ searchParams }: Props) {
       <div className="ad-title">
         <h1>Chi phí</h1>
         <span className="acts">
-          <Link href="/admin/bao-cao" className="vx-btn vx-btn--outline">Lãi lỗ</Link>
+          <Link href="/admin/thu-chi" className="vx-btn vx-btn--outline">Thu chi</Link>
           <a className="vx-btn vx-btn--outline" href={exportHref}>
             <svg className="vx-ico" viewBox="0 0 24 24" style={{ width: 15, height: 15 }} aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14" /></svg>Xuất Excel
           </a>

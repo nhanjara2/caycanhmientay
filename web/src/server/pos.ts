@@ -9,7 +9,7 @@ import { allProducts, getProducts } from './catalog';
 import { db, schema } from './db';
 import { applyStock, listStores, type Tx } from './inventory';
 import { notifyEvent } from './notify';
-import { itemPrice, newOrderCode, pricedLine } from './orders';
+import { itemPrice, newOrderCode, pricedLine, snapshotItemCosts } from './orders';
 import { getShippingConfig } from './shipping';
 import { checkVoucher } from './vouchers';
 
@@ -103,7 +103,7 @@ export async function createPosOrder(input: PosOrderInput, staff: SessionUser): 
       if (!code) throw new PosError('Không tạo được mã đơn, vui lòng thử lại');
       const [order] = await tx.insert(orders).values({
         code, userId: owner?.id ?? null, status: 'delivered', customerName: input.name || owner?.name || 'Khách lẻ', phone,
-        delivery: 'pickup', note: `Bán tại quầy · ${store.name}`, paymentMethod: PAY[input.payment], paid: true,
+        delivery: 'pickup', note: `Bán tại quầy · ${store.name}`, paymentMethod: PAY[input.payment], paid: true, paidAt: new Date(),
         original: totals.original, subtotal: totals.subtotal, plantShip: 0, supplyShip: 0, voucherCode, voucherDiscount, comboDiscount: totals.comboDiscount, total,
         channel: 'pos', storeId: store.id,
       }).returning({ id: orders.id });
@@ -118,6 +118,7 @@ export async function createPosOrder(input: PosOrderInput, staff: SessionUser): 
           throw new PosError(`“${p.name}${u.label ? ` · ${u.label}` : ''}” chỉ còn ${n} tại ${store.name}`);
         }
       }
+      await snapshotItemCosts(tx, order.id);
       await tx.insert(orderEvents).values({ orderId: order.id, status: 'delivered', actor, note: `Bán tại quầy · ${POS_PAY_LABEL[input.payment]}` });
       if (owner) {
         // Tích điểm như đơn online: 10.000đ = 1 điểm.

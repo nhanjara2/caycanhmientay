@@ -105,6 +105,11 @@ export const pricedLine = ({ p, u, it }: { p: Product; u: Unit; it: { qty: numbe
 /** Giá ghi vào dòng đơn: giá lẻ + giá gạch ngang. Combo 2 cây không đổi đơn giá — tiền giảm ghi ở orders.combo_discount. */
 export const itemPrice = (u: Unit) => ({ price: u.price, oldPrice: u.oldPrice && u.oldPrice > u.price ? u.oldPrice : null });
 
+/** Chụp tiền vốn (giá gốc của quy cách lúc này) vào các dòng hàng của đơn vừa tạo — gọi sau khi chèn `order_items`; sổ Thu chi tính lãi theo số này. */
+export const snapshotItemCosts = (tx: Tx, orderId: number) => tx.execute(sql`
+  update order_items oi set cost = po.cost from product_options po
+  where oi.order_id = ${orderId} and po.product_slug = oi.product_slug and po.idx = oi.option_idx`);
+
 /** Ném ra trong transaction khi tồn không đủ, để hủy toàn bộ đơn. */
 class OutOfStock extends Error {
   constructor(public product: string) { super('out of stock'); }
@@ -186,6 +191,7 @@ async function createOrderTx(
       throw new OutOfStock(p.name);
     }
   }
+  await snapshotItemCosts(tx, order.id);
   await tx.insert(orderEvents).values({ orderId: order.id, status: 'pending', actor: user ? 'Khách hàng' : 'Khách vãng lai' });
   if (user) await notifyEvent(tx, user.id, STATUS_EVENT.pending, { ma_don: code }, `/tai-khoan/don-hang/${code}`);
   return { ok: true as const, code };
@@ -225,8 +231,12 @@ export async function previewVouchers(codes: string[], items: PlaceOrderInput['i
 
 // ---- Đọc đơn ---------------------------------------------------------------------------------
 
+// Tiền vốn (`order_items.cost`) không nằm trong dữ liệu đơn trả ra: trang đơn của khách dùng chung hàm này, giá gốc không được xuống trình duyệt khách.
+const { cost: _itemCost, ...itemColumns } = getTableColumns(orderItems);
+void _itemCost;
+
 export type OrderFull = typeof orders.$inferSelect & {
-  items: (typeof orderItems.$inferSelect & { image: string | null })[];
+  items: (Omit<typeof orderItems.$inferSelect, 'cost'> & { image: string | null })[];
   events: (typeof orderEvents.$inferSelect)[];
 };
 
@@ -234,7 +244,7 @@ async function withDetails(rows: (typeof orders.$inferSelect)[]): Promise<OrderF
   if (!rows.length) return [];
   const ids = rows.map((r) => r.id);
   const [items, events] = await Promise.all([
-    db.select({ ...getTableColumns(orderItems), image: mainImageOf(orderItems.productSlug) }).from(orderItems).where(inArray(orderItems.orderId, ids)).orderBy(orderItems.id),
+    db.select({ ...itemColumns, image: mainImageOf(orderItems.productSlug) }).from(orderItems).where(inArray(orderItems.orderId, ids)).orderBy(orderItems.id),
     db.select().from(orderEvents).where(inArray(orderEvents.orderId, ids)).orderBy(orderEvents.id),
   ]);
   return rows.map((r) => ({ ...r, items: items.filter((i) => i.orderId === r.id), events: events.filter((e) => e.orderId === r.id) }));
@@ -329,7 +339,7 @@ export async function setOrderStatus(code: string, next: OrderStatus, actor: str
       status: next,
       updatedAt: new Date(),
       // Tiền mặt: coi như đã thu khi giao xong. Thanh toán online: TODO cập nhật từ webhook cổng thanh toán.
-      ...(next === 'delivered' && o.paymentMethod === 'cod' ? { paid: true } : {}),
+      ...(next === 'delivered' && o.paymentMethod === 'cod' ? { paid: true, paidAt: new Date() } : {}),
     }).where(eq(orders.id, o.id));
     await tx.insert(orderEvents).values({ orderId: o.id, status: next, actor, note: note || null });
     // Trả hàng về đúng lô / cửa hàng đã xuất
@@ -356,7 +366,7 @@ export async function setOrderPaid(code: string, paid: boolean, actor: string, r
     if (o.paymentMethod === 'cod') return { ok: false as const, error: 'Đơn thanh toán khi nhận hàng: hệ thống tự tính đã thu khi giao xong' };
     if (o.status === 'cancelled') return { ok: false as const, error: 'Đơn đã hủy' };
     if (o.paid === paid) return { ok: true as const };
-    await tx.update(orders).set({ paid, updatedAt: new Date() }).where(eq(orders.id, o.id));
+    await tx.update(orders).set({ paid, paidAt: paid ? new Date() : null, updatedAt: new Date() }).where(eq(orders.id, o.id));
     const note = paid ? `Đã nhận tiền${ref ? ` — ${ref}` : ''}` : `Bỏ đánh dấu đã nhận tiền${ref ? ` — ${ref}` : ''}`;
     await tx.insert(orderEvents).values({ orderId: o.id, status: o.status, actor, note });
     const owner = await orderOwner(tx, o);

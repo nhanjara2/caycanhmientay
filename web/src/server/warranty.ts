@@ -8,7 +8,7 @@ import { db, schema } from './db';
 import { WARRANTY_RESOLUTIONS, WARRANTY_STATUSES } from './db/schema';
 import { applyStock, type Tx } from './inventory';
 import { notifyEvent } from './notify';
-import { newOrderCode } from './orders';
+import { newOrderCode, snapshotItemCosts } from './orders';
 import { saveImage, type SavedImage } from './uploads';
 import { normalize } from '@/lib/catalog';
 import { SYMPTOMS, WARRANTY_DAYS, WARRANTY_RESOLUTION_LABEL, warrantyCode } from '@/lib/warranty-labels';
@@ -249,6 +249,7 @@ async function createWarrantyOrder(tx: Tx, src: OrderRow, userId: number, lines:
       throw new DecideError(`Kho không đủ “${l.name} · ${l.label}” (cần ${l.qty}). Nhập thêm hàng hoặc chọn hướng xử lý khác.`);
     }
   }
+  await snapshotItemCosts(tx, order.id);
   await tx.insert(orderEvents).values([
     { orderId: order.id, status: 'pending', actor, note },
     { orderId: order.id, status: 'confirmed', actor },

@@ -16,6 +16,7 @@ const msg = (p: { error: z.ZodError }) => p.error.issues[0]?.message || FAIL.err
 
 function refresh() {
   revalidatePath('/admin/chi-phi');
+  revalidatePath('/admin/thu-chi');
   revalidatePath('/admin/bao-cao');
 }
 

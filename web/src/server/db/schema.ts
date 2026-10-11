@@ -1,6 +1,7 @@
 // Schema database (PostgreSQL / Supabase qua Drizzle). Đổi schema xong chạy `npm run db:generate` để tạo migration.
 import { sql } from 'drizzle-orm';
 import type { FengShui, SpecField } from '../../lib/catalog';
+import { CASH_KINDS } from '../../lib/cash-labels';
 import type { Disease } from '../../lib/diseases';
 import type { PostBlock } from '../../lib/posts';
 import type { ProductAttrs } from '../../lib/product-filters';
@@ -368,6 +369,8 @@ export const orders = pgTable('orders', {
   storeId: integer('store_id').references(() => stores.id),
   paymentMethod: text('payment_method', { enum: PAYMENT_METHODS }).notNull(),
   paid: boolean('paid').notNull().default(false),
+  /** Lúc ghi nhận đã thu tiền (bán tại quầy: lúc bán; COD: lúc giao xong; online: lúc nhân viên bấm Đã nhận tiền) — sổ Thu chi xếp tiền bán hàng theo ngày này. */
+  paidAt: ts('paid_at'),
   original: integer('original').notNull(),
   subtotal: integer('subtotal').notNull(),
   plantShip: integer('plant_ship').notNull(),
@@ -430,6 +433,8 @@ export const orderItems = pgTable('order_items', {
   ship: text('ship', { enum: ['plant', 'supply'] }).notNull(),
   price: integer('price').notNull(),
   oldPrice: integer('old_price'),
+  /** Tiền vốn mỗi đơn vị (= product_options.cost) chụp lúc đặt, null = quy cách chưa khai giá gốc. Chỉ admin thấy. Ghi bằng `snapshotItemCosts`. */
+  cost: integer('cost'),
   qty: integer('qty').notNull(),
 }, (t) => [index('order_items_order_idx').on(t.orderId)]);
 
@@ -760,7 +765,22 @@ export const recurringExpenses = pgTable('recurring_expenses', {
 });
 
 /**
- * Sổ chi phí của cửa hàng: mọi khoản chi KHÔNG phải hàng nhập kho (hàng nhập kho đã có phiếu nhập, báo cáo tự cộng).
+ * Khoản tiền ghi tay của sổ Thu chi (/admin/thu-chi) ngoài bán hàng và chi phí: thu khác, vốn chủ shop bỏ vào, vốn rút ra.
+ * `entryOn` dạng YYYY-MM-DD theo giờ Việt Nam.
+ */
+export const cashEntries = pgTable('cash_entries', {
+  id: serial('id').primaryKey(),
+  kind: text('kind', { enum: CASH_KINDS }).notNull(),
+  entryOn: text('entry_on').notNull(),
+  /** Đồng. */
+  amount: integer('amount').notNull(),
+  note: text('note'),
+  actor: text('actor').notNull(),
+  createdAt: createdAt(),
+}, (t) => [index('cash_entries_on_idx').on(t.entryOn)]);
+
+/**
+ * Sổ chi phí của cửa hàng: mọi khoản đã chi; tiền mua hàng ghi ở nhóm `mua-hang` (hoặc giá nhập trên phiếu nhập — chỉ một nơi).
  * `storeId` null = chi chung cho cả hệ thống. `spentOn` dạng YYYY-MM-DD theo giờ Việt Nam.
  */
 export const expenses = pgTable('expenses', {

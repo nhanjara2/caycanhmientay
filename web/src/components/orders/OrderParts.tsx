@@ -163,8 +163,7 @@ export function OrderDetail({ o }: { o: OrderFull }) {
         <div className="vx-receipt">
           <h3>Thông tin thanh toán</h3>
           <div className="vx-lines">
-            <div><span>Tổng tiền</span><b>{money(o.original)}</b></div>
-            {o.original > o.subtotal && <div><span>Giảm giá trực tiếp</span><b className="neg">-{money(o.original - o.subtotal)}</b></div>}
+            <div><span>Tổng tiền</span><b>{money(o.subtotal)}</b></div>
             {plantShip && <div><span>Phí giao cây sống</span>{o.plantShip ? <b>{money(o.plantShip)}</b> : <b className="pos">Miễn phí</b>}</div>}
             {supplyShip && <div><span>Phí giao vật tư</span>{o.supplyShip ? <b>{money(o.supplyShip)}</b> : <b className="pos">Miễn phí</b>}</div>}
             {o.shipVoucherDiscount > 0 && <div><span>Mã miễn phí giao {o.shipVoucherCode}</span><b className="neg">-{money(o.shipVoucherDiscount)}</b></div>}

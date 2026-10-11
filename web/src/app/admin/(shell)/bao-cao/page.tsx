@@ -104,7 +104,7 @@ export default async function AdminReportsPage({ searchParams }: Props) {
       </div>
 
       <div className="ad-card">
-        <div className="ad-card__h">Lãi lỗ ước tính<Link href="/admin/chi-phi">Sổ chi phí</Link></div>
+        <div className="ad-card__h">Lãi lỗ<Link href="/admin/thu-chi">Thu chi</Link></div>
         <div className="ad-card__b">
           <div className="ad-kpis">
             <div className="ad-kpi">
@@ -113,23 +113,23 @@ export default async function AdminReportsPage({ searchParams }: Props) {
               <small>{r.orders} đơn trong kỳ</small>
             </div>
             <div className="ad-kpi">
-              <span><Icon name="box" />Tiền mua hàng</span>
-              <b>{shortMoney(f.purchases)}</b>
-              <small>{f.uncosted ? `${f.uncosted} dòng phiếu nhập chưa ghi giá nên chưa tính` : <>Kỳ trước: {shortMoney(f.prev.purchases)}</>}</small>
+              <span><Icon name="box" />Tiền vốn hàng đã bán</span>
+              <b>{shortMoney(f.cogs)}</b>
+              <small>{f.uncostedItems ? `${f.uncostedItems} dòng hàng chưa có giá gốc nên chưa tính` : <>Kỳ trước: {shortMoney(f.prev.cogs)}</>}</small>
             </div>
             <div className="ad-kpi">
               <span><Icon name="cash" />Chi phí khác</span>
               <b>{shortMoney(f.expenses)}</b>
-              <small>{f.expenseCount} khoản · kỳ trước: {shortMoney(f.prev.expenses)}</small>
+              <small>{f.expenseCount} khoản{f.refunds ? ` · hoàn tiền khách ${shortMoney(f.refunds)}` : ''} · kỳ trước: {shortMoney(f.prev.expenses)}</small>
             </div>
             <div className={`ad-kpi${f.profit < 0 ? ' warn' : ''}`}>
-              <span><Icon name={f.profit < 0 ? 'alert' : 'cash'} />{f.profit < 0 ? 'Lỗ ước tính' : 'Lãi ước tính'}</span>
+              <span><Icon name={f.profit < 0 ? 'alert' : 'cash'} />{f.profit < 0 ? 'Lỗ' : 'Lãi'}</span>
               <b>{shortMoney(f.profit)}</b>
               <small>{r.revenue ? `Biên ${fmtPct(margin)} doanh thu · ` : ''}kỳ trước: {shortMoney(f.prev.profit)}</small>
             </div>
           </div>
           <span style={{ fontSize: '0.75rem', color: 'var(--ink-muted)' }}>
-            Lãi ước tính = doanh thu − tiền mua hàng − chi phí khác, cùng kỳ. Doanh thu là đơn chưa hủy (kể cả chưa giao / chưa thu tiền); tiền mua hàng là nhóm Mua cây – hàng hóa của sổ chi phí + số lượng × giá nhập trên phiếu nhập trong kỳ — không phải giá vốn đúng số hàng đã bán.
+            Lãi = doanh thu − tiền vốn hàng đã bán − chi phí khác − hoàn tiền khách, cùng kỳ. Doanh thu là đơn chưa hủy (kể cả chưa giao / chưa thu tiền); tiền vốn = giá gốc của từng quy cách × số lượng đã bán. Tiền mua hàng đã chi xem ở Thu chi.
           </span>
         </div>
       </div>

@@ -43,6 +43,7 @@ export const ADMIN_NAV: { group: string; items: { href: string; label: string; i
   { group: 'TỔNG QUAN', items: [
     { href: '/admin', label: 'Tổng quan', icon: 'dash' },
     { href: '/admin/bao-cao', label: 'Báo cáo', icon: 'chart' },
+    { href: '/admin/thu-chi', label: 'Thu chi', icon: 'wallet' },
     { href: '/admin/chi-phi', label: 'Chi phí', icon: 'wallet' },
   ] },
   { group: 'BÁN HÀNG', items: [

@@ -1,6 +1,7 @@
 import 'server-only';
 import { sql } from 'drizzle-orm';
 import { db } from './db';
+import { salesProfit } from './cashflow';
 import { periodFinance } from './expenses';
 
 // Báo cáo admin (/admin/bao-cao): mọi số liệu tính từ đơn hàng / bảo hành / hỏi đáp / đánh giá thật.
@@ -179,8 +180,9 @@ export async function buildReport(range: ReportRange) {
            (count(*) filter (where status = 'pending'))::int as pending
     from reviews where created_at >= ${F} and created_at < ${T}`);
 
-  // Lãi lỗ ước tính = doanh thu − tiền hàng nhập (phiếu nhập) − chi phí khác (sổ chi phí) trong cùng kỳ; kỳ trước tính tương tự.
-  const [fin, prevFin] = await Promise.all([periodFinance(from, to), periodFinance(prevFrom, from)]);
+  // Lãi lỗ = doanh thu − tiền vốn hàng đã bán (order_items.cost) − chi phí khác (sổ chi phí) − hoàn tiền bảo hành, cùng kỳ; kỳ trước tính tương tự.
+  // (Trước 11/10/2026 trừ tiền hàng NHẬP trong kỳ — nhập hàng để bán dần thì kỳ nhập bị lỗ ảo. Dòng tiền mua hàng nay xem ở /admin/thu-chi.)
+  const [fin, prevFin, sp, prevSp] = await Promise.all([periodFinance(from, to), periodFinance(prevFrom, from), salesProfit(from, to), salesProfit(prevFrom, from)]);
   const revenue = kpi?.revenue ?? 0, prevRevenue = kpi?.prev_revenue ?? 0;
 
   const plantItems = warrantyByGroup.reduce((a, g) => a + g.items, 0);
@@ -189,7 +191,10 @@ export async function buildReport(range: ReportRange) {
   return {
     range, from, to, daily,
     revenue, prevRevenue,
-    finance: { ...fin, profit: revenue - fin.purchases - fin.expenses, prev: { expenses: prevFin.expenses, purchases: prevFin.purchases, profit: prevRevenue - prevFin.purchases - prevFin.expenses } },
+    finance: {
+      ...fin, cogs: sp.cogs, uncostedItems: sp.uncosted, refunds: sp.refunds, profit: revenue - sp.cogs - fin.expenses - sp.refunds,
+      prev: { expenses: prevFin.expenses, cogs: prevSp.cogs, refunds: prevSp.refunds, profit: prevRevenue - prevSp.cogs - prevFin.expenses - prevSp.refunds },
+    },
     orders: kpi?.orders ?? 0, prevOrders: kpi?.prev_orders ?? 0,
     buyers: kpi?.buyers ?? 0, prevBuyers: kpi?.prev_buyers ?? 0,
     voucherOrders: kpi?.voucher_orders ?? 0, voucherDiscount: kpi?.voucher_discount ?? 0,

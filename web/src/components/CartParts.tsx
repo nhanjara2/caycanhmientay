@@ -114,13 +114,14 @@ export function OrderSummary({ totals: t, voucherHint = false, voucher, children
   const { rules } = useShipping();
   const vouchers = usePublicVouchers();
   const plantLeft = t.plantSubtotal > 0 && t.plantShip > 0 ? rules.plant.freeFrom - t.plantSubtotal : 0;
-  const saved = t.directDiscount + t.comboDiscount + t.voucherDiscount + t.shipVoucherDiscount + t.partnerDiscount;
+  // Tổng tiền tính theo giá bán (giá lẻ). Giá gạch ngang chỉ để hiện % giảm ở từng sản phẩm — không cộng vào tổng,
+  // không tính vào "Tiết kiệm được" (chỉ gồm khoản bớt thật: combo, mã, chiết khấu đối tác).
+  const saved = t.comboDiscount + t.voucherDiscount + t.shipVoucherDiscount + t.partnerDiscount;
   const tiers = voucherHint ? voucherTiers(vouchers, t.goods) : { best: null, next: null };
   return (
     <aside className="vx-sum">
       <div className="vx-lines">
-        <div><span>Tổng tiền</span><b>{money(t.original)}</b></div>
-        {t.directDiscount > 0 && <div><span>Giảm giá trực tiếp</span><b className="neg">-{money(t.directDiscount)}</b></div>}
+        <div><span>Tổng tiền</span><b>{money(t.subtotal)}</b></div>
         {t.comboDiscount > 0 && <div><span>Combo 2 cây</span><b className="neg">-{money(t.comboDiscount)}</b></div>}
         {t.plantSubtotal > 0 && <div><span>Phí giao cây sống</span>{t.plantShip ? <b>{money(t.plantShip)}</b> : <b className="pos">Miễn phí</b>}</div>}
         {t.supplySubtotal > 0 && <div><span>Phí giao vật tư</span>{t.supplyShip ? <b>{money(t.supplyShip)}</b> : <b className="pos">Miễn phí</b>}</div>}
@@ -145,7 +146,7 @@ export function OrderSummary({ totals: t, voucherHint = false, voucher, children
       <div className="vx-total">
         <b>Thành tiền</b>
         <span>
-          {saved > 0 && <s>{money(t.original + t.plantShip + t.supplyShip)}</s>}
+          {saved > 0 && <s>{money(t.subtotal + t.plantShip + t.supplyShip)}</s>}
           <span className="amt">{money(t.total)}</span>
         </span>
       </div>
