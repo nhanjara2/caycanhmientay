@@ -222,8 +222,8 @@
   .hm { --hm-gut: 16px; }
   .hm-hero__stage[data-sides] .hm-hero__grid { grid-template-columns: minmax(0, 1fr); }
   .hm-car--top .hm-slide__sub { display: none; }
-  .hm-sides { grid-template-rows: none; grid-template-columns: repeat(var(--hm-sides, 2), minmax(0, 1fr)); }
-  .hm-side { aspect-ratio: 2 / 1; }
+  /* Không đủ chỗ đặt ảnh nhỏ bên cạnh: HomeHero nhập các ảnh nhỏ vào băng ảnh lớn thành một băng chạy chung, ô riêng ẩn đi */
+  .hm-sides { display: none; }
   .hm-partner { grid-template-columns: minmax(0, 1fr); padding: 24px; }
   .hm-mosaic { --hm-gap: 12px; }
   .hm-tile__txt b { font-size: 0.9375rem; }
@@ -239,7 +239,7 @@
 /* ---- Điện thoại ------------------------------------------------------------------------------- */
 @media (max-width: 47.9375em) {
   /* Thu gọn 11/10/2026 (chủ shop: đầu trang + băng ảnh quá cao, học bố cục điện thoại của Long Châu): ảnh lớn 2:1 (trước 4:3),
-     chữ trên ảnh chỉ còn nhãn + tiêu đề + nút, 2 ô ảnh nhỏ dựng sẵn ẩn (trùng lối tắt), lối tắt và tiêu đề khối nhỏ lại.
+     chữ trên ảnh chỉ còn nhãn + tiêu đề + nút, 2 ô ảnh nhỏ nhập vào băng ảnh lớn (12/10/2026), lối tắt và tiêu đề khối nhỏ lại.
      Khoảng đầu trang ở 390px: 842px -> ~550px. */
   .hm { --hm-r: 14px; }
   .hm-hero { padding-top: 10px; }
@@ -268,11 +268,7 @@
   .hm-collage img:nth-child(3) { display: none; }
   .hm-collage + .hm-slide__txt { padding-right: 43%; }
   .hm-collage + .hm-slide__txt .hm-slide__title { font-size: 1rem; }
-  .hm-sides { gap: 8px; }
-  /* Hai ô dựng sẵn (Gửi báo giá sỉ, Bắt bệnh) trùng với lối tắt ngay dưới — chỉ hiện ô chủ shop tự tải */
-  .hm-sides[data-auto] { display: none; }
-  .hm-side { aspect-ratio: 2.05; }
-  .hm-side--text { min-height: 4.75rem; }
+  /* Ô ảnh nhỏ: trang chủ đã nhập vào băng ảnh lớn (< 1024px) — 3 luật dưới còn dùng cho khung xem trước ở /admin/trang-chu */
   .hm-side .hm-slide__txt { justify-content: flex-end; padding: 8px 10px; gap: 4px; }
   .hm-side .hm-slide__title { font-size: 0.875rem; line-height: 1.25; }
   .hm-side .hm-slide__cta { display: none; }

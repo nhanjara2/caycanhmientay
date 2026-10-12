@@ -91,23 +91,21 @@ export default async function HomePage() {
       title: 'Cây Cảnh Miền Tây: cây cảnh, cây kiểng, hoa kiểng lá — xem hệ thống cửa hàng và vườn ươm', href: '/he-thong-cua-hang',
     },
   ];
-  const ofSub = (sub: string) => products.filter((p) => p.sub === sub || p.extraSubs?.includes(sub));
   const flashImgs = pickImages(flash, 3);
-  const officeImgs = pickImages(ofSub('cay-van-phong'), 3);
+  // Ảnh lớn dựng sẵn: 2 ảnh thiết kế đã có sẵn chữ (2:1, dùng chung máy tính + điện thoại) nên không đè chữ lên.
   const fallbackHero: Slide[] = [
     {
-      key: 'si', badge: 'Giá sỉ cho đối tác', tone: 'green', showText: true, image: PARTNER_IMAGE.project,
-      title: 'Cây xanh giá sỉ cho công trình, cảnh quan, đại lý',
-      subtitle: `${minOrder} · đăng ký đối tác để nhận chiết khấu riêng`, cta: 'Đăng ký đối tác', href: `${WHOLESALE_URL}#dang-ky`,
+      key: 'si', showText: false, image: '/images/banner/nguon-cung-cay-canh.webp',
+      title: 'Nguồn cung cây cảnh cho công trình, cảnh quan, đại lý — đăng ký đối tác', href: `${WHOLESALE_URL}#dang-ky`,
     },
     ...(flashImgs.length >= 2 ? [{
       key: 'flash', badge: 'Flash sale giờ vàng', tone: 'sale' as const, showText: true, image: flashImgs[0], contain: flashImgs,
       title: 'Giảm sâu mỗi ngày, 3 khung giờ vàng', subtitle: '08:00 · 12:00 · 20:00 — số lượng có hạn', cta: 'Săn ngay', href: '#flash-sale',
     }] : []),
-    ...(officeImgs.length >= 2 ? [{
-      key: 'tu-van', badge: 'Miễn phí', tone: 'green' as const, showText: true, image: officeImgs[0], contain: officeImgs,
-      title: 'Chọn đúng cây cho từng không gian', subtitle: 'Trả lời vài câu hỏi — gợi ý loại cây, số lượng, dự toán', cta: 'Tư vấn chọn cây', href: '/tu-van-chon-cay',
-    }] : []),
+    {
+      key: 'tu-van', showText: false, image: '/images/banner/chon-dung-cay.webp',
+      title: 'Chọn đúng cây cho từng không gian: làm việc, quán cafe sân vườn, cửa hàng — tư vấn chọn cây', href: '/tu-van-chon-cay',
+    },
   ];
   const fallbackSides: Slide[] = [
     {
@@ -170,7 +168,6 @@ export default async function HomePage() {
           tops={top.length ? top : fallbackTop}
           slides={hero.length ? hero : fallbackHero}
           sides={(sides.length ? sides : fallbackSides).slice(0, 2)}
-          sidesAuto={!sides.length}
           backdrop={backdrop ? { image: bannerImageUrl(backdrop.image), imageMobile: backdrop.imageMobile ? bannerImageUrl(backdrop.imageMobile) : null } : null}
         />
         <QuickLinks items={[...QUICK]} />

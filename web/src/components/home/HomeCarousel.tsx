@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties } from 'react';
 import { isExternal } from '@/lib/home-banners';
 import { Icon } from '../Icon';
 
@@ -71,10 +71,12 @@ export function HomeCarousel({ slides, label, className = '', onIndex }: {
   slides: Slide[]; label: string; className?: string; onIndex?: (i: number) => void;
 }) {
   const track = useRef<HTMLDivElement>(null);
-  const [i, setI] = useState(0);
+  const [pos, setPos] = useState(0);
   const [paused, setPaused] = useState(false);
   const [hold, setHold] = useState(false);
   const n = slides.length;
+  // Số ảnh có thể giảm khi đổi cỡ màn hình (ô ảnh nhỏ tách khỏi băng ảnh lớn) — không để ảnh đang hiện vượt quá ảnh cuối.
+  const i = Math.min(pos, Math.max(0, n - 1));
 
   const go = useCallback((to: number) => {
     const el = track.current;
@@ -90,7 +92,7 @@ export function HomeCarousel({ slides, label, className = '', onIndex }: {
     let raf = 0;
     const onScroll = () => {
       cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => setI(Math.round(el.scrollLeft / Math.max(1, el.clientWidth))));
+      raf = requestAnimationFrame(() => setPos(Math.round(el.scrollLeft / Math.max(1, el.clientWidth))));
     };
     el.addEventListener('scroll', onScroll, { passive: true });
     return () => { el.removeEventListener('scroll', onScroll); cancelAnimationFrame(raf); };
@@ -144,18 +146,34 @@ export function HomeCarousel({ slides, label, className = '', onIndex }: {
   );
 }
 
+/** Hẹp hơn máy tính (< 1024px) — khớp điểm chuyển 63.9375em trong home.css. Máy chủ + lúc mới tải coi như máy tính. */
+const COMPACT = '(max-width: 63.9375em)';
+function useCompact() {
+  return useSyncExternalStore(
+    (onChange) => {
+      const m = matchMedia(COMPACT);
+      m.addEventListener('change', onChange);
+      return () => m.removeEventListener('change', onChange);
+    },
+    () => matchMedia(COMPACT).matches,
+    () => false,
+  );
+}
+
 /**
  * Khung đầu trang chủ (kiểu Long Châu): nền phủ kín bề ngang, băng ảnh rộng trên cùng, rồi ảnh lớn + tối đa 2 ảnh nhỏ bên phải.
+ * Tablet / điện thoại (< 1024px) không đủ chỗ đặt ảnh nhỏ bên cạnh: các ảnh nhỏ nhập vào băng ảnh lớn thành MỘT băng chạy chung
+ * (ô ảnh nhỏ riêng ẩn bằng CSS) thay vì xếp thành hàng bên dưới.
  * Nền đổi theo băng ảnh rộng: mỗi ảnh một lớp nền (nền riêng chủ shop tải; không có thì ảnh nền sự kiện chung;
  * chưa có nữa thì chính ảnh đó phóng to, làm mờ) — qua ảnh mới thì lớp nền của nó hiện dần
  * lên trên lớp cũ (lớp cũ giữ nguyên tới khi lớp mới rõ hẳn, không lộ nền xanh giữa chừng), cả khoảng trên trang đổi theo.
  * Không có băng ảnh rộng thì nền đổi theo ảnh lớn.
  */
-export function HomeHero({ tops, slides, sides, sidesAuto, backdrop }: {
+export function HomeHero({ tops, slides, sides, backdrop }: {
   tops: Slide[]; slides: Slide[]; sides: Slide[]; backdrop: { image: string; imageMobile: string | null } | null;
-  /** Ô ảnh nhỏ là ô dựng sẵn (chủ shop chưa tải): điện thoại ẩn vì trùng lối tắt ngay dưới. */
-  sidesAuto?: boolean;
 }) {
+  const compact = useCompact();
+  const heroSlides = useMemo(() => (compact ? [...slides, ...sides] : slides), [compact, slides, sides]);
   const [{ i, prev }, setAt] = useState({ i: 0, prev: -1 });
   // Chỉ tải ảnh nền của ảnh đang hiện, ảnh kế tiếp và ảnh đã xem (khỏi tải hết 8 ảnh nền ngay khi vào trang).
   const [seen, setSeen] = useState(() => new Set([0, 1]));
@@ -169,7 +187,7 @@ export function HomeHero({ tops, slides, sides, sidesAuto, backdrop }: {
     const t = setTimeout(() => setAt((a) => ({ ...a, prev: -1 })), 1000);
     return () => clearTimeout(t);
   }, [i, prev]);
-  const lead = tops.length ? tops : slides;
+  const lead = tops.length ? tops : heroSlides;
   const style = { '--hm-sides': sides.length } as CSSProperties;
   return (
     <div className="hm-hero__stage" data-sides={sides.length || undefined} style={style}>
@@ -208,9 +226,9 @@ export function HomeHero({ tops, slides, sides, sidesAuto, backdrop }: {
       </div>
       {tops.length > 0 && <HomeCarousel slides={tops} label="Chương trình nổi bật" className="hm-car--top" onIndex={onIndex} />}
       <div className="hm-hero__grid">
-        <HomeCarousel slides={slides} label="Sự kiện & ưu đãi nổi bật" className="hm-car--hero" onIndex={tops.length ? undefined : onIndex} />
-        {sides.length > 0 && (
-          <div className="hm-sides" data-auto={sidesAuto || undefined}>
+        <HomeCarousel slides={heroSlides} label="Sự kiện & ưu đãi nổi bật" className="hm-car--hero" onIndex={tops.length ? undefined : onIndex} />
+        {!compact && sides.length > 0 && (
+          <div className="hm-sides">
             {sides.map((s) => <div key={s.key} className={s.showText ? 'hm-side hm-side--text' : 'hm-side'}><SlideBody s={s} /></div>)}
           </div>
         )}
