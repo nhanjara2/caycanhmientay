@@ -113,7 +113,8 @@ export default async function HomePage() {
   ];
   const fallbackSides: Slide[] = [
     {
-      key: 'bao-gia', tone: 'green', showText: true, image: PARTNER_IMAGE.trade,
+      // Ảnh mầm cây không có chữ nên vẫn đè tiêu đề + nút; khi cắt 12:5 đã dời mầm cây sang phải để chữ bên trái không đè lên.
+      key: 'bao-gia', tone: 'green', showText: true, image: '/images/banner/bao-gia-si.webp',
       title: 'Gửi danh sách, nhận báo giá sỉ', cta: 'Gửi báo giá', href: WHOLESALE_QUOTE_URL,
     },
     {
