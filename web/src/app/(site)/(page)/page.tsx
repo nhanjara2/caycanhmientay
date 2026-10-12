@@ -104,7 +104,7 @@ export default async function HomePage() {
     }] : []),
     {
       key: 'tu-van', showText: false, image: '/images/banner/chon-dung-cay.webp',
-      title: 'Chọn đúng cây cho từng không gian: làm việc, quán cafe sân vườn, cửa hàng — tư vấn chọn cây', href: '/tu-van-chon-cay',
+      title: 'Chọn đúng cây cho từng không gian: công trình, cảnh quan, cửa hàng, quán cafe, văn phòng — tư vấn chọn cây', href: '/tu-van-chon-cay',
     },
   ];
   const fallbackSides: Slide[] = [
