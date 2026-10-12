@@ -6,6 +6,7 @@ export const YOUTUBE_URL = 'https://www.youtube.com/channel/UCLnO5s6HZWpud5z0S-B
 /** Tên kênh của shop, ghi cạnh logo trên thẻ video ngắn. */
 export const YOUTUBE_NAME = 'Cây Cảnh Miền Tây';
 export const TIKTOK_NAME = 'caycanhmientay.com';
+export const TIKTOK_URL = `https://www.tiktok.com/@${TIKTOK_NAME}`;
 /** Ảnh mã QR Zalo trong public/ (mở trang Zalo cá nhân của shop). */
 export const ZALO_QR = '/images/zalo-qr.png';
 

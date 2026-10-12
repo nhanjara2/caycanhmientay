@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { CARE_PHONE, FACEBOOK_URL, formatPhone, SALES_PHONE, SHOP_ADDRESS, SHOP_EMAIL, SUPPORT_PHONE, YOUTUBE_URL, ZALO_QR, ZALO_URL } from '@/lib/contact';
+import { CARE_PHONE, FACEBOOK_URL, formatPhone, SALES_PHONE, SHOP_ADDRESS, SHOP_EMAIL, SUPPORT_PHONE, TIKTOK_URL, YOUTUBE_URL, ZALO_QR, ZALO_URL } from '@/lib/contact';
 import { menuCategories } from '@/server/categories';
 import { FooterGroup } from './FooterGroup';
 import { Icon } from './Icon';
@@ -88,6 +88,7 @@ export async function Footer() {
             <a href={FACEBOOK_URL} target="_blank" rel="noreferrer" title="Facebook"><img src="/images/social/facebook.svg" alt="Facebook" /></a>
             <a href={ZALO_URL} target="_blank" rel="noreferrer" title="Zalo"><img src="/images/social/zalo.svg" alt="Zalo" /></a>
             <a href={YOUTUBE_URL} target="_blank" rel="noreferrer" title="YouTube"><img src="/images/social/youtube.svg" alt="YouTube" /></a>
+            <a href={TIKTOK_URL} target="_blank" rel="noreferrer" title="TikTok"><img src="/images/social/tiktok.svg" alt="TikTok" /></a>
           </div>
           {/* Mã QR chỉ có ích khi xem trên máy tính; điện thoại đã có nút "Chat Zalo" ở thanh dưới. */}
           <div className="vx-fcol app-qrbox">

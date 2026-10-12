@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { Breadcrumb } from '@/components/Blocks';
 import { EmptyPosts } from '@/components/PostParts';
 import { ShortVideos } from '@/components/ShortVideos';
-import { YOUTUBE_URL } from '@/lib/contact';
+import { TIKTOK_NAME, TIKTOK_URL, YOUTUBE_URL } from '@/lib/contact';
 import { CATEGORIES, isCategory, SECTIONS, VIDEO_PAGE } from '@/lib/posts';
 import { publishedVideos } from '@/server/posts';
 
@@ -58,7 +58,10 @@ export default async function VideoPage({ searchParams }: Props) {
         <EmptyPosts text="Video đang được cập nhật" hint={<>Trong lúc chờ, mời xem <Link href={SECTIONS.blog.path}>Góc chăm cây</Link> hoặc <Link href="/benh-cay">thư viện bệnh cây</Link>.</>} />
       )}
 
-      <p className="shv-more">Xem thêm trên <a href={YOUTUBE_URL} target="_blank" rel="noreferrer">kênh YouTube Cây Cảnh Miền Tây</a></p>
+      <p className="shv-more">
+        Xem thêm trên <a href={YOUTUBE_URL} target="_blank" rel="noreferrer">kênh YouTube Cây Cảnh Miền Tây</a>
+        {' '}và <a href={TIKTOK_URL} target="_blank" rel="noreferrer">TikTok @{TIKTOK_NAME}</a>
+      </p>
     </div>
   );
 }
