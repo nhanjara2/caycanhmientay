@@ -72,8 +72,9 @@ export default async function HomePage() {
   // Băng ảnh rộng dựng sẵn: không có nền riêng — nền cả khoảng trên là chính ảnh đó làm mờ (HomeHero).
   const fallbackTop: Slide[] = [
     {
-      key: 'top-tet', badge: 'Mùa cây Tết 2027', tone: 'sun', showText: true, image: '/videos/mai-vang.jpg',
-      title: 'Mai, quất, cây Tết — đặt sớm, giữ hàng giá sỉ', subtitle: 'Cho cửa hàng, công trình, quà tặng doanh nghiệp', cta: 'Xem cây Tết', href: '/cay-tet',
+      // Ảnh thiết kế đã có sẵn chữ ("Vui Xuân Tết") nên không đè chữ lên; bản điện thoại xếp riêng 12:5.
+      key: 'top-tet', showText: false, image: '/images/banner/vui-xuan-tet.webp', imageMobile: '/images/banner/vui-xuan-tet-mb.webp',
+      title: 'Vui Xuân Tết, rộn ràng vui xuân — xem mai, quất, đào và cây Tết', href: '/cay-tet',
     },
     {
       key: 'top-mua', badge: season.name, tone: 'green', showText: true,
