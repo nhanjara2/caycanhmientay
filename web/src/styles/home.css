@@ -129,7 +129,7 @@
 .hm .hm-btn-light:hover { background: var(--primary-hover); }
 
 /* ---- Danh mục bằng ảnh: hàng ô (ảnh vuông + tên bên dưới) — máy tính / tablet 6 ô một hàng (--hm-cols),
-   ít ô hơn thì canh giữa. flex chứ không grid để hàng chưa đủ ô vẫn nằm giữa. ------------------------- */
+   ít ô hơn thì canh giữa. flex chứ không grid để hàng chưa đủ ô vẫn nằm giữa. Điện thoại: một hàng vuốt ngang. */
 .hm-mosaic { --hm-cols: 6; --hm-gap: 16px; display: flex; flex-wrap: wrap; justify-content: center; gap: 16px var(--hm-gap); }
 .hm-tile { flex: 0 0 calc((100% - (var(--hm-cols) - 1) * var(--hm-gap)) / var(--hm-cols) - 0.1px); min-width: 0; display: flex; flex-direction: column; gap: 8px; text-align: center; text-decoration: none; }
 .hm-tile__img { position: relative; display: block; overflow: hidden; aspect-ratio: 1; border-radius: 16px; background: var(--primary-soft); isolation: isolate; }
@@ -307,9 +307,17 @@
   .hm-head p { display: none; }
   .hm-sec--card { padding: 14px 10px; margin: 0 -6px; }
   .hm-sec--card .app-grid > :nth-child(n + 7) { display: none; }
-  .hm-mosaic { --hm-cols: 3; --hm-gap: 8px; row-gap: 14px; }
-  .hm-tile { gap: 6px; }
+  /* Danh mục: một hàng vuốt ngang như ảnh nhóm đối tác bên dưới (trước là 3 cột xếp 2 – 3 hàng) — thấy 3 ô + mép ô thứ 4.
+     Lề auto ở ô đầu / ô cuối: ít ô thì vẫn nằm giữa, tràn thì lề tự về 0 (justify-content: center sẽ cắt mất ô đầu khi tràn).
+     Đệm 3px trên dưới (bù bằng lề âm) để viền focus của ô không bị khung cuộn cắt. */
+  .hm-mosaic { --hm-gap: 8px; flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; margin: -3px calc(-1 * var(--hm-gut)); padding: 3px var(--hm-gut); scroll-padding-inline: var(--hm-gut); scrollbar-width: none; }
+  .hm-mosaic::-webkit-scrollbar { display: none; }
+  .hm-tile { flex: 0 0 30%; gap: 6px; scroll-snap-align: start; }
+  .hm-tile:first-child { margin-left: auto; }
+  .hm-tile:last-child { margin-right: auto; }
   .hm-tile__img { border-radius: 12px; }
+  /* Ô hẹp hơn lúc xếp 3 cột: tên 14px (như nhãn ảnh nhóm đối tác) để "Cây văn phòng" vẫn vừa một dòng ở máy 390px */
+  .hm-tile__txt b { font-size: 0.875rem; }
   /* Dải đối tác: bỏ đoạn giải thích, 2 nút cùng một hàng, ảnh nhóm đối tác nhỏ lại (thấy 2 ảnh + mép ảnh thứ 3) */
   .hm-partner { padding: 16px 14px; gap: 14px; border-radius: var(--hm-r); }
   .hm-partner__txt { gap: 10px; }
