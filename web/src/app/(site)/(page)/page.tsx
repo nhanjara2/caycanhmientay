@@ -68,7 +68,6 @@ export default async function HomePage() {
   // ---- Khung đầu trang: ảnh chủ shop tải lên; chưa có thì dựng từ ảnh thật của shop ----
   const season = seasonNow();
   const diseaseImgs = diseases.flatMap((d) => d.symptoms).flatMap((s) => (s.image ? [s.image] : []));
-  const diseaseImg = diseaseImgs[0];
   // Băng ảnh rộng dựng sẵn: không có nền riêng — nền cả khoảng trên là chính ảnh đó làm mờ (HomeHero).
   const fallbackTop: Slide[] = [
     {
@@ -118,7 +117,8 @@ export default async function HomePage() {
       title: 'Gửi danh sách, nhận báo giá sỉ', cta: 'Gửi báo giá', href: WHOLESALE_QUOTE_URL,
     },
     {
-      key: 'benh', tone: 'sale', showText: true, image: diseaseImg ? `/api/disease-images/${diseaseImg}` : PARTNER_IMAGE.landscape,
+      // Ảnh mầm hoa trên đất, cắt và dời cây sang phải như ô báo giá ở trên (hai ô xếp chồng trên máy tính, thân cây thẳng hàng).
+      key: 'benh', tone: 'sale', showText: true, image: '/images/banner/tra-benh-cay.webp',
       title: 'Cây bị bệnh? Tra theo triệu chứng', cta: 'Bắt bệnh cho cây', href: '/benh-cay',
     },
   ];
