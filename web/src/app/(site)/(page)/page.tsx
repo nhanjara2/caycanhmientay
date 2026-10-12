@@ -92,7 +92,7 @@ export default async function HomePage() {
     },
   ];
   const flashImgs = pickImages(flash, 3);
-  // Ảnh lớn dựng sẵn: 2 ảnh thiết kế đã có sẵn chữ (2:1, dùng chung máy tính + điện thoại) nên không đè chữ lên.
+  // Ảnh lớn dựng sẵn: các ảnh thiết kế đã có sẵn chữ (2:1, dùng chung máy tính + điện thoại) nên không đè chữ lên.
   const fallbackHero: Slide[] = [
     {
       key: 'si', showText: false, image: '/images/banner/nguon-cung-cay-canh.webp',
@@ -105,6 +105,10 @@ export default async function HomePage() {
     {
       key: 'tu-van', showText: false, image: '/images/banner/chon-dung-cay.webp',
       title: 'Chọn đúng cây cho từng không gian: công trình, cảnh quan, cửa hàng, quán cafe, văn phòng — tư vấn chọn cây', href: '/tu-van-chon-cay',
+    },
+    {
+      key: 'hoc-sinh', showText: false, image: '/images/banner/hoc-sinh-sinh-vien.webp',
+      title: 'Học sinh – sinh viên tự tin trang trí: cây xinh giá rẻ, giảm đến 29% — xem cây để bàn', href: '/danh-muc/cay-canh/cay-de-ban',
     },
   ];
   const fallbackSides: Slide[] = [
