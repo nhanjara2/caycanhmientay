@@ -92,7 +92,7 @@ export default async function HomePage() {
     },
   ];
   const flashImgs = pickImages(flash, 3);
-  // Ảnh lớn dựng sẵn: các ảnh thiết kế đã có sẵn chữ (2:1, dùng chung máy tính + điện thoại) nên không đè chữ lên.
+  // Ảnh lớn dựng sẵn: các ảnh thiết kế đã có sẵn chữ (12:5 = đúng khung, dùng chung máy tính + tablet + điện thoại) nên không đè chữ lên.
   const fallbackHero: Slide[] = [
     {
       key: 'si', showText: false, image: '/images/banner/nguon-cung-cay-canh.webp',

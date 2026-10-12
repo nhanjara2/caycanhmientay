@@ -9,13 +9,13 @@ export const BANNER_SLOTS = [
   },
   {
     key: 'hero', name: 'Ảnh lớn đầu trang', max: 8,
-    size: '1600 × 800 px (tỉ lệ 2:1)', ratio: 2, mobile: { size: '1200 × 600 px (2:1)', ratio: 2 },
-    hint: 'Chạy vòng tự động, mỗi ảnh 6 giây. Ảnh sự kiện, mùa cây, chương trình giảm giá…',
+    size: '1920 × 800 px (tỉ lệ 12:5)', ratio: 2.4, mobile: { size: '1080 × 450 px (12:5)', ratio: 2.4 },
+    hint: 'Chạy vòng tự động, mỗi ảnh 6 giây. Ảnh sự kiện, mùa cây, chương trình giảm giá… Khung 12:5 ở cả máy tính, tablet và điện thoại nên một ảnh dùng chung được; ảnh riêng cho điện thoại chỉ cần khi muốn chữ to hơn.',
   },
   {
     key: 'side', name: 'Ảnh nhỏ cạnh ảnh lớn', max: 2,
-    size: '800 × 390 px (tỉ lệ 2:1)', ratio: 2.05, mobile: null,
-    hint: 'Hai ô xếp chồng bên phải ảnh lớn (máy tính); điện thoại hiện thành hàng dưới ảnh lớn.',
+    size: '960 × 400 px (tỉ lệ 12:5)', ratio: 2.5, mobile: null,
+    hint: 'Hai ô xếp chồng bên phải ảnh lớn (máy tính); tablet và điện thoại thì nhập vào băng ảnh lớn, chạy chung một băng.',
   },
   {
     key: 'backdrop', name: 'Ảnh nền sự kiện', max: 4,
@@ -43,7 +43,7 @@ export type Banner = {
   /** Hiện tiêu đề / mô tả / nút đè lên ảnh. Tắt khi ảnh đã có sẵn chữ. */
   showText: boolean;
   image: string;
-  /** Ảnh riêng cho điện thoại (ảnh lớn 2:1, băng rộng 12:5), không có thì cắt ảnh chính. */
+  /** Ảnh riêng cho điện thoại (ảnh lớn và băng rộng đều 12:5), không có thì dùng ảnh chính. */
   imageMobile: string | null;
   /** Nền riêng phía sau (chỉ băng ảnh rộng trên cùng): ảnh (máy tính / điện thoại) và / hoặc màu #rrggbb. */
   bgImage: string | null;

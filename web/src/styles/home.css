@@ -37,8 +37,9 @@
 
 /* ---- Băng ảnh (dùng cho khung đầu trang và dải sự kiện) -------------------------------------- */
 .hm-car { position: relative; overflow: hidden; border-radius: var(--hm-r); background: var(--primary-deep); box-shadow: 0 10px 32px rgba(15, 74, 36, .28); }
-/* Chỉ trượt ngang: overflow-x: auto tự kéo overflow-y thành auto, phải khóa hẳn chiều dọc; mỗi ảnh cắt gọn trong ô của nó */
-.hm-car__track { display: flex; aspect-ratio: 2 / 1; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: none; }
+/* Chỉ trượt ngang: overflow-x: auto tự kéo overflow-y thành auto, phải khóa hẳn chiều dọc; mỗi ảnh cắt gọn trong ô của nó.
+   Ảnh lớn đầu trang 12:5 ở MỌI cỡ màn (thiết kế 1920 × 800) — một file dùng chung máy tính, tablet, điện thoại, không phải nối thêm trên dưới */
+.hm-car__track { display: flex; aspect-ratio: 12 / 5; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: none; }
 .hm-car__track::-webkit-scrollbar { display: none; }
 .hm-car--band .hm-car__track { aspect-ratio: 4 / 1; }
 .hm-slide { position: relative; flex: 0 0 100%; overflow: hidden; scroll-snap-align: start; scroll-snap-stop: always; }
@@ -89,6 +90,12 @@
 .hm-car__dots .hm-car__pause { width: 2.75rem; color: #fff; }
 .hm-car__dots .hm-car__pause::before { display: none; }
 .hm-car__pause svg { width: 16px; height: 16px; fill: currentColor; filter: drop-shadow(0 0 2px rgba(0, 0, 0, .5)); }
+/* Máy tính / tablet: chấm nằm sát mép dưới ảnh (tâm cách mép 12px, vùng bấm vẫn cao 44px) — ảnh thiết kế thường kín chữ tới gần mép dưới,
+   chấm nằm giữa vùng bấm thì đè lên nhãn. Điện thoại giữ nguyên (chấm ở góc phải). */
+@media (min-width: 48em) {
+  .hm-car__dots button::before { top: auto; bottom: 8px; margin-top: 0; }
+  .hm-car__pause svg { position: absolute; left: 50%; bottom: 4px; margin-left: -8px; }
+}
 
 /* ---- Lối tắt nổi lên nền ảnh ------------------------------------------------------------------ */
 .hm-quick { position: relative; max-width: var(--hm-max); margin: 16px auto 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
@@ -240,7 +247,7 @@
 
 /* ---- Điện thoại ------------------------------------------------------------------------------- */
 @media (max-width: 47.9375em) {
-  /* Thu gọn 11/10/2026 (chủ shop: đầu trang + băng ảnh quá cao, học bố cục điện thoại của Long Châu): ảnh lớn 2:1 (trước 4:3),
+  /* Thu gọn 11/10/2026 (chủ shop: đầu trang + băng ảnh quá cao, học bố cục điện thoại của Long Châu): ảnh lớn 12:5 (trước 2:1, trước nữa 4:3),
      chữ trên ảnh chỉ còn nhãn + tiêu đề + nút, 2 ô ảnh nhỏ nhập vào băng ảnh lớn (12/10/2026), lối tắt và tiêu đề khối nhỏ lại.
      Khoảng đầu trang ở 390px: 842px -> ~550px. */
   .hm { --hm-r: 14px; }
@@ -262,7 +269,7 @@
   .hm-slide__title { font-size: 1.125rem; line-height: 1.2; }
   .hm-slide__sub { display: none; }
   .hm-slide__cta { min-height: 2.25rem; margin-top: 2px; padding: 0 14px; font-size: 0.875rem; }
-  /* Ảnh xếp chồng: khung 2:1 thấp nên chữ bên trái, 2 ảnh bên phải (ảnh thứ 3 ẩn) — không đè lên nhau */
+  /* Ảnh xếp chồng: khung 12:5 thấp nên chữ bên trái, 2 ảnh bên phải (ảnh thứ 3 ẩn) — không đè lên nhau */
   .hm-collage { align-items: center; padding: 0 4% 0 58%; }
   .hm-collage img { flex: none; width: 52%; border-width: 3px; border-radius: 10px; }
   .hm-collage img:nth-child(1) { transform: rotate(-6deg); }
@@ -349,6 +356,9 @@
   .hm-trust small { display: none; }
 }
 
+/* Máy rất hẹp (< 360px): khung ảnh lớn 12:5 chỉ cao ~120px — bỏ nhãn nhỏ trên tiêu đề cho chữ khỏi bị cắt mất đầu */
+@media (max-width: 22.4375em) { .hm-car--hero .hm-slide__badge { display: none; } }
+
 @media (prefers-reduced-motion: reduce) {
   .hm *, .hm *::before { transition: none !important; animation: none !important; }
 }
@@ -372,7 +382,7 @@
 .ad-bnr-imgs { display: flex; flex-direction: column; gap: 8px; }
 .ad-bnr-imgacts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .ad-bnr-prev { --hm-r: 12px; box-shadow: none; }
-.ad-bnr-prev--side { aspect-ratio: 2.05; }
+.ad-bnr-prev--side { aspect-ratio: 2.5; }
 .ad-bnr-prev .hm-slide__title { font-size: 1.25rem; }
 .ad-bnr-prev .hm-slide__sub { font-size: 0.8125rem; }
 .ad-bnr-prev .hm-slide__cta { min-height: 2rem; padding: 0 12px; font-size: 0.8125rem; }
