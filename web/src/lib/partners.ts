@@ -28,7 +28,10 @@ export const PARTNER_STATUS_LABEL: Record<PartnerStatus, string> = { pending: 'C
 /** Chiết khấu riêng tối đa admin đặt được cho một đối tác (% trên tiền hàng). */
 export const MAX_PARTNER_DISCOUNT = 50;
 
-/** Ảnh minh họa từng nhóm đối tác (public/images/doi-tac/, 960×720, ảnh CC0 / phạm vi công cộng — không cần ghi nguồn). */
+/**
+ * Ảnh minh họa từng nhóm đối tác (public/images/doi-tac/). Công trình + buôn bán: 960×720, ảnh CC0 / phạm vi công cộng — không cần ghi nguồn.
+ * Dịch vụ cảnh quan: ảnh chủ shop đưa (736×736, vuông để khung dọc ở trang chủ lẫn khung ngang ở /doi-tac đều cắt được).
+ */
 export const PARTNER_IMAGE: Record<PartnerType, string> = {
   landscape: '/images/doi-tac/dich-vu-canh-quan.jpg',
   project: '/images/doi-tac/cong-trinh.jpg',
