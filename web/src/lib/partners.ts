@@ -29,13 +29,20 @@ export const PARTNER_STATUS_LABEL: Record<PartnerStatus, string> = { pending: 'C
 export const MAX_PARTNER_DISCOUNT = 50;
 
 /**
- * Ảnh minh họa từng nhóm đối tác (public/images/doi-tac/). Công trình + buôn bán: 960×720, ảnh CC0 / phạm vi công cộng — không cần ghi nguồn.
- * Dịch vụ cảnh quan: ảnh chủ shop đưa (736×736, vuông để khung dọc ở trang chủ lẫn khung ngang ở /doi-tac đều cắt được).
+ * Ảnh minh họa từng nhóm đối tác (public/images/doi-tac/) — ảnh chủ shop đưa, file gốc ở design-system/file out/:
+ * dịch vụ cảnh quan 736×736 (vuông), công trình 735×919 và buôn bán 800×1067 (hai ảnh dọc).
  */
 export const PARTNER_IMAGE: Record<PartnerType, string> = {
   landscape: '/images/doi-tac/dich-vu-canh-quan.jpg',
   project: '/images/doi-tac/cong-trinh.jpg',
   trade: '/images/doi-tac/buon-ban.jpg',
+};
+
+/** Chỗ giữ lại khi khung cắt ảnh (object-position) — khung vuông / ngang không cắt mất đầu người trong ảnh. Đổi ảnh thì chỉnh lại. */
+export const PARTNER_IMAGE_POS: Record<PartnerType, string> = {
+  landscape: '50% 25%',
+  project: '50% 36%',
+  trade: '50% 57%',
 };
 
 export const WHOLESALE_URL = '/doi-tac';

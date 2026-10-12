@@ -1433,8 +1433,9 @@ button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .sv-art--img { overflow: hidden; background: var(--primary); }
 .sv-art--img > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 .sv-art--img .tag { z-index: 1; }
-.sv-card .img { overflow: hidden; }
-.sv-card .img > img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .3s; }
+/* Ảnh đặt tuyệt đối mới phủ kín khung: .img là grid hàng auto nên height: 100% không ăn — ảnh dọc sẽ chỉ hiện phần trên, cắt ngang mặt người */
+.sv-card .img { position: relative; overflow: hidden; }
+.sv-card .img > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .3s; }
 .sv-card:hover .img > img { transform: scale(1.04); }
 .sv-cards[data-n="3"] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 @media (prefers-reduced-motion: reduce) { .sv-card .img > img { transition: none; } .sv-card:hover .img > img { transform: none; } }

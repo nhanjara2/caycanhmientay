@@ -10,7 +10,7 @@ import { ProjectCard } from '@/components/ProjectParts';
 import { ShortVideos } from '@/components/ShortVideos';
 import type { Product } from '@/lib/catalog';
 import { bannerImageUrl, slotOf, type Banner } from '@/lib/home-banners';
-import { PARTNER_IMAGE, PARTNER_INFO, PARTNER_TYPES, WHOLESALE_QUOTE_URL, WHOLESALE_URL } from '@/lib/partners';
+import { PARTNER_IMAGE, PARTNER_IMAGE_POS, PARTNER_INFO, PARTNER_TYPES, WHOLESALE_QUOTE_URL, WHOLESALE_URL } from '@/lib/partners';
 import { categoryOf, SECTIONS, VIDEO_PAGE } from '@/lib/posts';
 import { WARRANTY_DAYS } from '@/lib/warranty-labels';
 import { allProducts, categoryCounts, flashProducts } from '@/server/catalog';
@@ -206,7 +206,7 @@ export default async function HomePage() {
             {PARTNER_TYPES.map((t) => (
               <li key={t}>
                 <Link href={`${WHOLESALE_URL}#dang-ky`} className="hm-ptype app-plain">
-                  <img src={PARTNER_IMAGE[t]} alt="" loading="lazy" />
+                  <img src={PARTNER_IMAGE[t]} alt="" loading="lazy" style={{ objectPosition: PARTNER_IMAGE_POS[t] }} />
                   <span><Icon name={PARTNER_INFO[t].icon} /><b>{PARTNER_INFO[t].label}</b></span>
                 </Link>
               </li>

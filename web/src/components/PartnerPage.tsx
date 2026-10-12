@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { formatPhone, LEGAL, SALES_PHONE, SHOP_ADDRESS, SHOP_EMAIL, ZALO_URL } from '@/lib/contact';
-import { PARTNER_IMAGE, PARTNER_INFO, PARTNER_TYPES, WHOLESALE_QUOTE_URL, type PartnerType } from '@/lib/partners';
+import { PARTNER_IMAGE, PARTNER_IMAGE_POS, PARTNER_INFO, PARTNER_TYPES, WHOLESALE_QUOTE_URL, type PartnerType } from '@/lib/partners';
 import { projectImageUrl, projectPath, regionsOf, type Project } from '@/lib/projects';
 import { WARRANTY_DAYS } from '@/lib/warranty-labels';
 import { Icon, type IconName } from './Icon';
@@ -90,7 +90,7 @@ export function PartnerPage({ projects, profile }: { projects: Project[]; profil
           </Link>
         ) : (
           <div className="sv-art sv-art--img dn-hero__art">
-            <img src={PARTNER_IMAGE.project} alt="Khuôn viên trồng hàng cau vua, thảm cỏ và bồn cây cảnh quan" width={960} height={720} fetchPriority="high" />
+            <img src={PARTNER_IMAGE.project} alt="Ba công nhân đội mũ bảo hộ cắt tỉa, tưới và chăm bồn cây cảnh quan trước tòa nhà" width={960} height={720} fetchPriority="high" style={{ objectPosition: PARTNER_IMAGE_POS.project }} />
             <span className="tag"><b>Giá sỉ công trình</b>Gửi danh sách cây, shop báo giá</span>
           </div>
         )}
@@ -112,7 +112,7 @@ export function PartnerPage({ projects, profile }: { projects: Project[]; profil
         <div className="sv-cards" data-n="3">
           {PARTNER_TYPES.map((t) => (
             <div key={t} className="sv-card">
-              <span className="img"><img src={PARTNER_IMAGE[t]} alt="" width={960} height={720} loading="lazy" /></span>
+              <span className="img"><img src={PARTNER_IMAGE[t]} alt="" width={960} height={720} loading="lazy" style={{ objectPosition: PARTNER_IMAGE_POS[t] }} /></span>
               <span className="b">
                 <b>{PARTNER_INFO[t].label}</b>
                 {PARTNER_INFO[t].hint}
