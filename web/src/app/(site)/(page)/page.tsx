@@ -81,8 +81,9 @@ export default async function HomePage() {
       title: `${season.name}: phòng bệnh sớm, không mất cả lô cây`, subtitle: 'Tra bệnh theo triệu chứng, chọn đúng thuốc, đúng liều', cta: 'Bắt bệnh cho cây', href: '/benh-cay',
     },
     {
-      key: 'top-vuon', badge: 'Vườn ươm miền Tây', tone: 'green', showText: true, image: PARTNER_IMAGE.landscape,
-      title: 'Xem cây tận vườn trước khi lấy sỉ', subtitle: 'Hệ thống vườn ươm, cửa hàng khắp miền Tây', cta: 'Tìm vườn gần bạn', href: '/he-thong-cua-hang',
+      // Ảnh thiết kế đã có sẵn chữ (bảng tên shop) nên không đè chữ lên; bản điện thoại cắt riêng 12:5.
+      key: 'top-vuon', showText: false, image: '/images/banner/cay-canh-mien-tay.webp', imageMobile: '/images/banner/cay-canh-mien-tay-mb.webp',
+      title: 'Cây Cảnh Miền Tây: cây cảnh, cây kiểng, hoa kiểng lá — xem hệ thống cửa hàng và vườn ươm', href: '/he-thong-cua-hang',
     },
   ];
   const ofSub = (sub: string) => products.filter((p) => p.sub === sub || p.extraSubs?.includes(sub));
