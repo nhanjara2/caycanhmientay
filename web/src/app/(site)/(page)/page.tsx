@@ -76,7 +76,11 @@ export default async function HomePage() {
       key: 'top-tet', showText: false, image: '/images/banner/vui-xuan-tet.webp', imageMobile: '/images/banner/vui-xuan-tet-mb.webp',
       title: 'Vui Xuân Tết, rộn ràng vui xuân — xem mai, quất, đào và cây Tết', href: '/cay-tet',
     },
-    {
+    // Mùa mưa: ảnh thiết kế đã có sẵn chữ "Mùa Mưa". Mùa khô chưa có ảnh riêng nên vẫn dựng bằng ảnh bệnh cây + chữ.
+    season.key === 'mưa' ? {
+      key: 'top-mua', showText: false, image: '/images/banner/mua-mua-phong-benh.webp', imageMobile: '/images/banner/mua-mua-phong-benh-mb.webp',
+      title: 'Mùa mưa: phòng bệnh sớm, không mất cả lô cây — tra bệnh theo triệu chứng, chọn đúng thuốc, đúng liều', href: '/benh-cay',
+    } : {
       key: 'top-mua', badge: season.name, tone: 'green', showText: true,
       image: diseaseImgs.length ? `/api/disease-images/${diseaseImgs[1] ?? diseaseImgs[0]}` : PARTNER_IMAGE.landscape,
       title: `${season.name}: phòng bệnh sớm, không mất cả lô cây`, subtitle: 'Tra bệnh theo triệu chứng, chọn đúng thuốc, đúng liều', cta: 'Bắt bệnh cho cây', href: '/benh-cay',
