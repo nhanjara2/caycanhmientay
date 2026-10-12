@@ -37,13 +37,15 @@
 
 /* ---- Băng ảnh (dùng cho khung đầu trang và dải sự kiện) -------------------------------------- */
 .hm-car { position: relative; overflow: hidden; border-radius: var(--hm-r); background: var(--primary-deep); box-shadow: 0 10px 32px rgba(15, 74, 36, .28); }
-.hm-car__track { display: flex; aspect-ratio: 2 / 1; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: none; }
+/* Chỉ trượt ngang: overflow-x: auto tự kéo overflow-y thành auto, phải khóa hẳn chiều dọc; mỗi ảnh cắt gọn trong ô của nó */
+.hm-car__track { display: flex; aspect-ratio: 2 / 1; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: none; }
 .hm-car__track::-webkit-scrollbar { display: none; }
 .hm-car--band .hm-car__track { aspect-ratio: 4 / 1; }
-.hm-slide { position: relative; flex: 0 0 100%; scroll-snap-align: start; scroll-snap-stop: always; }
+.hm-slide { position: relative; flex: 0 0 100%; overflow: hidden; scroll-snap-align: start; scroll-snap-stop: always; }
 .hm-slide__a, .hm .hm-slide__a { position: absolute; inset: 0; display: block; color: #fff; text-decoration: none; }
 .hm-slide__a picture, .hm-slide__a > picture > img, .hm-slide__a picture img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.hm-slide__fill { display: none; }
+/* Phải mạnh hơn `.hm img { display: block }` ở trên — không thì ảnh nền mờ hiện nguyên cỡ gốc, đội khung cao lên và băng ảnh cuộn xuống được */
+.hm-slide__a .hm-slide__fill { display: none; }
 .hm-side .hm-slide__a img { transition: transform .5s ease; }
 .hm-side:hover .hm-slide__a img { transform: scale(1.04); }
 
