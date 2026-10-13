@@ -329,9 +329,9 @@ a.vx-chip[aria-current="true"] { background: var(--primary-soft); border-color: 
 /* Thẻ sản phẩm: viền khung ảnh theo loại (ProductCard) */
 /* Flash sale: viền vàng cam quanh khung ảnh. Outline vẽ đè lên ảnh nên không làm ảnh co lại */
 .vx-pcard--flash .vx-pcard__media { outline: 2px solid #f59e0b; outline-offset: -2px; }
-/* Hàng mới: nhãn góc trái dưới khung ảnh, nằm ngay trên dải sticker ưu đãi (.app-stk, cao 2rem) */
+/* Hàng mới: nhãn góc trái dưới khung ảnh, nằm ngay trên dải sticker ưu đãi (.app-stk, cao 1.75rem) */
 .vx-pcard__media { position: relative; }
-.app-pcard__new { position: absolute; left: 6px; bottom: calc(2rem + 0.375rem); background: var(--primary); color: #fff; font-size: 0.75rem; line-height: 1rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; box-shadow: 0 1px 3px rgb(0 0 0 / .2); pointer-events: none; }
+.app-pcard__new { position: absolute; left: 6px; bottom: calc(1.75rem + 0.375rem); background: var(--primary); color: #fff; font-size: 0.75rem; line-height: 1rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; box-shadow: 0 1px 3px rgb(0 0 0 / .2); pointer-events: none; }
 
 /* Flash sale: nền đỏ nổi bật, ô đếm giờ nền đỏ (FlashSale.tsx + trang /flash-sale) */
 .vx-count b { background: #dc2626; color: #fff; min-width: 2.2em; text-align: center; font-variant-numeric: tabular-nums; }
@@ -1606,38 +1606,42 @@ button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 /* Sticker trên ảnh sản phẩm (ProductStickers; kiểu dải nhãn Shopee, 12/10/2026): dải ô NHỎ liền nhau sát mép dưới trái ảnh, chỉ là điểm nhấn
    (chủ shop: khách không cần đọc kỹ). Mỗi ô = dòng nhỏ trên + chữ lớn dưới. Luật chọn sticker ở lib/stickers.ts: thẻ sản phẩm đúng 2 ô,
    ảnh lớn trang chi tiết tối đa 4 ô. Nhãn "Mới" và tim yêu thích nằm ngay trên dải này. Ô nào tràn khỏi một hàng thì bị ẩn (overflow hidden). */
-.app-stk { position: absolute; left: 0; bottom: 0; z-index: 1; display: flex; flex-wrap: wrap; align-content: flex-start; height: 2rem; max-width: 100%; overflow: hidden; border-bottom-left-radius: var(--radius-sm); pointer-events: none; }
-.app-stk__t { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; height: 2rem; min-width: 2.5rem; padding: 0 0.25rem; color: #fff; text-align: center; white-space: nowrap; }
-.app-stk__t + .app-stk__t { border-left: 1px solid rgb(255 255 255 / .45); }
-.app-stk__t i { font-style: normal; font-size: 0.5rem; line-height: 1; font-weight: 700; letter-spacing: 0.02em; }
-.app-stk__t b { font-size: 0.75rem; line-height: 1; font-weight: 800; letter-spacing: -0.01em; }
-.app-stk__t[data-k="day"] { background: #ffd23f; outline: 1px solid #ff8a00; outline-offset: -2px; }
+.app-stk { position: absolute; left: 0; bottom: 0; z-index: 1; display: flex; flex-wrap: wrap; align-content: flex-start; height: 1.75rem; max-width: 100%; overflow: hidden; border-bottom-left-radius: var(--radius-sm); pointer-events: none; }
+/* Mỗi ô dựng từ 3 lớp nền: vệt sáng bóng phía trên + họa tiết nhạt (`--pat`) + màu chuyển `--a` → `--b`; chữ nhỏ (dòng trên 7px, chữ dưới 10px) */
+.app-stk__t { --a: #555; --b: #333; --pat: none; flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; height: 1.75rem; min-width: 2.25rem; padding: 0 0.25rem; color: #fff; text-align: center; white-space: nowrap;
+  background: linear-gradient(180deg, rgb(255 255 255 / .32), rgb(255 255 255 / 0) 52%), var(--pat), linear-gradient(165deg, var(--a), var(--b));
+  box-shadow: inset 0 -2px 0 rgb(0 0 0 / .16); text-shadow: 0 1px 0 rgb(0 0 0 / .28); }
+.app-stk__t + .app-stk__t { border-left: 1px solid rgb(255 255 255 / .5); }
+.app-stk__t i { font-style: normal; font-size: 0.4375rem; line-height: 1; font-weight: 700; letter-spacing: 0.04em; }
+.app-stk__t b { font-size: 0.625rem; line-height: 1; font-weight: 800; letter-spacing: -0.01em; }
+/* Họa tiết: tia nắng (sale, mall, ngày đặc biệt), sọc chéo (ảnh thật, free ship, siêu rẻ), chấm (voucher) */
+.app-stk__t[data-k="day"] { --a: #ffe566; --b: #ffb300; --pat: repeating-conic-gradient(from 0deg at 50% 135%, rgb(255 255 255 / .42) 0 6deg, rgb(255 255 255 / 0) 6deg 12deg); outline: 1px solid #ff8a00; outline-offset: -2px; text-shadow: none; }
 .app-stk__t[data-k="day"] i { color: #b45309; }
-.app-stk__t[data-k="day"] b { color: #1565c0; font-size: 0.875rem; }
-.app-stk__t[data-k="sale"] { background: linear-gradient(160deg, #ff5a1f, #d0011b); }
+.app-stk__t[data-k="day"] b { color: #1565c0; font-size: 0.75rem; }
+.app-stk__t[data-k="sale"] { --a: #ff7a1a; --b: #e0001b; --pat: repeating-conic-gradient(from 0deg at 50% 135%, rgb(255 255 255 / .16) 0 6deg, rgb(255 255 255 / 0) 6deg 12deg); }
 .app-stk__t[data-k="sale"] b { color: #ffe44d; }
-.app-stk__t[data-k="real"] { background: #2e7d32; }
-.app-stk__t[data-k="ship"] { background: #1565c0; }
-.app-stk__t[data-k="voucher"] { background: #ffd400; }
+.app-stk__t[data-k="real"] { --a: #46b351; --b: #17762b; --pat: repeating-linear-gradient(125deg, rgb(255 255 255 / .1) 0 2px, rgb(255 255 255 / 0) 2px 6px); }
+.app-stk__t[data-k="ship"] { --a: #22bdf0; --b: #0a66c2; --pat: repeating-linear-gradient(125deg, rgb(255 255 255 / .12) 0 2px, rgb(255 255 255 / 0) 2px 6px); }
+.app-stk__t[data-k="voucher"] { --a: #ffe84f; --b: #ffc400; --pat: radial-gradient(rgb(208 1 27 / .2) 1px, rgb(208 1 27 / 0) 1.6px) 0 0 / 5px 5px; outline: 1px dashed #d0011b; outline-offset: -2px; text-shadow: none; }
 .app-stk__t[data-k="voucher"] i { color: #d0011b; }
 .app-stk__t[data-k="voucher"] b { color: #d0011b; font-style: italic; font-weight: 900; text-shadow: 0 0 2px #fff, 0 0 1px #fff; }
-.app-stk__t[data-k="mall"] { background: #8b0016; }
-.app-stk__t[data-k="mall"] b { padding: 1px 3px; border: 1px solid rgb(255 255 255 / .9); border-radius: 2px; letter-spacing: 0.04em; font-size: 0.6875rem; }
-.app-stk__t[data-k="cheap"] { background: linear-gradient(160deg, #1e88e5, #0d47a1); outline: 1px solid #ffe44d; outline-offset: -2px; }
+.app-stk__t[data-k="mall"] { --a: #ff2f2f; --b: #dc0019; --pat: repeating-conic-gradient(from 0deg at 50% 135%, rgb(255 255 255 / .18) 0 6deg, rgb(255 255 255 / 0) 6deg 12deg); }
+.app-stk__t[data-k="mall"] b { padding: 1px 3px; border-radius: 2px; background: #fff; color: #e0001f; text-shadow: none; letter-spacing: 0.05em; font-size: 0.5625rem; font-weight: 900; }
+.app-stk__t[data-k="cheap"] { --a: #8d55ff; --b: #3a22c9; --pat: repeating-linear-gradient(125deg, rgb(255 255 255 / .1) 0 2px, rgb(255 255 255 / 0) 2px 6px); }
 .app-stk__t[data-k="cheap"] b { color: #ffe44d; }
 /* Trang chi tiết: ảnh lớn nên ô to hơn chút, dải chạy hết bề ngang ảnh */
-.app-stk[data-size="lg"] { height: 2.75rem; border-bottom-left-radius: var(--radius-md); }
-.app-stk[data-size="lg"] .app-stk__t { height: 2.75rem; min-width: 3.5rem; padding: 0 0.5rem; gap: 2px; }
-.app-stk[data-size="lg"] .app-stk__t i { font-size: 0.5625rem; }
-.app-stk[data-size="lg"] .app-stk__t b { font-size: 0.9375rem; }
-.app-stk[data-size="lg"] .app-stk__t[data-k="day"] b { font-size: 1.0625rem; }
-.app-stk[data-size="lg"] .app-stk__t[data-k="mall"] b { font-size: 0.875rem; }
-/* Nhãn "Ảnh minh họa" / "Ảnh chụp tại vườn" lên góc trên trái ảnh lớn (góc dưới trái là dải sticker) */
+.app-stk[data-size="lg"] { height: 2.5rem; border-bottom-left-radius: var(--radius-md); }
+.app-stk[data-size="lg"] .app-stk__t { height: 2.5rem; min-width: 3.25rem; padding: 0 0.5rem; gap: 2px; }
+.app-stk[data-size="lg"] .app-stk__t i { font-size: 0.5rem; }
+.app-stk[data-size="lg"] .app-stk__t b { font-size: 0.8125rem; }
+.app-stk[data-size="lg"] .app-stk__t[data-k="day"] b { font-size: 0.9375rem; }
+.app-stk[data-size="lg"] .app-stk__t[data-k="mall"] b { font-size: 0.6875rem; }
+/* Nhãn "Ảnh chụp tại vườn" lên góc trên trái ảnh lớn (góc dưới trái là dải sticker) */
 .vx-gal__main > .vx-gal__tag { bottom: auto; top: var(--space-3); }
 
-/* Tim yêu thích trên thẻ sản phẩm: góc dưới phải khung ảnh, ngay trên dải sticker .app-stk cao 2rem (khung ảnh vuông = rộng thẻ − 2 lề) */
+/* Tim yêu thích trên thẻ sản phẩm: góc dưới phải khung ảnh, ngay trên dải sticker .app-stk cao 1.75rem (khung ảnh vuông = rộng thẻ − 2 lề) */
 .app-pcard__mediawrap { position: relative; }
-.vx-pcard .app-pcard__heart { top: auto; right: 0.5rem; bottom: calc(2rem + 0.375rem); width: 2.5rem; height: 2.5rem; color: var(--ink-muted); border: 0; cursor: pointer; }
+.vx-pcard .app-pcard__heart { top: auto; right: 0.5rem; bottom: calc(1.75rem + 0.375rem); width: 2.5rem; height: 2.5rem; color: var(--ink-muted); border: 0; cursor: pointer; }
 .vx-pcard .app-pcard__heart svg { width: 1.125rem; height: 1.125rem; fill: none; }
 .vx-pcard .app-pcard__heart[aria-pressed="true"] { color: var(--sale); }
 .vx-pcard .app-pcard__heart[aria-pressed="true"] svg { fill: currentColor; }
