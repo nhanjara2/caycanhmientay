@@ -1,12 +1,7 @@
 // Nạp dữ liệu mẫu khi database còn trống: 3 cửa hàng + sản phẩm mẫu (src/lib/seed-products.ts)
 // + bài bệnh cây (src/lib/seed-diseases.ts) + bài Góc chăm cây (src/lib/seed-posts.ts).
-import fs from 'node:fs';
-import path from 'node:path';
-import { and, asc, count, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { and, asc, count, eq, isNull } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { SEED_DISEASE_IMAGES } from '@/lib/seed-disease-images';
-import { SEED_POST_COVERS } from '@/lib/seed-post-covers';
-import { SEED_PRODUCT_IMAGES } from '@/lib/seed-product-images';
 import { seedDiseases } from '@/lib/seed-diseases';
 import { readMinutes } from '@/lib/posts';
 import { seedPosts } from '@/lib/seed-posts';
@@ -104,111 +99,6 @@ export async function seedDiseasesIfEmpty(db: Db) {
   })));
   await markSeeded(db, 'seeded:diseases');
   return true;
-}
-
-/**
- * Gắn ảnh minh họa triệu chứng (lib/seed-disease-images.ts, file ở seed/benh-cay/) vào bài bệnh — chạy MỘT lần (dấu
- * `seeded:disease-images`), kể cả database đã dùng. Chỉ gắn vào triệu chứng còn đúng chữ như bài mẫu và chưa có ảnh: bài
- * admin đã sửa chữ / đã tự thêm ảnh thì giữ nguyên; admin bỏ ảnh sau này thì không nạp lại. Trả về số ảnh đã gắn.
- */
-export async function seedDiseaseImages(db: Db) {
-  const KEY = 'seeded:disease-images';
-  const dir = path.join(process.cwd(), 'seed', 'benh-cay');
-  const missing = SEED_DISEASE_IMAGES.filter((x) => !fs.existsSync(path.join(dir, x.source)));
-  if (missing.length) {
-    console.warn(`[db] Thiếu ${missing.length} ảnh bệnh cây trong ${dir} — bỏ qua, lần deploy sau thử lại`);
-    return 0;
-  }
-  return db.transaction(async (tx) => {
-    await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${KEY}))`);
-    const [done] = await tx.select({ key: schema.appSettings.key }).from(schema.appSettings).where(eq(schema.appSettings.key, KEY));
-    if (done) return 0;
-    const slugs = [...new Set(SEED_DISEASE_IMAGES.map((x) => x.disease))];
-    const rows = await tx.select({ slug: schema.diseases.slug, symptoms: schema.diseases.symptoms })
-      .from(schema.diseases).where(inArray(schema.diseases.slug, slugs)).for('update');
-    let n = 0;
-    for (const d of rows) {
-      const imgs = SEED_DISEASE_IMAGES.filter((x) => x.disease === d.slug);
-      const used: typeof imgs = [];
-      const symptoms = d.symptoms.map((s) => {
-        const m = !s.image && imgs.find((x) => x.symptom === s.text && !used.includes(x));
-        if (!m) return s;
-        used.push(m);
-        return { ...s, image: m.file };
-      });
-      if (!used.length) continue;
-      await tx.insert(schema.diseaseImages).values(used.map((x) => ({
-        diseaseSlug: d.slug, file: x.file, mime: 'image/jpeg', data: fs.readFileSync(path.join(dir, x.source)),
-      }))).onConflictDoNothing({ target: schema.diseaseImages.file });
-      await tx.update(schema.diseases).set({ symptoms }).where(eq(schema.diseases.slug, d.slug));
-      n += used.length;
-    }
-    await tx.insert(schema.appSettings).values({ key: KEY, value: true, updatedBy: 'db-setup' }).onConflictDoNothing({ target: schema.appSettings.key });
-    return n;
-  });
-}
-
-/**
- * Ảnh minh họa cho sản phẩm chưa có ảnh (lib/seed-product-images.ts, file ở seed/san-pham/) — chạy MỘT lần (dấu
- * `seeded:product-images`), kể cả database đã dùng. Sản phẩm đã có ảnh / đã xóa thì bỏ qua; admin xóa ảnh minh họa để thay
- * ảnh thật thì không nạp lại. Ảnh vào `idx` 0 (ảnh đại diện). Trả về số ảnh đã gắn.
- */
-export async function seedProductImages(db: Db) {
-  const KEY = 'seeded:product-images';
-  if (!SEED_PRODUCT_IMAGES.length) return 0;
-  const dir = path.join(process.cwd(), 'seed', 'san-pham');
-  const missing = SEED_PRODUCT_IMAGES.filter((x) => !fs.existsSync(path.join(dir, x.source)));
-  if (missing.length) {
-    console.warn(`[db] Thiếu ${missing.length} ảnh sản phẩm trong ${dir} — bỏ qua, lần deploy sau thử lại`);
-    return 0;
-  }
-  return db.transaction(async (tx) => {
-    await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${KEY}))`);
-    const [done] = await tx.select({ key: schema.appSettings.key }).from(schema.appSettings).where(eq(schema.appSettings.key, KEY));
-    if (done) return 0;
-    const slugs = SEED_PRODUCT_IMAGES.map((x) => x.product);
-    const exists = new Set((await tx.select({ slug: schema.products.slug }).from(schema.products)
-      .where(inArray(schema.products.slug, slugs)).for('update')).map((r) => r.slug));
-    const hasImage = new Set((await tx.selectDistinct({ slug: schema.productImages.productSlug }).from(schema.productImages)
-      .where(inArray(schema.productImages.productSlug, slugs))).map((r) => r.slug));
-    const todo = SEED_PRODUCT_IMAGES.filter((x) => exists.has(x.product) && !hasImage.has(x.product));
-    // Mỗi ảnh ~150KB → chia nhỏ câu lệnh
-    for (let i = 0; i < todo.length; i += 20) {
-      await tx.insert(schema.productImages).values(todo.slice(i, i + 20).map((x) => ({
-        productSlug: x.product, idx: 0, file: x.file, mime: 'image/jpeg', data: fs.readFileSync(path.join(dir, x.source)),
-      }))).onConflictDoNothing({ target: schema.productImages.file });
-    }
-    await tx.insert(schema.appSettings).values({ key: KEY, value: true, updatedBy: 'db-setup' }).onConflictDoNothing({ target: schema.appSettings.key });
-    return todo.length;
-  });
-}
-
-/**
- * Ảnh bìa cho bài Góc chăm cây mẫu chưa có ảnh bìa (lib/seed-post-covers.ts, file ở seed/bai-viet/) — chạy MỘT lần (dấu
- * `seeded:post-covers`), kể cả database đã dùng. Bài đã xóa / đã có ảnh bìa thì bỏ qua. Trả về số ảnh đã gắn.
- */
-export async function seedPostCovers(db: Db) {
-  const KEY = 'seeded:post-covers';
-  const dir = path.join(process.cwd(), 'seed', 'bai-viet');
-  if (SEED_POST_COVERS.some((x) => !fs.existsSync(path.join(dir, x.source)))) {
-    console.warn(`[db] Thiếu ảnh bìa bài viết trong ${dir} — bỏ qua, lần deploy sau thử lại`);
-    return 0;
-  }
-  return db.transaction(async (tx) => {
-    await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${KEY}))`);
-    const [done] = await tx.select({ key: schema.appSettings.key }).from(schema.appSettings).where(eq(schema.appSettings.key, KEY));
-    if (done) return 0;
-    const rows = await tx.select({ id: schema.posts.id, slug: schema.posts.slug }).from(schema.posts)
-      .where(and(inArray(schema.posts.slug, SEED_POST_COVERS.map((x) => x.post)), isNull(schema.posts.coverFile))).for('update');
-    for (const r of rows) {
-      const c = SEED_POST_COVERS.find((x) => x.post === r.slug)!;
-      await tx.insert(schema.postImages).values({ postId: r.id, file: c.file, mime: 'image/jpeg', data: fs.readFileSync(path.join(dir, c.source)) })
-        .onConflictDoNothing({ target: schema.postImages.file });
-      await tx.update(schema.posts).set({ coverFile: c.file }).where(eq(schema.posts.id, r.id));
-    }
-    await tx.insert(schema.appSettings).values({ key: KEY, value: true, updatedBy: 'db-setup' }).onConflictDoNothing({ target: schema.appSettings.key });
-    return rows.length;
-  });
 }
 
 /** Nạp bài Góc chăm cây mẫu (đã đăng, cách nhau 1 ngày) khi bảng `posts` còn trống. */

@@ -10,7 +10,7 @@ const ABOUT: [string, string][] = [
   ['Chính sách giao hàng', '/chinh-sach/giao-hang'], ['Chính sách bảo hành cây', '/chinh-sach/bao-hanh-cay'],
   ['Chính sách đổi trả', '/chinh-sach/doi-tra'], ['Chính sách thanh toán', '/chinh-sach/thanh-toan'],
   ['Chính sách đặt cọc', '/chinh-sach/dat-coc'], ['Chính sách bảo mật dữ liệu cá nhân', '/chinh-sach/bao-mat'],
-  ['Điều khoản sử dụng', '/chinh-sach/dieu-khoan'], ['Nguồn ảnh minh họa', '/chinh-sach/nguon-anh'],
+  ['Điều khoản sử dụng', '/chinh-sach/dieu-khoan'],
 ];
 const LEARN: [string, string][] = [
   ['Góc chăm cây', '/goc-cham-cay'], ['Video ngắn', '/video'], ['Bắt bệnh cho cây', '/benh-cay'], ['Tra cứu thuốc BVTV', '/danh-muc/thuoc-bvtv'],

@@ -18,7 +18,6 @@ import { productFaqs } from '@/server/faqs';
 import { productQuestions } from '@/server/questions';
 import { productReviews } from '@/server/reviews';
 import { isWishlisted } from '@/server/wishlist';
-import { isStockProductImage } from '@/lib/seed-product-images';
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -169,7 +168,7 @@ export default async function ProductPage({ params }: Props) {
       />
       <section className="vx-pd">
         <GalleryCol>
-          <ProductGallery p={p} stock={(p.images ?? []).map((src) => isStockProductImage(src.split('/').pop()))} />
+          <ProductGallery p={p} />
           <p className="vx-gal__note">
             {p.ship === 'plant' ? 'Mỗi cây là một cá thể, dáng lá có thể khác đôi chút so với ảnh.' : 'Bao bì có thể thay đổi theo lô sản xuất.'}
           </p>

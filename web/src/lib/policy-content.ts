@@ -107,7 +107,6 @@ const QUY_CHE: Section[] = [
   { h: 'Giá, thanh toán, giao nhận, bảo hành', blocks: [
     { ul: [
       'Giá niêm yết bằng đồng Việt Nam. Sản phẩm hiển thị đúng chủng loại, quy cách, giá; với thuốc BVTV có thêm số đăng ký, hoạt chất, liều pha, thời gian cách ly.',
-      'Ảnh minh họa (nếu có) được ghi nguồn tại [Nguồn ảnh minh họa](/chinh-sach/nguon-anh).',
       'Phương thức thanh toán: [Chính sách thanh toán](/chinh-sach/thanh-toan). Phí và thời gian giao: [Chính sách giao hàng](/chinh-sach/giao-hang).',
       'Cây sống bảo hành ' + WARRANTY_DAYS + ' ngày: [Chính sách bảo hành cây](/chinh-sach/bao-hanh-cay). Vật tư, thuốc, phân bón: [Chính sách đổi trả](/chinh-sach/doi-tra).',
       'Cây lớn đặt trước và công trình sân vườn: [Chính sách đặt cọc](/chinh-sach/dat-coc).',
@@ -499,7 +498,6 @@ const NOI_DUNG: Section[] = [
   { h: 'Ảnh và video trên website', blocks: [
     { ul: [
       'Ảnh sản phẩm do shop chụp có đóng dấu chữ chìm; vui lòng không sao chép, đăng lại vào mục đích thương mại khi chưa được shop đồng ý.',
-      'Ảnh, video minh họa lấy từ nguồn mở được ghi công tại [Nguồn ảnh minh họa](/chinh-sach/nguon-anh).',
     ] },
   ] },
   { h: 'Báo nội dung sai hoặc vi phạm', blocks: [
@@ -545,7 +543,7 @@ const DIEU_KHOAN: Section[] = [
     'Nội dung chăm cây, bắt bệnh và liều dùng thuốc chỉ mang tính tham khảo chung vì điều kiện từng vườn khác nhau. Luôn đọc kỹ nhãn thuốc, dùng đúng liều, đúng thời gian cách ly và bảo hộ khi pha, phun ([xem hướng dẫn](/chinh-sach/thuoc-bvtv-an-toan)). Câu trả lời của khách khác trong mục Hỏi đáp chỉ để tham khảo, không thay thế tư vấn của kỹ sư.',
   ] },
   { h: 'Quyền sở hữu trí tuệ', blocks: [
-    'Logo, hình ảnh, bài viết, video, thiết kế và dữ liệu trên website thuộc Cây Cảnh Miền Tây hoặc được dùng theo giấy phép của chủ sở hữu (xem [Nguồn ảnh minh họa](/chinh-sach/nguon-anh)). Không sao chép, đăng lại hoặc dùng cho mục đích thương mại khi chưa được shop đồng ý bằng văn bản.',
+    'Logo, hình ảnh, bài viết, video, thiết kế và dữ liệu trên website thuộc Cây Cảnh Miền Tây hoặc được dùng theo giấy phép của chủ sở hữu. Không sao chép, đăng lại hoặc dùng cho mục đích thương mại khi chưa được shop đồng ý bằng văn bản.',
   ] },
   { h: 'Giới hạn trách nhiệm', blocks: [
     'Shop cố gắng để website hoạt động ổn định nhưng không bảo đảm không bao giờ gián đoạn (bảo trì, sự cố mạng, trường hợp bất khả kháng). Shop không chịu trách nhiệm với thiệt hại gián tiếp phát sinh từ việc sử dụng website, trừ trường hợp pháp luật có quy định khác.',
@@ -558,17 +556,6 @@ const DIEU_KHOAN: Section[] = [
       'Shop có thể cập nhật điều khoản; bản mới đăng tại trang này kèm ngày cập nhật. Bạn tiếp tục sử dụng website sau đó nghĩa là đồng ý với bản mới.',
     ] },
     contact('support'),
-  ] },
-];
-
-// ---- Nguồn ảnh minh họa --------------------------------------------------------------------------------------
-
-// Nơi DUY NHẤT trên web ghi tác giả + giấy phép ảnh mượn (trang sản phẩm, trang bệnh cây không ghi lại). Danh sách từng ảnh
-// do chinh-sach/[slug]/page.tsx nối vào từ lib/seed-product-images.ts và lib/seed-disease-images.ts.
-const NGUON_ANH: Section[] = [
-  { h: 'Ảnh minh họa', blocks: [
-    'Sản phẩm và bài bệnh cây chưa có ảnh shop tự chụp đang tạm dùng ảnh minh họa theo giấy phép mở (Creative Commons hoặc phạm vi công cộng), có nhãn "Ảnh minh họa" trên ảnh. Cây giao cho khách có thể khác ảnh về kích thước, dáng và màu; ảnh sẽ được thay dần bằng ảnh shop tự chụp.',
-    'Tác giả, giấy phép và đường dẫn tới ảnh gốc của từng ảnh được liệt kê bên dưới.',
   ] },
 ];
 
@@ -681,7 +668,6 @@ const BODIES: Record<string, Body> = {
   'huong-dan-mua-hang': HUONG_DAN_MUA,
   'tich-diem': TICH_DIEM,
   'dieu-khoan': DIEU_KHOAN,
-  'nguon-anh': NGUON_ANH,
 };
 
 /** Nội dung trang `slug`; undefined nếu chưa có (trang Giới thiệu viết tay ở AboutView). */

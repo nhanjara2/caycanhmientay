@@ -24,14 +24,9 @@ export function GalleryCol({ children }: { children: ReactNode }) {
   return <div className="vx-gal" ref={ref}>{children}</div>;
 }
 
-/** ProductGallery: ảnh lớn + dải ảnh nhỏ. Chưa có ảnh thật thì hiện biểu tượng. Ảnh minh họa nạp sẵn thì thay dấu
- *  "Ảnh thật" bằng nhãn "Ảnh minh họa" (tác giả + giấy phép ghi một chỗ ở /chinh-sach/nguon-anh).
+/** ProductGallery: ảnh lớn + dải ảnh nhỏ. Chưa có ảnh thì hiện biểu tượng. Mọi ảnh đều do shop tự chụp / tải lên.
  *  Máy có chuột: rê lên ảnh lớn hiện kính lúp, khung phóng to phủ lên cột thông tin bên phải. */
-export function ProductGallery({ p, stock = [] }: {
-  p: Product;
-  /** Ảnh thứ i là ảnh minh họa nạp sẵn (trang tính trên server — danh sách ảnh mượn không vào gói JS của khách). */
-  stock?: boolean[];
-}) {
+export function ProductGallery({ p }: { p: Product }) {
   const images = p.images ?? [];
   const [cur, setCur] = useState(0);
   const mainRef = useRef<HTMLDivElement>(null);
@@ -70,9 +65,9 @@ export function ProductGallery({ p, stock = [] }: {
         onMouseLeave={() => setLens(null)}
       >
         {images.length ? <img ref={imgRef} src={images[cur]} alt={p.name} /> : <Art name={p.icon} />}
-        {stock[cur] ? <span className="vx-gal__tag vx-badge">Ảnh minh họa</span> : p.ship === 'plant' && images.length > 0 && <span className="vx-gal__tag vx-badge vx-badge--origin">Ảnh chụp tại vườn</span>}
-        {/* Dấu "Ảnh thật 100%" nằm trong dải sticker; ảnh đang xem là ảnh minh họa nạp sẵn hoặc chưa có ảnh thì không có dấu này */}
-        <ProductStickers p={p} size="lg" real={images.length > 0 && !stock[cur]} />
+        {p.ship === 'plant' && images.length > 0 && <span className="vx-gal__tag vx-badge vx-badge--origin">Ảnh chụp tại vườn</span>}
+        {/* Dấu "Ảnh thật 100%" nằm trong dải sticker; chưa có ảnh thì không có dấu này */}
+        <ProductStickers p={p} size="lg" real={images.length > 0} />
         {lens && <span className="app-zoom-lens" style={{ left: lens.x, top: lens.y, width: lens.w, height: lens.h }} aria-hidden />}
       </div>
       {lens && (

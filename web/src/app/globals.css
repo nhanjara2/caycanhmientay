@@ -324,7 +324,6 @@ a.vx-chip[aria-current="true"] { background: var(--primary-soft); border-color: 
 .dd-sym .img--photo, .dd-sym:has(.img--photo) .img { aspect-ratio: 4 / 3; } /* có ảnh thì mọi ô cùng tỉ lệ cho đều hàng */
 .dd-sym .img--photo { overflow: hidden; }
 .dd-sym .img--photo > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
-/* Ghi công ảnh minh họa nạp sẵn (lib/seed-disease-images.ts) */
 #danh-sach { scroll-margin-top: 140px; }
 
 /* Thẻ sản phẩm: viền khung ảnh theo loại (ProductCard) */
@@ -1621,7 +1620,7 @@ button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .app-stk[data-size="lg"] .app-stk__t b { font-size: 1.25rem; }
 .app-stk[data-size="lg"] .app-stk__t i { font-size: 0.75rem; }
 .app-stk[data-size="lg"] .app-stk__t .vx-ico { width: 1.5rem; height: 1.5rem; }
-/* Nhãn "Ảnh minh họa" / "Ảnh chụp tại vườn" lên góc trên trái ảnh lớn (góc dưới trái là dải sticker) */
+/* Nhãn "Ảnh chụp tại vườn" lên góc trên trái ảnh lớn (góc dưới trái là dải sticker) */
 .vx-gal__main > .vx-gal__tag { bottom: auto; top: var(--space-3); }
 
 /* Tim yêu thích trên thẻ sản phẩm: góc dưới phải khung ảnh (khung ảnh vuông = rộng thẻ − 2 lề) */

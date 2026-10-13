@@ -5,7 +5,6 @@ import { and, asc, eq, getTableName, inArray, isNotNull, or, sql } from 'drizzle
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import type { IconName } from '@/components/Icon';
 import { isNewProduct, normalize, productImageUrl, type Product } from '@/lib/catalog';
-import { isStockProductImage } from '@/lib/seed-product-images';
 import { db, schema } from './db';
 
 const { products: P, productOptions: O, productImages: I } = schema;
@@ -30,7 +29,7 @@ async function hydrate(rows: Row[]): Promise<Product[]> {
       idx: o.idx, label: o.label, price: o.price, oldPrice: o.oldPrice ?? undefined, combo2: o.combo2 ?? undefined,
     })),
     images: imgs.filter((i) => i.slug === r.slug).map((i) => productImageUrl(i.file)),
-    realImg: (mainFile(r.slug) && !isStockProductImage(mainFile(r.slug))) || undefined,
+    realImg: Boolean(mainFile(r.slug)) || undefined,
     youtubeId: r.youtubeId ?? undefined,
     fengshui: r.fengshui ?? undefined,
     attrs: r.attrs ?? undefined,
