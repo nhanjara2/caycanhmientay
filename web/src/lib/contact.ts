@@ -15,6 +15,8 @@ export const CARE_PHONE = '0927291989';
 export const SUPPORT_PHONE = '0973806842';
 export const SHOP_EMAIL = 'nhanjara@gmail.com';
 export const SHOP_ADDRESS = 'Làng Hoa Sa Đéc, Đồng Tháp';
+/** Vị trí vườn ươm trên Google Maps (trang Đối tác sỉ, mục Thông tin doanh nghiệp). */
+export const SHOP_MAP_URL = 'https://maps.app.goo.gl/KMP5LKbNBavaTHRj7';
 /** Nơi khách chọn "Nhận tại vườn" (thanh toán, đơn hàng, trang thành công). */
 export const PICKUP_PLACE = `Vườn ươm Cây Cảnh Miền Tây, ${SHOP_ADDRESS}`;
 /** 0703005001 → 0703 005 001 */
@@ -27,4 +29,5 @@ export const LEGAL = {
   regNo: '087096010726',
   regIssued: '04/2026',
   taxOffice: 'Thuế cơ sở 6 tỉnh Đồng Tháp',
+  taxOfficeMapUrl: 'https://maps.app.goo.gl/4x4YD9f1py1b1C34A',
 };
