@@ -54,6 +54,7 @@ export const ADMIN_NAV: { group: string; items: { href: string; label: string; i
     { href: '/admin/dich-vu', label: 'Yêu cầu báo giá sỉ', icon: 'service' },
     { href: '/admin/khach-hang', label: 'Khách hàng & đối tác', icon: 'users' },
     { href: '/admin/khuyen-mai', label: 'Khuyến mãi', icon: 'tag' },
+    { href: '/admin/ngay-su-kien', label: 'Ngày sự kiện', icon: 'bell' },
   ] },
   { group: 'HÀNG HÓA', items: [
     { href: '/admin/san-pham', label: 'Sản phẩm', icon: 'plant' },

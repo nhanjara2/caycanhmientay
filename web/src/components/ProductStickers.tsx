@@ -2,22 +2,23 @@
 
 import type { Product } from '@/lib/catalog';
 import { useShipping } from '@/lib/shipping-client';
-import { productStickers } from '@/lib/stickers';
+import { CARD_STICKERS, DETAIL_STICKERS, productStickers } from '@/lib/stickers';
+import { useStickerDay } from '@/lib/stickers-client';
 import { usePublicVouchers } from '@/lib/vouchers-client';
-import { Icon } from './Icon';
 
-/** Dải sticker góc dưới trái ảnh sản phẩm. Đặt trong khung ảnh có `position: relative`. Chỉ hiện những ô còn vừa một hàng (CSS ẩn phần tràn). */
+/** Dải sticker góc dưới trái ảnh sản phẩm. Đặt trong khung ảnh có `position: relative`. Thẻ sản phẩm (cỡ nhỏ) đúng 2 ô; ảnh lớn trang chi tiết tối đa 4 ô. */
 export function ProductStickers({ p, size = 'sm', real }: { p: Product; size?: 'sm' | 'lg'; real?: boolean }) {
   const { rules } = useShipping();
   const vouchers = usePublicVouchers();
-  const list = productStickers(p, rules, vouchers, { real });
+  const day = useStickerDay();
+  const list = productStickers(p, { rules, vouchers, day }, { real, limit: size === 'sm' ? CARD_STICKERS : DETAIL_STICKERS });
   if (!list.length) return null;
   return (
     <div className="app-stk" data-size={size} role="group" aria-label="Điểm nổi bật của sản phẩm">
       {list.map((s) => (
         <span key={s.key} className="app-stk__t" data-k={s.key} title={s.title}>
-          <b>{s.icon ? <Icon name={s.icon} /> : s.big}</b>
           <i>{s.small}</i>
+          <b>{s.big}</b>
         </span>
       ))}
     </div>

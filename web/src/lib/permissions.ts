@@ -58,6 +58,7 @@ export const NAV_AREA: Record<string, Area> = {
   '/admin/dich-vu': 'services',
   '/admin/khach-hang': 'customers',
   '/admin/khuyen-mai': 'promotions',
+  '/admin/ngay-su-kien': 'promotions',
   '/admin/san-pham': 'products',
   '/admin/danh-muc': 'products',
   '/admin/bang-gia': 'settings',

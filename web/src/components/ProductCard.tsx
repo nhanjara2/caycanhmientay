@@ -5,6 +5,7 @@ import { cheapestOption, discountPct, isQuote, QUOTE_TEXT, type Product } from '
 import { useWishlist } from '@/lib/wishlist';
 import { money } from '@/lib/format';
 import { seoNameOf } from '@/lib/seo-name';
+import { ClockPercentIcon } from './FlashIcons';
 import { Art } from './Icon';
 import { ProductStickers } from './ProductStickers';
 import { WishlistHeart } from './WishlistHeart';
@@ -44,7 +45,7 @@ export function ProductCard({ product: p, showFlash = false, onRemoveFromWishlis
       </div>
       <div className="vx-pcard__tags">
         <span className="vx-badge vx-badge--origin">{p.origin}</span>
-        {pct > 0 ? <span className="vx-badge vx-badge--sale">-{pct}%</span> : <span />}
+        {pct > 0 ? <span className={p.flash ? 'vx-badge vx-badge--sale app-badge-flash' : 'vx-badge vx-badge--sale'}>{p.flash && <ClockPercentIcon onRed />}-{pct}%</span> : <span />}
       </div>
       <h3 className="vx-pcard__name">
         <Link href={href} className="app-plain" title={fullName}>{fullName}</Link>

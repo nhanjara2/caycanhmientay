@@ -17,6 +17,7 @@ import type { PublicVoucher } from '@/lib/voucher-labels';
 import { usePublicVouchers } from '@/lib/vouchers-client';
 import { DeliverToNote } from './DeliverTo';
 import { FlashPriceBar } from './FlashSale';
+import { ClockPercentIcon, VoucherCheckIcon } from './FlashIcons';
 import { Icon, Thumb } from './Icon';
 import { WishlistHeart } from './WishlistHeart';
 import { Select } from './Select';
@@ -111,10 +112,13 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
       <div className="app-pp">
         <div className="vx-buy__price">
           {quote ? <b className="app-quote">{QUOTE_TEXT}</b> : <><b>{money(u.price)}</b><span>/ {p.unit}</span></>}
+          {/* Flash sale: vé voucher có dấu tích cuối dòng giá khi shop đang có mã giảm giá */}
+          {flash && vouchers.length > 0 && <VoucherCheckIcon title={`Đơn này dùng được mã giảm giá: ${(vouchers.find((v) => v.kind === 'discount') ?? vouchers[0]).code}`} />}
         </div>
         {u.oldPrice && !quote && (
           <div className="vx-buy__old">
             <s>{money(u.oldPrice)}</s>
+            {flash && <ClockPercentIcon />}
             <span className="vx-badge vx-badge--sale">-{pct}%</span>
           </div>
         )}
