@@ -1,16 +1,19 @@
 'use client';
 
+import type { CSSProperties } from 'react';
 import Link from 'next/link';
 import { cheapestOption, discountPct, isQuote, QUOTE_TEXT, type Product } from '@/lib/catalog';
 import { useWishlist } from '@/lib/wishlist';
 import { moneyNum } from '@/lib/format';
 import { seoNameOf } from '@/lib/seo-name';
-import { ClockPercentIcon } from './FlashIcons';
+import { ClockPercentIcon, VoucherCheckIcon } from './FlashIcons';
 import { Art } from './Icon';
 import { ProductStickers } from './ProductStickers';
 import { usePublicVouchers } from '@/lib/vouchers-client';
-import { VoucherCheckIcon } from './FlashIcons';
 import { WishlistHeart } from './WishlistHeart';
+
+/** Bề rộng ước tính của "giá + đ" tính bằng em (chữ số ~0,66em, dấu chấm ~0,29em, "đ" nhỏ ~0,5em, đo trên Be Vietnam Pro) — CSS (`--w`) dùng để co cỡ giá cho vừa thẻ hẹp. */
+const priceEm = (s: string) => { const d = s.replace(/\D/g, '').length; return d * 0.66 + (s.length - d) * 0.29 + 0.5; };
 
 /** Thẻ sản phẩm ở danh sách: không chọn quy cách, không nút thêm vào giỏ (chọn + mua ở trang sản phẩm, kiểu Shopee).
  *  Giá = quy cách rẻ nhất có giá ("Từ …" khi các quy cách khác giá nhau); bấm chỗ nào trên thẻ cũng mở trang sản phẩm. */
@@ -49,22 +52,26 @@ export function ProductCard({ product: p, showFlash = false, onRemoveFromWishlis
       </div>
       <div className="vx-pcard__tags">
         <span className="vx-badge vx-badge--origin">{p.origin}</span>
-        {pct > 0 ? <span className={p.flash ? 'vx-badge vx-badge--sale app-badge-flash' : 'vx-badge vx-badge--sale'}>{p.flash && <ClockPercentIcon onRed />}-{pct}%</span> : <span />}
       </div>
       <h3 className="vx-pcard__name">
         <Link href={href} className="app-plain" title={fullName}>{fullName}</Link>
       </h3>
-      <div className="vx-price">
-        {isQuote(u) ? <span className="app-quote">{QUOTE_TEXT}</span> : (
-          <>
-            <span className="app-pcard__amt">{from && <small>Từ </small>}{moneyNum(u.price)}<span className="app-dong">đ</span> <small>/ {p.unit}</small></span>
-            {/* Giá nào cũng kèm vé voucher có dấu tích (chủ shop dặn: giá nào cũng có voucher) */}
-            <VoucherCheckIcon title={vouchers.length ? `Đơn này dùng được mã giảm giá: ${(vouchers.find((v) => v.kind === 'discount') ?? vouchers[0]).code}` : 'Có voucher ưu đãi cho đơn này'} />
-          </>
-        )}
-      </div>
-      <div className="vx-strike" style={u.oldPrice && !isQuote(u) ? undefined : { visibility: 'hidden' }}>
-        {u.oldPrice && !isQuote(u) ? <>{moneyNum(u.oldPrice)}<span className="app-dong">đ</span></> : '.'}
+      <div className="app-pcard__buy">
+        {/* Hàng giá gạch + nhãn "-%" nền vàng có đồng hồ báo thức (kiểu Shopee) nằm trên giá. Luôn chiếm chỗ (trống khi không giảm giá) để giá thẳng hàng giữa các thẻ */}
+        <div className="app-pcard__was">
+          {u.oldPrice && !isQuote(u) && <s>{moneyNum(u.oldPrice)}<span className="app-dong">đ</span></s>}
+          {pct > 0 && <span className="app-pcard__off"><ClockPercentIcon />-{pct}%</span>}
+        </div>
+        <div className="vx-price" style={isQuote(u) ? undefined : { '--w': priceEm(moneyNum(u.price)).toFixed(2), '--from': from ? 1 : 0 } as CSSProperties}>
+          {isQuote(u) ? <span className="app-quote">{QUOTE_TEXT}</span> : (
+            <>
+              <span className="app-pcard__amt">{from && <small>Từ </small>}{moneyNum(u.price)}<span className="app-dong">đ</span></span>
+              <small className="app-pcard__unit">/ {p.unit}</small>
+              {/* Giá nào cũng kèm vé voucher có dấu tích (chủ shop dặn: giá nào cũng có voucher) */}
+              <VoucherCheckIcon title={vouchers.length ? `Đơn này dùng được mã giảm giá: ${(vouchers.find((v) => v.kind === 'discount') ?? vouchers[0]).code}` : 'Có voucher ưu đãi cho đơn này'} />
+            </>
+          )}
+        </div>
       </div>
       <div className="vx-spec">
         {showFlash && p.flash ? (

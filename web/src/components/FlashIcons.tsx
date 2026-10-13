@@ -1,10 +1,9 @@
-/** Hai biểu tượng nhấn mạnh Flash sale (kiểu Shopee): đồng hồ báo thức có dấu % (cạnh nhãn -%) và vé voucher có dấu tích (cạnh giá). Hình vẽ riêng, màu cố định. */
+/** Hai biểu tượng nhấn mạnh giảm giá (kiểu Shopee): đồng hồ báo thức có dấu % (cạnh nhãn -%) và vé voucher có dấu tích (cạnh giá). Hình vẽ riêng, màu cố định. */
 const RED = '#ee4d2d';
 
-/** `onRed` = đặt trên nền đỏ (nhãn -% ở thẻ sản phẩm): thân trắng, dấu % đỏ. */
-export function ClockPercentIcon({ onRed = false }: { onRed?: boolean }) {
-  const body = onRed ? '#fff' : RED;
-  const mark = onRed ? RED : '#fff';
+export function ClockPercentIcon() {
+  const body = RED;
+  const mark = '#fff';
   return (
     <svg className="app-fico" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
       <circle cx="5.2" cy="5.4" r="3.2" fill={body} />
