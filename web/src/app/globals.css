@@ -1599,7 +1599,7 @@ button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .app-quote { font-size: 1.0625rem; font-weight: 700; color: var(--primary-hover); }
 .vx-buy__price .app-quote { font-size: 1.5rem; }
 /* Sticker ưu đãi trên ảnh sản phẩm (ProductStickers; kiểu dải nhãn Shopee, 12/10/2026): dải ô nhỏ liền nhau sát mép dưới trái ảnh —
-   Siêu sale, Ảnh thật 100%, Free ship, Mua 2 giảm, Bảo hành / Chính hãng (luật chọn sticker ở lib/stickers.ts; nhãn "Mới" nằm ngay trên dải này). Chỉ hiện những ô còn vừa MỘT hàng:
+   Siêu sale, Ảnh thật 100%, Freeship, Voucher (luật chọn sticker ở lib/stickers.ts; nhãn "Mới" nằm ngay trên dải này). Chỉ hiện những ô còn vừa MỘT hàng:
    hàng cao đúng một ô + overflow hidden nên ô tràn xuống hàng 2 bị ẩn (thẻ hẹp ở điện thoại còn 1–2 ô, chừa chỗ cho tim bên phải). */
 .app-stk { position: absolute; left: 0; bottom: 0; z-index: 1; display: flex; flex-wrap: wrap; align-content: flex-start; height: 2.5rem; max-width: calc(100% - 3.25rem); overflow: hidden; border-bottom-left-radius: var(--radius-sm); pointer-events: none; }
 .app-stk__t { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; height: 2.5rem; min-width: 3rem; padding: 0 0.3125rem; color: #fff; text-align: center; white-space: nowrap; }
@@ -1611,9 +1611,7 @@ button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .app-stk__t[data-k="sale"] b { color: #ffe44d; }
 .app-stk__t[data-k="real"] { background: #2e7d32; }
 .app-stk__t[data-k="ship"] { background: #1565c0; }
-.app-stk__t[data-k="combo"] { background: #ffc21a; color: #7a1000; }
-.app-stk__t[data-k="warranty"] { background: #00796b; }
-.app-stk__t[data-k="genuine"] { background: #37474f; }
+.app-stk__t[data-k="voucher"] { background: #ffc21a; color: #7a1000; }
 /* Trang chi tiết: ảnh lớn nên ô to hơn, dải chạy hết bề ngang ảnh */
 .app-stk[data-size="lg"] { height: 3.5rem; max-width: 100%; border-bottom-left-radius: var(--radius-md); }
 .app-stk[data-size="lg"] .app-stk__t { height: 3.5rem; min-width: 4.25rem; padding: 0 0.75rem; gap: 2px; }
