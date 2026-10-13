@@ -1613,19 +1613,19 @@ button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .app-stk__t i { font-style: normal; font-size: 0.4375rem; line-height: 1; font-weight: 700; letter-spacing: 0.04em; }
 .app-stk__t b { font-size: 0.625rem; line-height: 1; font-weight: 800; letter-spacing: -0.01em; }
 /* Họa tiết: tia nắng (sale, mall, ngày đặc biệt), sọc chéo (ảnh thật, free ship, siêu rẻ), chấm (voucher) */
-.app-stk__t[data-k="day"] { --a: #ffe566; --b: #ffb300; --pat: repeating-conic-gradient(from 0deg at 50% 135%, rgb(255 255 255 / .42) 0 6deg, rgb(255 255 255 / 0) 6deg 12deg); outline: 1px solid #ff8a00; outline-offset: -2px; text-shadow: none; }
+.app-stk__t[data-k="day"] { --a: #ffd23f; --b: #ff9100; --pat: repeating-conic-gradient(from 0deg at 50% 135%, rgb(255 255 255 / .42) 0 6deg, rgb(255 255 255 / 0) 6deg 12deg); outline: 1px solid #ff8a00; outline-offset: -2px; text-shadow: none; }
 .app-stk__t[data-k="day"] i { color: #b45309; }
 .app-stk__t[data-k="day"] b { color: #1565c0; font-size: 0.75rem; }
-.app-stk__t[data-k="sale"] { --a: #ff7a1a; --b: #e0001b; --pat: repeating-conic-gradient(from 0deg at 50% 135%, rgb(255 255 255 / .16) 0 6deg, rgb(255 255 255 / 0) 6deg 12deg); }
+.app-stk__t[data-k="sale"] { --a: #ff9500; --b: #ff2a00; --pat: repeating-conic-gradient(from 0deg at 50% 135%, rgb(255 255 255 / .16) 0 6deg, rgb(255 255 255 / 0) 6deg 12deg); }
 .app-stk__t[data-k="sale"] b { color: #ffe44d; }
-.app-stk__t[data-k="real"] { --a: #46b351; --b: #17762b; --pat: repeating-linear-gradient(125deg, rgb(255 255 255 / .1) 0 2px, rgb(255 255 255 / 0) 2px 6px); }
-.app-stk__t[data-k="ship"] { --a: #22bdf0; --b: #0a66c2; --pat: repeating-linear-gradient(125deg, rgb(255 255 255 / .12) 0 2px, rgb(255 255 255 / 0) 2px 6px); }
-.app-stk__t[data-k="voucher"] { --a: #ffe84f; --b: #ffc400; --pat: radial-gradient(rgb(208 1 27 / .2) 1px, rgb(208 1 27 / 0) 1.6px) 0 0 / 5px 5px; outline: 1px dashed #d0011b; outline-offset: -2px; text-shadow: none; }
+.app-stk__t[data-k="real"] { --a: #2fd24f; --b: #08892b; --pat: repeating-linear-gradient(125deg, rgb(255 255 255 / .1) 0 2px, rgb(255 255 255 / 0) 2px 6px); }
+.app-stk__t[data-k="ship"] { --a: #00cfff; --b: #005fe0; --pat: repeating-linear-gradient(125deg, rgb(255 255 255 / .12) 0 2px, rgb(255 255 255 / 0) 2px 6px); }
+.app-stk__t[data-k="voucher"] { --a: #faff00; --b: #faff00; --pat: radial-gradient(rgb(208 1 27 / .2) 1px, rgb(208 1 27 / 0) 1.6px) 0 0 / 5px 5px; outline: 1px dashed #d0011b; outline-offset: -2px; text-shadow: none; }
 .app-stk__t[data-k="voucher"] i { color: #d0011b; }
 .app-stk__t[data-k="voucher"] b { color: #d0011b; font-style: italic; font-weight: 900; text-shadow: 0 0 2px #fff, 0 0 1px #fff; }
-.app-stk__t[data-k="mall"] { --a: #ff2f2f; --b: #dc0019; --pat: repeating-conic-gradient(from 0deg at 50% 135%, rgb(255 255 255 / .18) 0 6deg, rgb(255 255 255 / 0) 6deg 12deg); }
+.app-stk__t[data-k="mall"] { --a: #ff2f2f; --b: #ff0000; --pat: repeating-conic-gradient(from 0deg at 50% 135%, rgb(255 255 255 / .18) 0 6deg, rgb(255 255 255 / 0) 6deg 12deg); }
 .app-stk__t[data-k="mall"] b { padding: 1px 3px; border-radius: 2px; background: #fff; color: #e0001f; text-shadow: none; letter-spacing: 0.05em; font-size: 0.5625rem; font-weight: 900; }
-.app-stk__t[data-k="cheap"] { --a: #8d55ff; --b: #3a22c9; --pat: repeating-linear-gradient(125deg, rgb(255 255 255 / .1) 0 2px, rgb(255 255 255 / 0) 2px 6px); }
+.app-stk__t[data-k="cheap"] { --a: #b45cff; --b: #5b1ee6; --pat: repeating-linear-gradient(125deg, rgb(255 255 255 / .1) 0 2px, rgb(255 255 255 / 0) 2px 6px); }
 .app-stk__t[data-k="cheap"] b { color: #ffe44d; }
 .app-stk__t[data-k="new"] { --a: #ffffff; --b: #dff3e3; --pat: radial-gradient(rgb(46 158 62 / .25) 1px, rgb(46 158 62 / 0) 1.6px) 0 0 / 5px 5px; outline: 1px solid #2e9e3e; outline-offset: -2px; text-shadow: none; }
 .app-stk__t[data-k="new"] i { color: #2e9e3e; }
