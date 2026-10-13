@@ -80,7 +80,8 @@ export function ProductCard({ product: p, showFlash = false, onRemoveFromWishlis
             <span>{p.flash.sold / p.flash.total > 0.85 ? 'Sắp hết' : `Đã bán ${p.flash.sold}/${p.flash.total}`}</span>
           </span>
         ) : (
-          p.spec
+          // "Văn phòng · Trong nhà" → mỗi cụm một nhãn viền cam chữ cam (kiểu "Cheap on Shopee")
+          p.spec.split(/\s*·\s*/).filter(Boolean).map((t) => <span key={t} className="app-pcard__tag">{t}</span>)
         )}
       </div>
     </article>
