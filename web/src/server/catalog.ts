@@ -5,6 +5,7 @@ import { and, asc, eq, getTableName, inArray, isNotNull, or, sql } from 'drizzle
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import type { IconName } from '@/components/Icon';
 import { isNewProduct, normalize, productImageUrl, type Product } from '@/lib/catalog';
+import { isStockProductImage } from '@/lib/seed-product-images';
 import { db, schema } from './db';
 
 const { products: P, productOptions: O, productImages: I } = schema;
@@ -18,6 +19,8 @@ async function hydrate(rows: Row[]): Promise<Product[]> {
     db.select().from(O).where(and(inArray(O.productSlug, slugs), eq(O.deleted, false))).orderBy(asc(O.idx)),
     db.select({ slug: I.productSlug, file: I.file }).from(I).where(inArray(I.productSlug, slugs)).orderBy(asc(I.idx), asc(I.id)),
   ]);
+  // ảnh đã xếp theo thứ tự, ảnh đầu của mỗi sản phẩm là ảnh chính
+  const mainFile = (slug: string) => imgs.find((i) => i.slug === slug)?.file;
   return rows.map((r) => ({
     slug: r.slug, sku: r.sku, name: r.name, seoName: r.seoName ?? undefined, category: r.category, sub: r.sub, extraSubs: r.extraSubs.length ? r.extraSubs : undefined, icon: r.icon as IconName,
     origin: r.origin, ship: r.ship, pesticide: r.pesticide || undefined, unit: r.unit, spec: r.spec, lead: r.lead,
@@ -27,6 +30,7 @@ async function hydrate(rows: Row[]): Promise<Product[]> {
       idx: o.idx, label: o.label, price: o.price, oldPrice: o.oldPrice ?? undefined, combo2: o.combo2 ?? undefined,
     })),
     images: imgs.filter((i) => i.slug === r.slug).map((i) => productImageUrl(i.file)),
+    realImg: (mainFile(r.slug) && !isStockProductImage(mainFile(r.slug))) || undefined,
     youtubeId: r.youtubeId ?? undefined,
     fengshui: r.fengshui ?? undefined,
     attrs: r.attrs ?? undefined,

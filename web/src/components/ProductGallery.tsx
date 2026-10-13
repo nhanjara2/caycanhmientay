@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
 import type { Product } from '@/lib/catalog';
 import { Art } from './Icon';
+import { ProductStickers } from './ProductStickers';
 
 /** Độ phóng khi rê chuột lên ảnh lớn (kính lúp = 1/ZOOM khung phóng to). */
 const ZOOM = 2.5;
@@ -69,12 +70,9 @@ export function ProductGallery({ p, stock = [] }: {
         onMouseLeave={() => setLens(null)}
       >
         {images.length ? <img ref={imgRef} src={images[cur]} alt={p.name} /> : <Art name={p.icon} />}
-        {stock[cur] ? <span className="vx-gal__tag vx-badge">Ảnh minh họa</span> : (
-          <>
-            <div className="vx-gal__stamp"><span>ẢNH<br />THẬT</span></div>
-            {p.ship === 'plant' && <span className="vx-gal__tag vx-badge vx-badge--origin">Ảnh chụp tại vườn</span>}
-          </>
-        )}
+        {stock[cur] ? <span className="vx-gal__tag vx-badge">Ảnh minh họa</span> : p.ship === 'plant' && images.length > 0 && <span className="vx-gal__tag vx-badge vx-badge--origin">Ảnh chụp tại vườn</span>}
+        {/* Dấu "Ảnh thật 100%" nằm trong dải sticker; ảnh đang xem là ảnh minh họa nạp sẵn hoặc chưa có ảnh thì không có dấu này */}
+        <ProductStickers p={p} size="lg" real={images.length > 0 && !stock[cur]} />
         {lens && <span className="app-zoom-lens" style={{ left: lens.x, top: lens.y, width: lens.w, height: lens.h }} aria-hidden />}
       </div>
       {lens && (

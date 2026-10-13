@@ -93,6 +93,8 @@ export type Product = {
   inStock?: boolean;
   /** Đăng trong NEW_DAYS ngày gần đây → thẻ có nhãn "Mới" + viền xanh. Tính trên server. */
   isNew?: boolean;
+  /** Ảnh chính là ảnh shop tự chụp (có ảnh và không phải ảnh minh họa nạp sẵn) → sticker "Ảnh thật 100%". Tính trên server (danh sách ảnh mượn không vào gói JS của khách). */
+  realImg?: boolean;
 };
 
 /** Biểu tượng chọn được cho sản phẩm (hiện thay ảnh khi chưa có ảnh). Tên cũ đã lưu trong database phải giữ trong danh sách. */

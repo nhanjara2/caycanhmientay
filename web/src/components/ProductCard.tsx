@@ -6,6 +6,7 @@ import { useWishlist } from '@/lib/wishlist';
 import { money } from '@/lib/format';
 import { seoNameOf } from '@/lib/seo-name';
 import { Art } from './Icon';
+import { ProductStickers } from './ProductStickers';
 import { WishlistHeart } from './WishlistHeart';
 
 /** Thẻ sản phẩm ở danh sách: không chọn quy cách, không nút thêm vào giỏ (chọn + mua ở trang sản phẩm, kiểu Shopee).
@@ -31,7 +32,9 @@ export function ProductCard({ product: p, showFlash = false, onRemoveFromWishlis
           {p.images?.[0] ? <img src={p.images[0]} alt={fullName} loading="lazy" /> : <Art name={p.icon} />}
           {p.isNew && <span className="app-pcard__new">Mới</span>}
         </Link>
-        {/* Tim yêu thích góc dưới phải khung ảnh (trên trái là xuất xứ, trên phải -%, dưới trái nhãn Mới). Trang Yêu thích: bỏ tim thì gỡ thẻ khỏi lưới. */}
+        {/* Sticker ưu đãi (ảnh thật, siêu sale, free ship…) dải góc dưới trái; nhãn Mới góc trên trái */}
+        <ProductStickers p={p} />
+        {/* Tim yêu thích góc dưới phải khung ảnh (-% và xuất xứ nằm dưới ảnh). Trang Yêu thích: bỏ tim thì gỡ thẻ khỏi lưới. */}
         <WishlistHeart
           slug={p.slug}
           active={onRemoveFromWishlist ? true : wish.has(p.slug)}

@@ -330,9 +330,9 @@ a.vx-chip[aria-current="true"] { background: var(--primary-soft); border-color: 
 /* Thẻ sản phẩm: viền khung ảnh theo loại (ProductCard) */
 /* Flash sale: viền vàng cam quanh khung ảnh. Outline vẽ đè lên ảnh nên không làm ảnh co lại */
 .vx-pcard--flash .vx-pcard__media { outline: 2px solid #f59e0b; outline-offset: -2px; }
-/* Hàng mới: sticker góc trái dưới khung ảnh */
+/* Hàng mới: nhãn góc trái dưới khung ảnh, nằm ngay trên dải sticker ưu đãi (.app-stk, cao 2.5rem) */
 .vx-pcard__media { position: relative; }
-.app-pcard__new { position: absolute; left: 6px; bottom: 6px; background: var(--primary); color: #fff; font-size: 0.75rem; line-height: 1rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; box-shadow: 0 1px 3px rgb(0 0 0 / .2); pointer-events: none; }
+.app-pcard__new { position: absolute; left: 6px; bottom: calc(2.5rem + 0.375rem); background: var(--primary); color: #fff; font-size: 0.75rem; line-height: 1rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; box-shadow: 0 1px 3px rgb(0 0 0 / .2); pointer-events: none; }
 
 /* Flash sale: nền đỏ nổi bật, ô đếm giờ nền đỏ (FlashSale.tsx + trang /flash-sale) */
 .vx-count b { background: #dc2626; color: #fff; min-width: 2.2em; text-align: center; font-variant-numeric: tabular-nums; }
@@ -1599,6 +1599,31 @@ button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 /* "Liên hệ báo giá" — quy cách chưa có giá (giá 0): thay số tiền ở thẻ sản phẩm, trang sản phẩm */
 .app-quote { font-size: 1.0625rem; font-weight: 700; color: var(--primary-hover); }
 .vx-buy__price .app-quote { font-size: 1.5rem; }
+/* Sticker ưu đãi trên ảnh sản phẩm (ProductStickers; kiểu dải nhãn Shopee, 12/10/2026): dải ô nhỏ liền nhau sát mép dưới trái ảnh —
+   Siêu sale, Ảnh thật 100%, Free ship, Mua 2 giảm, Bảo hành / Chính hãng (luật chọn sticker ở lib/stickers.ts; nhãn "Mới" nằm ngay trên dải này). Chỉ hiện những ô còn vừa MỘT hàng:
+   hàng cao đúng một ô + overflow hidden nên ô tràn xuống hàng 2 bị ẩn (thẻ hẹp ở điện thoại còn 1–2 ô, chừa chỗ cho tim bên phải). */
+.app-stk { position: absolute; left: 0; bottom: 0; z-index: 1; display: flex; flex-wrap: wrap; align-content: flex-start; height: 2.5rem; max-width: calc(100% - 3.25rem); overflow: hidden; border-bottom-left-radius: var(--radius-sm); pointer-events: none; }
+.app-stk__t { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; height: 2.5rem; min-width: 3rem; padding: 0 0.3125rem; color: #fff; text-align: center; white-space: nowrap; }
+.app-stk__t + .app-stk__t { box-shadow: inset 1px 0 0 rgb(255 255 255 / .4); }
+.app-stk__t b { display: flex; align-items: center; font-size: 0.9375rem; line-height: 1.1; font-weight: 800; letter-spacing: -0.01em; }
+.app-stk__t i { font-style: normal; font-size: 0.625rem; line-height: 1.1; font-weight: 700; letter-spacing: 0.01em; }
+.app-stk__t .vx-ico { width: 1.125rem; height: 1.125rem; }
+.app-stk__t[data-k="sale"] { background: linear-gradient(160deg, #ff5a1f, #d0011b); }
+.app-stk__t[data-k="sale"] b { color: #ffe44d; }
+.app-stk__t[data-k="real"] { background: #2e7d32; }
+.app-stk__t[data-k="ship"] { background: #1565c0; }
+.app-stk__t[data-k="combo"] { background: #ffc21a; color: #7a1000; }
+.app-stk__t[data-k="warranty"] { background: #00796b; }
+.app-stk__t[data-k="genuine"] { background: #37474f; }
+/* Trang chi tiết: ảnh lớn nên ô to hơn, dải chạy hết bề ngang ảnh */
+.app-stk[data-size="lg"] { height: 3.5rem; max-width: 100%; border-bottom-left-radius: var(--radius-md); }
+.app-stk[data-size="lg"] .app-stk__t { height: 3.5rem; min-width: 4.25rem; padding: 0 0.75rem; gap: 2px; }
+.app-stk[data-size="lg"] .app-stk__t b { font-size: 1.25rem; }
+.app-stk[data-size="lg"] .app-stk__t i { font-size: 0.75rem; }
+.app-stk[data-size="lg"] .app-stk__t .vx-ico { width: 1.5rem; height: 1.5rem; }
+/* Nhãn "Ảnh minh họa" / "Ảnh chụp tại vườn" lên góc trên trái ảnh lớn (góc dưới trái là dải sticker) */
+.vx-gal__main > .vx-gal__tag { bottom: auto; top: var(--space-3); }
+
 /* Tim yêu thích trên thẻ sản phẩm: góc dưới phải khung ảnh (khung ảnh vuông = rộng thẻ − 2 lề) */
 .app-pcard__mediawrap { position: relative; }
 .vx-pcard .app-pcard__heart { top: auto; right: 0.5rem; bottom: 0.5rem; width: 2.5rem; height: 2.5rem; color: var(--ink-muted); border: 0; cursor: pointer; }
