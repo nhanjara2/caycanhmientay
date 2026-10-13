@@ -136,13 +136,17 @@ export default async function HomePage() {
     if (img) usedImages.add(img);
     return img;
   };
+  // Ảnh riêng của chủ shop cho từng nhóm con Cây cảnh (public/images/danh-muc/, vuông 640px); nhóm chưa có ảnh (vd. Cây công trình) dùng ảnh sản phẩm bán chạy.
+  const TILE_IMAGE: Record<string, string> = Object.fromEntries(
+    ['cay-de-ban', 'cay-van-phong', 'cay-trong-nha', 'cay-ban-cong', 'cay-san-vuon'].map((s) => [`cay-canh/${s}`, `/images/danh-muc/${s}.webp`]),
+  );
   const stocked = categories.filter((c) => counts[c.slug]);
   const mosaic: MosaicItem[] = stocked.flatMap((c) => {
     const subs = stocked.length < 4 ? c.subs.filter((s) => s.active && counts[`${c.slug}/${s.slug}`]) : [];
     if (subs.length < 2) return [{ key: c.slug, name: c.name, href: `/danh-muc/${c.slug}`, count: counts[c.slug], icon: c.icon, image: tileImage(products.filter((p) => p.category === c.slug)) }];
     return subs.map((s) => ({
       key: `${c.slug}/${s.slug}`, name: s.name, href: `/danh-muc/${c.slug}/${s.slug}`, count: counts[`${c.slug}/${s.slug}`], icon: c.icon,
-      image: tileImage(products.filter((p) => p.category === c.slug && (p.sub === s.slug || p.extraSubs?.includes(s.slug)))),
+      image: TILE_IMAGE[`${c.slug}/${s.slug}`] ?? tileImage(products.filter((p) => p.category === c.slug && (p.sub === s.slug || p.extraSubs?.includes(s.slug)))),
     }));
   }).slice(0, 9);
 
