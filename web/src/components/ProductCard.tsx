@@ -3,11 +3,13 @@
 import Link from 'next/link';
 import { cheapestOption, discountPct, isQuote, QUOTE_TEXT, type Product } from '@/lib/catalog';
 import { useWishlist } from '@/lib/wishlist';
-import { money } from '@/lib/format';
+import { moneyNum } from '@/lib/format';
 import { seoNameOf } from '@/lib/seo-name';
 import { ClockPercentIcon } from './FlashIcons';
 import { Art } from './Icon';
 import { ProductStickers } from './ProductStickers';
+import { usePublicVouchers } from '@/lib/vouchers-client';
+import { VoucherCheckIcon } from './FlashIcons';
 import { WishlistHeart } from './WishlistHeart';
 
 /** Thẻ sản phẩm ở danh sách: không chọn quy cách, không nút thêm vào giỏ (chọn + mua ở trang sản phẩm, kiểu Shopee).
@@ -18,6 +20,7 @@ export function ProductCard({ product: p, showFlash = false, onRemoveFromWishlis
   onRemoveFromWishlist?: () => void;
 }) {
   const wish = useWishlist();
+  const vouchers = usePublicVouchers();
   const u = p.options[cheapestOption(p.options)];
   const from = p.options.some((o) => o !== u && (isQuote(o) || o.price !== u.price));
   const pct = isQuote(u) ? 0 : discountPct(u);
@@ -31,11 +34,12 @@ export function ProductCard({ product: p, showFlash = false, onRemoveFromWishlis
       <div className="app-pcard__mediawrap">
         <Link href={href} className="vx-pcard__media" aria-label={fullName}>
           {p.images?.[0] ? <img src={p.images[0]} alt={fullName} loading="lazy" /> : <Art name={p.icon} />}
-          {p.isNew && <span className="app-pcard__new">Mới</span>}
         </Link>
-        {/* Sticker ưu đãi (ảnh thật, siêu sale, free ship…) dải góc dưới trái; nhãn Mới góc trên trái */}
-        <ProductStickers p={p} />
-        {/* Tim yêu thích góc dưới phải khung ảnh (-% và xuất xứ nằm dưới ảnh). Trang Yêu thích: bỏ tim thì gỡ thẻ khỏi lưới. */}
+        {/* Dải góc dưới trái: ô "Hàng mới" (nếu có) + sticker ưu đãi (ảnh thật, siêu sale, free ship…) cùng một kiểu ô */}
+        <ProductStickers p={p} isNew={p.isNew} />
+        {/* Có video (YouTube) → biểu tượng play góc dưới phải ảnh, kiểu Shopee; chỉ để báo hiệu, bấm vẫn mở trang sản phẩm */}
+        {p.youtubeId && <span className="app-pcard__play" title="Có video" aria-label="Có video"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 5.6v12.8L18.6 12z" /></svg></span>}
+        {/* Tim yêu thích góc trên phải khung ảnh, ngay dưới nhãn -% (cột bên phải: -% rồi tim; bên trái: xuất xứ). Trang Yêu thích: bỏ tim thì gỡ thẻ khỏi lưới. */}
         <WishlistHeart
           slug={p.slug}
           active={onRemoveFromWishlist ? true : wish.has(p.slug)}
@@ -51,10 +55,16 @@ export function ProductCard({ product: p, showFlash = false, onRemoveFromWishlis
         <Link href={href} className="app-plain" title={fullName}>{fullName}</Link>
       </h3>
       <div className="vx-price">
-        {isQuote(u) ? <span className="app-quote">{QUOTE_TEXT}</span> : <>{from && <small>Từ </small>}{money(u.price)} <small>/ {p.unit}</small></>}
+        {isQuote(u) ? <span className="app-quote">{QUOTE_TEXT}</span> : (
+          <>
+            <span className="app-pcard__amt">{from && <small>Từ </small>}{moneyNum(u.price)}<span className="app-dong">đ</span> <small>/ {p.unit}</small></span>
+            {/* Giá nào cũng kèm vé voucher có dấu tích (chủ shop dặn: giá nào cũng có voucher) */}
+            <VoucherCheckIcon title={vouchers.length ? `Đơn này dùng được mã giảm giá: ${(vouchers.find((v) => v.kind === 'discount') ?? vouchers[0]).code}` : 'Có voucher ưu đãi cho đơn này'} />
+          </>
+        )}
       </div>
       <div className="vx-strike" style={u.oldPrice && !isQuote(u) ? undefined : { visibility: 'hidden' }}>
-        {u.oldPrice && !isQuote(u) ? money(u.oldPrice) : '.'}
+        {u.oldPrice && !isQuote(u) ? <>{moneyNum(u.oldPrice)}<span className="app-dong">đ</span></> : '.'}
       </div>
       <div className="vx-spec">
         {showFlash && p.flash ? (
