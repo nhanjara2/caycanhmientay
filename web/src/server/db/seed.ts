@@ -1,7 +1,10 @@
 // Nạp dữ liệu mẫu khi database còn trống: 3 cửa hàng + sản phẩm mẫu (src/lib/seed-products.ts)
 // + bài bệnh cây (src/lib/seed-diseases.ts) + bài Góc chăm cây (src/lib/seed-posts.ts).
-import { and, asc, count, eq, isNull } from 'drizzle-orm';
+import fs from 'node:fs';
+import path from 'node:path';
+import { and, asc, count, eq, inArray, isNull, sql } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { SEED_DISEASE_IMAGES } from '@/lib/seed-disease-images';
 import { seedDiseases } from '@/lib/seed-diseases';
 import { readMinutes } from '@/lib/posts';
 import { seedPosts } from '@/lib/seed-posts';
@@ -99,6 +102,50 @@ export async function seedDiseasesIfEmpty(db: Db) {
   })));
   await markSeeded(db, 'seeded:diseases');
   return true;
+}
+
+/**
+ * Gắn ảnh minh họa triệu chứng (lib/seed-disease-images.ts, file ở seed/benh-cay/) vào bài bệnh — chạy MỘT lần (dấu
+ * `seeded:disease-images:v2`), kể cả database đã dùng. Chỉ gắn vào triệu chứng còn đúng chữ như bài mẫu và chưa có ảnh: bài
+ * admin đã sửa chữ / đã tự thêm ảnh thì giữ nguyên; admin bỏ ảnh sau này thì không nạp lại. Trả về số ảnh đã gắn.
+ * Dấu `:v2` vì migration 0055 (13/10/2026) đã xóa 45 ảnh nạp lần đầu (dấu `seeded:disease-images`); chủ shop muốn giữ ảnh bệnh
+ * nên nạp lại bằng dấu mới.
+ */
+export async function seedDiseaseImages(db: Db) {
+  const KEY = 'seeded:disease-images:v2';
+  const dir = path.join(process.cwd(), 'seed', 'benh-cay');
+  const missing = SEED_DISEASE_IMAGES.filter((x) => !fs.existsSync(path.join(dir, x.source)));
+  if (missing.length) {
+    console.warn(`[db] Thiếu ${missing.length} ảnh bệnh cây trong ${dir} — bỏ qua, lần deploy sau thử lại`);
+    return 0;
+  }
+  return db.transaction(async (tx) => {
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${KEY}))`);
+    const [done] = await tx.select({ key: schema.appSettings.key }).from(schema.appSettings).where(eq(schema.appSettings.key, KEY));
+    if (done) return 0;
+    const slugs = [...new Set(SEED_DISEASE_IMAGES.map((x) => x.disease))];
+    const rows = await tx.select({ slug: schema.diseases.slug, symptoms: schema.diseases.symptoms })
+      .from(schema.diseases).where(inArray(schema.diseases.slug, slugs)).for('update');
+    let n = 0;
+    for (const d of rows) {
+      const imgs = SEED_DISEASE_IMAGES.filter((x) => x.disease === d.slug);
+      const used: typeof imgs = [];
+      const symptoms = d.symptoms.map((s) => {
+        const m = !s.image && imgs.find((x) => x.symptom === s.text && !used.includes(x));
+        if (!m) return s;
+        used.push(m);
+        return { ...s, image: m.file };
+      });
+      if (!used.length) continue;
+      await tx.insert(schema.diseaseImages).values(used.map((x) => ({
+        diseaseSlug: d.slug, file: x.file, mime: 'image/jpeg', data: fs.readFileSync(path.join(dir, x.source)),
+      }))).onConflictDoNothing({ target: schema.diseaseImages.file });
+      await tx.update(schema.diseases).set({ symptoms }).where(eq(schema.diseases.slug, d.slug));
+      n += used.length;
+    }
+    await tx.insert(schema.appSettings).values({ key: KEY, value: true, updatedBy: 'db-setup' }).onConflictDoNothing({ target: schema.appSettings.key });
+    return n;
+  });
 }
 
 /** Nạp bài Góc chăm cây mẫu (đã đăng, cách nhau 1 ngày) khi bảng `posts` còn trống. */
