@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 import { formatPhone, LEGAL, SALES_PHONE, SHOP_ADDRESS, SHOP_EMAIL, SHOP_MAP_URL, ZALO_URL } from '@/lib/contact';
 import { PARTNER_IMAGE, PARTNER_IMAGE_POS, PARTNER_INFO, PARTNER_TYPES, WHOLESALE_QUOTE_URL, type PartnerType } from '@/lib/partners';
 import { projectImageUrl, projectPath, regionsOf, type Project } from '@/lib/projects';
@@ -53,12 +54,11 @@ const MAIL_BODY = [
 ].join('\n');
 const MAILTO = `mailto:${SHOP_EMAIL}?subject=${encodeURIComponent(MAIL_SUBJECT)}&body=${encodeURIComponent(MAIL_BODY)}`;
 
-/** Liên kết Google Maps (biểu tượng Google Maps đứng trước chữ) đặt dưới dòng thông tin. */
-function MapLink({ href }: { href: string }) {
+/** Tên địa điểm là liên kết mở Google Maps, biểu tượng Google Maps đứng ngay sau chữ (không ghi "Xem trên Google Maps"). */
+function MapLink({ href, children }: { href: string; children: ReactNode }) {
   return (
-    <a className="dn-maplink" href={href} target="_blank" rel="noreferrer">
-      <img src="/images/social/google-maps.svg" alt="" />
-      Xem trên Google Maps
+    <a className="dn-maplink" href={href} target="_blank" rel="noreferrer" title="Xem trên Google Maps">
+      {children}&nbsp;<img src="/images/social/google-maps.svg" alt="Xem trên Google Maps" />
     </a>
   );
 }
@@ -275,8 +275,8 @@ export function PartnerPage({ projects, profile }: { projects: Project[]; profil
             <div><dt>Tên gọi</dt><dd>{LEGAL.name}</dd></div>
             <div><dt>Người chịu trách nhiệm</dt><dd>{LEGAL.owner}</dd></div>
             <div><dt>Số đăng ký kinh doanh</dt><dd>{LEGAL.regNo}, cấp tháng {LEGAL.regIssued}</dd></div>
-            <div><dt>Cơ quan thuế quản lý</dt><dd>{LEGAL.taxOffice} <MapLink href={LEGAL.taxOfficeMapUrl} /></dd></div>
-            <div><dt>Địa chỉ, vườn ươm</dt><dd>{SHOP_ADDRESS} <MapLink href={SHOP_MAP_URL} /></dd></div>
+            <div><dt>Cơ quan thuế quản lý</dt><dd><MapLink href={LEGAL.taxOfficeMapUrl}>{LEGAL.taxOffice}</MapLink></dd></div>
+            <div><dt>Địa chỉ, vườn ươm</dt><dd><MapLink href={SHOP_MAP_URL}>{SHOP_ADDRESS}</MapLink></dd></div>
             <div><dt>Email</dt><dd><a href={`mailto:${SHOP_EMAIL}`}>{SHOP_EMAIL}</a></dd></div>
           </dl>
           <div className="dn-legal__links">

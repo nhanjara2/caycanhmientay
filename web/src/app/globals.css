@@ -2075,8 +2075,9 @@ a.app-mm__card:hover .app-mm__name { color: var(--primary); }
 .dn-legal dt { font-size: 0.875rem; color: var(--ink-muted); }
 .dn-legal dd { margin: 0; font-size: 1rem; line-height: 1.45; font-weight: 600; overflow-wrap: anywhere; }
 .dn-legal dd a { color: var(--primary); }
-.dn-legal dd .dn-maplink { display: flex; align-items: center; gap: 0.5rem; width: fit-content; min-height: 2.5rem; font-size: 0.9375rem; font-weight: 600; }
-.dn-legal dd .dn-maplink img { width: 1rem; height: 1.375rem; flex: none; }
+.dn-legal dd .dn-maplink { display: inline-block; padding-block: 0.6875rem; margin-block: -0.6875rem; }
+.dn-legal dd .dn-maplink:hover { text-decoration: underline; text-underline-offset: 3px; }
+.dn-legal dd .dn-maplink img { display: inline-block; width: 1rem; height: 1.375rem; margin-left: 0.125rem; vertical-align: -0.3125rem; }
 .dn-legal__links { display: flex; flex-direction: column; gap: 0.5rem; }
 .dn-legal__links a { display: flex; align-items: center; gap: 0.75rem; min-height: 3rem; padding: 0.5rem 1rem; background: var(--surface-sunken); border: 1px solid var(--border); border-radius: var(--radius-md); font-size: 0.9375rem; font-weight: 600; color: var(--ink); }
 .dn-legal__links a:hover { border-color: var(--primary); color: var(--primary); }
