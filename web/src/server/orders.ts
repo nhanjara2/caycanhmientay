@@ -108,7 +108,7 @@ export async function createOrder(input: PlaceOrderInput, user: SessionUser | nu
 
 /** Dòng hàng đưa vào computeTotals (giá lẻ, giá gạch ngang, combo 2 cây của quy cách). */
 export const pricedLine = ({ p, u, it }: { p: Product; u: Unit; it: { qty: number } }) => ({
-  price: u.price, oldPrice: u.oldPrice, combo2: u.combo2, qty: it.qty, ship: p.ship, pesticide: p.pesticide, bulky: u.bulky,
+  price: u.price, oldPrice: u.oldPrice, combo2: u.combo2, qty: it.qty, ship: p.ship, pesticide: p.pesticide, bulky: u.bulky, noVoucher: p.noVoucher,
 });
 
 /** Giá ghi vào dòng đơn: giá lẻ + giá gạch ngang. Combo 2 cây không đổi đơn giá — tiền giảm ghi ở orders.combo_discount. */
@@ -219,7 +219,7 @@ async function pickVouchers(
   user: SessionUser | null, phone: string, lock = false,
 ): Promise<PickedVouchers> {
   const out: PickedVouchers = { discount: null, ship: null, errors: [] };
-  const ctx = { subtotal: totals.goods, shipFee: totals.plantShip + totals.supplyShip, userId: user?.id ?? null, phone };
+  const ctx = { subtotal: totals.voucherBase, shipFee: totals.plantShip + totals.supplyShip, userId: user?.id ?? null, phone };
   for (const code of [...new Set(codes.map((c) => c?.trim().toUpperCase()).filter((c): c is string => !!c))]) {
     const r = await checkVoucher(executor, code, ctx, { lock });
     if (!r.ok) out.errors.push({ code, error: r.error });

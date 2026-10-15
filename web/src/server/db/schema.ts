@@ -115,6 +115,8 @@ export const products = pgTable('products', {
   origin: text('origin').notNull(),
   ship: text('ship', { enum: ['plant', 'supply'] }).notNull(),
   pesticide: boolean('pesticide').notNull().default(false),
+  /** Không áp mã giảm giá / mã miễn phí giao: tiền của sản phẩm này không tính vào tiền hàng xét mã (vd. cây lớn giá đã chốt). */
+  noVoucher: boolean('no_voucher').notNull().default(false),
   unit: text('unit').notNull(),
   spec: text('spec').notNull(),
   lead: text('lead').notNull(),

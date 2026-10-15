@@ -32,6 +32,8 @@ export type ProductFormValue = {
   origin: string;
   ship: 'plant' | 'supply';
   pesticide: boolean;
+  /** Không áp mã giảm giá / miễn phí giao. */
+  noVoucher: boolean;
   unit: string;
   spec: string;
   lead: string;
@@ -517,6 +519,10 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
                 <div className="vx-label-row">
                   <span>Hiện ở Flash sale</span>
                   <button type="button" className="vx-switch" role="switch" aria-checked={v.flash} aria-label="Hiện ở Flash sale" onClick={() => set('flash', !v.flash)} />
+                </div>
+                <div className="vx-label-row">
+                  <span>Không áp mã giảm giá</span>
+                  <button type="button" className="vx-switch" role="switch" aria-checked={v.noVoucher} aria-label="Không áp mã giảm giá" onClick={() => set('noVoucher', !v.noVoucher)} />
                 </div>
               </div>
             </div>

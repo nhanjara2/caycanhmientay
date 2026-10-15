@@ -35,7 +35,7 @@ export const SHIP_RULES: ShipRules = { plant: DEFAULT_SHIPPING.plant, supply: DE
 /** Ba vùng khác mức phí thì khách chưa chọn nơi nhận chỉ thấy số tạm tính (theo vùng rẻ nhất). */
 export const plantFeeVaries = (r: PlantRule) => new Set(Object.values(r.regionFee)).size > 1;
 
-export type PricedLine = { price: number; oldPrice?: number | null; combo2?: number | null; qty: number; ship: ShipGroup; pesticide?: boolean; /** Cây lớn / cồng kềnh: tính thêm phụ phí giao mỗi cây. */ bulky?: boolean };
+export type PricedLine = { price: number; oldPrice?: number | null; combo2?: number | null; qty: number; ship: ShipGroup; pesticide?: boolean; /** Cây lớn / cồng kềnh: tính thêm phụ phí giao mỗi cây. */ bulky?: boolean; /** Không áp mã giảm giá: không tính vào `voucherBase`. */ noVoucher?: boolean };
 
 /** Giá thật của một dòng sau khi xét combo 2 cây (cùng thứ tự với dòng đưa vào). */
 export type LinePrice = {
@@ -59,6 +59,8 @@ export type Totals = {
   comboDiscount: number;
   /** Tiền hàng phải trả trước phí giao, mã giảm giá, chiết khấu đối tác = subtotal − comboDiscount (mã giảm giá tính trên số này). */
   goods: number;
+  /** Tiền hàng xét mã giảm giá / miễn phí giao (đơn tối thiểu, % giảm) = `goods` trừ sản phẩm không áp mã. */
+  voucherBase: number;
   plantSubtotal: number;
   supplySubtotal: number;
   /** Phí giao cây sống PHẢI TRẢ: đã gồm phụ phí cây lớn (`bulkyShip`) và đã trừ phần được miễn (`plantShipFree`). */
@@ -95,13 +97,14 @@ export function linePrice(l: PricedLine): LinePrice {
 
 export function computeTotals(lines: PricedLine[], delivery: 'ship' | 'pickup' = 'ship', voucherDiscount = 0, rules: ShipRules = SHIP_RULES, partnerPct = 0, region: ShipRegion | null = null): Totals {
   const priced = lines.map(linePrice);
-  let subtotal = 0, original = 0, comboDiscount = 0, plantSubtotal = 0, supplySubtotal = 0, bulkyQty = 0, count = 0;
+  let subtotal = 0, original = 0, comboDiscount = 0, plantSubtotal = 0, supplySubtotal = 0, bulkyQty = 0, count = 0, noVoucher = 0;
   lines.forEach((l, i) => {
     const p = priced[i];
     subtotal += l.price * l.qty;
     original += p.strike;
     comboDiscount += p.comboSaving;
     count += l.qty;
+    if (l.noVoucher) noVoucher += p.total;
     if (l.ship === 'plant') {
       plantSubtotal += p.total;
       if (l.bulky) bulkyQty += l.qty;
@@ -127,6 +130,7 @@ export function computeTotals(lines: PricedLine[], delivery: 'ship' | 'pickup' =
     directDiscount: original - subtotal,
     comboDiscount,
     goods,
+    voucherBase: Math.max(0, goods - noVoucher),
     voucherDiscount,
     shipVoucherDiscount: 0,
     partnerDiscount,

@@ -320,7 +320,7 @@ export default function CheckoutPage() {
           )}
         </div>
 
-        <OrderSummary totals={totals} delivery={delivery} voucher={<VoucherBox state={vouchers} goods={totals.goods} shipFee={totals.plantShip + totals.supplyShip} />}>
+        <OrderSummary totals={totals} delivery={delivery} voucher={totals.voucherBase > 0 || !totals.goods ? <VoucherBox state={vouchers} goods={totals.voucherBase} shipFee={totals.plantShip + totals.supplyShip} /> : undefined}>
           {totals.hasPesticide && (
             <label className="vx-check">
               <input type="checkbox" checked={safety} onChange={(e) => setSafety(e.target.checked)} />

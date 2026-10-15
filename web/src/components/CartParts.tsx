@@ -114,7 +114,8 @@ export function OrderSummary({ totals: t, voucherHint = false, voucher, delivery
   // Tổng tiền tính theo giá bán (giá lẻ). Giá gạch ngang chỉ để hiện % giảm ở từng sản phẩm — không cộng vào tổng,
   // không tính vào "Tiết kiệm được" (chỉ gồm khoản bớt thật: combo, giảm phí giao, mã, chiết khấu đối tác).
   const saved = t.comboDiscount + t.plantShipFree + t.supplyShipFree + t.voucherDiscount + t.shipVoucherDiscount + t.partnerDiscount;
-  const tiers = voucherHint ? voucherTiers(vouchers, t.goods) : { best: null, next: null };
+  // Mã chỉ xét tiền hàng áp được mã (`voucherBase`); giỏ chỉ toàn sản phẩm không áp mã thì không gợi ý.
+  const tiers = voucherHint && t.voucherBase > 0 ? voucherTiers(vouchers, t.voucherBase) : { best: null, next: null };
   return (
     <aside className="vx-sum">
       <div className="vx-lines">
@@ -139,8 +140,8 @@ export function OrderSummary({ totals: t, voucherHint = false, voucher, delivery
       )}
       {!short && tiers.next && (
         <div className="vx-freeship app-minorder" role="status">
-          <span>Mua thêm <b>{money(tiers.next.minOrder - t.goods)}</b> để dùng mã <b>{tiers.next.code}</b> — {voucherValueText(tiers.next, money).toLowerCase()}</span>
-          <div className="bar"><i style={{ width: `${Math.min(100, (t.goods / tiers.next.minOrder) * 100)}%` }} /></div>
+          <span>Mua thêm <b>{money(tiers.next.minOrder - t.voucherBase)}</b> để dùng mã <b>{tiers.next.code}</b> — {voucherValueText(tiers.next, money).toLowerCase()}</span>
+          <div className="bar"><i style={{ width: `${Math.min(100, (t.voucherBase / tiers.next.minOrder) * 100)}%` }} /></div>
         </div>
       )}
       {plantLeft > 0 && (

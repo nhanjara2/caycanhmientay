@@ -414,6 +414,13 @@
       "when": 1792075002667,
       "tag": "0058_ngay_sua_san_pham",
       "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1792076535281,
+      "tag": "0059_khong_ap_ma",
+      "breakpoints": true
     }
   ]
 }

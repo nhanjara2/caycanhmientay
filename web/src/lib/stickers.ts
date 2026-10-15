@@ -46,11 +46,12 @@ export function productStickers(p: Product, ctx: StickerContext, opts: { real?: 
     pool.push({ key: 'cheap', small: 'SHOP', big: 'SIÊU RẺ', title: 'Giá tại vườn, mua nhiều càng rẻ' });
     const free = ctx.rules[p.ship].freeFrom;
     const ship = easiest('ship');
-    pool.push({
+    // Sản phẩm không áp mã (giá đã chốt, tiền xe tính riêng): không có ô Free ship / Voucher Extra
+    if (!p.noVoucher) pool.push({
       key: 'ship', small: 'FREE', big: 'SHIP',
       title: ship ? `Mã ${ship.code}: giảm ${money(ship.discountValue)} phí giao cho đơn từ ${money(ship.minOrder)}` : free > 0 ? `Miễn phí giao hàng cho đơn từ ${money(free)}` : 'Miễn phí giao hàng',
     });
-    const v = easiest('discount');
+    const v = p.noVoucher ? undefined : easiest('discount');
     if (v) {
       const off = v.discountType === 'percent' ? `${v.discountValue}%` : money(v.discountValue);
       pool.push({ key: 'voucher', small: 'VOUCHER', big: 'EXTRA', title: `Mã ${v.code}: giảm ${off}${v.minOrder > 0 ? ` cho đơn từ ${money(v.minOrder)}` : ''}` });

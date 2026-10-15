@@ -33,7 +33,9 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
 }) {
   const { add } = useCart();
   const { rules } = useShipping();
-  const vouchers = usePublicVouchers();
+  // Sản phẩm không áp mã (admin đánh dấu) thì không hiện vé voucher
+  const allVouchers = usePublicVouchers();
+  const vouchers = p.noVoucher ? [] : allVouchers;
   const partner = useAuth().user?.partner;
   const partnerPct = partner?.discount ?? 0;
   const partnerType = partner?.type;

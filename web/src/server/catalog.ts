@@ -22,7 +22,7 @@ async function hydrate(rows: Row[]): Promise<Product[]> {
   const mainFile = (slug: string) => imgs.find((i) => i.slug === slug)?.file;
   return rows.map((r) => ({
     slug: r.slug, sku: r.sku, name: r.name, seoName: r.seoName ?? undefined, category: r.category, sub: r.sub, extraSubs: r.extraSubs.length ? r.extraSubs : undefined, icon: r.icon as IconName,
-    origin: r.origin, ship: r.ship, pesticide: r.pesticide || undefined, unit: r.unit, spec: r.spec, lead: r.lead,
+    origin: r.origin, ship: r.ship, pesticide: r.pesticide || undefined, noVoucher: r.noVoucher || undefined, unit: r.unit, spec: r.spec, lead: r.lead,
     specs: r.specs, keywords: r.keywords, rating: r.rating / 10, reviews: r.reviews, sold: r.sold,
     flash: r.flashTotal ? { sold: r.flashSold ?? 0, total: r.flashTotal } : undefined,
     options: opts.filter((o) => o.productSlug === r.slug).map((o) => ({

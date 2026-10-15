@@ -74,6 +74,8 @@ export type Product = {
   ship: ShipGroup;
   /** Thuốc BVTV: giỏ hàng bắt buộc xác nhận đã đọc hướng dẫn an toàn. */
   pesticide?: boolean;
+  /** Không áp mã giảm giá / miễn phí giao — không hiện vé voucher, tiền không tính vào tiền hàng xét mã. */
+  noVoucher?: boolean;
   /** Đơn vị bán, "/ Chậu", "/ Chai"… — giá hiển thị luôn kèm đơn vị. */
   unit: string;
   options: Unit[];

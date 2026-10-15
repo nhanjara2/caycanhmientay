@@ -35,6 +35,7 @@ export const ProductInputSchema = z.object({
   origin: z.string().trim().min(1, 'Nhập xuất xứ').max(60),
   ship: z.enum(['plant', 'supply']),
   pesticide: z.boolean(),
+  noVoucher: z.boolean().default(false),
   unit: z.string().trim().min(1, 'Nhập đơn vị bán').max(20),
   spec: z.string().trim().max(120),
   lead: z.string().trim().min(10, 'Mô tả ngắn cần ít nhất 10 ký tự').max(600),
@@ -220,14 +221,14 @@ const stable = (v: unknown): string =>
     : v && typeof v === 'object' ? `{${Object.keys(v).filter((k) => (v as Record<string, unknown>)[k] !== undefined).sort().map((k) => `${JSON.stringify(k)}:${stable((v as Record<string, unknown>)[k])}`).join(',')}}`
       : JSON.stringify(v ?? null);
 
-type Shown = Pick<typeof products.$inferSelect, 'name' | 'seoName' | 'category' | 'sub' | 'extraSubs' | 'icon' | 'origin' | 'ship' | 'pesticide' | 'unit' | 'spec' | 'lead' | 'specs' | 'youtubeId' | 'keywords' | 'fengshui' | 'attrs'>;
+type Shown = Pick<typeof products.$inferSelect, 'name' | 'seoName' | 'category' | 'sub' | 'extraSubs' | 'icon' | 'origin' | 'ship' | 'pesticide' | 'noVoucher' | 'unit' | 'spec' | 'lead' | 'specs' | 'youtubeId' | 'keywords' | 'fengshui' | 'attrs'>;
 type ShownOption = { label: string; price: number; oldPrice?: number | null; combo2?: number | null; bulky?: boolean | null };
 
 /** Phần nội dung khách thấy trên trang sản phẩm (không gồm Đang bán / Ẩn, tồn kho, giá vườn / giá gốc). */
 function shownContent(p: { [K in keyof Shown]?: Shown[K] | null }, options: ShownOption[]) {
-  const { name, seoName, category, sub, extraSubs, icon, origin, ship, pesticide, unit, spec, lead, specs, youtubeId, keywords, fengshui, attrs } = p;
+  const { name, seoName, category, sub, extraSubs, icon, origin, ship, pesticide, noVoucher, unit, spec, lead, specs, youtubeId, keywords, fengshui, attrs } = p;
   const opts = options.map((o) => stable([o.label, o.price, o.oldPrice ?? null, o.combo2 ?? null, !!o.bulky])).sort();
-  return stable([name, seoName, category, sub, extraSubs, icon, origin, ship, !!pesticide, unit, spec, lead, specs, youtubeId, keywords, fengshui, attrs, opts]);
+  return stable([name, seoName, category, sub, extraSubs, icon, origin, ship, !!pesticide, !!noVoucher, unit, spec, lead, specs, youtubeId, keywords, fengshui, attrs, opts]);
 }
 
 export async function saveProduct(input: ProductInput, actor: string): Promise<SaveResult> {
@@ -238,7 +239,7 @@ export async function saveProduct(input: ProductInput, actor: string): Promise<S
   const extraSubs = [...new Set(input.extraSubs)].filter((s) => s !== input.sub && subsOfCat.includes(s));
   const values = {
     name: input.name, seoName: input.seoName, category: input.category, sub: input.sub, extraSubs, icon: input.icon, origin: input.origin, ship: input.ship,
-    pesticide: input.pesticide, unit: input.unit, spec: input.spec, lead: input.lead, specs: input.specs, active: input.active,
+    pesticide: input.pesticide, noVoucher: input.noVoucher, unit: input.unit, spec: input.spec, lead: input.lead, specs: input.specs, active: input.active,
     youtubeId: input.video, keywords: input.keywords,
     fengshui: input.fengshui,
     attrs: input.attrs,
