@@ -164,8 +164,10 @@ export function OrderDetail({ o }: { o: OrderFull }) {
           <h3>Thông tin thanh toán</h3>
           <div className="vx-lines">
             <div><span>Tổng tiền</span><b>{money(o.subtotal)}</b></div>
-            {plantShip && <div><span>Phí giao cây sống</span>{o.plantShip ? <b>{money(o.plantShip)}</b> : <b className="pos">Miễn phí</b>}</div>}
-            {supplyShip && <div><span>Phí giao vật tư</span>{o.supplyShip ? <b>{money(o.supplyShip)}</b> : <b className="pos">Miễn phí</b>}</div>}
+            {plantShip && <div><span>Phí giao cây sống</span>{o.plantShip + o.plantShipFree ? <b>{money(o.plantShip + o.plantShipFree)}</b> : <b className="pos">Miễn phí</b>}</div>}
+            {o.plantShipFree > 0 && <div><span>Giảm phí giao cây sống</span><b className="neg">-{money(o.plantShipFree)}</b></div>}
+            {supplyShip && <div><span>Phí giao vật tư</span>{o.supplyShip + o.supplyShipFree ? <b>{money(o.supplyShip + o.supplyShipFree)}</b> : <b className="pos">Miễn phí</b>}</div>}
+            {o.supplyShipFree > 0 && <div><span>Giảm phí giao vật tư</span><b className="neg">-{money(o.supplyShipFree)}</b></div>}
             {o.shipVoucherDiscount > 0 && <div><span>Mã miễn phí giao {o.shipVoucherCode}</span><b className="neg">-{money(o.shipVoucherDiscount)}</b></div>}
             {o.voucherDiscount > 0 && <div><span>Mã giảm giá {o.voucherCode}</span><b className="neg">-{money(o.voucherDiscount)}</b></div>}
             {o.comboDiscount > 0 && <div><span>Combo 2 cây</span><b className="neg">-{money(o.comboDiscount)}</b></div>}

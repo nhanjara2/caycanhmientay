@@ -119,18 +119,23 @@ export function OrderSummary({ totals: t, voucherHint = false, voucher, delivery
   const plantLeft = t.plantSubtotal > 0 && t.plantShip > 0 ? rules.plant.freeFrom - t.plantSubtotal : 0;
   // Chưa biết nơi nhận mà các vùng khác phí: số hiện là tạm tính
   const estimate = delivery === 'ship' && t.plantSubtotal > 0 && !t.shipRegion && plantFeeVaries(rules.plant);
+  // Phí giao luôn hiện đủ theo bảng phí; đủ mức miễn phí giao thì có thêm dòng "Giảm phí giao" trừ ra (chữ "Miễn phí" chỉ còn khi không có phí để tính, vd. nhận tại vườn).
+  const plantGross = t.plantShip + t.plantShipFree;
+  const supplyGross = t.supplyShip + t.supplyShipFree;
   // Tổng tiền tính theo giá bán (giá lẻ). Giá gạch ngang chỉ để hiện % giảm ở từng sản phẩm — không cộng vào tổng,
-  // không tính vào "Tiết kiệm được" (chỉ gồm khoản bớt thật: combo, mã, chiết khấu đối tác).
-  const saved = t.comboDiscount + t.voucherDiscount + t.shipVoucherDiscount + t.partnerDiscount;
+  // không tính vào "Tiết kiệm được" (chỉ gồm khoản bớt thật: combo, giảm phí giao, mã, chiết khấu đối tác).
+  const saved = t.comboDiscount + t.plantShipFree + t.supplyShipFree + t.voucherDiscount + t.shipVoucherDiscount + t.partnerDiscount;
   const tiers = voucherHint ? voucherTiers(vouchers, t.goods) : { best: null, next: null };
   return (
     <aside className="vx-sum">
       <div className="vx-lines">
         <div><span>Tổng tiền</span><b>{money(t.subtotal)}</b></div>
         {t.comboDiscount > 0 && <div><span>Combo 2 cây</span><b className="neg">-{money(t.comboDiscount)}</b></div>}
-        {t.plantSubtotal > 0 && <div><span>Phí giao cây sống{t.shipRegion && plantFeeVaries(rules.plant) ? ` (${REGION_LABEL[t.shipRegion]})` : ''}</span>{t.plantShip ? <b>{money(t.plantShip)}</b> : <b className="pos">Miễn phí</b>}</div>}
+        {t.plantSubtotal > 0 && <div><span>Phí giao cây sống{t.shipRegion && plantFeeVaries(rules.plant) ? ` (${REGION_LABEL[t.shipRegion]})` : ''}</span>{plantGross ? <b>{money(plantGross)}</b> : <b className="pos">Miễn phí</b>}</div>}
         {t.bulkyShip > 0 && <div className="app-ship-sub"><span>Gồm phụ phí cây lớn</span><b>{money(t.bulkyShip)}</b></div>}
-        {t.supplySubtotal > 0 && <div><span>Phí giao vật tư</span>{t.supplyShip ? <b>{money(t.supplyShip)}</b> : <b className="pos">Miễn phí</b>}</div>}
+        {t.plantShipFree > 0 && <div><span>Giảm phí giao cây sống</span><b className="neg">-{money(t.plantShipFree)}</b></div>}
+        {t.supplySubtotal > 0 && <div><span>Phí giao vật tư</span>{supplyGross ? <b>{money(supplyGross)}</b> : <b className="pos">Miễn phí</b>}</div>}
+        {t.supplyShipFree > 0 && <div><span>Giảm phí giao vật tư</span><b className="neg">-{money(t.supplyShipFree)}</b></div>}
         {t.shipVoucherDiscount > 0 && <div><span>Mã miễn phí giao</span><b className="neg">-{money(t.shipVoucherDiscount)}</b></div>}
         {t.voucherDiscount > 0 && <div><span>Mã giảm giá</span><b className="neg">-{money(t.voucherDiscount)}</b></div>}
         {t.partnerDiscount > 0 && <div><span>Chiết khấu đối tác</span><b className="neg">-{money(t.partnerDiscount)}</b></div>}
@@ -159,7 +164,7 @@ export function OrderSummary({ totals: t, voucherHint = false, voucher, delivery
       <div className="vx-total">
         <b>Thành tiền</b>
         <span>
-          {saved > 0 && <s>{money(t.subtotal + t.plantShip + t.supplyShip)}</s>}
+          {saved > 0 && <s>{money(t.subtotal + plantGross + supplyGross)}</s>}
           <span className="amt">{money(t.total)}</span>
         </span>
       </div>

@@ -61,9 +61,12 @@ export type Totals = {
   goods: number;
   plantSubtotal: number;
   supplySubtotal: number;
-  /** Phí giao cây sống đã gồm phụ phí cây lớn (`bulkyShip`). */
+  /** Phí giao cây sống PHẢI TRẢ: đã gồm phụ phí cây lớn (`bulkyShip`) và đã trừ phần được miễn (`plantShipFree`). */
   plantShip: number;
   supplyShip: number;
+  /** Phí giao được miễn vì tiền hàng đủ mức miễn phí giao (đã trừ khỏi `plantShip` / `supplyShip`; cộng lại để ra phí giao gốc). 0 = không có phí để miễn (nhận tại vườn…). */
+  plantShipFree: number;
+  supplyShipFree: number;
   /** Phần phụ phí cây lớn nằm trong `plantShip`. */
   bulkyShip: number;
   /** Vùng nhận hàng đã dùng để tính phí cây sống; null = chưa biết nơi nhận (số tạm tính theo vùng rẻ nhất). */
@@ -105,15 +108,22 @@ export function computeTotals(lines: PricedLine[], delivery: 'ship' | 'pickup' =
     } else supplySubtotal += p.total;
   });
   const goods = subtotal - comboDiscount;
-  const ship = (sub: number, rule: { fee: number; freeFrom: number }) =>
-    delivery === 'pickup' || sub === 0 || sub >= rule.freeFrom ? 0 : rule.fee;
+  // Phí giao luôn tính đủ theo bảng phí, đủ mức miễn phí giao thì ghi thành khoản được miễn (khách thấy phí gốc rồi dòng trừ ra, không phải chữ "Miễn phí").
+  const ship = (sub: number, rule: { fee: number; freeFrom: number }) => {
+    const fee = delivery === 'pickup' || sub === 0 ? 0 : rule.fee;
+    const free = sub >= rule.freeFrom ? fee : 0;
+    return { pay: fee - free, free };
+  };
   // Phí cây sống theo vùng nhận hàng (chưa biết thì mức thấp nhất); phụ phí cây lớn tính thêm cho từng cây, kể cả khi đơn đã miễn phí giao.
   const bulkyShip = delivery === 'ship' ? bulkyQty * rules.plant.bulky : 0;
-  const plantShip = ship(plantSubtotal, { fee: region ? rules.plant.regionFee[region] : rules.plant.fee, freeFrom: rules.plant.freeFrom }) + bulkyShip;
-  const supplyShip = ship(supplySubtotal, rules.supply);
+  const plant = ship(plantSubtotal, { fee: region ? rules.plant.regionFee[region] : rules.plant.fee, freeFrom: rules.plant.freeFrom });
+  const supply = ship(supplySubtotal, rules.supply);
+  const plantShip = plant.pay + bulkyShip;
+  const supplyShip = supply.pay;
   const partnerDiscount = partnerDiscountOf(goods, partnerPct);
   return {
     count, subtotal, original, plantSubtotal, supplySubtotal, plantShip, supplyShip, bulkyShip, shipRegion: region,
+    plantShipFree: plant.free, supplyShipFree: supply.free,
     directDiscount: original - subtotal,
     comboDiscount,
     goods,

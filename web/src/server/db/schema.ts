@@ -378,6 +378,9 @@ export const orders = pgTable('orders', {
   subtotal: integer('subtotal').notNull(),
   plantShip: integer('plant_ship').notNull(),
   supplyShip: integer('supply_ship').notNull(),
+  /** Phí giao được miễn vì đủ mức miễn phí giao, chụp lại lúc đặt: phí giao gốc = plantShip + plantShipFree. Đơn đặt trước đó = 0 (chỉ còn số đã thu). */
+  plantShipFree: integer('plant_ship_free').notNull().default(0),
+  supplyShipFree: integer('supply_ship_free').notNull().default(0),
   /** Chụp lại mã + số tiền giảm lúc đặt — không ràng buộc khóa ngoại, mã đổi/tắt sau đó không ảnh hưởng đơn cũ. */
   voucherCode: text('voucher_code'),
   voucherDiscount: integer('voucher_discount').notNull().default(0),

@@ -188,6 +188,7 @@ async function createOrderTx(
     delivery: input.delivery, address: input.delivery === 'ship' ? input.address : null,
     slot: slot?.text ?? null, slotDate: slot?.date ?? null, slotKey: slot?.key ?? null, note: input.note || null, paymentMethod: input.payment,
     original: totals.original, subtotal: totals.subtotal, plantShip: totals.plantShip, supplyShip: totals.supplyShip,
+    plantShipFree: totals.plantShipFree, supplyShipFree: totals.supplyShipFree,
     voucherCode, voucherDiscount, shipVoucherCode, shipVoucherDiscount, partnerDiscount: totals.partnerDiscount, comboDiscount: totals.comboDiscount, total,
   }).returning({ id: orders.id });
 
