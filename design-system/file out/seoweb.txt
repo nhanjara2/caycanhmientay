@@ -1,0 +1,745 @@
+1. SEO nền tảng trong kiến trúc hệ thống
+1.1. Routing và cấu trúc URL
+- [ ] Thiết kế quy tắc URL thống nhất toàn website.
+- [ ] URL dễ đọc, có ý nghĩa, dùng slug thân thiện SEO.
+- [ ] Chuyển tiêu đề thành slug đúng chuẩn Unicode/tiếng Việt theo quy ước thống nhất.
+- [ ] Chuẩn hóa dấu / cuối URL: có hoặc không, chỉ chọn một quy tắc.
+- [ ] Chuẩn hóa chữ hoa/chữ thường trong URL.
+- [ ] Xử lý dấu cách, ký tự đặc biệt, ký tự mã hóa và URL Unicode.
+- [ ] Chuẩn hóa domain: www hoặc non-www.
+- [ ] Chuẩn hóa HTTPS, không để HTTP và HTTPS cùng phục vụ nội dung độc lập.
+- [ ] Chuẩn hóa hostname, port và URL mặc định.
+- [ ] Xử lý URL có nhiều dấu /, dấu // hoặc dấu phân cách bất thường.
+- [ ] Không để URL có ID database hoặc mã nội bộ khó hiểu nếu không cần thiết.
+- [ ] Thiết kế quy tắc URL cho danh mục, bài viết, sản phẩm, thương hiệu, địa điểm và trang dịch vụ.
+- [ ] Thiết kế quy tắc URL cho phân trang.
+- [ ] Thiết kế quy tắc URL cho bộ lọc, tìm kiếm và sắp xếp.
+- [ ] Xử lý URL chứa tham số tracking như UTM.
+- [ ] Xử lý URL trùng nội dung do tham số query.
+- [ ] Không tạo URL mới vô hạn từ các tổ hợp bộ lọc.
+- [ ] Thiết lập quy tắc đổi slug khi đổi tên nội dung.
+- [ ] Đảm bảo URL cũ được chuyển hướng đúng khi đổi URL.
+- [ ] Có cơ chế kiểm soát trùng slug và xung đột route.
+- [ ] Không để route động bắt nhầm URL của trang tĩnh.
+- [ ] Không để các trang khác nhau bị render chung nội dung do lỗi routing.
+Tiêu chuẩn nghiệm thu: Mỗi nội dung cần SEO phải có URL ổn định, truy cập trực tiếp được, không sinh URL trùng lặp ngoài ý muốn và không phụ thuộc vào việc người dùng đã đi qua trang chủ trước đó.
+1.2. Kiến trúc render: SSR, SSG, ISR và CSR
+- [ ] Chọn phương thức render phù hợp với từng loại trang.
+- [ ] Các trang quan trọng phải trả về nội dung chính mà bot có thể đọc được.
+- [ ] Với SSR/SSG/ISR, kiểm tra HTML trả về từ server có nội dung thực tế.
+- [ ] Với CSR, kiểm tra Google có thể render JavaScript và đọc nội dung sau render.
+- [ ] Không chỉ trả về một app shell trống rồi chờ client tải toàn bộ nội dung SEO.
+- [ ] Không để nội dung chính chỉ xuất hiện sau thao tác click, hover hoặc đăng nhập nếu trang cần được index công khai.
+- [ ] Không để nội dung quan trọng bị phụ thuộc vào API bên thứ ba không ổn định.
+- [ ] Xử lý lỗi API, timeout, loading và dữ liệu rỗng.
+- [ ] Không trả về nội dung SEO khác nhau một cách không nhất quán giữa HTML server và DOM sau render.
+- [ ] Đảm bảo title, description, canonical, robots và structured data không bị mất khi hydration.
+- [ ] Tránh lỗi hydration khiến nội dung hoặc metadata bị thay đổi ngoài dự kiến.
+- [ ] Tránh tạo nhiều thẻ canonical, title hoặc robots khi component render lại.
+- [ ] Đảm bảo Googlebot không bị chặn các file JS/CSS cần thiết để render trang.
+- [ ] Kiểm tra lazy loading không khiến nội dung chính hoặc hình ảnh quan trọng không được phát hiện.
+- [ ] Không phụ thuộc vào thao tác cuộn vô hạn để tải các trang cần index.
+- [ ] Đảm bảo nội dung quan trọng có trong HTML được render hoặc trong DOM mà Google có thể truy cập.
+- [ ] Kiểm tra website với URL Inspection và HTML đã render, không chỉ nhìn bằng trình duyệt thông thường.
+Google mô tả quy trình tìm kiếm JavaScript theo ba giai đoạn crawl, render và index; SSR hoặc pre-render thường giúp nội dung dễ tiếp cận hơn với bot và các hệ thống không thực thi JavaScript. 
+
+Google for Developers
++1
+
+
+
+1.3. HTTP status code và xử lý lỗi
+- [ ] Trang hợp lệ trả về HTTP 200.
+- [ ] Trang không tồn tại trả về HTTP 404 hoặc 410 khi phù hợp.
+- [ ] Không trả HTTP 200 cho trang báo lỗi không tồn tại (soft 404).
+- [ ] Không trả HTTP 200 cho trang trắng, thiếu dữ liệu hoặc lỗi render nghiêm trọng.
+- [ ] Trang đã xóa có quy tắc xử lý rõ ràng: 404, 410 hoặc chuyển hướng nếu có đích thay thế phù hợp.
+- [ ] URL sai định dạng không được trả về một trang nội dung chung như thể hợp lệ.
+- [ ] Trang lỗi server thực sự trả về 5xx khi server lỗi.
+- [ ] Xử lý lỗi API, database và cache mà không tạo HTML lỗi mang status 200.
+- [ ] Kiểm tra mã 301, 302, 307, 308 sử dụng đúng trường hợp.
+- [ ] Không tạo redirect loop.
+- [ ] Không tạo chuỗi chuyển hướng nhiều bước.
+- [ ] Không chuyển hướng tất cả URL lỗi về trang chủ.
+- [ ] Redirect trực tiếp tới URL cuối cùng.
+- [ ] Xử lý đúng 401, 403, 429 và các trạng thái xác thực, giới hạn truy cập.
+- [ ] Không để CDN, reverse proxy hoặc WAF trả status khác với ứng dụng.
+- [ ] Không để cache lưu nhầm trang lỗi với status 200.
+- [ ] Không để trang hợp lệ bị lỗi status do middleware hoặc rule rewrite.
+- [ ] Xử lý đúng đường dẫn có và không có dấu / cuối.
+- [ ] Theo dõi tỷ lệ lỗi 4xx, 5xx trên toàn website.
+1.4. Robots, crawl và index
+- [ ] Tạo robots.txt đúng domain và đúng môi trường.
+- [ ] Production không bị cấu hình Disallow: / ngoài ý muốn.
+- [ ] Staging/dev không bị mở index công khai.
+- [ ] Kiểm tra các rule Allow và Disallow có xung đột hay không.
+- [ ] Không chặn nhầm tài nguyên cần thiết cho việc render trang.
+- [ ] Phân biệt rõ chặn crawl bằng robots.txt và chặn index bằng noindex.
+- [ ] Hỗ trợ meta name="robots" theo từng trang.
+- [ ] Hỗ trợ X-Robots-Tag cho PDF hoặc tài nguyên cần kiểm soát index.
+- [ ] Không phát noindex trên trang SEO hợp lệ.
+- [ ] Không để noindex bị ghi đè hoặc mất khi render phía client.
+- [ ] Không để header HTTP và meta robots mâu thuẫn.
+- [ ] Có quy tắc indexability cho từng loại trang.
+- [ ] Trang quản trị, giỏ hàng, tài khoản, checkout và dữ liệu riêng tư không bị index công khai.
+- [ ] Trang tìm kiếm nội bộ và bộ lọc có quy tắc index rõ ràng.
+- [ ] Trang nội dung chính thức không bị loại khỏi index do cấu hình mặc định.
+- [ ] Không phụ thuộc vào robots.txt để bảo vệ thông tin nhạy cảm.
+- [ ] Không cho Googlebot truy cập URL có tác dụng thay đổi trạng thái như xóa dữ liệu hoặc thực hiện giao dịch.
+- [ ] Kiểm tra các trang cần index có thể truy cập mà không cần cookie đăng nhập.
+- [ ] Kiểm tra không có noindex bị sót từ môi trường test.
+- [ ] Kiểm tra không có nofollow hoặc quy tắc hạn chế crawl toàn trang ngoài ý muốn.
+Google nhấn mạnh rằng robots.txt chủ yếu điều khiển crawl, không phải cơ chế đảm bảo loại URL khỏi index; việc kiểm soát index cần sử dụng đúng cơ chế như noindex hoặc xác thực truy cập. 
+
+Google for Developers
++1
+
+
+
+1.5. Sitemap XML
+- [ ] Tự động sinh XML sitemap từ dữ liệu thực tế.
+- [ ] Chỉ đưa URL canonical, hợp lệ và được phép index vào sitemap.
+- [ ] Loại URL noindex, URL lỗi và URL chuyển hướng.
+- [ ] Không đưa URL staging, localhost hoặc domain test vào sitemap production.
+- [ ] Không đưa URL trùng lặp do tham số tracking vào sitemap.
+- [ ] Tách sitemap theo loại nội dung nếu website lớn: page, post, product, category, image, video…
+- [ ] Tạo sitemap index nếu cần chia nhiều sitemap.
+- [ ] Tuân thủ giới hạn 50.000 URL hoặc 50 MB chưa nén cho mỗi sitemap.
+- [ ] Đảm bảo XML hợp lệ và encoding UTF-8.
+- [ ] Đảm bảo URL tuyệt đối sử dụng đúng HTTPS và hostname chính.
+- [ ] Cập nhật sitemap khi tạo, sửa, xuất bản hoặc xóa nội dung.
+- [ ] Không cập nhật lastmod giả tạo ở mọi URL mỗi lần deploy.
+- [ ] Chỉ cập nhật lastmod khi nội dung chính thực sự thay đổi.
+- [ ] Trả status HTTP phù hợp và không yêu cầu đăng nhập để tải sitemap.
+- [ ] Khai báo sitemap trong robots.txt.
+- [ ] Có thể khai báo sitemap trong Google Search Console.
+- [ ] Kiểm tra sitemap không chứa URL bị chặn crawl.
+- [ ] Kiểm tra sitemap không chứa canonical trỏ sang URL khác.
+- [ ] Có cơ chế kiểm tra và cảnh báo sitemap lỗi.
+1.6. Canonical và chống trùng URL
+- [ ] Mỗi trang indexable có canonical phù hợp.
+- [ ] Canonical sử dụng URL tuyệt đối.
+- [ ] Canonical trỏ đến URL chuẩn cuối cùng, không trỏ qua redirect.
+- [ ] Canonical không trỏ nhầm sang trang chủ.
+- [ ] Canonical không bị trùng hoặc có nhiều giá trị trên cùng trang.
+- [ ] Không tạo canonical động sai do hostname từ request không đáng tin cậy.
+- [ ] Không để URL HTTP canonical trong website HTTPS.
+- [ ] Xử lý canonical khi có UTM và tham số tracking.
+- [ ] Xử lý canonical cho URL có tham số sắp xếp và lọc.
+- [ ] Xử lý canonical cho trang phân trang theo đúng chiến lược nội dung.
+- [ ] Xử lý trang biến thể sản phẩm theo chiến lược URL đã chọn.
+- [ ] Xử lý nội dung trùng giữa các danh mục hoặc landing page.
+- [ ] Không canonical hàng loạt các trang nội dung khác nhau về một URL không phù hợp.
+- [ ] Không đồng thời redirect và canonical về các đích khác nhau.
+- [ ] Canonical trong HTML ban đầu và canonical sau render phải nhất quán.
+- [ ] Canonical trong sitemap, internal link và redirect không mâu thuẫn.
+- [ ] Có quy tắc cho URL có dấu /, không dấu /, chữ hoa và chữ thường.
+- [ ] Có test tự động phát hiện canonical thiếu, sai domain hoặc trỏ vòng.
+Canonical là tín hiệu để Google lựa chọn URL đại diện cho nội dung trùng hoặc tương tự; không phải lệnh đảm bảo Google luôn chọn đúng URL mà website chỉ định. 
+
+Google for Developers
++1
+
+
+
+2. SEO metadata – Những gì DEV phải lập trình cho mọi trang
+Đây là nhóm bắt buộc phải có hệ thống quản lý metadata, không hard-code riêng lẻ cho từng trang.
+2.1. Title, description và robots
+- [ ] Có cơ chế tạo <title> riêng cho từng URL.
+- [ ] Title lấy từ dữ liệu đúng loại trang.
+- [ ] Có title mặc định khi dữ liệu thiếu.
+- [ ] Không để hàng loạt trang dùng chung một title.
+- [ ] Không để title thành undefined, null, [object Object] hoặc chuỗi rỗng.
+- [ ] Không để title bị lặp nhiều lần trong <head>.
+- [ ] Có <meta name="description"> riêng cho từng trang.
+- [ ] Description được lấy từ trường dữ liệu phù hợp.
+- [ ] Có fallback description nhưng không để tất cả URL dùng cùng nội dung một cách máy móc.
+- [ ] Escape ký tự HTML và xử lý nội dung đầu vào an toàn.
+- [ ] Không để HTML hoặc mã script bị chèn vào metadata.
+- [ ] Hỗ trợ cấu hình index, noindex, follow, nofollow theo từng URL.
+- [ ] Metadata phản ánh đúng nội dung thực tế, không chỉ dựa vào URL.
+- [ ] Metadata phải xuất hiện đúng trong HTML được render.
+- [ ] Có khả năng tùy chỉnh SEO mà không cần sửa code cho từng bài viết.
+Lưu ý: DEV xây dựng cơ chế và quy tắc; người phụ trách nội dung SEO vẫn cần quyết định title, description và nội dung cụ thể.
+2.2. Các thẻ trong <head>
+- [ ] title
+- [ ] meta description
+- [ ] meta robots
+- [ ] link rel="canonical"
+- [ ] meta charset="UTF-8"
+- [ ] meta name="viewport"
+- [ ] link rel="alternate" hreflang nếu website đa ngôn ngữ.
+- [ ] Open Graph: og:title, og:description, og:type, og:url, og:image, og:site_name.
+- [ ] Twitter/X Card metadata nếu cần.
+- [ ] Favicon và các biểu tượng thiết bị.
+- [ ] Metadata cho article hoặc nội dung có ngày xuất bản, ngày cập nhật nếu phù hợp.
+- [ ] meta robots không bị xung đột với X-Robots-Tag.
+- [ ] Các URL trong metadata phải dùng đúng domain production.
+- [ ] Không đưa metadata chỉ phục vụ marketing vào nếu chúng không cần thiết.
+- [ ] Không tạo thẻ meta trùng lặp do nhiều plugin hoặc component cùng quản lý.
+2.3. Open Graph và chia sẻ mạng xã hội
+- [ ] Mỗi trang có tiêu đề chia sẻ phù hợp.
+- [ ] Mỗi trang có mô tả chia sẻ phù hợp.
+- [ ] Ảnh chia sẻ lấy từ dữ liệu trang hoặc ảnh mặc định.
+- [ ] URL chia sẻ đúng URL chuẩn.
+- [ ] Ảnh OG có URL tuyệt đối, truy cập công khai.
+- [ ] Ảnh không bị chặn bởi CDN hoặc quyền truy cập.
+- [ ] Có fallback khi nội dung không có ảnh đại diện.
+- [ ] Thay đổi ảnh đại diện phải cập nhật metadata.
+- [ ] Không để trang sản phẩm A sử dụng ảnh OG của sản phẩm B.
+3. HTML semantic – Cấu trúc nội dung trong code
+Đây là phần thường bị bỏ sót khi DEV chỉ tập trung làm giao diện.
+3.1. Heading và cấu trúc tài liệu
+- [ ] Mỗi trang có một tiêu đề chính rõ ràng, thông thường là một h1.
+- [ ] H1 phản ánh đúng nội dung chính.
+- [ ] H2, H3, H4 được sử dụng theo cấu trúc nội dung hợp lý.
+- [ ] Không sử dụng heading chỉ để chỉnh kích thước chữ.
+- [ ] Không bỏ mất heading khi chuyển từ desktop sang mobile.
+- [ ] Heading phải tồn tại trong DOM và có nội dung đọc được.
+- [ ] Không render nhiều H1 không chủ đích từ header, banner, popup và component con.
+- [ ] Component có heading level cấu hình được theo ngữ cảnh.
+- [ ] Tiêu đề bài viết, tên sản phẩm và tiêu đề danh mục không bị thay thế bằng hình ảnh.
+- [ ] Nội dung ẩn do tab hoặc accordion được xử lý nhất quán với cách hiển thị và mục đích sử dụng.
+3.2. HTML semantic
+- [ ] Dùng <header> cho phần đầu trang.
+- [ ] Dùng <nav> cho vùng điều hướng.
+- [ ] Dùng <main> cho nội dung chính.
+- [ ] Dùng <article> cho nội dung độc lập khi phù hợp.
+- [ ] Dùng <section> cho nhóm nội dung có ý nghĩa.
+- [ ] Dùng <footer> cho phần chân trang.
+- [ ] Dùng <a href> cho liên kết điều hướng.
+- [ ] Dùng <button> cho hành động.
+- [ ] Dùng <ul>, <ol>, <li> cho danh sách.
+- [ ] Dùng <table> đúng ngữ cảnh cho dữ liệu dạng bảng.
+- [ ] Dùng <time datetime> cho ngày giờ khi phù hợp.
+- [ ] Dùng <figure> và <figcaption> cho ảnh có chú thích khi phù hợp.
+- [ ] Không dùng <div> cho mọi thành phần bất kể ý nghĩa.
+- [ ] Không dùng canvas để thay thế toàn bộ nội dung văn bản có thể đánh dấu bằng HTML.
+- [ ] Đảm bảo nội dung quan trọng không chỉ được vẽ bằng CSS hoặc pseudo-element.
+- [ ] Không tạo DOM sai cấu trúc khiến trình duyệt tự sửa HTML ngoài ý muốn.
+3.3. Internal link và điều hướng
+- [ ] Tất cả liên kết quan trọng sử dụng thẻ <a href="..."> có thể crawl.
+- [ ] Không dùng onClick trên <div> làm cách duy nhất để điều hướng.
+- [ ] Link có anchor text mô tả được nội dung đích.
+- [ ] Link hình ảnh có ngữ cảnh hoặc văn bản thay thế phù hợp.
+- [ ] Header, menu desktop, menu mobile có liên kết thật.
+- [ ] Breadcrumb có liên kết tới các cấp cha.
+- [ ] Footer có liên kết đến các trang quan trọng.
+- [ ] Danh mục liên kết tới trang con phù hợp.
+- [ ] Bài viết có internal link tới các nội dung liên quan.
+- [ ] Sản phẩm liên kết tới danh mục, thương hiệu hoặc sản phẩm liên quan khi phù hợp.
+- [ ] Không để trang quan trọng trở thành orphan page (trang không có internal link trỏ tới).
+- [ ] Không để link nội bộ trỏ tới URL redirect không cần thiết.
+- [ ] Không để link nội bộ trỏ tới trang 404, 5xx hoặc URL noindex ngoài ý muốn.
+- [ ] Không để anchor text trống hoặc chỉ là “click here” khi có thể mô tả rõ.
+- [ ] Không dùng href="#" thay cho link điều hướng thực.
+- [ ] Không thêm nofollow vào mọi link nội bộ theo mặc định.
+- [ ] Link mở tab mới có hành vi và bảo mật phù hợp.
+- [ ] Không tạo quá nhiều link lặp không cần thiết từ các component.
+- [ ] Phân biệt link điều hướng, nút thao tác, bộ lọc và nút tải thêm.
+- [ ] Nếu dùng infinite scroll, vẫn có URL và link phân trang để bot khám phá các phần nội dung.
+Google khuyến nghị dùng các liên kết HTML có href để Googlebot phát hiện URL và sử dụng văn bản liên kết có ý nghĩa để hiểu trang đích. 
+
+Google for Developers
++1
+
+
+
+4. Hình ảnh và media SEO
+4.1. Image SEO
+- [ ] Tên file ảnh có ý nghĩa, ổn định.
+- [ ] Có quy tắc đặt tên file khi upload.
+- [ ] Hỗ trợ alt cho ảnh.
+- [ ] Cho phép biên tập viên chỉnh alt text trong CMS.
+- [ ] Ảnh trang trí có thể dùng alt="".
+- [ ] Ảnh nội dung không bị bỏ alt một cách tự động.
+- [ ] Không tự tạo alt spam bằng cách nhồi từ khóa.
+- [ ] Dùng thẻ <img> hoặc <picture> cho ảnh nội dung quan trọng.
+- [ ] Hỗ trợ srcset và sizes khi cần ảnh responsive.
+- [ ] Hỗ trợ WebP/AVIF và định dạng fallback phù hợp.
+- [ ] Có kích thước ảnh phù hợp với vị trí hiển thị.
+- [ ] Nén ảnh trước khi lưu hoặc phân phối.
+- [ ] Không tải ảnh gốc dung lượng quá lớn cho thumbnail.
+- [ ] Có quy trình resize và tạo thumbnail tự động.
+- [ ] Đặt width và height hoặc tỷ lệ khung hình để tránh layout shift.
+- [ ] Không lazy-load ảnh hero/LCP quan trọng một cách mặc định.
+- [ ] Lazy-load ảnh nằm ngoài màn hình đầu khi phù hợp.
+- [ ] Không lazy-load bằng cách khiến crawler không phát hiện được ảnh.
+- [ ] Đảm bảo URL ảnh công khai, ổn định và trả status đúng.
+- [ ] Không chặn ảnh SEO quan trọng bằng robots hoặc quyền truy cập.
+- [ ] Không để ảnh bị lỗi do URL hết hạn, token tạm thời hoặc CDN.
+- [ ] Có fallback khi ảnh lỗi.
+- [ ] Không để fallback vô tình tạo alt hoặc tên sản phẩm sai.
+- [ ] Hỗ trợ ảnh đại diện riêng cho bài viết, sản phẩm, danh mục và thương hiệu.
+- [ ] Có thể sinh image sitemap khi website có nhu cầu phù hợp.
+- [ ] Kiểm tra ảnh trong HTML đã render, không chỉ kiểm tra giao diện.
+4.2. Video, audio và file đính kèm
+- [ ] Video quan trọng có thể được crawler phát hiện.
+- [ ] Có thumbnail video ổn định.
+- [ ] Có title và mô tả video khi phù hợp.
+- [ ] Có video sitemap nếu website cần.
+- [ ] Nội dung chính của video có thể được thể hiện bằng văn bản hoặc transcript khi phù hợp.
+- [ ] Không để nội dung chỉ tồn tại trong video mà không có ngữ cảnh.
+- [ ] PDF cần index phải truy cập công khai và có nội dung hữu ích.
+- [ ] PDF không cần index có cơ chế X-Robots-Tag phù hợp.
+- [ ] Xử lý đúng canonical hoặc redirect khi tài liệu có nhiều URL.
+- [ ] Kiểm soát URL download có token, session hoặc thời hạn.
+- [ ] Kiểm tra MIME type và HTTP status của file.
+- [ ] Đảm bảo file quan trọng không bị chặn bởi xác thực ngoài ý muốn.
+5. Structured Data – Schema.org và JSON-LD
+DEV cần xây dựng hệ thống schema theo loại trang, thay vì chỉ gắn một schema chung cho toàn website.
+Loại trang	Schema nên xem xét
+Toàn website	Organization, WebSite
+Trang doanh nghiệp địa phương	LocalBusiness hoặc subtype phù hợp
+Trang bài viết	Article, BlogPosting
+Trang sản phẩm	Product, Offer
+Trang danh mục sản phẩm	BreadcrumbList, cấu trúc danh sách phù hợp
+Trang hướng dẫn	HowTo nếu nội dung đáp ứng điều kiện
+Trang hỏi đáp	QAPage khi đúng loại nội dung
+Trang sự kiện	Event
+Trang video	VideoObject
+Trang công thức	Recipe
+Trang sản phẩm phần mềm	SoftwareApplication khi phù hợp
+Các hạng mục DEV phải làm:
+- [ ] Tạo JSON-LD hợp lệ.
+- [ ] Schema lấy dữ liệu từ nguồn dữ liệu chính thức của trang.
+- [ ] Không hard-code giá, tồn kho, đánh giá hoặc thông tin doanh nghiệp đã thay đổi.
+- [ ] Không tạo schema cho loại nội dung không tồn tại.
+- [ ] Không khai báo rating hoặc review giả.
+- [ ] Không khai báo giá khác với giá người dùng nhìn thấy.
+- [ ] Xử lý sản phẩm hết hàng, ngừng bán và biến thể.
+- [ ] Khai báo name, url, image và các thuộc tính phù hợp.
+- [ ] Khai báo price, priceCurrency, availability khi phù hợp.
+- [ ] Khai báo datePublished, dateModified, author cho bài viết khi phù hợp.
+- [ ] Khai báo breadcrumb theo đúng đường dẫn thực tế.
+- [ ] Dùng @id ổn định nếu cần liên kết các thực thể.
+- [ ] Không tạo nhiều schema mâu thuẫn từ nhiều plugin.
+- [ ] Không để JSON-LD lỗi dấu ngoặc, ký tự escape hoặc dữ liệu rỗng.
+- [ ] Schema phản ánh nội dung nhìn thấy được, không bịa thêm thông tin.
+- [ ] Schema thay đổi khi dữ liệu trang thay đổi.
+- [ ] Có unit test hoặc integration test cho JSON-LD.
+- [ ] Kiểm tra bằng Rich Results Test và Schema Markup Validator.
+Lưu ý: Có schema không đồng nghĩa chắc chắn được hiển thị rich result. Google chỉ hỗ trợ một số loại kết quả nâng cao và áp dụng điều kiện riêng cho từng loại. 
+
+Google for Developers
++1
+
+
+
+6. Phân trang, bộ lọc, tìm kiếm và URL động
+Đây là một trong những nhóm dễ phát sinh hàng nghìn hoặc hàng triệu URL ngoài ý muốn.
+6.1. Pagination
+- [ ] Mỗi trang phân trang có URL riêng.
+- [ ] Trang 2, 3, 4 có thể truy cập trực tiếp.
+- [ ] Có link <a href> tới trang tiếp theo và các trang phù hợp.
+- [ ] Nội dung phân trang không chỉ tải sau thao tác JavaScript.
+- [ ] Trang cuối không tạo link next sai.
+- [ ] Xử lý URL trang 1 thống nhất với URL danh mục chính.
+- [ ] Không tạo URL trang 0, số âm hoặc vượt phạm vi.
+- [ ] Trang phân trang có canonical theo chiến lược đã xác định.
+- [ ] Không canonical tất cả các trang phân trang về trang 1 nếu làm mất khả năng thể hiện nội dung khác biệt.
+- [ ] Nội dung sản phẩm/bài viết không bị lặp hoặc bỏ sót giữa các trang.
+- [ ] Tránh redirect loop giữa URL có và không có tham số page.
+6.2. Filter, sort và faceted navigation
+- [ ] Liệt kê tất cả tham số filter có thể sinh URL.
+- [ ] Phân loại bộ lọc nào cần index và bộ lọc nào không.
+- [ ] Xác định quy tắc canonical cho từng nhóm URL.
+- [ ] Xử lý thứ tự tham số query thống nhất.
+- [ ] Không sinh URL mới chỉ vì người dùng chọn cùng bộ lọc theo thứ tự khác nhau.
+- [ ] Không để tổ hợp filter vô hạn được crawl không kiểm soát.
+- [ ] Quy định cách xử lý sort theo giá, ngày, độ phổ biến.
+- [ ] Quy định cách xử lý filter màu sắc, kích thước, thương hiệu, địa điểm.
+- [ ] Có URL SEO riêng cho landing page được chủ động xây dựng khi phù hợp.
+- [ ] Không biến mọi tổ hợp filter thành landing page SEO tự động.
+- [ ] Kiểm soát tham số tracking, session, cache-busting.
+- [ ] Tránh URL tìm kiếm nội bộ tạo ra nội dung mỏng hoặc trùng lặp hàng loạt.
+- [ ] Xử lý filter không có kết quả.
+- [ ] Không để URL filter lỗi trả status 200 với nội dung rỗng như một trang hợp lệ.
+- [ ] Theo dõi crawl phát sinh từ filter và sort trong log server.
+6.3. Infinite scroll và load more
+- [ ] Có URL phân trang cho nội dung cần được crawl.
+- [ ] Có liên kết tới các trang nội dung tiếp theo.
+- [ ] Nội dung không phụ thuộc hoàn toàn vào thao tác cuộn chuột.
+- [ ] Trạng thái URL được xử lý nhất quán khi tải thêm.
+- [ ] Không để load more tạo ra hàng loạt URL trùng.
+- [ ] Kiểm tra bot có thể tìm thấy nội dung ở các trang tiếp theo.
+6.4. Search nội bộ
+- [ ] Có quy tắc index/noindex cho trang kết quả tìm kiếm.
+- [ ] Không index hàng loạt truy vấn tìm kiếm tùy ý nếu không có chủ đích.
+- [ ] Không để truy vấn chứa chuỗi bất thường làm hỏng URL hoặc HTML.
+- [ ] Xử lý trang không có kết quả.
+- [ ] Hạn chế crawl trap từ các truy vấn kết hợp.
+- [ ] Bảo vệ endpoint tìm kiếm khỏi lạm dụng và tải quá mức.
+7. Breadcrumb và cấu trúc liên kết theo tầng
+- [ ] Có breadcrumb phù hợp trên các loại trang.
+- [ ] Breadcrumb phản ánh kiến trúc website, không chỉ là đường dẫn kỹ thuật.
+- [ ] Các cấp breadcrumb có liên kết thực.
+- [ ] Breadcrumb không chứa URL sai hoặc trùng cấp.
+- [ ] Trang chủ không bị lặp trong breadcrumb một cách bất hợp lý.
+- [ ] Breadcrumb tương ứng với cấu trúc danh mục.
+- [ ] Breadcrumb schema đồng nhất với breadcrumb hiển thị.
+- [ ] Xử lý sản phẩm thuộc nhiều danh mục theo quy tắc nhất quán.
+- [ ] Không để breadcrumb thay đổi ngẫu nhiên theo session hoặc thứ tự người dùng truy cập.
+- [ ] Kiểm tra breadcrumb trên desktop và mobile.
+- [ ] Không tạo breadcrumb schema khi không có dữ liệu hợp lệ.
+8. SEO đa ngôn ngữ và đa khu vực
+Áp dụng khi website có tiếng Việt, tiếng Anh hoặc nhiều thị trường.
+- [ ] Thiết kế URL riêng cho từng ngôn ngữ/thị trường.
+- [ ] Có quy tắc thống nhất như /vi/, /en/ hoặc subdomain.
+- [ ] Mỗi phiên bản ngôn ngữ có canonical phù hợp.
+- [ ] Triển khai hreflang đúng mã ngôn ngữ và khu vực.
+- [ ] Các trang hreflang tham chiếu qua lại đúng quy tắc.
+- [ ] Có x-default khi thực sự phù hợp.
+- [ ] Không gắn hreflang giữa những trang không tương đương về nội dung.
+- [ ] Không tự động chuyển hướng toàn bộ bot theo IP hoặc cookie khiến các phiên bản khó truy cập.
+- [ ] Có selector ngôn ngữ với link thực tới phiên bản tương ứng.
+- [ ] Metadata và structured data theo đúng ngôn ngữ trang.
+- [ ] Đảm bảo URL canonical không vô tình trỏ sang phiên bản ngôn ngữ khác.
+- [ ] Xử lý nội dung chưa được dịch.
+- [ ] Xử lý thay đổi slug theo từng ngôn ngữ.
+- [ ] Sitemap hoặc hệ thống URL mapping phản ánh đúng phiên bản ngôn ngữ.
+- [ ] Định dạng giá, tiền tệ, ngày tháng và thông tin địa phương chính xác.
+9. SEO cho các template đặc thù
+Không chỉ trang chủ cần SEO. DEV cần kiểm tra từng loại template đang có trong hệ thống.
+Template	Những gì cần triển khai
+Trang chủ	Title, description, canonical, H1, schema, link tới khu vực quan trọng
+Trang danh mục	Metadata động, nội dung giới thiệu, breadcrumb, link sản phẩm/bài viết
+Trang chi tiết	Title riêng, nội dung chính, ảnh, canonical, schema
+Trang bài viết	Author, ngày xuất bản/cập nhật, ảnh đại diện, heading, breadcrumb
+Trang thương hiệu	Nội dung riêng, sản phẩm liên quan, metadata và schema phù hợp
+Trang địa điểm	Địa chỉ, thông tin địa phương, dữ liệu riêng từng địa điểm
+Landing page	Metadata, nội dung, indexability và canonical riêng
+Trang tag	Chính sách index/noindex, tránh tạo trang mỏng
+Trang tác giả	Thông tin tác giả, bài viết liên quan, canonical
+Trang tìm kiếm	Chính sách index, xử lý query và trạng thái không có kết quả
+Trang tài khoản/checkout	Xác thực, không index dữ liệu riêng tư
+Trang 404/500	Status code đúng, giao diện lỗi rõ ràng
+Trang lọc/sắp xếp	Canonical, tham số URL, crawl control
+Trang phân trang	URL, internal link và nội dung từng trang
+Trang đa ngôn ngữ	Canonical, hreflang, nội dung đúng locale
+Quy tắc quan trọng: Mỗi template phải có một bộ SEO contract rõ ràng: dữ liệu đầu vào, metadata đầu ra, indexability, canonical, schema, status code và các link bắt buộc.
+10. Core Web Vitals, tốc độ và hiệu năng
+Đây là phần DEV trực tiếp ảnh hưởng đến trải nghiệm người dùng và khả năng đáp ứng các chỉ số hiệu năng của Google.
+10.1. Core Web Vitals
+- [ ] Đo LCP – thời gian hiển thị nội dung lớn nhất.
+- [ ] Đo INP – độ trễ phản hồi tương tác.
+- [ ] Đo CLS – độ dịch chuyển bố cục.
+- [ ] Tối ưu LCP cho trang chủ, danh mục, chi tiết và landing page.
+- [ ] Xác định phần tử LCP thực tế của từng template.
+- [ ] Tối ưu ảnh hero hoặc phần tử LCP.
+- [ ] Không lazy-load phần tử LCP nếu gây chậm hiển thị.
+- [ ] Preload tài nguyên quan trọng khi có căn cứ.
+- [ ] Dùng fetchpriority="high" cho ảnh LCP khi phù hợp.
+- [ ] Tối ưu TTFB và thời gian phản hồi server.
+- [ ] Giảm JavaScript làm chậm tương tác.
+- [ ] Chia nhỏ bundle và loại bỏ JavaScript không sử dụng.
+- [ ] Tránh long tasks trên main thread.
+- [ ] Tránh tải nhiều script bên thứ ba.
+- [ ] Đặt kích thước ảnh, banner, iframe và quảng cáo để tránh CLS.
+- [ ] Tránh chèn nội dung lên phía trên phần người dùng đang đọc.
+- [ ] Tối ưu font để giảm layout shift.
+- [ ] Đảm bảo tương tác menu, bộ lọc, tab và modal phản hồi nhanh.
+- [ ] Kiểm tra trên thiết bị di động thực tế.
+- [ ] Theo dõi dữ liệu người dùng thực tế, không chỉ điểm Lighthouse.
+Mốc tham chiếu Core Web Vitals ở phân vị thứ 75:
+Chỉ số	Mức tốt
+LCP	≤ 2,5 giây
+INP	≤ 200 ms
+CLS	≤ 0,1
+Các ngưỡng này nên được đánh giá riêng cho mobile và desktop khi có đủ dữ liệu.
+10.2. Frontend performance
+- [ ] Minify CSS, JS và HTML khi phù hợp.
+- [ ] Nén Brotli hoặc gzip.
+- [ ] Tối ưu CSS critical.
+- [ ] Loại bỏ CSS/JS không dùng.
+- [ ] Code splitting theo route.
+- [ ] Không tải thư viện lớn chỉ để thực hiện chức năng nhỏ.
+- [ ] Dùng cache cho static assets.
+- [ ] Dùng file fingerprint để cache dài hạn an toàn.
+- [ ] Tối ưu font và preload font quan trọng.
+- [ ] Hạn chế redirect trước khi tải tài nguyên.
+- [ ] Tối ưu request waterfall.
+- [ ] Giảm request tới API không cần thiết.
+- [ ] Tránh layout thrashing và render lại không cần thiết.
+- [ ] Kiểm tra hiệu năng các component dùng chung trên toàn site.
+10.3. Backend, database và CDN
+- [ ] Tối ưu truy vấn database cho trang SEO có lượng truy cập lớn.
+- [ ] Tránh N+1 query.
+- [ ] Có cache dữ liệu và HTML khi phù hợp.
+- [ ] Thiết lập TTL cache đúng.
+- [ ] Purge cache khi nội dung quan trọng thay đổi.
+- [ ] Tránh cache HTML sai theo ngôn ngữ, người dùng hoặc hostname.
+- [ ] CDN trả đúng status, MIME type và nội dung.
+- [ ] CDN không chặn Googlebot hợp lệ ngoài ý muốn.
+- [ ] Hạn chế lỗi 5xx khi bot crawl với tần suất cao.
+- [ ] Có giám sát latency, timeout và tỷ lệ lỗi.
+- [ ] Có cơ chế stale cache hoặc fallback phù hợp khi backend gặp sự cố.
+- [ ] Không để rate limiting hoặc bot protection chặn nhầm Googlebot xác thực.
+11. Mobile SEO và responsive
+- [ ] Responsive theo các kích thước màn hình.
+- [ ] Nội dung chính trên mobile tương đương desktop.
+- [ ] Metadata không phụ thuộc vào thiết bị.
+- [ ] Heading và nội dung không bị ẩn hoàn toàn trên mobile ngoài ý muốn.
+- [ ] Link nội bộ quan trọng vẫn tồn tại trên mobile.
+- [ ] Menu mobile có link crawlable.
+- [ ] Ảnh, video và bảng hiển thị phù hợp.
+- [ ] Không dùng nội dung mobile rút gọn đến mức mất thông tin SEO quan trọng.
+- [ ] Không chặn Googlebot Smartphone.
+- [ ] Không để popup che toàn bộ nội dung ngay khi vào trang theo cách gây cản trở trải nghiệm.
+- [ ] Không sử dụng font quá nhỏ hoặc vùng bấm quá khó thao tác.
+- [ ] Kiểm tra horizontal overflow.
+- [ ] Kiểm tra CLS và LCP trên thiết bị di động.
+- [ ] Đảm bảo các component tải nội dung hoạt động tốt trên mạng chậm.
+- [ ] Kiểm tra trang bằng công cụ render và kiểm tra URL của Google.
+12. Accessibility và khả năng đọc nội dung
+Accessibility không phải yếu tố xếp hạng trực tiếp cho mọi tiêu chí, nhưng nhiều thực hành tốt giúp người dùng và công cụ tìm kiếm hiểu, truy cập nội dung dễ dàng hơn.
+- [ ] Có cấu trúc heading dễ hiểu.
+- [ ] Link có tên mô tả.
+- [ ] Nút có tên truy cập được.
+- [ ] Form có label phù hợp.
+- [ ] Hình ảnh có alt đúng ngữ cảnh.
+- [ ] Các thành phần tương tác sử dụng semantic HTML.
+- [ ] Có thể điều hướng bằng bàn phím.
+- [ ] Trạng thái focus rõ ràng.
+- [ ] Nội dung không chỉ phân biệt bằng màu sắc.
+- [ ] Các tab, accordion, dialog có trạng thái và thuộc tính accessibility phù hợp.
+- [ ] Không để nội dung quan trọng chỉ hiển thị qua CSS pseudo-element.
+- [ ] Nội dung có thể chọn, sao chép và đọc được khi phù hợp.
+- [ ] Đảm bảo tương phản và kích thước chữ đủ đọc.
+- [ ] Xử lý lỗi form bằng thông báo có ý nghĩa.
+- [ ] Kiểm tra accessibility của component dùng chung.
+13. Bảo mật, HTTPS và độ ổn định
+- [ ] Toàn bộ trang công khai sử dụng HTTPS.
+- [ ] HTTP được chuyển hướng sang HTTPS đúng cách.
+- [ ] Không có mixed content.
+- [ ] Chứng chỉ TLS hợp lệ.
+- [ ] HSTS được cấu hình sau khi đánh giá phù hợp.
+- [ ] Không để hostname staging được index.
+- [ ] Không để trang preview nội dung bị index.
+- [ ] Bảo vệ admin, tài khoản và thông tin cá nhân.
+- [ ] Không đưa dữ liệu riêng tư vào HTML công khai hoặc JSON-LD.
+- [ ] Không để API nhạy cảm bị gọi công khai không kiểm soát.
+- [ ] Escape nội dung do người dùng nhập.
+- [ ] Chống XSS và các lỗ hổng injection.
+- [ ] Có cơ chế xác thực Googlebot nếu WAF hoặc firewall áp dụng quy tắc bot.
+- [ ] Không để lỗi bảo mật gây ra trang spam hoặc URL rác.
+- [ ] Theo dõi uptime và lỗi DNS.
+- [ ] Giám sát chứng chỉ SSL và ngày hết hạn.
+- [ ] Có backup và quy trình khôi phục.
+- [ ] Có cảnh báo khi website bị thay đổi robots, sitemap hoặc canonical bất thường.
+14. SEO cho CMS, Admin và hệ thống quản trị nội dung
+Nếu website có CMS, DEV nên xây dựng khả năng quản lý SEO ngay trong Admin.
+- [ ] Trường SEO title.
+- [ ] Trường meta description.
+- [ ] Trường slug.
+- [ ] Trường canonical tùy chỉnh khi cần.
+- [ ] Trường robots index/noindex.
+- [ ] Trường ảnh đại diện.
+- [ ] Trường alt text cho ảnh.
+- [ ] Trường Open Graph title, description và image.
+- [ ] Trường dữ liệu SEO bổ sung theo loại trang.
+- [ ] Tạo metadata mặc định theo template.
+- [ ] Có fallback khi trường SEO để trống.
+- [ ] Cảnh báo slug bị trùng.
+- [ ] Cảnh báo nội dung thiếu metadata quan trọng.
+- [ ] Quản lý redirect khi thay đổi slug.
+- [ ] Quản lý ngày xuất bản và ngày cập nhật.
+- [ ] Phân biệt bản nháp, bản preview và bản public.
+- [ ] Bản nháp không bị index công khai.
+- [ ] Publish nội dung mới tự cập nhật sitemap.
+- [ ] Xóa hoặc unpublish nội dung có quy tắc status và redirect phù hợp.
+- [ ] Thay đổi nội dung làm cập nhật cache đúng.
+- [ ] Có audit log cho thay đổi SEO quan trọng.
+- [ ] Phân quyền người dùng chỉnh canonical, robots và redirect.
+- [ ] Không cho phép người dùng không có quyền vô tình noindex toàn website.
+- [ ] Có thể xuất danh sách URL và các trường SEO để kiểm tra hàng loạt.
+15. SEO cho thương mại điện tử
+Nếu website bán hàng, DEV cần thêm các quy tắc chuyên biệt sau.
+- [ ] URL sản phẩm ổn định khi đổi tên hoặc danh mục.
+- [ ] Trang sản phẩm có title, description, canonical và schema riêng.
+- [ ] Giá, tiền tệ và tồn kho đồng bộ giữa UI và schema.
+- [ ] Có quy tắc khi sản phẩm hết hàng.
+- [ ] Có quy tắc khi sản phẩm ngừng kinh doanh.
+- [ ] Xử lý sản phẩm có nhiều màu, kích thước và biến thể.
+- [ ] Xử lý URL biến thể sản phẩm và canonical.
+- [ ] Không để mọi biến thể tạo trang trùng nội dung không kiểm soát.
+- [ ] Trang danh mục có phân trang và link sản phẩm crawlable.
+- [ ] Xử lý danh mục rỗng.
+- [ ] Xử lý thương hiệu và bộ sưu tập.
+- [ ] Kiểm soát URL lọc sản phẩm.
+- [ ] Quản lý review và rating thực tế.
+- [ ] Schema sản phẩm được cập nhật theo dữ liệu mới.
+- [ ] Không đánh dấu review không tồn tại.
+- [ ] Không để trang giỏ hàng, checkout, tài khoản bị index.
+- [ ] Có redirect phù hợp khi URL sản phẩm thay đổi.
+- [ ] Có chính sách với sản phẩm xóa vĩnh viễn hoặc thay thế bằng sản phẩm tương đương.
+- [ ] Hình ảnh sản phẩm có alt và URL ổn định.
+- [ ] Giá khuyến mãi, giá gốc và tình trạng hàng hóa được thể hiện nhất quán.
+16. Redirect, thay đổi nội dung và migration website
+Đây là nhóm rất quan trọng khi đổi giao diện, đổi CMS, đổi domain hoặc tái cấu trúc URL.
+- [ ] Xuất toàn bộ danh sách URL cũ trước khi triển khai.
+- [ ] Lập mapping URL cũ sang URL mới.
+- [ ] Thiết lập redirect 301 hoặc 308 phù hợp cho các URL chuyển vĩnh viễn.
+- [ ] Redirect trực tiếp tới URL đích cuối.
+- [ ] Không redirect hàng loạt sang trang chủ.
+- [ ] Giữ nguyên các URL không cần đổi nếu có thể.
+- [ ] Cập nhật internal link sang URL mới.
+- [ ] Cập nhật canonical.
+- [ ] Cập nhật sitemap.
+- [ ] Cập nhật hreflang nếu có.
+- [ ] Cập nhật schema và metadata.
+- [ ] Kiểm tra ảnh, PDF và file media sau migration.
+- [ ] Kiểm tra redirect chain và redirect loop.
+- [ ] Kiểm tra URL có backlink quan trọng.
+- [ ] Không chặn website mới bằng robots hoặc noindex.
+- [ ] Kiểm tra domain, HTTPS, DNS và CDN.
+- [ ] Kiểm tra lỗi 404, 5xx và các trang quan trọng sau khi deploy.
+- [ ] Duy trì theo dõi lỗi sau migration.
+- [ ] Có phương án rollback nếu phát sinh sự cố lớn.
+Google có hướng dẫn riêng về thay đổi URL và di chuyển website; migration cần được xử lý như một dự án kỹ thuật có mapping và kiểm thử, không chỉ thay giao diện. 
+
+Google for Developers
++1
+
+
+
+17. API, dữ liệu động và trạng thái nội dung
+Các lỗi SEO đôi khi không nằm ở frontend mà nằm ở API, database hoặc logic nghiệp vụ.
+- [ ] API trả đúng dữ liệu cho từng URL.
+- [ ] Không trả nhầm nội dung do cache key thiếu slug, locale hoặc ID.
+- [ ] Không trả dữ liệu của sản phẩm/bài viết khác khi đổi route.
+- [ ] Xử lý ID không tồn tại.
+- [ ] Xử lý nội dung đã xóa.
+- [ ] Xử lý nội dung nháp hoặc chưa xuất bản.
+- [ ] Xử lý nội dung hết hạn.
+- [ ] Xử lý nội dung bị ẩn hoặc ngừng kinh doanh.
+- [ ] Xử lý trường dữ liệu bắt buộc bị null.
+- [ ] Không sinh title, H1, canonical hoặc schema từ dữ liệu lỗi.
+- [ ] Không để lỗi API khiến trang SEO rỗng nhưng vẫn trả HTTP 200.
+- [ ] Không để API riêng tư vô tình đưa dữ liệu vào HTML công khai.
+- [ ] Đảm bảo dữ liệu SEO cập nhật khi nội dung thay đổi.
+- [ ] Đảm bảo cache được làm mới khi publish, update hoặc delete.
+- [ ] Có cơ chế xử lý dữ liệu cũ sau khi thay đổi slug.
+- [ ] Không để URL động thay đổi theo session hoặc cookie ngoài chủ đích.
+- [ ] Đảm bảo nội dung chính không phụ thuộc vào API cần token riêng của người dùng.
+18. SEO cho các thành phần dùng chung (Shared Components)
+Đây là nhóm rất dễ bị bỏ sót vì một component có thể xuất hiện trên hàng trăm hoặc hàng nghìn URL.
+Component	Checklist DEV
+Header	Logo có link về trang chủ, menu có link thật, không tạo link lỗi
+Navigation	URL đúng, crawlable, không phụ thuộc hoàn toàn vào sự kiện click
+Footer	Link quan trọng hợp lệ, không phát sinh link rác
+Breadcrumb	Cấp bậc đúng, URL đúng, schema đồng nhất
+Card bài viết	Title, ảnh, alt, link đúng bài
+Card sản phẩm	Tên, giá, ảnh và URL đúng sản phẩm
+Banner	Ảnh tối ưu, alt phù hợp, link đúng đích
+Tab	Nội dung quan trọng truy cập được, URL và trạng thái nhất quán
+Accordion	Nội dung được render, không lỗi khi mở/đóng
+Modal	Không che nội dung chính ngoài ý muốn, link bên trong hoạt động
+Pagination	Link trang trước/sau chính xác
+Filter	Không sinh URL vô hạn hoặc canonical sai
+Related content	Không tạo link trùng hoặc link tới trang lỗi
+Search box	Không sinh URL lỗi, không tạo crawl trap
+Image component	Có alt, kích thước, lazy loading và fallback đúng
+SEO Head component	Không có metadata trùng, canonical sai hoặc robots xung đột
+Error component	Trả đúng status HTTP theo trường hợp
+Locale switcher	Chuyển tới đúng trang tương ứng ở ngôn ngữ khác
+Cookie/consent banner	Không ngăn bot tiếp cận nội dung công khai ngoài ý muốn
+Nguyên tắc: SEO phải được triển khai tại component dùng chung và template, thay vì sửa thủ công từng URL. Tuy nhiên, phải kiểm thử các trường hợp cụ thể vì một component hoạt động đúng trên trang chủ chưa chắc hoạt động đúng ở trang danh mục hoặc trang chi tiết.
+19. Log, monitoring và cảnh báo SEO
+DEV cần giúp đội SEO phát hiện sự cố trước khi nó gây ảnh hưởng lớn.
+- [ ] Ghi nhận HTTP status theo URL.
+- [ ] Thu thập access log đủ để phân tích crawl.
+- [ ] Có khả năng xác định Googlebot hợp lệ và phân biệt bot khác.
+- [ ] Theo dõi tỷ lệ 404, 5xx và redirect.
+- [ ] Theo dõi lỗi SSR, hydration và API.
+- [ ] Theo dõi thời gian phản hồi server.
+- [ ] Theo dõi tỷ lệ URL bị noindex.
+- [ ] Theo dõi URL trong sitemap bị lỗi hoặc redirect.
+- [ ] Phát hiện canonical trỏ sang URL khác.
+- [ ] Phát hiện sitemap biến mất hoặc XML không hợp lệ.
+- [ ] Cảnh báo nếu robots.txt production thay đổi bất thường.
+- [ ] Cảnh báo nếu deploy tạo ra số lượng lớn URL 404.
+- [ ] Cảnh báo nếu title, canonical hoặc robots bị thiếu trên template quan trọng.
+- [ ] Theo dõi URL mới được xuất bản nhưng chưa có internal link.
+- [ ] Theo dõi URL có traffic hoặc backlink nhưng đột nhiên trả lỗi.
+- [ ] Tích hợp Search Console API nếu phù hợp.
+- [ ] Tích hợp hệ thống giám sát hiệu năng.
+- [ ] Lưu lịch sử thay đổi route, redirect và cấu hình SEO.
+- [ ] Có dashboard hoặc báo cáo lỗi SEO dành cho đội DEV.
+Không nên chỉ dựa vào Google Search Console để phát hiện mọi lỗi. Log server, test tự động và monitoring giúp tìm ra nguyên nhân kỹ thuật sớm hơn.
+20. Kiểm thử SEO tự động trong quy trình phát triển
+Đây là phần mình khuyên bạn yêu cầu DEV bắt buộc triển khai nếu muốn hạn chế bỏ sót SEO về lâu dài.
+20.1. Unit test
+- [ ] Hàm tạo title.
+- [ ] Hàm tạo description.
+- [ ] Hàm tạo slug.
+- [ ] Hàm tạo canonical.
+- [ ] Hàm tạo robots metadata.
+- [ ] Hàm tạo hreflang.
+- [ ] Hàm tạo sitemap.
+- [ ] Hàm tạo JSON-LD.
+- [ ] Hàm xử lý redirect.
+- [ ] Hàm xử lý trạng thái nội dung.
+20.2. Integration test
+- [ ] Mỗi loại trang trả status code đúng.
+- [ ] Mỗi loại trang có metadata cần thiết.
+- [ ] Trang indexable không bị noindex.
+- [ ] Trang không index có quy tắc robots đúng.
+- [ ] Canonical đúng domain và URL.
+- [ ] Không có nhiều canonical.
+- [ ] Không có nhiều title hoặc meta description.
+- [ ] Nội dung chính xuất hiện trong HTML trả về.
+- [ ] Link nội bộ quan trọng có href.
+- [ ] Sitemap chỉ chứa URL hợp lệ.
+- [ ] Structured data hợp lệ.
+- [ ] 404 trả status 404 thật.
+- [ ] URL redirect không tạo vòng lặp.
+- [ ] Nội dung hết hạn hoặc đã xóa được xử lý đúng.
+20.3. E2E test và kiểm tra toàn website
+- [ ] Crawl tất cả template quan trọng.
+- [ ] Crawl menu và link nội bộ.
+- [ ] Phát hiện trang mồ côi bằng cách đối chiếu danh sách URL với link nội bộ.
+- [ ] Phát hiện broken links.
+- [ ] Phát hiện redirect chains.
+- [ ] Phát hiện title trùng.
+- [ ] Phát hiện H1 thiếu hoặc trùng bất thường.
+- [ ] Phát hiện canonical sai.
+- [ ] Phát hiện URL bị noindex ngoài ý muốn.
+- [ ] Phát hiện trang mỏng hoặc trang rỗng do lỗi render.
+- [ ] Phát hiện URL có tham số phát sinh bất thường.
+- [ ] Kiểm tra desktop và mobile.
+- [ ] Kiểm tra HTML gốc và HTML sau render.
+- [ ] Kiểm tra các URL quan trọng sau mỗi lần deploy.
+20.4. SEO gate trước khi deploy production
+Nên cấu hình CI/CD để cảnh báo hoặc chặn deploy khi xuất hiện lỗi nghiêm trọng, chẳng hạn:
+- Robots production chặn toàn bộ website.
+- Template quan trọng phát noindex sai.
+- Canonical của hàng loạt trang trỏ về staging.
+- Sitemap không hợp lệ.
+- Trang chi tiết trả 500.
+- Route mới làm mất nội dung chính trong HTML.
+- Redirect tạo vòng lặp.
+- Metadata component bị lỗi trên toàn bộ website.
+Không nhất thiết chặn deploy vì mọi cảnh báo SEO. Nên phân loại thành lỗi blocker, lỗi nghiêm trọng và cảnh báo để tránh quy trình phát triển bị tắc nghẽn vì lỗi nhỏ.
+21. Các tiêu chuẩn DEV phải bàn giao cho SEO trước khi nghiệm thu
+Đội SEO không nên chỉ nhận một website chạy được. Cần nhận cả tài liệu kỹ thuật và công cụ quản trị để tiếp tục vận hành.
+- [ ] Danh sách route và template toàn website.
+- [ ] Danh sách loại trang được phép index.
+- [ ] Danh sách loại trang không được index.
+- [ ] Quy tắc tạo title và meta description.
+- [ ] Quy tắc canonical.
+- [ ] Quy tắc URL và redirect.
+- [ ] Quy tắc robots.txt.
+- [ ] Cấu trúc sitemap.
+- [ ] Danh sách structured data được triển khai.
+- [ ] Danh sách component SEO dùng chung.
+- [ ] Hướng dẫn quản lý SEO trong CMS.
+- [ ] Hướng dẫn publish, sửa slug và xóa nội dung.
+- [ ] Hướng dẫn xử lý lỗi 404 và redirect.
+- [ ] Báo cáo crawl audit trước khi bàn giao.
+- [ ] Kết quả kiểm thử trên HTML đã render.
+- [ ] Kết quả kiểm thử schema.
+- [ ] Kết quả kiểm tra Core Web Vitals và hiệu năng.
+- [ ] Quy trình deploy và rollback.
+- [ ] Danh sách lỗi SEO còn tồn đọng.
+- [ ] Người chịu trách nhiệm khi cấu hình SEO bị thay đổi.
