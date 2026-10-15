@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound, permanentRedirect } from 'next/navigation';
 import { after } from 'next/server';
 import { CATEGORIES, categoryOf, plainText, postPath, postState, SECTIONS, sectionOf, tableOfContents, tiktokPlayer, type PostSection } from '@/lib/posts';
+import { SITE_ORIGIN } from '@/lib/site';
 import { getCurrentUser } from '@/server/auth';
 import { getProducts } from '@/server/catalog';
 import { allDiseases } from '@/server/diseases';
@@ -20,7 +21,6 @@ async function load({ params, searchParams }: PostPageProps) {
   return { post: await getPost(slug, preview), preview };
 }
 
-const site = () => (process.env.SITE_URL ?? '').replace(/\/$/, '');
 const describe = (p: PostFull) => (p.seoDescription || plainText(p.excerpt)).slice(0, 300);
 
 export async function postMetadata(props: PostPageProps): Promise<Metadata> {
@@ -58,7 +58,7 @@ export async function PostDetail({ section, ...props }: PostPageProps & { sectio
   const author = p.authorName || 'Cây Cảnh Miền Tây';
   const edited = p.updatedAt.getTime() - p.publishedAt.getTime() > 86_400_000;
 
-  const base = site();
+  const base = SITE_ORIGIN;
   const ld = p.kind === 'video' && (p.youtubeId || p.tiktokId)
     ? {
       '@context': 'https://schema.org', '@type': 'VideoObject', name: p.title, description: describe(p) || p.title,

@@ -12,6 +12,8 @@ const REVEAL = [
   '.hm-body > section', '.vx-panel', '.vx-flash', '.vx-pcard', '.pm-sec', '.pm-contact', '.dn-sec', '.dn-faq',
   '.sv-sec', '.sv-cta', '.vx-cblock', '.vx-dtile', '.vx-pdpage > .vx-card', '.ab-tl__item', '.shv-card',
 ].join(',');
+/** Máy dựng trang của công cụ tìm kiếm / công cụ đo: không giấu gì, nội dung hiện đủ ngay (không phụ thuộc thao tác cuộn). */
+const BOT = /bot|crawl|spider|slurp|google-inspectiontool|lighthouse|headlesschrome/i;
 const STEP_MS = 60;
 const MAX_STEPS = 5;
 const DONE_MS = 700;
@@ -20,7 +22,7 @@ export function ScrollReveal() {
   useEffect(() => {
     const site = document.querySelector('.app-site');
     if (!site || !('IntersectionObserver' in window)) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || BOT.test(navigator.userAgent)) return;
 
     const seen = new WeakSet<Element>();
     const io = new IntersectionObserver(

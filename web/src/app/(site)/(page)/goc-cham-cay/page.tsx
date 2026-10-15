@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { Icon } from '@/components/Icon';
 import { EmptyPosts, PostMeta, PostThumb } from '@/components/PostParts';
 import { CATEGORIES, categoryOf, durationLabel, isCategory, plainText, postPath, SECTIONS, sectionOf, VIDEO_PAGE } from '@/lib/posts';
@@ -21,11 +22,15 @@ function filters(sp: SP) {
 }
 
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
-  const { cat, tag, video } = filters(await searchParams);
+  const { cat, tag, video, page } = filters(await searchParams);
   const name = cat ? categoryOf(cat)?.name : tag ? `#${tag}` : video ? 'Video chăm cây' : undefined;
+  // SEO: trang chính + từng chuyên mục (kể cả ?trang=n) là trang chuẩn; trang thẻ chủ đề và "Video" (trùng /video) thì noindex.
+  const thin = !!tag || video;
   return {
     title: name ? `${name} · Góc chăm cây` : 'Góc chăm cây',
     description: 'Kinh nghiệm chăm cây, bắt bệnh, dùng thuốc và phân bón đúng cách từ nhà vườn Cây Cảnh Miền Tây.',
+    alternates: { canonical: thin ? BASE : href({ 'chuyen-muc': cat, trang: cat && page > 1 ? page : undefined }) },
+    robots: thin ? { index: false, follow: true } : undefined,
   };
 }
 
@@ -72,9 +77,11 @@ function VCard({ p, alt }: { p: PostCard; alt?: boolean }) {
 
 /** Góc chăm cây: bài viết + video ngắn soạn ở /admin/noi-dung (BlogLayout). */
 export default async function BlogPage({ searchParams }: Props) {
-  const { cat, tag, video, page } = filters(await searchParams);
+  const sp = await searchParams;
+  const { cat, tag, video, page } = filters(sp);
   const all = (await publishedPosts()).filter((p) => sectionOf(p.category) === 'blog');
   const listing = cat || tag || video;
+  if (!listing && sp.trang !== undefined) redirect(BASE); // trang chính không phân trang
 
   const used = new Set(all.map((p) => p.category));
   const chips = CATEGORIES.filter((c) => c.section === 'blog' && (used.has(c.key) || c.key === cat));
@@ -140,8 +147,11 @@ export default async function BlogPage({ searchParams }: Props) {
   if (listing) {
     const rows = all.filter((p) => (!cat || p.category === cat) && (!tag || p.tags.includes(tag)) && (!video || p.kind === 'video'));
     const pages = Math.max(1, Math.ceil(rows.length / PER_PAGE));
-    const shown = rows.slice((page - 1) * PER_PAGE, page * PER_PAGE);
     const q = { 'chuyen-muc': cat, the: tag, loai: video ? 'video' : undefined };
+    // Mỗi trang một đường dẫn: ?trang=1 / abc / quá số trang → về đúng trang.
+    const at = Math.min(page, pages);
+    if (sp.trang !== undefined && sp.trang !== (at > 1 ? String(at) : undefined)) redirect(href({ ...q, trang: at > 1 ? at : undefined }));
+    const shown = rows.slice((page - 1) * PER_PAGE, page * PER_PAGE);
     return (
       <>
         {top}

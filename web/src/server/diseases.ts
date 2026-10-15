@@ -3,7 +3,7 @@ import { connection } from 'next/server';
 import { cache } from 'react';
 import { and, asc, desc, eq, lt, notInArray, sql } from 'drizzle-orm';
 import * as z from 'zod';
-import { normalize } from '@/lib/catalog';
+import { slugify } from '@/lib/slug';
 import { CAUSES, DISEASE_IMAGE_FILE, PARTS, PLANTS, type Disease } from '@/lib/diseases';
 import { db, schema } from './db';
 import type { SavedImage } from './uploads';
@@ -61,7 +61,6 @@ export const DiseaseInputSchema = z.object({
 });
 export type DiseaseInput = z.infer<typeof DiseaseInputSchema>;
 
-const slugify = (s: string) => normalize(s).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80);
 
 /** Tạo mới (slug sinh từ tên, không đổi về sau để link cũ không chết) hoặc cập nhật. */
 export async function saveDisease(v: DiseaseInput) {

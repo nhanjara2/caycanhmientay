@@ -5,6 +5,7 @@ import { CartProvider } from '@/lib/cart';
 import { WishlistProvider } from '@/lib/wishlist';
 import { DeliverToProvider } from '@/lib/deliver-to';
 import { ShippingProvider } from '@/lib/shipping-client';
+import { SITE_ORIGIN } from '@/lib/site';
 import '@/styles/ds/tokens.css';
 import '@/styles/ds/components.css';
 import '@/styles/ds/responsive.css';
@@ -18,6 +19,8 @@ const font = Be_Vietnam_Pro({
 });
 
 export const metadata: Metadata = {
+  // canonical / ảnh chia sẻ ghi đường dẫn tương đối ("/san-pham/…") → Next ghép thành URL tuyệt đối trên tên miền chính.
+  metadataBase: new URL(SITE_ORIGIN),
   title: { default: 'Cây Cảnh Miền Tây — Cung cấp sỉ cây cảnh & vật tư', template: '%s | Cây Cảnh Miền Tây' },
   description: 'Cung cấp sỉ cây cảnh, cây công trình, thuốc bảo vệ thực vật, phân bón, chậu và vật tư cho đối tác dịch vụ cảnh quan, công trình và buôn bán. Nguồn cây từ gần 200 nhà vườn miền Nam, giao toàn quốc.',
 };

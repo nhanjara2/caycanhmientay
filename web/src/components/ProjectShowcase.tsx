@@ -30,7 +30,8 @@ export function ProjectShowcase({ projects }: { projects: Project[] }) {
       {wide && <ProjectCard p={wide} wide />}
       {rest.length > 0 && (
         <div className="dn-grid">
-          {rest.slice(0, shown).map((p) => <ProjectCard key={p.id} p={p} />)}
+          {/* Đủ mọi thẻ trong HTML (thẻ chưa "Xem thêm" chỉ bị ẩn) để Google lần được tới từng trang công trình. */}
+          {rest.map((p, i) => <ProjectCard key={p.id} p={p} hidden={i >= shown} />)}
         </div>
       )}
       {rest.length > shown && (

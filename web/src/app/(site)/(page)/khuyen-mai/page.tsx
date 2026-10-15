@@ -19,6 +19,7 @@ import { listActiveVouchers } from '@/server/vouchers';
 export const metadata: Metadata = {
   title: 'Tin khuyến mãi',
   description: 'Mã giảm giá đang áp dụng, sản phẩm đang giảm giá và tin ưu đãi, sự kiện của Cây Cảnh Miền Tây.',
+  alternates: { canonical: '/khuyen-mai' },
 };
 
 const SALE_SHOWN = 12;

@@ -4,6 +4,7 @@ import { cache } from 'react';
 import { and, asc, desc, eq, lt, notInArray, sql } from 'drizzle-orm';
 import * as z from 'zod';
 import { normalize } from '@/lib/catalog';
+import { slugify } from '@/lib/slug';
 import {
   MAX_PROJECT_IMAGES, MAX_PROJECT_METRICS, MAX_PROJECT_PLANTS, MAX_PROJECT_SCOPE, PROJECT_IMAGE_FILE, PROJECT_ROLES, PROJECT_TYPES, type Project, type ProjectRole, type ProjectType,
 } from '@/lib/projects';
@@ -77,7 +78,6 @@ export const ProjectInputSchema = z.object({
 });
 export type ProjectInput = z.infer<typeof ProjectInputSchema>;
 
-const slugify = (s: string) => normalize(s).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80).replace(/-$/, '');
 
 /** Lưu dự án. Trả `ok: false` + lời nhắc dễ hiểu khi chưa đủ điều kiện hiện trên web. */
 export async function saveProject(v: ProjectInput, user: SessionUser) {

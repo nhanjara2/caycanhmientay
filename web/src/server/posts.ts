@@ -3,7 +3,7 @@ import { connection } from 'next/server';
 import { cache } from 'react';
 import { and, desc, eq, inArray, isNull, lt, lte, ne, notInArray, or, sql, type SQL } from 'drizzle-orm';
 import * as z from 'zod';
-import { normalize } from '@/lib/catalog';
+import { slugify } from '@/lib/slug';
 import {
   blockingChecks, CATEGORY_KEYS, categoryOf, MAX_BLOCK_PRODUCTS, NOTE_TITLE, postChecks, postImageUrl, postPath, PRODUCTS_TITLE,
   readMinutes, TITLE_MAX, youtubeThumb, type PostBlock, type PostStatus, type ShortVideo,
@@ -169,7 +169,6 @@ export type PostInput = z.infer<typeof PostInputSchema>;
 export const INTENTS = ['save', 'review', 'publish', 'unpublish'] as const;
 export type Intent = (typeof INTENTS)[number];
 
-const slugify = (s: string) => normalize(s).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80).replace(/-$/, '');
 
 /** Bỏ khối trống, ảnh không thuộc bài này, link video sai; chuẩn hóa bảng. */
 function cleanBody(body: PostBlock[], files: ReadonlySet<string>): PostBlock[] {

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { Art, Icon } from '@/components/Icon';
 import { EmptyPosts, iconOf, PostLinks, postDate } from '@/components/PostParts';
 import { FACEBOOK_URL, SALES_PHONE } from '@/lib/contact';
@@ -20,11 +21,19 @@ function filters(sp: SP) {
   return { cat, page };
 }
 
+function link(q: { cat?: string; page?: number }) {
+  const u = new URLSearchParams();
+  if (q.cat) u.set('chuyen-muc', q.cat);
+  if (q.page && q.page > 1) u.set('trang', String(q.page));
+  return u.size ? `${BASE}?${u}` : BASE;
+}
+
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
-  const { cat } = filters(await searchParams);
+  const { cat, page } = filters(await searchParams);
   return {
     title: cat ? `${categoryOf(cat)?.name} · Truyền thông` : 'Truyền thông',
     description: 'Tin tức, hoạt động cộng đồng, báo chí và tuyển dụng của Cây Cảnh Miền Tây.',
+    alternates: { canonical: link({ cat, page }) },
   };
 }
 
@@ -40,7 +49,8 @@ const Tag = ({ p }: { p: PostCard }) => <span className="nw-tag">{categoryOf(p.c
 
 /** Truyền thông: tin công ty soạn ở /admin/noi-dung (NewsCategoryLayout). */
 export default async function NewsPage({ searchParams }: Props) {
-  const { cat, page } = filters(await searchParams);
+  const sp = await searchParams;
+  const { cat, page } = filters(sp);
   const all = (await publishedPosts()).filter((p) => sectionOf(p.category) === 'news');
   const rows = all.filter((p) => !cat || p.category === cat);
   const ordered = [...rows.filter((p) => p.featured), ...rows.filter((p) => !p.featured)];
@@ -48,14 +58,10 @@ export default async function NewsPage({ searchParams }: Props) {
   const hero = page === 1 ? ordered.slice(0, ordered.length > 3 ? 6 : 1) : [];
   const rest = ordered.slice(hero.length);
   const pages = Math.max(1, Math.ceil(rest.length / PER_PAGE));
+  // Mỗi trang một đường dẫn: ?trang=1 / abc / quá số trang → về đúng trang.
+  if (sp.trang !== undefined && (page > pages || sp.trang !== (page > 1 ? String(page) : undefined))) redirect(link({ cat, page: Math.min(page, pages) }));
   const list = rest.slice((page - 1) * PER_PAGE, page * PER_PAGE);
   const popular = [...all].filter((p) => p.views > 0).sort((a, b) => b.views - a.views).slice(0, 5);
-  const link = (q: { cat?: string; page?: number }) => {
-    const u = new URLSearchParams();
-    if (q.cat) u.set('chuyen-muc', q.cat);
-    if (q.page && q.page > 1) u.set('trang', String(q.page));
-    return u.size ? `${BASE}?${u}` : BASE;
-  };
 
   return (
     <div className="nw-page">

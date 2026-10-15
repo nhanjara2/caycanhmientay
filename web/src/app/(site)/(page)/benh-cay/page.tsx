@@ -1,19 +1,28 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { CauseIcon, PartIcon, PlantMap } from '@/components/DiseaseArt';
 import { Icon } from '@/components/Icon';
 import { CAUSES, PARTS, PLANTS, causeOf, isCause, isPart, isPlant, diseaseScore, partName } from '@/lib/diseases';
 import { allDiseases } from '@/server/diseases';
 
-export const metadata: Metadata = {
-  title: 'Tìm hiểu bệnh cây trồng',
-  description: 'Tra cứu bệnh cây theo bộ phận bị bệnh, nguyên nhân hoặc triệu chứng: nhận biết, cách xử lý và phòng bệnh.',
-};
-
 const PER_PAGE = 20;
 
 type Filters = { bo_phan?: string; nguyen_nhan?: string; cay?: string; q?: string; trang?: string };
 type Props = { searchParams: Promise<Filters> };
+
+/** SEO: trang danh sách (kể cả ?trang=n) là trang chuẩn; đang lọc / tìm thì noindex, canonical về /benh-cay. */
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  const sp = await searchParams;
+  const filtered = !!(sp.bo_phan || sp.nguyen_nhan || sp.cay || sp.q?.trim());
+  const page = Number(sp.trang);
+  return {
+    title: 'Tìm hiểu bệnh cây trồng',
+    description: 'Tra cứu bệnh cây theo bộ phận bị bệnh, nguyên nhân hoặc triệu chứng: nhận biết, cách xử lý và phòng bệnh.',
+    alternates: { canonical: !filtered && Number.isInteger(page) && page > 1 ? `/benh-cay?trang=${page}` : '/benh-cay' },
+    robots: filtered ? { index: false, follow: true } : undefined,
+  };
+}
 
 /** Link giữ các bộ lọc đang chọn, đổi những gì truyền vào (undefined = bỏ lọc đó), về trang 1. */
 function hrefWith(cur: Filters, patch: Filters, hash = '#danh-sach') {
@@ -39,6 +48,10 @@ export default async function DiseaseLibraryPage({ searchParams }: Props) {
     .map(({ d }) => d);
   const pages = Math.max(1, Math.ceil(list.length / PER_PAGE));
   const page = Math.min(pages, Math.max(1, Number(sp.trang) || 1));
+  // Mỗi trang một đường dẫn: ?trang=1 / 0 / abc / quá số trang → về đúng trang (không thành trang trùng).
+  if (sp.trang !== undefined && sp.trang !== (page > 1 ? String(page) : undefined)) {
+    redirect(hrefWith(cur, { trang: page > 1 ? String(page) : undefined }, ''));
+  }
   const shown = list.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
   const title = [

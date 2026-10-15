@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { FlashSale } from '@/components/FlashSale';
 import { HomeCarousel, HomeHero, type Slide } from '@/components/home/HomeCarousel';
@@ -55,6 +56,8 @@ function seasonNow() {
     ? { key: 'mưa', name: 'Mùa mưa' }
     : { key: 'khô', name: 'Mùa khô' };
 }
+
+export const metadata: Metadata = { alternates: { canonical: '/' } };
 
 export default async function HomePage() {
   const [banners, products, flash, categories, counts, posts, allVideos, projects, diseases] = await Promise.all([

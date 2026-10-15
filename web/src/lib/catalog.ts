@@ -2,6 +2,7 @@
 // Sản phẩm, danh mục nằm trong database — truy vấn qua src/server/catalog.ts, src/server/categories.ts (chỉ chạy trên server).
 import type { IconName } from '@/components/Icon';
 import type { ProductAttrs } from './product-filters';
+import { plainText, slugify, SLUG_RE } from './slug';
 
 /** Cách giao khác nhau: cây sống giao riêng bằng xe, vật tư giao nhanh. */
 export type ShipGroup = 'plant' | 'supply';
@@ -169,12 +170,11 @@ export function applySpecTemplate(rows: [string, string][], fields: SpecField[])
 }
 
 /** Tìm không phân biệt dấu: "tri nam" khớp "trị nấm". */
-export const normalize = (s: string) =>
-  s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase().trim();
+export const normalize = plainText;
 
-/** "Cây nội thất" → "cay-noi-that" (đường dẫn danh mục / nhóm con). */
-export const toSlug = (s: string, max = 60) => normalize(s).replace(/[^a-z0-9]+/g, '-').slice(0, max).replace(/^-+|-+$/g, '');
-export const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+/** "Cây nội thất" → "cay-noi-that" (đường dẫn danh mục / nhóm con) — quy ước chung ở lib/slug.ts. */
+export const toSlug = (s: string, max = 60) => slugify(s, max);
+export { SLUG_RE };
 
 /** Tối đa ảnh mỗi sản phẩm (mỗi ảnh ~200–500KB sau khi nén). */
 export const MAX_PRODUCT_IMAGES = 10;

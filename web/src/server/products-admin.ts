@@ -2,6 +2,7 @@ import 'server-only';
 import { and, asc, count, desc, eq, gt, ilike, inArray, like, notInArray, or, sql } from 'drizzle-orm';
 import * as z from 'zod';
 import { ELEMENTS, findCategory, MAX_PRODUCT_IMAGES, normalize, parseYoutubeId, PRODUCT_ICONS, productImageUrl, specTemplate, type FengShui } from '@/lib/catalog';
+import { slugify } from '@/lib/slug';
 import { advisorKeys } from '@/lib/plant-advisor';
 import { attrKeys, type ProductAttrs } from '@/lib/product-filters';
 import { SEO_NAME_MAX } from '@/lib/seo-name';
@@ -117,7 +118,6 @@ export const ProductInputSchema = z.object({
 });
 export type ProductInput = z.infer<typeof ProductInputSchema>;
 
-const slugify = (s: string) => normalize(s).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80);
 
 export async function listProductsAdmin({ q, category }: { q?: string; category?: string } = {}) {
   const term = q?.trim() ? `%${q.trim().replace(/[%_]/g, '')}%` : undefined;

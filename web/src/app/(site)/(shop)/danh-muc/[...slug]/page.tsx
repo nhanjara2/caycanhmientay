@@ -28,9 +28,20 @@ async function resolve(slug: string[]) {
   return { cat, sub };
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+/**
+ * SEO: canonical luôn là trang danh mục / nhóm con gốc (không ?tham số — bỏ cả utm_…, fbclid). Đang lọc / sắp xếp thì
+ * noindex nhưng vẫn follow: các tổ hợp bộ lọc không thành hàng nghìn trang trùng trên Google, sản phẩm bên trong vẫn được lần theo.
+ */
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const r = await resolve((await params).slug);
-  return { title: r ? (r.sub?.name ?? r.cat.name) : 'Không tìm thấy' };
+  if (!r) return { title: 'Không tìm thấy' };
+  const sp = await searchParams;
+  const varied = typeof sp.sap_xep === 'string' || selectedCount(parseSel(sp, groupsFor(r.cat.slug))) > 0;
+  return {
+    title: r.sub?.name ?? r.cat.name,
+    alternates: { canonical: r.sub ? `/danh-muc/${r.cat.slug}/${r.sub.slug}` : `/danh-muc/${r.cat.slug}` },
+    robots: varied ? { index: false, follow: true } : undefined,
+  };
 }
 
 /** ProductListingLayout: tiêu đề + danh mục con + bộ lọc đa chọn + sắp xếp + lưới 4 cột. Bộ lọc nằm trên đường dẫn (?vi-tri=…&mau=…). */
@@ -98,6 +109,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
               href={withQuery(base, sel, s.key === 'pho-bien' ? undefined : s.key)}
               aria-current={activeSort === s.key ? 'true' : undefined}
               scroll={false}
+              rel={s.key === 'pho-bien' ? undefined : 'nofollow'}
             >
               {s.label}
             </Link>

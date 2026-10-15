@@ -15,7 +15,7 @@ type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const d = await getDisease((await params).slug);
-  return d ? { title: d.name, description: d.summary } : { title: 'Không tìm thấy bài bệnh' };
+  return d ? { title: d.name, description: d.summary, alternates: { canonical: `/benh-cay/${d.slug}` } } : { title: 'Không tìm thấy bài bệnh' };
 }
 
 /** Tên ngắn cho câu hỏi: "Thối rễ (úng rễ do nấm)" → "thối rễ". */

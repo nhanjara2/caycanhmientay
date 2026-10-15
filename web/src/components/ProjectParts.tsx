@@ -3,12 +3,12 @@ import { projectImageUrl, projectPath, projectTypeOf, roleName, type Project } f
 import { Icon } from './Icon';
 
 /** Thẻ dự án: ảnh bìa, loại công trình, địa điểm · năm, tên, tóm tắt, tối đa 3 con số. Cả thẻ bấm được (link trải lên thẻ). */
-export function ProjectCard({ p, wide, headingLevel = 3 }: { p: Project; wide?: boolean; headingLevel?: 2 | 3 }) {
+export function ProjectCard({ p, wide, headingLevel = 3, hidden }: { p: Project; wide?: boolean; headingLevel?: 2 | 3; hidden?: boolean }) {
   const cover = p.images[0];
   const H = headingLevel === 2 ? 'h2' : 'h3';
   const where = [p.location, p.year].filter(Boolean).join(' · ');
   return (
-    <article className={wide ? 'dn-card dn-card--wide' : 'dn-card'}>
+    <article className={wide ? 'dn-card dn-card--wide' : 'dn-card'} hidden={hidden}>
       <div className="dn-card__media">
         {cover
           ? <img src={projectImageUrl(cover.file)} alt={cover.caption || p.title} loading="lazy" />

@@ -10,6 +10,7 @@ import { getPartnerProfile } from '@/server/partners';
 export const metadata: Metadata = {
   title: 'Yêu cầu báo giá sỉ',
   description: 'Gửi danh sách cây cảnh, vật tư cần mua số lượng lớn — Cây Cảnh Miền Tây báo giá sỉ cho đối tác dịch vụ cảnh quan, công trình và buôn bán.',
+  alternates: { canonical: '/bao-gia-si' },
 };
 
 type Props = { searchParams: Promise<{ loai?: string; 'phuong-an'?: string }> };

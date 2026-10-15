@@ -17,7 +17,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const p = getPolicy((await params).slug);
-  return p ? { title: p.title, description: p.description } : { title: 'Không tìm thấy' };
+  return p ? { title: p.title, description: p.description, alternates: { canonical: `/chinh-sach/${p.slug}` } } : { title: 'Không tìm thấy' };
 }
 
 /** Trang "Nguồn ảnh minh họa": thêm mục ghi công ảnh triệu chứng bệnh cây (lib/seed-disease-images.ts). */

@@ -11,6 +11,7 @@ import { categoryLabel, elementName, isQuote, type Product } from '@/lib/catalog
 import { YOUTUBE_URL } from '@/lib/contact';
 import { reviewStats } from '@/lib/reviews';
 import { seoNameOf } from '@/lib/seo-name';
+import { absoluteUrl } from '@/lib/site';
 import { boughtTogether, getProduct } from '@/server/catalog';
 import { getCurrentUser } from '@/server/auth';
 import { getCategories } from '@/server/categories';
@@ -33,8 +34,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-const site = () => (process.env.SITE_URL ?? '').replace(/\/$/, '');
-
 /** Schema Product (JSON-LD) để Google hiểu tên chi tiết, ảnh, giá, còn hàng; đánh giá chỉ ghi khi có đánh giá thật. */
 function productJsonLd(p: Product, rating: { avg: number; count: number }) {
   const prices = p.options.filter((o) => !isQuote(o)).map((o) => o.price);
@@ -45,7 +44,7 @@ function productJsonLd(p: Product, rating: { avg: number; count: number }) {
     alternateName: p.name,
     sku: p.sku,
     description: p.lead,
-    image: p.images?.length ? p.images.map((src) => `${site()}${src}`) : undefined,
+    image: p.images?.length ? p.images.map(absoluteUrl) : undefined,
     brand: { '@type': 'Brand', name: 'Cây Cảnh Miền Tây' },
     offers: prices.length ? {
       '@type': 'AggregateOffer', priceCurrency: 'VND', lowPrice: Math.min(...prices), highPrice: Math.max(...prices), offerCount: prices.length,
