@@ -15,6 +15,7 @@
     "db:studio": "node --env-file-if-exists=.env.local node_modules/drizzle-kit/bin.cjs studio",
     "seo:sitemap": "tsx scripts/check-sitemap.mts",
     "seo:canonical": "tsx scripts/check-canonical.mts",
+    "seo:metadata": "tsx scripts/check-metadata.mts",
     "db:setup": "tsx --env-file-if-exists=.env.local scripts/db-setup.mts"
   },
   "dependencies": {
