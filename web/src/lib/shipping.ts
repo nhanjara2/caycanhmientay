@@ -27,7 +27,7 @@ export type ShippingConfig = {
 };
 
 /** Phí 35k / 20k, miễn phí từ 800k / 300k. Mặc định giao toàn quốc, không hẹn khung giờ; bật giới hạn vùng (30 km) và khung giờ (2 khung × 2 ngày) ở Cài đặt giao hàng khi shop có xe giao riêng. */
-export const DEFAULT_MIN_ORDER = 300_000;
+export const DEFAULT_MIN_ORDER = 150_000;
 
 export const DEFAULT_SHIPPING: ShippingConfig = {
   plant: { fee: 35000, freeFrom: 800000 },
