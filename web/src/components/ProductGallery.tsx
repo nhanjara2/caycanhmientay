@@ -40,18 +40,21 @@ export function ProductGallery({ p }: { p: Product }) {
     const r = box.getBoundingClientRect();
     // Khung phóng to = vuông, rộng bằng cả cột ảnh (ảnh lớn có thể hẹp hơn cột trên màn thấp)
     const pane = box.parentElement?.clientWidth || r.width;
-    // Ảnh hiển thị kiểu object-fit: cover → tính khung ảnh thật (có thể tràn ra ngoài khung vuông)
-    const s = Math.max(r.width / img.naturalWidth, r.height / img.naturalHeight);
+    // Ảnh hiển thị kiểu object-fit: contain → tính khung ảnh thật (nằm giữa khung, có thể chừa viền hai bên / trên dưới)
+    const s = Math.min(r.width / img.naturalWidth, r.height / img.naturalHeight);
     const iw = img.naturalWidth * s;
     const ih = img.naturalHeight * s;
-    const w = Math.min(pane / ZOOM, r.width);
-    const h = Math.min(pane / ZOOM, r.height);
-    const x = Math.min(Math.max(e.clientX - r.left - w / 2, 0), r.width - w);
-    const y = Math.min(Math.max(e.clientY - r.top - h / 2, 0), r.height - h);
+    const ix = (r.width - iw) / 2;
+    const iy = (r.height - ih) / 2;
+    // Kính lúp chỉ chạy trong phần có ảnh, không trượt ra viền trống
+    const w = Math.min(pane / ZOOM, iw);
+    const h = Math.min(pane / ZOOM, ih);
+    const x = Math.min(Math.max(e.clientX - r.left - w / 2, ix), ix + iw - w);
+    const y = Math.min(Math.max(e.clientY - r.top - h / 2, iy), iy + ih - h);
     setLens({
       x, y, w, h,
       size: `${iw * ZOOM}px ${ih * ZOOM}px`,
-      pos: `${((r.width - iw) / 2 - x) * ZOOM}px ${((r.height - ih) / 2 - y) * ZOOM}px`,
+      pos: `${(ix - x) * ZOOM}px ${(iy - y) * ZOOM}px`,
     });
   };
 
