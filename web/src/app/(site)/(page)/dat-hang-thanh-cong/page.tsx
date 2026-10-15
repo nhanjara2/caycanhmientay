@@ -41,11 +41,16 @@ export default async function OrderSuccessPage({ searchParams }: Props) {
     <div className="os-page">
       <div className="os-hero">
         <span className="os-check"><Icon name="check" /></span>
-        <h1>Đặt hàng thành công!</h1>
-        <p>
-          Cảm ơn bạn đã chọn Cây Cảnh Miền Tây.{' '}
-          {deposit ? 'Shop sẽ gọi hoặc nhắn Zalo cho bạn trong 30 phút (8:00 – 21:00) để xác nhận đơn và hướng dẫn đặt cọc.' : 'Shop sẽ gọi xác nhận đơn trong 30 phút (8:00 – 21:00).'}
-        </p>
+        <h1>{deposit ? 'Chúc mừng! Đơn hàng của bạn đã được đặt thành công' : 'Đặt hàng thành công!'}</h1>
+        {deposit ? (
+          <p>
+            Cảm ơn bạn đã chọn Cây Cảnh Miền Tây. Chúng tôi sẽ liên hệ anh/chị <b style={{ color: 'var(--ink)' }}>{order.customerName}</b>
+            {order.phone && <> qua số <b style={{ color: 'var(--ink)' }}>{formatPhone(order.phone)}</b> (điện thoại hoặc Zalo)</>} trong 30 phút (8:00 – 21:00)
+            để xác nhận đơn, hướng dẫn đặt cọc và {order.delivery === 'ship' ? 'giao hàng' : 'hẹn nhận cây'}.
+          </p>
+        ) : (
+          <p>Cảm ơn bạn đã chọn Cây Cảnh Miền Tây. Shop sẽ gọi xác nhận đơn trong 30 phút (8:00 – 21:00).</p>
+        )}
         <span className="os-code">Mã đơn <b>{order.code}</b></span>
       </div>
       <div className="os-grid">

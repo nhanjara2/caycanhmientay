@@ -92,11 +92,11 @@ const QUY_CHE: Section[] = [
   { h: 'Quy trình giao dịch', blocks: [
     { ol: [
       '**Chọn hàng:** chọn sản phẩm, quy cách, số lượng rồi bấm **Thêm vào giỏ** hoặc **Mua ngay**.',
-      '**Thanh toán:** vào Giỏ hàng, nhập họ tên, số điện thoại, chọn **Giao tận nơi** (kèm địa chỉ) hoặc **Nhận tại vườn**, nhập mã giảm giá nếu có và chọn phương thức thanh toán. Đơn có thuốc BVTV cần xác nhận đã đọc hướng dẫn an toàn.',
+      '**Thanh toán:** vào Giỏ hàng, nhập họ tên, số điện thoại, chọn **Giao tận nơi** (kèm địa chỉ) hoặc **Nhận tại vườn**, nhập mã giảm giá nếu có rồi bấm **Đặt hàng**. Đơn có thuốc BVTV cần xác nhận đã đọc hướng dẫn an toàn.',
       '**Đặt hàng:** hệ thống tạo đơn và mã đơn. Giá, phí giao hàng, mã giảm giá và tồn kho được tính lại ngay lúc này; số tiền cuối cùng hiện trước khi bạn bấm xác nhận.',
       '**Shop xác nhận:** shop gọi hoặc nhắn xác nhận đơn trong 30 phút (' + HOURS + '). Đơn có hiệu lực khi shop xác nhận.',
       '**Chuẩn bị và giao:** shop chuẩn bị hàng, gửi ảnh cây thật trước khi giao với cây sống, rồi giao tận nơi hoặc giữ hàng chờ bạn nhận tại vườn.',
-      '**Nhận hàng:** kiểm tra hàng, thanh toán (nếu chọn tiền mặt), nhận điểm thưởng. Cây sống được [bảo hành](/chinh-sach/bao-hanh-cay) ' + WARRANTY_DAYS + ' ngày.',
+      '**Nhận hàng:** kiểm tra hàng, nhận điểm thưởng. Cây sống được [bảo hành](/chinh-sach/bao-hanh-cay) ' + WARRANTY_DAYS + ' ngày.',
     ] },
     'Bạn theo dõi đơn ở **Tài khoản → Đơn hàng** qua các bước: Đặt hàng → Xác nhận → Chuẩn bị cây → Đang giao → Đã giao. Có thay đổi quan trọng, bạn nhận thông báo trên website (biểu tượng chuông) và có thể qua Zalo hoặc email.',
     { ul: [
@@ -219,7 +219,6 @@ function giaoHang({ shipping: s }: PolicyContext): Section[] {
         'Nên **quay video hoặc chụp ảnh lúc mở hàng**, nhất là với cây sống. Đây là căn cứ để kỹ sư xử lý nhanh nếu cây dập, gãy hay khác với đơn.',
         'Cây dập, gãy lúc nhận: gửi yêu cầu ở **Tài khoản → Bảo hành cây** ngay trong ngày nhận ([Chính sách bảo hành](/chinh-sach/bao-hanh-cay)).',
         'Giao sai, thiếu hoặc hư hỏng vật tư: xem [Chính sách đổi trả](/chinh-sach/doi-tra).',
-        'Chọn tiền mặt khi nhận hàng thì thanh toán cho người giao sau khi bạn kiểm tra hàng.',
       ] },
     ] },
     { h: 'Theo dõi đơn, thay đổi và giao không thành công', blocks: [
@@ -312,7 +311,7 @@ const DOI_TRA: Section[] = [
   ] },
   { h: 'Hoàn tiền', blocks: [
     { ul: [
-      'Hoàn tiền theo hình thức bạn đã thanh toán; đơn trả tiền mặt khi nhận hàng được hoàn bằng chuyển khoản vào tài khoản bạn cung cấp.',
+      'Hoàn tiền bằng chuyển khoản vào tài khoản bạn cung cấp.',
       'Thời gian hoàn tiền **3–5 ngày làm việc** kể từ khi shop xác nhận hoàn.',
     ] },
   ] },
@@ -332,7 +331,6 @@ const THANH_TOAN: Section[] = [
   { h: 'Phương thức thanh toán', blocks: [
     { table: { head: ['Phương thức', 'Cách thực hiện', 'Lưu ý'], rows: [
       ['Đặt cọc (shop liên hệ)', 'Bạn đặt hàng trên website, shop gọi hoặc nhắn Zalo xác nhận đơn rồi hướng dẫn chuyển khoản đặt cọc (xem [Chính sách đặt cọc](/chinh-sach/dat-coc)).', 'Chưa cần trả tiền khi đặt hàng. Đơn ghi nhận "Đã thanh toán" khi shop nhận đủ tiền.'],
-      ['Tiền mặt khi nhận hàng', 'Trả trực tiếp cho người giao hàng sau khi kiểm tra hàng.', 'Không áp dụng cho đơn có sản phẩm Flash sale.'],
       ['Chuyển khoản ngân hàng, ví MoMo / ZaloPay, thẻ quốc tế', 'Thanh toán theo hướng dẫn của nhân viên khi xác nhận đơn.', 'Cổng thanh toán trực tuyến trên website đang được tích hợp.'],
     ] } },
     'Với đơn chọn Đặt cọc hoặc thanh toán trước, sau khi bạn đặt hàng, nhân viên liên hệ trong 30 phút (' + HOURS + ') để xác nhận đơn và hướng dẫn thanh toán. Khi shop xác nhận đã nhận tiền, bạn nhận thông báo "Đã nhận thanh toán".',
@@ -372,8 +370,7 @@ const DAT_COC: Section[] = [
   { h: 'Khi nào cần đặt cọc', blocks: [
     { ul: [
       '**Cần đặt cọc:** cây lớn đặt trước và công trình sân vườn.',
-      '**Đơn đặt trên website:** chọn **Đặt cọc** ở bước thanh toán; shop gọi hoặc nhắn Zalo xác nhận đơn, báo mức cọc và hướng dẫn chuyển khoản.',
-      '**Không cần đặt cọc:** đơn chọn trả tiền mặt khi nhận hàng; bạn thanh toán theo [Chính sách thanh toán](/chinh-sach/thanh-toan).',
+      '**Đơn đặt trên website:** sau khi bạn bấm Đặt hàng, shop gọi hoặc nhắn Zalo xác nhận đơn, báo mức cọc và hướng dẫn chuyển khoản. Shop không thu tiền mặt khi giao hàng; xem thêm [Chính sách thanh toán](/chinh-sach/thanh-toan).',
     ] },
   ] },
   { h: 'Mức cọc và phần còn lại', blocks: [
@@ -384,7 +381,7 @@ const DAT_COC: Section[] = [
   ] },
   { h: 'Quy trình', blocks: [
     { ol: [
-      'Đặt hàng trên website và chọn **Đặt cọc**, hoặc liên hệ shop qua hotline, Zalo, hoặc [gửi yêu cầu báo giá sỉ](/bao-gia-si) kèm danh sách cây / bảng khối lượng; shop xác nhận và gửi báo giá qua Zalo.',
+      'Đặt hàng trên website (shop sẽ liên hệ lại), hoặc liên hệ shop qua hotline, Zalo, hoặc [gửi yêu cầu báo giá sỉ](/bao-gia-si) kèm danh sách cây / bảng khối lượng; shop xác nhận và gửi báo giá qua Zalo.',
       'Shop xác nhận cây, quy cách, số lượng, giá và thời gian giao bằng báo giá hay tin nhắn.',
       'Bạn chuyển khoản tiền cọc; shop xác nhận khi đã nhận tiền.',
       'Shop chuẩn bị cây hoặc triển khai công trình theo đúng thỏa thuận.',
@@ -526,7 +523,7 @@ const DIEU_KHOAN: Section[] = [
       'Đơn hàng có hiệu lực khi shop xác nhận (thường qua điện thoại hoặc Zalo trong 30 phút, ' + HOURS + ').',
       'Shop có thể từ chối hoặc hủy đơn khi hết hàng, hiển thị sai giá hay thông tin do lỗi hệ thống, không liên lạc được với bạn hoặc nghi ngờ gian lận. Đơn đã thanh toán được hoàn tiền.',
       'Mã giảm giá và quà tặng dùng theo điều kiện đi kèm (đơn tối thiểu, số lượt, thời hạn, lượt dùng cho mỗi tài khoản hoặc số điện thoại nhận hàng) và không quy đổi thành tiền mặt.',
-      'Sản phẩm Flash sale có số lượng và thời gian giới hạn, không thanh toán tiền mặt khi nhận hàng.',
+      'Sản phẩm Flash sale có số lượng và thời gian giới hạn.',
       'Đơn có thuốc BVTV cần xác nhận đã đọc hướng dẫn an toàn trước khi đặt.',
       'Điểm thưởng theo [Thể lệ tích điểm](/chinh-sach/tich-diem).',
     ] },

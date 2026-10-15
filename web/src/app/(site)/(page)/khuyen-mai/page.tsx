@@ -98,7 +98,7 @@ export default async function PromotionsPage() {
         <ul className="pm-rules">
           <li>Mỗi đơn hàng dùng được <b>một mã giảm giá và một mã miễn phí giao</b>. Mã giảm giá tính trên tiền hàng sau khi đã trừ giá giảm của sản phẩm, chưa gồm phí giao.</li>
           <li>Mỗi mã có điều kiện riêng (đơn tối thiểu, hạn dùng, số lượt) — xem ngay trên thẻ mã. Mã hết lượt hoặc hết hạn thì trang thanh toán sẽ báo rõ.</li>
-          <li>Đơn có sản phẩm Flash sale không thanh toán khi nhận hàng. Đơn mua xong còn được tích điểm: xem <Link href="/chinh-sach/tich-diem">Thể lệ tích điểm</Link>.</li>
+          <li>Đơn mua xong còn được tích điểm: xem <Link href="/chinh-sach/tich-diem">Thể lệ tích điểm</Link>.</li>
         </ul>
       </section>
 

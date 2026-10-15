@@ -50,8 +50,9 @@ export type PlaceOrderResult = { ok: true; code: string } | { ok: false; error: 
 
 /** Tạo đơn: giá, phí giao, quy tắc Flash sale & thuốc BVTV đều tính lại từ database — không tin số liệu từ trình duyệt. */
 export async function createOrder(input: PlaceOrderInput, user: SessionUser | null): Promise<PlaceOrderResult> {
-  // Chưa nối cổng thanh toán trực tuyến: đơn chọn QR / ví / thẻ (trang thanh toán mở từ trước) chuyển thành "Đặt cọc" — shop liên hệ hướng dẫn.
-  if (!ONLINE_PAYMENTS_READY && ONLINE_PAYMENT_METHODS.includes(input.payment)) input = { ...input, payment: 'deposit' };
+  // Shop không nhận COD trên web; chưa nối cổng thanh toán trực tuyến thì đơn chọn QR / ví / thẻ (trang thanh toán mở từ trước)
+  // cũng thành "Đặt cọc" — shop gọi / nhắn Zalo hướng dẫn.
+  if (input.payment === 'cod' || (!ONLINE_PAYMENTS_READY && ONLINE_PAYMENT_METHODS.includes(input.payment))) input = { ...input, payment: 'deposit' };
   // Tài khoản (Google) phải có SĐT liên hệ trước khi đặt — khách vãng lai thì SĐT nằm ngay trong đơn.
   if (user && !accountPhone(user)) return { ok: false, error: 'Vui lòng cập nhật số điện thoại cho tài khoản trước khi đặt hàng', needsPhone: true };
   const cfg = await getShippingConfig();
@@ -64,9 +65,7 @@ export async function createOrder(input: PlaceOrderInput, user: SessionUser | nu
     if (u.price <= 0) return { ok: false, error: `“${p.name}” chưa có giá bán online — vui lòng liên hệ shop để báo giá rồi bỏ khỏi giỏ.` };
     lines.push({ p, u, it });
   }
-  const hasFlash = lines.some((l) => l.p.flash);
   const hasPesticide = lines.some((l) => l.p.pesticide);
-  if (hasFlash && input.payment === 'cod') return { ok: false, error: 'Đơn có sản phẩm Flash sale không áp dụng thanh toán khi nhận hàng' };
   if (hasPesticide && !input.safetyAck) return { ok: false, error: 'Vui lòng xác nhận đã đọc hướng dẫn an toàn thuốc BVTV' };
 
   // Khung giờ giao chỉ bắt buộc khi shop bật hẹn giờ (có xe giao riêng).

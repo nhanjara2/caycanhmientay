@@ -29,7 +29,6 @@ import { VoucherBox } from '@/components/VoucherBox';
 // Logo lấy theo PAY_LOGO (public/images/pay/); cards: dải logo nhỏ dưới tên
 const ALL_PAYMENTS: { key: keyof typeof PAY_LABEL; label: string; note?: string; icon: IconName; cards?: [string, string][] }[] = [
   { key: 'deposit', label: 'Đặt cọc — shop liên hệ hướng dẫn', note: 'Chưa cần trả tiền ngay. Sau khi đặt, shop gọi hoặc nhắn Zalo trong 30 phút (8:00 – 21:00) để xác nhận đơn và hướng dẫn chuyển khoản đặt cọc.', icon: 'phone' },
-  { key: 'cod', label: 'Thanh toán tiền mặt khi nhận hàng', note: 'Không áp dụng cho đơn có sản phẩm Flash sale', icon: 'cash' },
   { key: 'qr', label: 'Chuyển khoản ngân hàng (QR Code)', note: 'Quét mã, xác nhận tự động', icon: 'qr' },
   { key: 'momo', label: 'Ví điện tử MoMo', icon: 'wallet' },
   { key: 'zalopay', label: 'Ví điện tử ZaloPay', icon: 'wallet' },
@@ -38,16 +37,17 @@ const ALL_PAYMENTS: { key: keyof typeof PAY_LABEL; label: string; note?: string;
     cards: [['Visa', 'visa.svg'], ['Mastercard', 'mastercard.svg'], ['JCB', 'jcb.svg'], ['Apple Pay', 'applepay.svg']],
   },
 ];
-// Chưa nối cổng thanh toán trực tuyến thì chỉ hiện Đặt cọc + tiền mặt (xem ONLINE_PAYMENTS_READY trong lib/order-labels.ts).
+// Shop không nhận tiền mặt khi nhận hàng (COD). Chưa nối cổng thanh toán trực tuyến thì không có bước chọn phương thức: đơn luôn là Đặt cọc
+// (shop gọi / nhắn Zalo sau khi đặt) — xem ONLINE_PAYMENTS_READY trong lib/order-labels.ts.
 const PAYMENTS = ALL_PAYMENTS.filter((m) => ONLINE_PAYMENTS_READY || !ONLINE_PAYMENT_METHODS.includes(m.key));
 const DEFAULT_PAY = PAYMENTS[0].key;
+const SHOW_PAY_PICKER = PAYMENTS.length > 1;
 
 const PHONE = /^(0|\+84)(3|5|7|8|9)\d{8}$/;
 
 export default function CheckoutPage() {
   const { lines, ready, clear } = useCart();
   const router = useRouter();
-  const hasFlash = lines.some((l) => l.snap.flash);
 
   const [delivery, setDelivery] = useState<'ship' | 'pickup'>('ship');
   const [name, setName] = useState('');
@@ -135,8 +135,7 @@ export default function CheckoutPage() {
     return s && !s.full && !s.past ? { date, key } : null;
   })();
 
-  // Đơn có Flash sale không được trả tiền mặt.
-  const pay = picked === 'cod' && hasFlash ? DEFAULT_PAY : picked;
+  const pay = picked;
 
   const errors = {
     name: !name.trim() && 'Vui lòng nhập họ tên',
@@ -288,39 +287,39 @@ export default function CheckoutPage() {
 
           <CartList editable={false} />
 
-          <div className="vx-card">
-            <h3 className="vx-card__title">Chọn phương thức thanh toán</h3>
-            <div className="vx-pay" role="radiogroup">
-              {PAYMENTS.map((m) => {
-                const disabled = m.key === 'cod' && hasFlash;
-                return (
-                  <button
-                    key={m.key}
-                    type="button"
-                    role="radio"
-                    className="vx-pay__opt"
-                    aria-checked={pay === m.key}
-                    aria-disabled={disabled || undefined}
-                    onClick={() => !disabled && setPay(m.key)}
-                  >
-                    <span className="vx-radio" />
-                    <span className="vx-pay__mark app-pay-logo">
-                      {PAY_LOGO[m.key] ? <img src={`/images/pay/${PAY_LOGO[m.key]}`} alt="" /> : <Icon name={m.icon} />}
-                    </span>
-                    <span>
-                      {m.label}
-                      {m.note && <small>{m.note}</small>}
-                      {m.cards && (
-                        <span className="app-pay-cards">
-                          {m.cards.map(([name, file]) => <img key={name} src={`/images/pay/${file}`} alt={name} title={name} />)}
-                        </span>
-                      )}
-                    </span>
-                  </button>
-                );
-              })}
+          {SHOW_PAY_PICKER && (
+            <div className="vx-card">
+              <h3 className="vx-card__title">Chọn phương thức thanh toán</h3>
+              <div className="vx-pay" role="radiogroup">
+                {PAYMENTS.map((m) => {
+                  return (
+                    <button
+                      key={m.key}
+                      type="button"
+                      role="radio"
+                      className="vx-pay__opt"
+                      aria-checked={pay === m.key}
+                      onClick={() => setPay(m.key)}
+                    >
+                      <span className="vx-radio" />
+                      <span className="vx-pay__mark app-pay-logo">
+                        {PAY_LOGO[m.key] ? <img src={`/images/pay/${PAY_LOGO[m.key]}`} alt="" /> : <Icon name={m.icon} />}
+                      </span>
+                      <span>
+                        {m.label}
+                        {m.note && <small>{m.note}</small>}
+                        {m.cards && (
+                          <span className="app-pay-cards">
+                            {m.cards.map(([name, file]) => <img key={name} src={`/images/pay/${file}`} alt={name} title={name} />)}
+                          </span>
+                        )}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         <OrderSummary totals={totals} delivery={delivery} voucher={<VoucherBox state={vouchers} goods={totals.goods} shipFee={totals.plantShip + totals.supplyShip} />}>
@@ -331,6 +330,9 @@ export default function CheckoutPage() {
             </label>
           )}
           {err('safety')}
+          {!SHOW_PAY_PICKER && (
+            <div className="vx-note"><Icon name="phone" /><div><b>Chưa cần thanh toán ngay.</b> Sau khi bạn đặt hàng, shop gọi hoặc nhắn Zalo trong 30 phút (8:00 – 21:00) để xác nhận đơn, hướng dẫn đặt cọc và giao hàng.</div></div>
+          )}
           {serverError && <div className="vx-note" role="alert"><Icon name="alert" /><div>{serverError}</div></div>}
           <button type="submit" className="vx-btn vx-btn--primary vx-btn--lg vx-btn--block" disabled={busy || short > 0}>{busy ? 'Đang đặt hàng…' : short > 0 ? 'Chưa đủ đơn tối thiểu để giao' : 'Đặt hàng'}</button>
           {short > 0 && <Link href="/gio-hang" className="vx-btn vx-btn--outline vx-btn--block">Quay lại giỏ hàng để mua thêm</Link>}

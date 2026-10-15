@@ -47,8 +47,8 @@ export const PAY_LOGO: Partial<Record<keyof typeof PAY_LABEL, string>> = {
 
 /**
  * Cổng thanh toán trực tuyến (VietQR / MoMo / ZaloPay / thẻ) đã nối chưa.
- * false (hiện tại): trang thanh toán chỉ cho chọn "Đặt cọc" (shop gọi / nhắn Zalo hướng dẫn) hoặc tiền mặt khi nhận hàng,
- * và `createOrder` đổi mọi đơn chọn cổng trực tuyến (trang mở từ trước) thành "Đặt cọc".
+ * false (hiện tại): trang thanh toán không có bước chọn phương thức — mọi đơn là "Đặt cọc" (shop gọi / nhắn Zalo hướng dẫn),
+ * và `createOrder` đổi đơn chọn cổng trực tuyến (trang mở từ trước) thành "Đặt cọc". Web không nhận COD (`cod` chỉ còn cho đơn cũ / POS).
  * Nối cổng xong: đổi thành true, rồi làm bước chuyển sang cổng + webhook đánh dấu đã trả ở trang thanh toán / `createOrder`.
  */
 export const ONLINE_PAYMENTS_READY = false;
