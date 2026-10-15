@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { cache } from 'react';
 import { AdvisorBanner } from '@/components/AdvisorBanner';
 import { Breadcrumb, EmptyState } from '@/components/Blocks';
 import { Icon } from '@/components/Icon';
@@ -19,6 +20,9 @@ type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
+/** generateMetadata và trang dùng chung một lần đọc database trong cùng request. */
+const listOf = cache((cat: string, sub?: string) => productsIn(cat, sub));
+
 /** Danh mục / nhóm con đang ẩn khỏi menu vẫn mở được (đường dẫn cũ, breadcrumb của sản phẩm không bị lỗi). */
 async function resolve(slug: string[]) {
   const [catSlug, subSlug, ...rest] = slug;
@@ -31,16 +35,18 @@ async function resolve(slug: string[]) {
 /**
  * SEO: canonical luôn là trang danh mục / nhóm con gốc (không ?tham số — bỏ cả utm_…, fbclid). Đang lọc / sắp xếp thì
  * noindex nhưng vẫn follow: các tổ hợp bộ lọc không thành hàng nghìn trang trùng trên Google, sản phẩm bên trong vẫn được lần theo.
+ * Danh mục / nhóm con chưa có sản phẩm nào cũng noindex (trang trống = soft 404); có hàng lại là tự index.
  */
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const r = await resolve((await params).slug);
   if (!r) return { title: 'Không tìm thấy' };
   const sp = await searchParams;
   const varied = typeof sp.sap_xep === 'string' || selectedCount(parseSel(sp, groupsFor(r.cat.slug))) > 0;
+  const empty = !(await listOf(r.cat.slug, r.sub?.slug)).length;
   return {
     title: r.sub?.name ?? r.cat.name,
     alternates: { canonical: r.sub ? `/danh-muc/${r.cat.slug}/${r.sub.slug}` : `/danh-muc/${r.cat.slug}` },
-    robots: varied ? { index: false, follow: true } : undefined,
+    robots: varied || empty ? { index: false, follow: true } : undefined,
   };
 }
 
@@ -53,7 +59,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   const sap_xep = typeof sp.sap_xep === 'string' ? sp.sap_xep : undefined;
   const groups = groupsFor(cat.slug);
   const sel = parseSel(sp, groups);
-  const all = await productsIn(cat.slug, sub?.slug);
+  const all = await listOf(cat.slug, sub?.slug);
   const items = sortProducts(filterProducts(all, sel), sap_xep);
   const origins = originOptions(all);
   const base = sub ? `/danh-muc/${cat.slug}/${sub.slug}` : `/danh-muc/${cat.slug}`;

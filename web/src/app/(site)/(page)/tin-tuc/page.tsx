@@ -30,10 +30,13 @@ function link(q: { cat?: string; page?: number }) {
 
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
   const { cat, page } = filters(await searchParams);
+  // Chưa có bài nào (trong chuyên mục đang xem) → trang trống, noindex tới khi có bài (tránh soft 404).
+  const empty = !(await publishedPosts()).some((p) => sectionOf(p.category) === 'news' && (!cat || p.category === cat));
   return {
     title: cat ? `${categoryOf(cat)?.name} · Truyền thông` : 'Truyền thông',
     description: 'Tin tức, hoạt động cộng đồng, báo chí và tuyển dụng của Cây Cảnh Miền Tây.',
     alternates: { canonical: link({ cat, page }) },
+    robots: empty ? { index: false, follow: true } : undefined,
   };
 }
 

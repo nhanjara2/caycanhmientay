@@ -6,10 +6,11 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ['exceljs'],
   // 09/10/2026 shop thôi làm dịch vụ, chỉ bán sỉ: trang dịch vụ cũ chuyển về trang Đối tác sỉ / Báo giá sỉ;
   // trang Khách doanh nghiệp + dự án chuyển hẳn sang /doi-tac.
+  // SEO (15/10/2026): trang đã gỡ hẳn và có trang thay thế → chuyển vĩnh viễn (308), một bước tới đích cuối.
   async redirects() {
     return [
-      { source: '/dich-vu/dat-lich-khao-sat', destination: '/bao-gia-si', permanent: false },
-      { source: '/dich-vu/:path*', destination: '/doi-tac', permanent: false },
+      { source: '/dich-vu/dat-lich-khao-sat', destination: '/bao-gia-si', permanent: true },
+      { source: '/dich-vu/:path*', destination: '/doi-tac', permanent: true },
       { source: '/doanh-nghiep/du-an/:slug', destination: '/doi-tac/cong-trinh/:slug', permanent: true },
       { source: '/doanh-nghiep', destination: '/doi-tac', permanent: true },
     ];

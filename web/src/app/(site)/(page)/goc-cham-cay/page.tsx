@@ -26,11 +26,13 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   const name = cat ? categoryOf(cat)?.name : tag ? `#${tag}` : video ? 'Video chăm cây' : undefined;
   // SEO: trang chính + từng chuyên mục (kể cả ?trang=n) là trang chuẩn; trang thẻ chủ đề và "Video" (trùng /video) thì noindex.
   const thin = !!tag || video;
+  // Chưa có bài nào (trong chuyên mục đang xem) → trang trống, noindex tới khi có bài (tránh soft 404).
+  const empty = !(await publishedPosts()).some((p) => sectionOf(p.category) === 'blog' && (!cat || p.category === cat));
   return {
     title: name ? `${name} · Góc chăm cây` : 'Góc chăm cây',
     description: 'Kinh nghiệm chăm cây, bắt bệnh, dùng thuốc và phân bón đúng cách từ nhà vườn Cây Cảnh Miền Tây.',
     alternates: { canonical: thin ? BASE : href({ 'chuyen-muc': cat, trang: cat && page > 1 ? page : undefined }) },
-    robots: thin ? { index: false, follow: true } : undefined,
+    robots: thin || empty ? { index: false, follow: true } : undefined,
   };
 }
 
