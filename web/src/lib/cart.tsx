@@ -5,6 +5,8 @@ import { isQuote, optionOf, type Product } from './catalog';
 import { snapOf, type CartLine } from './cart-snap';
 import { computeTotals, type Totals } from './pricing';
 import { useAuth } from './auth';
+import { useDeliverTo } from './deliver-to';
+import { regionOfAddress, type ShipRegion } from './shipping';
 import { useShipping } from './shipping-client';
 
 export { SHIP_RULES } from './pricing';
@@ -14,6 +16,8 @@ export type { Totals } from './pricing';
 type CartCtx = {
   lines: CartLine[];
   totals: Totals;
+  /** Vùng nhận hàng suy ra từ "Giao đến" ở đầu trang (phí giao cây sống khác nhau theo vùng); null = chưa chọn nơi nhận. */
+  region: ShipRegion | null;
   ready: boolean;
   add: (product: Product, option?: number, qty?: number) => void;
   setQty: (slug: string, option: number, qty: number) => void;
@@ -34,7 +38,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [lines, setLines] = useState<CartLine[]>([]);
   const [ready, setReady] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
-  const { rules } = useShipping();
+  const { rules, regionProvinces } = useShipping();
+  const { place } = useDeliverTo();
 
   useEffect(() => {
     try {
@@ -92,10 +97,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // Combo 2 cây, chiết khấu đối tác đã duyệt hiện ngay trong giỏ (server tính lại khi đặt).
   const partnerPct = useAuth().user?.partner?.discount ?? 0;
-  const totals = useMemo(() => computeTotals(lines.map((l) => ({ ...l.snap, qty: l.qty })), 'ship', 0, rules, partnerPct), [lines, rules, partnerPct]);
+  // Phí giao cây sống tính theo nơi nhận: lấy từ "Giao đến" nếu khách đã chọn, chưa chọn thì tạm tính theo vùng rẻ nhất (thanh toán chốt theo địa chỉ thật).
+  const region = useMemo(() => (place ? regionOfAddress(place.detail || place.label, regionProvinces) : null), [place, regionProvinces]);
+  const totals = useMemo(() => computeTotals(lines.map((l) => ({ ...l.snap, qty: l.qty })), 'ship', 0, rules, partnerPct, region), [lines, rules, partnerPct, region]);
 
   return (
-    <Ctx.Provider value={{ lines, totals, ready, add, setQty, remove, replace: setLines, merge, clear, toast, notify: setToast }}>
+    <Ctx.Provider value={{ lines, totals, region, ready, add, setQty, remove, replace: setLines, merge, clear, toast, notify: setToast }}>
       {children}
     </Ctx.Provider>
   );

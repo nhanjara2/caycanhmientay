@@ -95,6 +95,8 @@ export const ProductInputSchema = z.object({
     garden: money.nullable().default(null),
     cost: money.nullable().default(null),
     combo2: money.nullable().default(null),
+    /** Cây lớn / cồng kềnh: tính thêm phụ phí giao mỗi cây (Cài đặt giao hàng). */
+    bulky: z.boolean().default(false),
     stock: z.number().int().min(0).max(100_000).optional(), // chỉ dùng khi tạo quy cách mới
   })).min(1, 'Cần ít nhất 1 quy cách').max(10),
 }).superRefine((v, ctx) => {
@@ -255,7 +257,7 @@ export async function saveProduct(input: ProductInput, actor: string): Promise<S
       let next = Math.max(-1, ...rows.map((r) => r.idx)) + 1;
       const idxs: number[] = [];
       for (const o of input.options) {
-        const price = { label: o.label, price: o.price, oldPrice: o.oldPrice, garden: o.garden, cost: o.cost, combo2: o.combo2 };
+        const price = { label: o.label, price: o.price, oldPrice: o.oldPrice, garden: o.garden, cost: o.cost, combo2: o.combo2, bulky: o.bulky };
         if (o.idx !== undefined) {
           await tx.update(productOptions).set(price).where(and(eq(productOptions.productSlug, slug), eq(productOptions.idx, o.idx)));
           idxs.push(o.idx);
@@ -288,7 +290,7 @@ export async function saveProduct(input: ProductInput, actor: string): Promise<S
   await db.transaction(async (tx) => {
     await tx.insert(products).values({ slug, sku, ...values, flashTotal: input.flash ? 50 : null, flashSold: input.flash ? 0 : null });
     for (const [idx, o] of input.options.entries()) {
-      await tx.insert(productOptions).values({ productSlug: slug, idx, label: o.label, price: o.price, oldPrice: o.oldPrice, garden: o.garden, cost: o.cost, combo2: o.combo2, stock: 0 });
+      await tx.insert(productOptions).values({ productSlug: slug, idx, label: o.label, price: o.price, oldPrice: o.oldPrice, garden: o.garden, cost: o.cost, combo2: o.combo2, bulky: o.bulky, stock: 0 });
       if (o.stock) await applyStock(tx, slug, idx, o.stock, 'import', actor, 'Tồn đầu kỳ');
     }
   });

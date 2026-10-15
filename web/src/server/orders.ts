@@ -8,7 +8,7 @@ import { ONLINE_PAYMENT_METHODS, ONLINE_PAYMENTS_READY } from '@/lib/order-label
 import { computeTotals, minOrderShort } from '@/lib/pricing';
 import { accountPhone, normalizePhone, isPhone, partnerPct, type SessionUser } from './auth';
 import { getProducts, mainImageOf } from './catalog';
-import { buildSlotOptions, dayLabel, slotTime, vnDate, type ShippingConfig } from '@/lib/shipping';
+import { buildSlotOptions, dayLabel, regionOfAddress, slotTime, vnDate, type ShipRegion, type ShippingConfig } from '@/lib/shipping';
 import { plantZone } from '@/lib/stock';
 import { getAddress } from './addresses';
 import { applyStock, listStores, restoreOrderStock, type Tx } from './inventory';
@@ -87,8 +87,10 @@ export async function createOrder(input: PlaceOrderInput, user: SessionUser | nu
     if (!opt || opt.stock < it.qty) return { ok: false, error: `“${p.name}” chỉ còn ${opt?.stock ?? 0} sản phẩm` };
   }
 
-  // Combo 2 cây + chiết khấu đối tác — cùng công thức với giỏ hàng.
-  const totals = computeTotals(lines.map(pricedLine), input.delivery, 0, cfg, partnerPct(user));
+  // Combo 2 cây + chiết khấu đối tác + phí giao theo vùng nhận hàng — cùng công thức với giỏ hàng / thanh toán.
+  // Địa chỉ không nhận ra tỉnh / thành thì tính như tỉnh xa (regionOfAddress).
+  const region = input.delivery === 'ship' ? regionOfAddress(input.address, cfg.regionProvinces) : null;
+  const totals = computeTotals(lines.map(pricedLine), input.delivery, 0, cfg, partnerPct(user), region);
 
   // Đơn giao hàng phải đủ tiền hàng tối thiểu (Cài đặt giao hàng); nhận tại vườn không giới hạn.
   const short = minOrderShort(totals.goods, cfg.minOrder, input.delivery);
@@ -106,7 +108,7 @@ export async function createOrder(input: PlaceOrderInput, user: SessionUser | nu
 
 /** Dòng hàng đưa vào computeTotals (giá lẻ, giá gạch ngang, combo 2 cây của quy cách). */
 export const pricedLine = ({ p, u, it }: { p: Product; u: Unit; it: { qty: number } }) => ({
-  price: u.price, oldPrice: u.oldPrice, combo2: u.combo2, qty: it.qty, ship: p.ship, pesticide: p.pesticide,
+  price: u.price, oldPrice: u.oldPrice, combo2: u.combo2, qty: it.qty, ship: p.ship, pesticide: p.pesticide, bulky: u.bulky,
 });
 
 /** Giá ghi vào dòng đơn: giá lẻ + giá gạch ngang. Combo 2 cây không đổi đơn giá — tiền giảm ghi ở orders.combo_discount. */
@@ -227,12 +229,12 @@ async function pickVouchers(
 }
 
 /** Xem trước các mã khách chọn ở trang thanh toán (chưa chốt lượt dùng — chốt thật khi tạo đơn ở createOrderTx). */
-export async function previewVouchers(codes: string[], items: PlaceOrderInput['items'], user: SessionUser | null, phone: string, delivery: 'ship' | 'pickup'): Promise<PickedVouchers> {
+export async function previewVouchers(codes: string[], items: PlaceOrderInput['items'], user: SessionUser | null, phone: string, delivery: 'ship' | 'pickup', region: ShipRegion | null = null): Promise<PickedVouchers> {
   const products = new Map((await getProducts([...new Set(items.map((i) => i.slug))])).map((p) => [p.slug, p]));
   const lines = items
     .map((it) => { const p = products.get(it.slug); const u = p && optionOf(p, it.option); return p && u ? { p, u, it } : null; })
     .filter((x): x is { p: Product; u: Unit; it: PlaceOrderInput['items'][number] } => x !== null);
-  const totals = computeTotals(lines.map(pricedLine), delivery, 0, await getShippingConfig());
+  const totals = computeTotals(lines.map(pricedLine), delivery, 0, await getShippingConfig(), 0, delivery === 'ship' ? region : null);
   return pickVouchers(db, codes, totals, user, phone ? normalizePhone(phone) : '');
 }
 

@@ -21,7 +21,7 @@ import { useDeliverTo } from '@/lib/deliver-to';
 import { computeTotals, minOrderShort, withVouchers } from '@/lib/pricing';
 import { clearVoucherPick, useAppliedVouchers } from '@/lib/voucher-pick';
 import { useShipping } from '@/lib/shipping-client';
-import type { DayOption } from '@/lib/shipping';
+import { regionOfAddress, type DayOption } from '@/lib/shipping';
 import { plantZone, type StorePoint } from '@/lib/stock';
 import { addrComplete, composeFull } from '@/lib/vn-provinces';
 import { VoucherBox } from '@/components/VoucherBox';
@@ -56,7 +56,7 @@ export default function CheckoutPage() {
   // Địa chỉ gõ / chọn tại chỗ (khi không dùng địa chỉ trong sổ): `address` là chuỗi ghép từ các ô này
   const [addr, setAddr] = useState<AddrValue>(EMPTY_ADDR);
   const typeAddr = (v: AddrValue) => { setAddr(v); setAddress(composeFull(v)); };
-  const { rules, plantZoneKm, plantZoneEnabled, slotsEnabled, minOrder } = useShipping();
+  const { rules, regionProvinces, plantZoneKm, plantZoneEnabled, slotsEnabled, minOrder } = useShipping();
   // Khung giờ lấy từ Cài đặt giao hàng (còn chỗ / đã kín / đã qua giờ); chọn = "ngày|mã khung"
   const [days, setDays] = useState<DayOption[] | null>(null);
   const [slot, setSlot] = useState<string | null>(null);
@@ -75,7 +75,9 @@ export default function CheckoutPage() {
   const [askPhone, setAskPhone] = useState(false);
   const blankAddress = useNewAddress();
   // Mã khách chọn trong hộp "Ưu đãi dành cho bạn" (mang từ giỏ hàng sang); đổi cách nhận hàng thì server tính lại
-  const vouchers = useAppliedVouchers({ items: lines.map((l) => ({ slug: l.slug, option: l.option, qty: l.qty })), phone, delivery, enabled: ready });
+  // Phí giao cây sống theo tỉnh / thành của địa chỉ nhận (server tính lại bằng đúng hàm này)
+  const region = delivery === 'ship' ? regionOfAddress(address, regionProvinces) : null;
+  const vouchers = useAppliedVouchers({ items: lines.map((l) => ({ slug: l.slug, option: l.option, qty: l.qty })), phone, delivery, region, enabled: ready });
 
   useEffect(() => { deliveryStoresAction().then(setStores).catch(() => {}); }, []);
   const loadSlots = () => slotOptionsAction().then(setDays).catch(() => setDays([]));
@@ -123,7 +125,7 @@ export default function CheckoutPage() {
   // Nhận tại vườn thì không tính phí giao. Server tính lại đúng công thức này (kể cả mã giảm giá) khi tạo đơn.
   // Combo 2 cây tính ngay ở đây; server tính lại khi tạo đơn.
   const totals = withVouchers(
-    computeTotals(lines.map((l) => ({ ...l.snap, qty: l.qty })), delivery, 0, rules, user?.partner?.discount ?? 0),
+    computeTotals(lines.map((l) => ({ ...l.snap, qty: l.qty })), delivery, 0, rules, user?.partner?.discount ?? 0, region),
     vouchers.applied.discount?.discount ?? 0, vouchers.applied.ship?.discount ?? 0,
   );
 

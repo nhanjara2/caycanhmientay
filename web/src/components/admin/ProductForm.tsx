@@ -16,7 +16,7 @@ import { ProductImages, type AdminImage } from './ProductImages';
 import { Select } from '@/components/Select';
 
 /** `idx` = số thứ tự trong database của quy cách đã lưu (chưa có = quy cách mới thêm, chưa lưu). */
-type Option = { idx?: number; label: string; garden: string; cost: string; price: string; combo2: string; oldPrice: string; stock: string; existingStock?: number };
+type Option = { idx?: number; label: string; garden: string; cost: string; price: string; combo2: string; oldPrice: string; bulky: boolean; stock: string; existingStock?: number };
 type PriceKey = 'garden' | 'cost' | 'price' | 'combo2' | 'oldPrice';
 export type ProductFormValue = {
   slug?: string;
@@ -50,7 +50,7 @@ export type ProductFormValue = {
     /** Tư vấn chọn cây (lib/plant-advisor.ts). */
     anhSang: string[]; vaiTro: string[]; cham: string | null; thuCung: string | null; chiuGio: boolean;
   };
-  options: { idx?: number; label: string; price: number; oldPrice: number | null; garden: number | null; cost: number | null; combo2: number | null; stock: number }[];
+  options: { idx?: number; label: string; price: number; oldPrice: number | null; garden: number | null; cost: number | null; combo2: number | null; bulky: boolean; stock: number }[];
 };
 
 /**
@@ -109,7 +109,7 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
   const [opts, setOpts] = useState<Option[]>(
     initial.options.map((o) => ({
       idx: initial.slug ? o.idx : undefined, label: o.label, garden: o.garden ? fmt(String(o.garden)) : '', cost: o.cost ? fmt(String(o.cost)) : '',
-      price: fmt(String(o.price)), combo2: o.combo2 ? fmt(String(o.combo2)) : '', oldPrice: o.oldPrice ? fmt(String(o.oldPrice)) : '',
+      price: fmt(String(o.price)), combo2: o.combo2 ? fmt(String(o.combo2)) : '', oldPrice: o.oldPrice ? fmt(String(o.oldPrice)) : '', bulky: o.bulky,
       stock: '', existingStock: initial.slug ? o.stock : undefined,
     })),
   );
@@ -165,6 +165,7 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
         garden: num(o.garden),
         cost: num(o.cost),
         combo2: num(o.combo2),
+        bulky: kind === 'plant' && o.bulky,
         stock: o.existingStock === undefined ? (lotted ? 0 : Number(digits(o.stock) || 0)) : undefined,
       })),
     };
@@ -413,11 +414,11 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
             <div className="ad-card">
               <div className="ad-card__h">
                 Quy cách bán
-                <a style={{ cursor: 'pointer' }} onClick={() => setOpts((o) => [...o, { label: '', garden: '', cost: '', price: '', combo2: '', oldPrice: '', stock: '' }])}>+ Thêm quy cách</a>
+                <a style={{ cursor: 'pointer' }} onClick={() => setOpts((o) => [...o, { label: '', garden: '', cost: '', price: '', combo2: '', oldPrice: '', bulky: false, stock: '' }])}>+ Thêm quy cách</a>
               </div>
               <div className="ad-tablewrap">
                 <table className="ad-table ad-vtable app-mtable">
-                  <thead><tr><th>Quy cách</th><th>Giá tại vườn</th><th>Giá gốc</th><th>Giá lẻ (giá bán)</th><th>Combo 2 cây</th><th>Giá gạch ngang</th><th className="num">Tồn</th><th /></tr></thead>
+                  <thead><tr><th>Quy cách</th><th>Giá tại vườn</th><th>Giá gốc</th><th>Giá lẻ (giá bán)</th><th>Combo 2 cây</th><th>Giá gạch ngang</th>{kind === 'plant' && <th>Cây lớn</th>}<th className="num">Tồn</th><th /></tr></thead>
                   <tbody>
                     {opts.map((o, i) => {
                       const removeOpt = () => {
@@ -440,6 +441,13 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
                           {price('price', 'Giá lẻ (giá bán)', '0 = Liên hệ')}
                           {price('combo2', 'Combo 2 cây', 'Tự tính')}
                           {price('oldPrice', 'Giá gạch ngang', 'Tự tính')}
+                          {kind === 'plant' && (
+                            <td data-label="Cây lớn">
+                              <label className="vx-check" title="Cây lớn / cồng kềnh: tính thêm phụ phí giao mỗi cây (đặt số phụ phí ở Cài đặt giao hàng)">
+                                <input type="checkbox" checked={o.bulky} onChange={(e) => { setOpts((x) => x.map((y, j) => (j === i ? { ...y, bulky: e.target.checked } : y))); setSaved(false); }} aria-label={`Quy cách ${o.label || i + 1} là cây lớn`} />
+                              </label>
+                            </td>
+                          )}
                           <td className="num" data-label={o.existingStock !== undefined ? 'Tồn' : 'Tồn đầu kỳ'}>
                             {o.existingStock !== undefined
                               ? <Link href="/admin/kho" title="Đổi tồn ở trang Kho">{o.existingStock}</Link>
@@ -460,7 +468,7 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
                     ? <>Hàng theo lô (thuốc BVTV, phân bón, hạt giống) không điền Tồn đầu kỳ ở đây. Lưu sản phẩm xong, vào <Link href="/admin/nhap-hang" style={{ color: 'var(--primary)', fontWeight: 600 }}>Nhập hàng</Link> để ghi số lượng kèm Số lô và Hạn dùng.</>
                     : <>{kind === 'plant' && <><b>Cây:</b> quy cách ghi kích thước của cây (Cao 40–60cm, 3 tầng, 15–20 lá…), không ghi chậu — chậu bán riêng ở danh mục Chậu (kích thước dài × cao, vd. 8x8cm). </>}
                       {v.category === 'chau' && <><b>Chậu:</b> quy cách ghi kích thước dài × cao (vd. 8x8cm, 25x22cm). </>}
-                      <b>Giá:</b> chỉ cần nhập <b>Giá tại vườn</b>, các ô khác tự tính — Giá gốc = vườn + {PRICE_FORMULA.costPct}%, Giá lẻ = gốc + {PRICE_FORMULA.retailPct}%, Combo 2 cây = (lẻ × 2) − {PRICE_FORMULA.comboPct}%, Giá gạch ngang = lẻ + {PRICE_FORMULA.strikeMinPct}–{PRICE_FORMULA.strikeMaxPct}% (ngẫu nhiên, để hiện % giảm). Sửa tay ô nào thì các ô bên phải tính lại theo ô đó. Giá tại vườn và giá gốc chỉ quản trị thấy; giá sỉ công trình khách liên hệ báo giá.
+                      <b>Cây lớn:</b> tích ở quy cách cồng kềnh (cây cao, chậu to khó vận chuyển) — khách giao hàng bị tính thêm phụ phí mỗi cây, số tiền đặt ở <Link href="/admin/cai-dat-giao-hang" style={{ color: 'var(--primary)', fontWeight: 600 }}>Cài đặt giao hàng</Link>. <b>Giá:</b> chỉ cần nhập <b>Giá tại vườn</b>, các ô khác tự tính — Giá gốc = vườn + {PRICE_FORMULA.costPct}%, Giá lẻ = gốc + {PRICE_FORMULA.retailPct}%, Combo 2 cây = (lẻ × 2) − {PRICE_FORMULA.comboPct}%, Giá gạch ngang = lẻ + {PRICE_FORMULA.strikeMinPct}–{PRICE_FORMULA.strikeMaxPct}% (ngẫu nhiên, để hiện % giảm). Sửa tay ô nào thì các ô bên phải tính lại theo ô đó. Giá tại vườn và giá gốc chỉ quản trị thấy; giá sỉ công trình khách liên hệ báo giá.
                       {' '}Giá lẻ để <b>0</b> (bỏ trống các giá khác) = web hiện “Liên hệ báo giá” (khách gọi / Zalo hỏi giá, không đặt online). Tồn đầu kỳ là số đang có sẵn. <b>Xóa</b> quy cách: bấm Xóa rồi Lưu sản phẩm (tồn kho của quy cách đó bị hủy). Hàng nhập thêm sau này làm ở <Link href="/admin/nhap-hang" style={{ color: 'var(--primary)', fontWeight: 600 }}>Nhập hàng</Link> (Excel) hoặc nút “Nhập / Kiểm kê” ở trang Kho.</>}
                 </small>
               </div>

@@ -26,7 +26,7 @@ async function hydrate(rows: Row[]): Promise<Product[]> {
     specs: r.specs, keywords: r.keywords, rating: r.rating / 10, reviews: r.reviews, sold: r.sold,
     flash: r.flashTotal ? { sold: r.flashSold ?? 0, total: r.flashTotal } : undefined,
     options: opts.filter((o) => o.productSlug === r.slug).map((o) => ({
-      idx: o.idx, label: o.label, price: o.price, oldPrice: o.oldPrice ?? undefined, combo2: o.combo2 ?? undefined,
+      idx: o.idx, label: o.label, price: o.price, oldPrice: o.oldPrice ?? undefined, combo2: o.combo2 ?? undefined, bulky: o.bulky || undefined,
     })),
     images: imgs.filter((i) => i.slug === r.slug).map((i) => productImageUrl(i.file)),
     realImg: Boolean(mainFile(r.slug)) || undefined,

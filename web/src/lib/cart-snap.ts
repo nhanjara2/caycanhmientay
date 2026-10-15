@@ -17,6 +17,8 @@ export type CartSnap = {
   oldPrice?: number;
   /** Giá 2 cây cùng quy cách — giỏ tự tính mỗi cặp (server tính lại khi đặt). */
   combo2?: number;
+  /** Cây lớn: có phụ phí giao (giỏ tự cộng, server tính lại khi đặt). */
+  bulky?: boolean;
 };
 export type CartLine = { slug: string; option: number; qty: number; snap: CartSnap };
 
@@ -25,7 +27,7 @@ export const snapOf = (p: Product, option: number): CartSnap => {
   const u = optionOf(p, option)!;
   return {
     name: p.name, label: u.label, unit: p.unit, icon: p.icon, image: p.images?.[0], ship: p.ship, pesticide: p.pesticide,
-    flash: Boolean(p.flash), price: u.price, oldPrice: u.oldPrice, combo2: u.combo2,
+    flash: Boolean(p.flash), price: u.price, oldPrice: u.oldPrice, combo2: u.combo2, bulky: u.bulky,
   };
 };
 

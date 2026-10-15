@@ -4,15 +4,16 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import { shippingRulesAction } from '@/app/actions/shipping';
 import type { ShipRules } from './pricing';
 import { SHIP_RULES } from './pricing';
-import { DEFAULT_MIN_ORDER } from './shipping';
+import { DEFAULT_MIN_ORDER, DEFAULT_REGION_PROVINCES, type RegionProvinces } from './shipping';
 import { PLANT_ZONE_KM } from './stock';
 
-/** Phí giao + vùng giao cây sống mà khách thấy: lấy từ Cài đặt giao hàng, mặc định cho tới khi tải xong. `minOrder` = đơn giao hàng tối thiểu (tiền hàng), 0 = không giới hạn. */
-export type PublicShipping = { rules: ShipRules; plantZoneKm: number; plantZoneEnabled: boolean; slotsEnabled: boolean; minOrder: number };
-const DEFAULTS: PublicShipping = { rules: SHIP_RULES, plantZoneKm: PLANT_ZONE_KM, plantZoneEnabled: false, slotsEnabled: false, minOrder: DEFAULT_MIN_ORDER };
+/** Phí giao + vùng giao cây sống mà khách thấy: lấy từ Cài đặt giao hàng, mặc định cho tới khi tải xong. `minOrder` = đơn giao hàng tối thiểu (tiền hàng), 0 = không giới hạn.
+ *  `regionProvinces` = tỉnh nào thuộc TP.HCM / miền Tây (còn lại là tỉnh xa) để đổi địa chỉ khách thành vùng tính phí cây sống (`regionOfAddress`). */
+export type PublicShipping = { rules: ShipRules; regionProvinces: RegionProvinces; plantZoneKm: number; plantZoneEnabled: boolean; slotsEnabled: boolean; minOrder: number };
+const DEFAULTS: PublicShipping = { rules: SHIP_RULES, regionProvinces: DEFAULT_REGION_PROVINCES, plantZoneKm: PLANT_ZONE_KM, plantZoneEnabled: false, slotsEnabled: false, minOrder: DEFAULT_MIN_ORDER };
 
 const Ctx = createContext<PublicShipping>(DEFAULTS);
-const CACHE_KEY = 'ccmt-shipping-v6';
+const CACHE_KEY = 'ccmt-shipping-v7';
 const CACHE_MS = 3 * 60_000;
 
 export function ShippingProvider({ children }: { children: ReactNode }) {

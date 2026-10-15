@@ -7,6 +7,8 @@ import type { AddressDTO } from '@/lib/address-labels';
 import { useAuth } from '@/lib/auth';
 import { placeFromAddress, useDeliverTo } from '@/lib/deliver-to';
 import { money } from '@/lib/format';
+import { plantFeeVaries } from '@/lib/pricing';
+import { regionOfAddress } from '@/lib/shipping';
 import { useShipping } from '@/lib/shipping-client';
 import { plantZone, type StorePoint } from '@/lib/stock';
 import { addrComplete, composeArea, composeFull } from '@/lib/vn-provinces';
@@ -167,13 +169,21 @@ export function DeliverToDialog() {
   );
 }
 
-/** Dòng "Giao đến …" ở trang sản phẩm: cây sống báo trong / ngoài vùng giao, vật tư báo phí giao. */
-export function DeliverToNote({ ship }: { ship: 'plant' | 'supply' }) {
+/** Dòng "Giao đến …" ở trang sản phẩm: cây sống báo trong / ngoài vùng giao, vật tư báo phí giao. `bulky` = quy cách đang chọn là cây lớn (có phụ phí giao). */
+export function DeliverToNote({ ship, bulky = false }: { ship: 'plant' | 'supply'; bulky?: boolean }) {
   const { place, loaded, stores, openPicker } = useDeliverTo();
-  const { rules } = useShipping();
+  const { rules, regionProvinces } = useShipping();
   const { enabled, pinned, zone, plantZoneKm } = useZone(place, stores);
-  const fee = rules[ship];
-  const feeText = `Phí giao ${money(fee.fee)}, miễn phí đơn từ ${money(fee.freeFrom)}`;
+  let feeText: string;
+  if (ship === 'plant') {
+    // Cây sống: phí theo tỉnh / thành nhận hàng; chưa biết thì ghi "từ" mức thấp nhất khi các vùng khác phí
+    const region = place ? regionOfAddress(place.detail || place.label, regionProvinces) : null;
+    const amount = region ? rules.plant.regionFee[region] : rules.plant.fee;
+    feeText = `Phí giao ${!region && plantFeeVaries(rules.plant) ? 'từ ' : ''}${money(amount)}, miễn phí đơn từ ${money(rules.plant.freeFrom)}`;
+    if (bulky && rules.plant.bulky > 0) feeText += `. Cây lớn tính thêm ${money(rules.plant.bulky)} / cây`;
+  } else {
+    feeText = `Phí giao ${money(rules.supply.fee)}, miễn phí đơn từ ${money(rules.supply.freeFrom)}`;
+  }
 
   if (!loaded) return <div className="app-deliver-note" style={{ minHeight: 40 }} />;
   if (!place) {

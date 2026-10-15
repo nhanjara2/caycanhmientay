@@ -164,7 +164,7 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
         )}
         <div className="app-prow">
           <span className="app-prow__k">Vận chuyển</span>
-          <div className="app-prow__v"><DeliverToNote ship={p.ship} /></div>
+          <div className="app-prow__v"><DeliverToNote ship={p.ship} bulky={Boolean(u.bulky)} /></div>
         </div>
         <div className="app-prow">
           <span className="app-prow__k" id="buy-opt">{p.options.length > 1 ? `Chọn quy cách (${p.options.length})` : 'Quy cách'}</span>

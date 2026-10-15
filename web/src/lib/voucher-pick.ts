@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { applyVouchersAction } from '@/app/actions/vouchers';
+import type { ShipRegion } from './shipping';
 
 // Mã khách đã chọn trong hộp "Ưu đãi dành cho bạn" — dùng chung giỏ hàng và trang thanh toán.
 // Chỉ lưu MÃ trong sessionStorage của tab; số tiền giảm luôn hỏi lại server theo giỏ hiện tại (đổi số lượng, đổi cách nhận hàng là tính lại).
@@ -26,10 +27,12 @@ const save = (codes: string[]) => {
 /** Đặt hàng xong: bỏ mã đã chọn. */
 export const clearVoucherPick = () => save([]);
 
-export function useAppliedVouchers({ items, phone, delivery, enabled = true }: {
+export function useAppliedVouchers({ items, phone, delivery, region = null, enabled = true }: {
   items: { slug: string; option: number; qty: number }[];
   phone: string;
   delivery: 'ship' | 'pickup';
+  /** Vùng nhận hàng (phí giao cây sống khác nhau theo vùng → mã miễn phí giao giảm theo phí của vùng đó). */
+  region?: ShipRegion | null;
   /** false khi giỏ chưa nạp xong. */
   enabled?: boolean;
 }) {
@@ -38,16 +41,16 @@ export function useAppliedVouchers({ items, phone, delivery, enabled = true }: {
   const [dropped, setDropped] = useState<VoucherError[]>([]);
   const [busy, setBusy] = useState(false);
   const seq = useRef(0);
-  const latest = useRef({ items, phone, delivery });
-  latest.current = { items, phone, delivery };
+  const latest = useRef({ items, phone, delivery, region });
+  latest.current = { items, phone, delivery, region };
 
   /** Hỏi server các mã này với giỏ hiện tại. `must`: mã khách vừa gõ tay — mã này lỗi thì giữ nguyên trạng thái cũ. */
   const check = useCallback(async (codes: string[], must?: string): Promise<VoucherError[]> => {
     const n = ++seq.current;
     if (!codes.length || !latest.current.items.length) { setApplied(NONE); setDropped([]); save([]); return []; }
     setBusy(true);
-    const { items, phone, delivery } = latest.current;
-    const r = await applyVouchersAction(codes, items, phone, delivery).catch(() => null);
+    const { items, phone, delivery, region } = latest.current;
+    const r = await applyVouchersAction(codes, items, phone, delivery, region).catch(() => null);
     if (n !== seq.current) return [];
     setBusy(false);
     if (!r || !r.ok) return [{ code: codes[0], error: r?.error ?? 'Không kiểm tra được mã, vui lòng thử lại' }];
@@ -64,7 +67,7 @@ export function useAppliedVouchers({ items, phone, delivery, enabled = true }: {
   }, [check]);
 
   // Mở trang / đổi giỏ / đổi cách nhận hàng: tính lại các mã đã chọn; mã không còn dùng được thì bỏ và báo lý do.
-  const sig = `${delivery}|${items.map((i) => `${i.slug}:${i.option}:${i.qty}`).join(',')}`;
+  const sig = `${delivery}|${region ?? ''}|${items.map((i) => `${i.slug}:${i.option}:${i.qty}`).join(',')}`;
   useEffect(() => {
     if (!enabled) return;
     const codes = read();

@@ -14,10 +14,10 @@ import { withVouchers } from '@/lib/pricing';
 import { useAppliedVouchers } from '@/lib/voucher-pick';
 
 export default function CartPage() {
-  const { lines, totals, ready, replace } = useCart();
+  const { lines, totals, region, ready, replace } = useCart();
   const { user } = useAuth();
   // Khách chọn mã ngay ở giỏ (hộp "Ưu đãi dành cho bạn"); mã đã chọn theo sang trang thanh toán
-  const vouchers = useAppliedVouchers({ items: lines.map(({ slug, option, qty }) => ({ slug, option, qty })), phone: user?.phone ?? '', delivery: 'ship', enabled: ready });
+  const vouchers = useAppliedVouchers({ items: lines.map(({ slug, option, qty }) => ({ slug, option, qty })), phone: user?.phone ?? '', delivery: 'ship', region, enabled: ready });
   const [notice, setNotice] = useState('');
   const refreshed = useRef(false);
 

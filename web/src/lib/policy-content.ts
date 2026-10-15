@@ -4,7 +4,7 @@
 // nên đổi ở Cài đặt giao hàng là trang này đổi theo. Ghi nhớ khi sửa: chỉ viết điều hệ thống thật sự làm.
 import { CARE_PHONE, formatPhone, SALES_PHONE, SHOP_ADDRESS, SHOP_EMAIL, SUPPORT_PHONE, ZALO_URL } from './contact';
 import { money } from './format';
-import { SLOT_CLOSE_BEFORE_END_MIN, slotTime, type ShippingConfig } from './shipping';
+import { REGION_LABEL, SLOT_CLOSE_BEFORE_END_MIN, slotTime, type ShippingConfig } from './shipping';
 import { WARRANTY_DAYS } from './warranty-labels';
 
 export type Block =
@@ -173,6 +173,20 @@ const DOI_NGU: Section[] = [
 
 // ---- Giao hàng (số liệu lấy từ Cài đặt giao hàng) ------------------------------------------------------------
 
+const plantVaries = (s: ShippingConfig) => new Set(Object.values(s.plant.regionFee)).size > 1;
+
+/** Dòng bảng phí cây sống: một dòng khi ba vùng cùng mức, ngược lại mỗi vùng một dòng kèm tỉnh / thành thuộc vùng đó. */
+function plantFeeRows(s: ShippingConfig): string[][] {
+  const { regionFee: fee, freeFrom } = s.plant;
+  if (!plantVaries(s)) return [['Cây sống', money(fee.hcm), money(freeFrom)]];
+  const { hcm, west } = s.regionProvinces;
+  return [
+    ...(hcm.length ? [[`Cây sống — giao ${hcm.join(', ')}`, money(fee.hcm), money(freeFrom)]] : []),
+    ...(west.length ? [[`Cây sống — giao ${REGION_LABEL.west} (${west.join(', ')})`, money(fee.west), money(freeFrom)]] : []),
+    ['Cây sống — giao các tỉnh / thành còn lại', money(fee.far), money(freeFrom)],
+  ];
+}
+
 function giaoHang({ shipping: s }: PolicyContext): Section[] {
   const zone = s.plantZoneEnabled
     ? `**Cây sống** giao tận nơi trong bán kính **${s.plantZoneKm} km** quanh cửa hàng gần nhất. Địa chỉ ở xa hơn, bạn chọn **Nhận tại vườn** hoặc liên hệ shop để được tư vấn.`
@@ -191,11 +205,13 @@ function giaoHang({ shipping: s }: PolicyContext): Section[] {
     ] },
     { h: 'Phí giao hàng', blocks: [
       { table: { head: ['Nhóm hàng', 'Phí giao', 'Miễn phí khi tiền hàng từ'], rows: [
-        ['Cây sống', money(s.plant.fee), money(s.plant.freeFrom)],
+        ...plantFeeRows(s),
         ['Vật tư (thuốc BVTV, phân bón, chậu, đất, dụng cụ, hạt giống)', money(s.supply.fee), money(s.supply.freeFrom)],
         ['Nhận tại vườn', 'Miễn phí', '—'],
       ] } },
       { ul: [
+        ...(plantVaries(s) ? ['**Phí giao cây sống tính theo tỉnh / thành của địa chỉ nhận hàng.** Khi bạn chưa chọn địa chỉ, giỏ hàng tạm tính theo mức thấp nhất; số chính xác hiện ở trang thanh toán trước khi đặt.'] : []),
+        ...(s.plant.bulky > 0 ? [`**Cây lớn, cồng kềnh** (cây cao, chậu to — trang sản phẩm ghi chú ở dòng Vận chuyển): phụ phí **${money(s.plant.bulky)} mỗi cây**, tính thêm cả khi đơn đã đủ mức miễn phí giao.`] : []),
         'Đơn có cả cây sống và vật tư: phí tính riêng cho từng nhóm, mỗi nhóm đủ mức miễn phí thì nhóm đó không mất phí.',
         'Mức miễn phí tính trên tiền hàng của nhóm đó, trước khi trừ mã giảm giá.',
         'Phí hiển thị ở giỏ hàng và trang thanh toán trước khi bạn bấm đặt hàng; không phát sinh thêm phí ẩn.',

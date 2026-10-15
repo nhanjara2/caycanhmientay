@@ -38,6 +38,8 @@ export type Unit = {
   /** Số thứ tự trong database — giỏ hàng, đơn, kho tham chiếu theo số này. KHÔNG phải vị trí trong mảng `options`: quy cách đã xóa để lại khoảng trống. */
   idx: number;
   label: string; price: number; oldPrice?: number; combo2?: number;
+  /** Cây lớn / cồng kềnh: tính thêm phụ phí giao mỗi cây (Cài đặt giao hàng). */
+  bulky?: boolean;
 };
 
 /** Quy cách theo số thứ tự database (`Unit.idx`); undefined khi quy cách đã bị xóa. */

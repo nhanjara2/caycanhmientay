@@ -1,6 +1,7 @@
 // Cách tính tiền đơn hàng — dùng chung: client để hiển thị, server để tính số tiền thật khi đặt hàng.
 import type { ShipGroup } from './catalog';
 import { partnerDiscountOf } from './partners';
+import { DEFAULT_SHIPPING, type FeeRule, type PlantRule, type ShipRegion } from './shipping';
 
 // ---- Công thức giá ----------------------------------------------------------------------------
 // Chủ shop (10/10/2026) chỉ nhập Giá tại vườn; các giá khác tự tính rồi sửa tay được ở form sản phẩm:
@@ -26,15 +27,15 @@ export const minOrderShort = (goods: number, minOrder: number, delivery: 'ship' 
 
 // ---- Tính tiền giỏ / đơn -----------------------------------------------------------------------
 
-// Phí giao tách theo nhóm, như BRANDBOOK: cây sống giao riêng bằng xe, vật tư giao nhanh.
+// Phí giao tách theo nhóm, như BRANDBOOK: cây sống giao riêng bằng xe (phí theo vùng nhận hàng + phụ phí cây lớn), vật tư giao nhanh.
 // Đây là giá trị mặc định; số thật do admin chỉnh ở Cài đặt giao hàng (lib/shipping.ts) và truyền vào `rules`.
-export type ShipRules = { plant: { fee: number; freeFrom: number }; supply: { fee: number; freeFrom: number } };
-export const SHIP_RULES: ShipRules = {
-  plant: { fee: 35000, freeFrom: 800000 },
-  supply: { fee: 20000, freeFrom: 300000 },
-};
+export type ShipRules = { plant: PlantRule; supply: FeeRule };
+export const SHIP_RULES: ShipRules = { plant: DEFAULT_SHIPPING.plant, supply: DEFAULT_SHIPPING.supply };
 
-export type PricedLine = { price: number; oldPrice?: number | null; combo2?: number | null; qty: number; ship: ShipGroup; pesticide?: boolean };
+/** Ba vùng khác mức phí thì khách chưa chọn nơi nhận chỉ thấy số tạm tính (theo vùng rẻ nhất). */
+export const plantFeeVaries = (r: PlantRule) => new Set(Object.values(r.regionFee)).size > 1;
+
+export type PricedLine = { price: number; oldPrice?: number | null; combo2?: number | null; qty: number; ship: ShipGroup; pesticide?: boolean; /** Cây lớn / cồng kềnh: tính thêm phụ phí giao mỗi cây. */ bulky?: boolean };
 
 /** Giá thật của một dòng sau khi xét combo 2 cây (cùng thứ tự với dòng đưa vào). */
 export type LinePrice = {
@@ -60,8 +61,13 @@ export type Totals = {
   goods: number;
   plantSubtotal: number;
   supplySubtotal: number;
+  /** Phí giao cây sống đã gồm phụ phí cây lớn (`bulkyShip`). */
   plantShip: number;
   supplyShip: number;
+  /** Phần phụ phí cây lớn nằm trong `plantShip`. */
+  bulkyShip: number;
+  /** Vùng nhận hàng đã dùng để tính phí cây sống; null = chưa biết nơi nhận (số tạm tính theo vùng rẻ nhất). */
+  shipRegion: ShipRegion | null;
   voucherDiscount: number;
   /** Mã miễn phí giao: số tiền phí giao được giảm (không quá tổng phí giao). */
   shipVoucherDiscount: number;
@@ -84,26 +90,30 @@ export function linePrice(l: PricedLine): LinePrice {
   };
 }
 
-export function computeTotals(lines: PricedLine[], delivery: 'ship' | 'pickup' = 'ship', voucherDiscount = 0, rules: ShipRules = SHIP_RULES, partnerPct = 0): Totals {
+export function computeTotals(lines: PricedLine[], delivery: 'ship' | 'pickup' = 'ship', voucherDiscount = 0, rules: ShipRules = SHIP_RULES, partnerPct = 0, region: ShipRegion | null = null): Totals {
   const priced = lines.map(linePrice);
-  let subtotal = 0, original = 0, comboDiscount = 0, plantSubtotal = 0, supplySubtotal = 0, count = 0;
+  let subtotal = 0, original = 0, comboDiscount = 0, plantSubtotal = 0, supplySubtotal = 0, bulkyQty = 0, count = 0;
   lines.forEach((l, i) => {
     const p = priced[i];
     subtotal += l.price * l.qty;
     original += p.strike;
     comboDiscount += p.comboSaving;
     count += l.qty;
-    if (l.ship === 'plant') plantSubtotal += p.total;
-    else supplySubtotal += p.total;
+    if (l.ship === 'plant') {
+      plantSubtotal += p.total;
+      if (l.bulky) bulkyQty += l.qty;
+    } else supplySubtotal += p.total;
   });
   const goods = subtotal - comboDiscount;
   const ship = (sub: number, rule: { fee: number; freeFrom: number }) =>
     delivery === 'pickup' || sub === 0 || sub >= rule.freeFrom ? 0 : rule.fee;
-  const plantShip = ship(plantSubtotal, rules.plant);
+  // Phí cây sống theo vùng nhận hàng (chưa biết thì mức thấp nhất); phụ phí cây lớn tính thêm cho từng cây, kể cả khi đơn đã miễn phí giao.
+  const bulkyShip = delivery === 'ship' ? bulkyQty * rules.plant.bulky : 0;
+  const plantShip = ship(plantSubtotal, { fee: region ? rules.plant.regionFee[region] : rules.plant.fee, freeFrom: rules.plant.freeFrom }) + bulkyShip;
   const supplyShip = ship(supplySubtotal, rules.supply);
   const partnerDiscount = partnerDiscountOf(goods, partnerPct);
   return {
-    count, subtotal, original, plantSubtotal, supplySubtotal, plantShip, supplyShip,
+    count, subtotal, original, plantSubtotal, supplySubtotal, plantShip, supplyShip, bulkyShip, shipRegion: region,
     directDiscount: original - subtotal,
     comboDiscount,
     goods,
