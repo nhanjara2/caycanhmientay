@@ -396,7 +396,7 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
               <div className="ad-card__b">
                 <div className="ad-f">
                   <label>Ảnh sản phẩm</label>
-                  <ProductImages key={v.slug} slug={v.slug} initial={v.images} canEdit={canEdit} />
+                  <ProductImages key={v.slug} slug={v.slug} name={v.name} initial={v.images} canEdit={canEdit} />
                 </div>
                 <div className="ad-f">
                   <label htmlFor="pf-video">Video YouTube</label>

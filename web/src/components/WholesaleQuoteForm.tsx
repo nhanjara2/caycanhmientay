@@ -150,7 +150,7 @@ export function WholesaleQuoteForm({ defaults, fromAdvisor = false }: { defaults
       <h1>Yêu cầu báo giá sỉ</h1>
 
       <div className="qf-sec">
-        <h3><b>1</b>Bạn là đối tác nào?</h3>
+        <h2><b>1</b>Bạn là đối tác nào?</h2>
         <div className="qf-opts app-qf-opts3" role="radiogroup" aria-label="Loại đối tác">
           {PARTNER_TYPES.map((t) => (
             <button key={t} type="button" role="radio" className="qf-opt" aria-checked={v.type === t} onClick={() => set('type', t)}>
@@ -163,7 +163,7 @@ export function WholesaleQuoteForm({ defaults, fromAdvisor = false }: { defaults
       </div>
 
       <div className="qf-sec">
-        <h3><b>2</b>Hàng cần báo giá</h3>
+        <h2><b>2</b>Hàng cần báo giá</h2>
         {plan && (
           <div className="qf-plan">
             <div className="qf-plan__h">
@@ -217,7 +217,7 @@ export function WholesaleQuoteForm({ defaults, fromAdvisor = false }: { defaults
       </div>
 
       <div className="qf-sec">
-        <h3><b>3</b>Thông tin liên hệ</h3>
+        <h2><b>3</b>Thông tin liên hệ</h2>
         <div className="ad-frow">
           <div className="vx-field">
             <div className="vx-fl"><label htmlFor="qf-company">Tên đơn vị / cửa hàng (không bắt buộc)</label><input id="qf-company" value={v.company} onChange={(e) => set('company', e.target.value)} autoComplete="organization" maxLength={120} /></div>

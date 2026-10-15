@@ -20,6 +20,8 @@ export async function GET(_req: Request, ctx: { params: Promise<{ file: string }
       // Đánh giá có thể bị ẩn sau đó → không cache lâu ở trình duyệt/CDN.
       'cache-control': open ? 'public, max-age=3600' : 'private, max-age=3600',
       'x-content-type-options': 'nosniff',
+      // ảnh của đánh giá chưa hiện công khai không được vào Google Hình ảnh
+      ...(open ? {} : { 'x-robots-tag': 'noindex, nofollow' }),
     },
   });
 }

@@ -7,6 +7,7 @@ import { Icon, type IconName } from '@/components/Icon';
 import { WHOLESALE_QUOTE_URL, WHOLESALE_URL } from '@/lib/partners';
 import { flashProducts, productsIn } from '@/server/catalog';
 import { menuCategories } from '@/server/categories';
+import { withShare } from '@/lib/seo';
 
 // Lối tắt theo nhóm hàng đối tác hay lấy (09/10/2026 shop chuyển sang chỉ bán sỉ).
 const COLLECTIONS: { label: string; icon: IconName; q?: string; hot?: boolean; href?: string }[] = [
@@ -30,11 +31,11 @@ const QUICK: { label: string; icon: IconName; href: string }[] = [
   { label: 'Tìm vườn ươm', icon: 'pin', href: '/he-thong-cua-hang' },
 ];
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withShare({
   title: 'Tất cả sản phẩm',
   description: 'Tất cả sản phẩm của Cây Cảnh Miền Tây: cây để bàn, văn phòng, trong nhà, sân vườn, công trình cùng chậu, phân bón, vật tư. Giá tại vườn, giao toàn quốc.',
   alternates: { canonical: '/danh-muc' },
-};
+});
 
 /** Trang danh mục tổng (trước 09/10/2026 là trang chủ): lối tắt nhóm hàng, Flash sale, mỗi danh mục một khối sản phẩm. */
 export default async function AllProductsPage() {

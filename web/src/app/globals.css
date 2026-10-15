@@ -110,7 +110,7 @@ button.vx-pay__opt:first-child { border-top: 0; }
 .au-head .x { cursor: pointer; }
 .au-sbtn { position: relative; cursor: pointer; }
 .au-otp { cursor: text; position: relative; }
-.app-sr { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.app-sr { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
 /* Header: nút Đăng nhập / tên người dùng + menu tài khoản */
 .app-hbtn { display: flex; align-items: center; gap: 6px; background: none; border: 0; color: inherit; font: inherit; font-weight: 600; cursor: pointer; padding: 0; }
@@ -293,6 +293,8 @@ button.vx-pay__opt:first-child { border-top: 0; }
 }
 
 /* Ảnh sản phẩm thật (thay biểu tượng) + video YouTube nhúng */
+/* Ảnh hỏng (components/ImageFallback.tsx): giấu ảnh, khung giữ nền của nó */
+.app-site img[data-broken] { visibility: hidden; }
 .vx-pcard__media > img, .vx-gal__main > img, .vx-item__img > img, .ad-thumb > img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
 .vx-pcard__media:has(> img), .vx-gal__main:has(> img), .vx-item__img:has(> img), .ad-thumb:has(> img) { overflow: hidden; }
 /* Vườn của tôi: ảnh nằm tuyệt đối để không kéo giãn khung 4:3 (ảnh khách tự chụp hoặc ảnh sản phẩm) */
@@ -320,6 +322,12 @@ button.vx-pay__opt:first-child { border-top: 0; }
 .pi-tile figcaption button { height: 24px; min-width: 24px; border: 0; border-radius: 4px; background: var(--surface); color: var(--ink); font-size: 0.8125rem; line-height: 1; cursor: pointer; }
 .pi-tile figcaption .pi-primary { width: 100%; font-size: 0.75rem; font-weight: 600; color: var(--primary); }
 .pi-tile figcaption button:disabled { opacity: .5; cursor: default; }
+.pi-alts { margin-top: var(--space-2); }
+.pi-alts > summary { cursor: pointer; font-weight: 600; color: var(--primary); }
+.pi-alt { display: grid; grid-template-columns: 40px 5.5rem minmax(0, 1fr); align-items: center; gap: var(--space-2); margin-top: var(--space-2); }
+.pi-alt img { width: 40px; height: 40px; object-fit: cover; border-radius: 4px; }
+.pi-alt span { font-size: 0.8125rem; color: var(--ink-muted); }
+@media (max-width: 47.9375em) { .pi-alt { grid-template-columns: 40px minmax(0, 1fr); } .pi-alt input { grid-column: 1 / -1; } }
 .pi-tile--add { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: var(--space-2); border: 2px dashed var(--border); background: var(--surface); color: var(--primary); cursor: pointer; text-align: center; font: inherit; }
 .pi-tile--add:hover:not(:disabled) { border-color: var(--primary); }
 .pi-tile--add small { font-size: 0.6875rem; color: var(--ink-muted); }
@@ -2394,6 +2402,13 @@ a.app-mm__card:hover .app-mm__name { color: var(--primary); }
   .app-select__pop, .app-select__backdrop { animation: none; }
   .app-select__chev { transition: none; }
 }
+
+/* Tiêu đề đổi bậc h3 → h2 cho đúng thứ bậc (mục 3.1 checklist SEO): giữ nguyên kiểu h3 của design system */
+.qf-sec h2 { margin: 0; font-size: 0.9375rem; display: flex; align-items: center; gap: 8px; }
+.qf-sec h2 b { width: 24px; height: 24px; border-radius: 50%; background: var(--primary); color: var(--on-primary); display: grid; place-items: center; font-size: 0.75rem; }
+@media (max-width: 47.9375em) { .qf-sec h2 { flex-wrap: wrap; } }
+.vx-topics h2, .vx-experts h2 { margin: 0; font-size: 1rem; color: var(--primary); }
+.nw-box h2 { margin: 0; font-size: 0.9375rem; color: var(--primary); }
 
 /* >>> DỄ DÙNG ĐIỆN THOẠI */
 /* ===================== Dễ dùng trên điện thoại cho người lớn tuổi (06/10/2026) =====================

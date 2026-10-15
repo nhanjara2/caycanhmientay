@@ -153,6 +153,8 @@ export const productImages = pgTable('product_images', {
   file: text('file').notNull().unique(),
   mime: text('mime').notNull(),
   data: bytea('data').notNull(),
+  /** Mô tả ảnh (alt) do admin nhập; null = web tự dùng tên sản phẩm (`imageAlt` trong lib/catalog.ts). */
+  alt: text('alt'),
   createdAt: createdAt(),
 }, (t) => [index('product_images_slug_idx').on(t.productSlug, t.idx)]);
 

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { projectImageUrl, projectPath, projectTypeOf, roleName, type Project } from '@/lib/projects';
 import { Icon } from './Icon';
+import { responsive } from '@/lib/images';
 
 /** Thẻ dự án: ảnh bìa, loại công trình, địa điểm · năm, tên, tóm tắt, tối đa 3 con số. Cả thẻ bấm được (link trải lên thẻ). */
 export function ProjectCard({ p, wide, headingLevel = 3, hidden }: { p: Project; wide?: boolean; headingLevel?: 2 | 3; hidden?: boolean }) {
@@ -11,7 +12,7 @@ export function ProjectCard({ p, wide, headingLevel = 3, hidden }: { p: Project;
     <article className={wide ? 'dn-card dn-card--wide' : 'dn-card'} hidden={hidden}>
       <div className="dn-card__media">
         {cover
-          ? <img src={projectImageUrl(cover.file)} alt={cover.caption || p.title} loading="lazy" />
+          ? <img {...responsive(projectImageUrl(cover.file, p.slug), '(max-width: 47.9375em) 100vw, 560px', 960)} alt={cover.caption || p.title} loading="lazy" />
           : <span className="dn-card__noimg"><Icon name="trees" /></span>}
         <span className="dn-card__type">{projectTypeOf(p.type).name}</span>
         {wide && <span className="dn-card__flag">Dự án tiêu biểu</span>}

@@ -5,6 +5,8 @@ import { Icon } from '@/components/Icon';
 import { EmptyPosts, PostMeta, PostThumb } from '@/components/PostParts';
 import { CATEGORIES, CATEGORY_DESCRIPTION, categoryOf, durationLabel, isCategory, pageSuffix, plainText, postPath, SECTIONS, sectionOf, VIDEO_PAGE } from '@/lib/posts';
 import { publishedPosts, type PostCard } from '@/server/posts';
+import { withShare } from '@/lib/seo';
+import { responsive } from '@/lib/images';
 
 type SP = { 'chuyen-muc'?: string; the?: string; loai?: string; trang?: string };
 type Props = { searchParams: Promise<SP> };
@@ -29,12 +31,12 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   // Chưa có bài nào (trong chuyên mục đang xem) → trang trống, noindex tới khi có bài (tránh soft 404).
   const empty = !(await publishedPosts()).some((p) => sectionOf(p.category) === 'blog' && (!cat || p.category === cat));
   const nth = cat ? pageSuffix(page) : ''; // chỉ trang chuyên mục có phân trang được index
-  return {
+  return withShare({
     title: `${name ? `${name} · Góc chăm cây` : 'Góc chăm cây'}${nth}`,
     description: `${cat ? CATEGORY_DESCRIPTION[cat] : 'Kinh nghiệm chăm cây, bắt bệnh, dùng thuốc và phân bón đúng cách từ nhà vườn Cây Cảnh Miền Tây.'}${pageSuffix(cat ? page : 1, ' ')}`,
     alternates: { canonical: thin ? BASE : href({ 'chuyen-muc': cat, trang: cat && page > 1 ? page : undefined }) },
     robots: thin || empty ? { index: false, follow: true } : undefined,
-  };
+  });
 }
 
 const href = (q: Record<string, string | number | undefined>) => {
@@ -68,7 +70,7 @@ function VCard({ p, alt }: { p: PostCard; alt?: boolean }) {
   return (
     <Link href={postPath(p)} className="vx-vcard">
       <span className={alt ? 'vx-vcard__img alt' : 'vx-vcard__img'}>
-        {p.thumb && <img src={p.thumb} alt="" loading="lazy" className="app-vbg" />}
+        {p.thumb && <img {...responsive(p.thumb, '(max-width: 47.9375em) 46vw, 240px', 640)} alt="" loading="lazy" className="app-vbg" />}
         <span className="tag"><Icon name="camera" size={11} />VIDEO</span>
         <span className="play"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg></span>
         {p.videoSeconds ? <small>{durationLabel(p.videoSeconds)}</small> : null}
@@ -123,7 +125,7 @@ export default async function BlogPage({ searchParams }: Props) {
     <div className="vx-blog__side">
       {topTags.length > 0 && (
         <aside className="vx-topics">
-          <h3>Chủ đề nổi bật</h3>
+          <h2>Chủ đề nổi bật</h2>
           {topTags.map(([t, n]) => (
             <Link key={t} href={href({ the: t })} aria-current={t === tag ? 'true' : undefined}><b># {t}</b><small>{n} bài viết</small></Link>
           ))}
@@ -131,7 +133,7 @@ export default async function BlogPage({ searchParams }: Props) {
       )}
       {experts.size > 0 && (
         <aside className="vx-experts">
-          <h3>Đội ngũ chuyên môn</h3>
+          <h2>Đội ngũ chuyên môn</h2>
           {[...experts].slice(0, 6).map(([name, e]) => (
             <div key={name} className="vx-expert-row">
               <span className="vx-avatar">{name.trim().split(/\s+/).slice(-2).map((w) => w[0]?.toUpperCase()).join('')}</span>
@@ -197,7 +199,7 @@ export default async function BlogPage({ searchParams }: Props) {
             <section className="vx-cblock">
               <div className="vx-sect">
                 <h2 style={{ fontSize: '1.125rem' }}><span className="vx-sect__mark"><Icon name="camera" /></span>Video ngắn</h2>
-                <Link href={VIDEO_PAGE} className="vx-link">Xem tất cả <Icon name="chevron" size={14} /></Link>
+                <Link href={VIDEO_PAGE} className="vx-link" aria-label="Xem tất cả video ngắn">Xem tất cả <Icon name="chevron" size={14} /></Link>
               </div>
               <div className="vx-vrow">{videos.slice(0, 6).map((p, i) => <VCard key={p.id} p={p} alt={i % 2 === 1} />)}</div>
             </section>
@@ -206,7 +208,7 @@ export default async function BlogPage({ searchParams }: Props) {
             <section key={c.key} className="vx-cblock">
               <div className="vx-cblock__head">
                 <h2>{c.name}</h2>
-                {posts.length > 5 && <Link href={href({ 'chuyen-muc': c.key })} className="vx-link">Xem tất cả <Icon name="chevron" size={14} /></Link>}
+                {posts.length > 5 && <Link href={href({ 'chuyen-muc': c.key })} className="vx-link" aria-label={`Xem tất cả bài ${c.name}`}>Xem tất cả <Icon name="chevron" size={14} /></Link>}
               </div>
               <div className={posts.length === 1 ? 'vx-cblock__top app-cblock-one' : 'vx-cblock__top'}>
                 {posts.slice(0, 2).map((p, i) => <Feat key={p.id} p={p} tone={i ? undefined : 't3'} />)}

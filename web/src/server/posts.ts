@@ -31,8 +31,8 @@ const selectCards = () => db.select(cardCols).from(P);
 type CardRow = Awaited<ReturnType<typeof selectCards>>[number];
 
 /** Ảnh hiện trên thẻ bài: ảnh bìa, không có thì ảnh của video YouTube. */
-export const thumbOf = (p: { coverFile: string | null; youtubeId: string | null }) =>
-  p.coverFile ? postImageUrl(p.coverFile) : p.youtubeId ? youtubeThumb(p.youtubeId) : null;
+export const thumbOf = (p: { coverFile: string | null; youtubeId: string | null; slug?: string }) =>
+  p.coverFile ? postImageUrl(p.coverFile, p.slug) : p.youtubeId ? youtubeThumb(p.youtubeId) : null;
 
 const toCard = (r: CardRow) => ({ ...r, thumb: thumbOf(r), publishedAt: r.publishedAt ?? r.updatedAt });
 export type PostCard = ReturnType<typeof toCard>;

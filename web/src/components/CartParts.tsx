@@ -11,6 +11,7 @@ import { voucherTiers, voucherValueText } from '@/lib/voucher-labels';
 import { voucherAmount, type VoucherScope } from '@/lib/voucher-scope';
 import { usePublicVouchers } from '@/lib/vouchers-client';
 import { Art, Icon } from './Icon';
+import { thumbUrl } from '@/lib/images';
 
 export function Steps({ step }: { step: 1 | 2 | 3 }) {
   const names = ['Giỏ hàng', 'Thanh toán', 'Hoàn tất'];
@@ -69,7 +70,7 @@ function Item({ l, pr, editable, setQty, remove }: {
   const { snap: p } = l;
   return (
     <div className="vx-item">
-      <Link href={`/san-pham/${l.slug}`} className="vx-item__img">{p.image ? <img src={p.image} alt="" /> : <Art name={p.icon} />}</Link>
+      <Link href={`/san-pham/${l.slug}`} className="vx-item__img">{p.image ? <img src={thumbUrl(p.image, 320)} alt="" width={320} height={320} /> : <Art name={p.icon} />}</Link>
       <div className="vx-item__info">
         {p.flash && <span><span className="vx-badge vx-badge--sale" style={{ fontSize: '0.6875rem', padding: '2px 6px' }}><Icon name="bolt" size={12} />Flash sale</span></span>}
         <p className="vx-item__name"><Link href={`/san-pham/${l.slug}`}>{p.name}</Link></p>

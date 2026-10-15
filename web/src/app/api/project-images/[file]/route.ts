@@ -1,13 +1,7 @@
 import { readProjectImage } from '@/server/projects';
-import { isSafeName } from '@/server/uploads';
+import { publicImage } from '@/server/image-response';
 
-/** Ảnh công trình / logo khách: công khai (tên file ngẫu nhiên, không đoán được). Nội dung không đổi → cache lâu dài. */
-export async function GET(_req: Request, ctx: { params: Promise<{ file: string }> }) {
-  const { file } = await ctx.params;
-  if (!isSafeName(file)) return new Response('Not found', { status: 404 });
-  const img = await readProjectImage(file);
-  if (!img) return new Response('Not found', { status: 404 });
-  return new Response(new Uint8Array(img.data), {
-    headers: { 'content-type': img.mime, 'cache-control': 'public, max-age=31536000, immutable', 'x-content-type-options': 'nosniff' },
-  });
+/** Ảnh công trình / logo khách: công khai (tên file ngẫu nhiên, không đoán được). Tên "<slug>-<mã>.jpg", "?w=" = bản thu nhỏ — xem lib/images.ts, server/image-response.ts. */
+export async function GET(req: Request, ctx: { params: Promise<{ file: string }> }) {
+  return publicImage(req, (await ctx.params).file, readProjectImage);
 }

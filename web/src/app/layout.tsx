@@ -6,6 +6,7 @@ import { WishlistProvider } from '@/lib/wishlist';
 import { DeliverToProvider } from '@/lib/deliver-to';
 import { ShippingProvider } from '@/lib/shipping-client';
 import { SITE_ORIGIN } from '@/lib/site';
+import { BASE_OPEN_GRAPH, SITE_NAME } from '@/lib/seo';
 import '@/styles/ds/tokens.css';
 import '@/styles/ds/components.css';
 import '@/styles/ds/responsive.css';
@@ -24,6 +25,12 @@ export const metadata: Metadata = {
   title: { default: 'Cây Cảnh Miền Tây — Cung cấp sỉ cây cảnh & vật tư', template: '%s | Cây Cảnh Miền Tây' },
   // Mô tả dự phòng — trang nào cũng nên tự đặt description riêng (npm run seo:metadata báo trang dùng chung).
   description: 'Cung cấp sỉ và lẻ cây cảnh, cây công trình, thuốc BVTV, phân bón, chậu và vật tư từ gần 200 nhà vườn miền Nam. Giá tại vườn, giao toàn quốc.',
+  applicationName: SITE_NAME,
+  // Khung chia sẻ chung: og:title / og:description / twitter:* Next tự lấy từ title + description của từng trang;
+  // og:url + ảnh riêng do trang công khai gắn bằng withShare() (lib/seo.ts).
+  openGraph: BASE_OPEN_GRAPH,
+  twitter: { card: 'summary_large_image' },
+  // Biểu tượng: app/favicon.ico + app/icon.svg (trình duyệt), app/apple-icon.png (iPhone), app/manifest.ts (Android).
 };
 
 // Website chỉ có giao diện sáng (BRANDBOOK) — tokens.css khai báo color-scheme: light.

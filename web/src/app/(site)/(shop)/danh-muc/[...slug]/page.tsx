@@ -15,6 +15,7 @@ import { categorySeo } from '@/lib/category-seo';
 import { productsIn } from '@/server/catalog';
 import { getCategory } from '@/server/categories';
 import { SORTS, sortProducts } from '@/lib/sort';
+import { withShare } from '@/lib/seo';
 
 type Props = {
   params: Promise<{ slug: string[] }>;
@@ -47,12 +48,15 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const empty = !list.length;
   // Tiêu đề / mô tả: admin viết ở /admin/danh-muc, không có thì tự tạo từ tên + sản phẩm đang bán.
   const seo = categorySeo(r.sub ?? r.cat, list.map((p) => p.name));
-  return {
+  return withShare({
     title: seo.title,
     description: seo.description,
     alternates: { canonical: r.sub ? `/danh-muc/${r.cat.slug}/${r.sub.slug}` : `/danh-muc/${r.cat.slug}` },
     robots: varied || empty ? { index: false, follow: true } : undefined,
-  };
+  }, {
+    // Ảnh chia sẻ = ảnh chính của sản phẩm đầu tiên có ảnh trong danh mục (đúng thứ tự trang đang hiện).
+    images: [list.find((p) => p.images?.length)?.images?.[0]], alt: seo.title,
+  });
 }
 
 /** ProductListingLayout: tiêu đề + danh mục con + bộ lọc đa chọn + sắp xếp + lưới 4 cột. Bộ lọc nằm trên đường dẫn (?vi-tri=…&mau=…). */
@@ -130,7 +134,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
       {cat.slug === 'thuoc-bvtv' && <PesticideLookup slug={cat.slug} />}
       {cat.slug === 'cay-canh' && <AdvisorBanner sub={sub?.slug} />}
       {items.length ? (
-        <ProductGrid products={items} />
+        <ProductGrid products={items} level={2} />
       ) : filtering ? (
         <EmptyState
           icon="leaf"

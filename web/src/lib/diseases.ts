@@ -1,6 +1,7 @@
 // Thư viện bệnh cây: kiểu dữ liệu + danh mục (bộ phận, nguyên nhân, loại cây) dùng chung cho server và client.
 // Bài bệnh nằm trong database — truy vấn qua src/server/diseases.ts.
 import { normalize } from './catalog';
+import { imageUrl } from './images';
 
 /** Bộ phận của cây (thứ tự theo hình minh họa, từ ngọn xuống rễ). */
 export const PARTS = [
@@ -41,7 +42,7 @@ export const PLANTS = [
 export type PlantKey = (typeof PLANTS)[number]['key'];
 
 /** Ảnh minh họa triệu chứng: công khai, phục vụ qua /api/disease-images/[file]. */
-export const diseaseImageUrl = (file: string) => `/api/disease-images/${file}`;
+export const diseaseImageUrl = (file: string, slug?: string) => imageUrl('disease-images', file, slug);
 /** Tên file ảnh hợp lệ (hex ngẫu nhiên + đuôi) — khớp `isSafeName` ở server/uploads.ts. */
 export const DISEASE_IMAGE_FILE = /^[a-f0-9]{32}\.(jpg|png|webp)$/;
 

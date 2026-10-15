@@ -6,6 +6,8 @@ import { EmptyPosts, iconOf, PostLinks, postDate } from '@/components/PostParts'
 import { FACEBOOK_URL, SALES_PHONE } from '@/lib/contact';
 import { CATEGORIES, CATEGORY_DESCRIPTION, categoryOf, isCategory, pageSuffix, plainText, postPath, SECTIONS, sectionOf } from '@/lib/posts';
 import { publishedPosts, type PostCard } from '@/server/posts';
+import { withShare } from '@/lib/seo';
+import { responsive } from '@/lib/images';
 
 type SP = { 'chuyen-muc'?: string; trang?: string };
 type Props = { searchParams: Promise<SP> };
@@ -32,18 +34,18 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   const { cat, page } = filters(await searchParams);
   // Chưa có bài nào (trong chuyên mục đang xem) → trang trống, noindex tới khi có bài (tránh soft 404).
   const empty = !(await publishedPosts()).some((p) => sectionOf(p.category) === 'news' && (!cat || p.category === cat));
-  return {
+  return withShare({
     title: `${cat ? `${categoryOf(cat)?.name} · Truyền thông` : 'Truyền thông'}${pageSuffix(page)}`,
     description: `${cat ? CATEGORY_DESCRIPTION[cat] : 'Tin tức, hoạt động cộng đồng, báo chí và tuyển dụng của Cây Cảnh Miền Tây – nhà vườn cây cảnh tại Làng hoa Sa Đéc.'}${pageSuffix(page, ' ')}`,
     alternates: { canonical: link({ cat, page }) },
     robots: empty ? { index: false, follow: true } : undefined,
-  };
+  });
 }
 
 function Img({ p, tone }: { p: PostCard; tone?: string }) {
   return (
     <span className={tone ? `nw-img ${tone}` : 'nw-img'}>
-      {p.thumb ? <img src={p.thumb} alt="" loading="lazy" /> : <Art name={iconOf(p.category)} />}
+      {p.thumb ? <img {...responsive(p.thumb, '(max-width: 47.9375em) 40vw, 480px', 960)} alt="" loading="lazy" /> : <Art name={iconOf(p.category)} />}
     </span>
   );
 }

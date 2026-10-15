@@ -3,6 +3,7 @@
 import type { IconName } from '@/components/Icon';
 import type { ProductAttrs } from './product-filters';
 import { plainText, slugify, SLUG_RE } from './slug';
+import { imageUrl } from './images';
 
 /** Cách giao khác nhau: cây sống giao riêng bằng xe, vật tư giao nhanh. */
 export type ShipGroup = 'plant' | 'supply';
@@ -90,6 +91,8 @@ export type Product = {
   keywords?: string[];
   /** Đường dẫn ảnh thật, ảnh đầu là ảnh đại diện. Không có thì hiện biểu tượng `icon`. */
   images?: string[];
+  /** Mô tả (alt) admin nhập cho từng ảnh, cùng thứ tự `images`; '' = chưa nhập — đọc bằng `imageAlt`. */
+  imageAlts?: string[];
   /** Video hướng dẫn trên YouTube (mã 11 ký tự). */
   youtubeId?: string;
   fengshui?: FengShui;
@@ -182,7 +185,15 @@ export { SLUG_RE };
 /** Tối đa ảnh mỗi sản phẩm (mỗi ảnh ~200–500KB sau khi nén). */
 export const MAX_PRODUCT_IMAGES = 10;
 
-export const productImageUrl = (file: string) => `/api/product-images/${file}`;
+/** Tối đa ký tự mô tả ảnh (alt) — ngắn gọn, tả đúng ảnh, không nhồi từ khóa. */
+export const MAX_IMAGE_ALT = 125;
+
+/** Alt của ảnh thứ `i`: admin đã nhập thì dùng, không thì tên sản phẩm (ảnh phụ thêm "– ảnh n"). */
+export const imageAlt = (p: Pick<Product, 'name' | 'imageAlts'>, i: number) =>
+  p.imageAlts?.[i] || (i === 0 ? p.name : `${p.name} – ảnh ${i + 1}`);
+
+/** `slug` gắn vào tên file trên URL (cay-kim-tien-<mã>.jpg) — xem lib/images.ts. */
+export const productImageUrl = (file: string, slug?: string) => imageUrl('product-images', file, slug);
 
 /** Lấy mã video từ link YouTube: youtu.be/…, watch?v=…, /shorts/…, /embed/…, /live/… hoặc dán thẳng mã. */
 export function parseYoutubeId(input: string): string | null {

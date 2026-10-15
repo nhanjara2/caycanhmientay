@@ -11,12 +11,19 @@ import { getProducts } from '@/server/catalog';
 import { allDiseases, getDisease } from '@/server/diseases';
 import { categoryOf, postPath } from '@/lib/posts';
 import { postsForDisease } from '@/server/posts';
+import { withShare } from '@/lib/seo';
+import { responsive } from '@/lib/images';
 
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const d = await getDisease((await params).slug);
-  return d ? { title: d.name, description: clipText(d.summary || `${d.name}: dấu hiệu nhận biết, nguyên nhân, cách xử lý và phòng bệnh.`, 170), alternates: { canonical: `/benh-cay/${d.slug}` } } : { title: 'Không tìm thấy bài bệnh' };
+  if (!d) return { title: 'Không tìm thấy bài bệnh' };
+  return withShare(
+    { title: d.name, description: clipText(d.summary || `${d.name}: dấu hiệu nhận biết, nguyên nhân, cách xử lý và phòng bệnh.`, 170), alternates: { canonical: `/benh-cay/${d.slug}` } },
+    // Ảnh chia sẻ = ảnh triệu chứng (theo thứ tự trong bài); bài chưa có ảnh dùng ảnh mặc định.
+    { images: d.symptoms.map((s) => (s.image ? diseaseImageUrl(s.image, d.slug) : null)), alt: d.name },
+  );
 }
 
 /** Tên ngắn cho câu hỏi: "Thối rễ (úng rễ do nấm)" → "thối rễ". */
@@ -77,7 +84,7 @@ export default async function DiseaseDetailPage({ params }: Props) {
         {d.symptoms.map((s, i) => (
           <div key={i}>
             <span className={s.image ? 'img img--photo' : 'img'}>
-              {s.image ? <img src={diseaseImageUrl(s.image)} alt={s.text} loading="lazy" /> : <PartIcon part={s.part} plain />}
+              {s.image ? <img {...responsive(diseaseImageUrl(s.image, d.slug), '(max-width: 47.9375em) 100vw, 360px', 960)} alt={s.text} width={1000} height={750} loading="lazy" /> : <PartIcon part={s.part} plain />}
               <em>{partName(s.part)}</em>
             </span>
             {s.text}

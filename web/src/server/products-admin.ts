@@ -1,7 +1,7 @@
 import 'server-only';
 import { and, asc, count, desc, eq, gt, ilike, inArray, like, notInArray, or, sql } from 'drizzle-orm';
 import * as z from 'zod';
-import { ELEMENTS, findCategory, MAX_PRODUCT_IMAGES, normalize, parseYoutubeId, PRODUCT_ICONS, productImageUrl, specTemplate, type FengShui } from '@/lib/catalog';
+import { ELEMENTS, findCategory, MAX_IMAGE_ALT, MAX_PRODUCT_IMAGES, normalize, parseYoutubeId, PRODUCT_ICONS, productImageUrl, specTemplate, type FengShui } from '@/lib/catalog';
 import { slugify } from '@/lib/slug';
 import { advisorKeys } from '@/lib/plant-advisor';
 import { attrKeys, type ProductAttrs } from '@/lib/product-filters';
@@ -147,9 +147,19 @@ export async function getProductAdmin(slug: string) {
 const touch = (tx: Pick<typeof db, 'update'>, slug: string) => tx.update(products).set({ updatedAt: new Date() }).where(eq(products.slug, slug));
 
 export async function listProductImages(slug: string) {
-  const rows = await db.select({ id: productImages.id, file: productImages.file }).from(productImages)
+  const rows = await db.select({ id: productImages.id, file: productImages.file, alt: productImages.alt }).from(productImages)
     .where(eq(productImages.productSlug, slug)).orderBy(asc(productImages.idx), asc(productImages.id));
-  return rows.map((r) => ({ id: r.id, url: productImageUrl(r.file) }));
+  return rows.map((r) => ({ id: r.id, url: productImageUrl(r.file), alt: r.alt ?? '' }));
+}
+
+/** Mô tả ảnh (alt): khoảng trắng gộp lại, bỏ ký tự < >; trống = null (web tự dùng tên sản phẩm). */
+export const cleanImageAlt = (s: string) => s.replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, MAX_IMAGE_ALT) || null;
+
+export async function setProductImageAlt(slug: string, id: number, alt: string) {
+  const r = await db.update(productImages).set({ alt: cleanImageAlt(alt) })
+    .where(and(eq(productImages.productSlug, slug), eq(productImages.id, id))).returning({ id: productImages.id });
+  if (r.length) await touch(db, slug);
+  return r.length > 0;
 }
 
 export async function addProductImage(slug: string, img: SavedImage): Promise<{ ok: true } | { ok: false; error: string }> {

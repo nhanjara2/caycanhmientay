@@ -20,6 +20,7 @@ import { productFaqs } from '@/server/faqs';
 import { productQuestions } from '@/server/questions';
 import { productReviews } from '@/server/reviews';
 import { isWishlisted } from '@/server/wishlist';
+import { withShare } from '@/lib/seo';
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -29,11 +30,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // tên chi tiết đã đủ dài, không nối thêm "| Cây Cảnh Miền Tây" (Google cắt phần đuôi)
   const title = seoNameOf(p);
   const description = clipText(p.lead, 170);
-  return {
-    title: { absolute: title }, description,
-    alternates: { canonical: `/san-pham/${p.slug}` },
-    openGraph: { type: 'website', title, description, images: p.images?.length ? [p.images[0]] : undefined },
-  };
+  return withShare(
+    { title: { absolute: title }, description, alternates: { canonical: `/san-pham/${p.slug}` } },
+    // Ảnh chính đứng đầu — đổi ảnh chính ở admin là ảnh chia sẻ đổi theo (tên file ảnh mới).
+    { images: p.images ?? [], alt: p.name },
+  );
 }
 
 /** Schema Product (JSON-LD) để Google hiểu tên chi tiết, ảnh, giá, còn hàng; đánh giá chỉ ghi khi có đánh giá thật. */

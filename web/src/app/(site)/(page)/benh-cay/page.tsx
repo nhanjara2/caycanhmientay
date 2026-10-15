@@ -6,6 +6,7 @@ import { Icon } from '@/components/Icon';
 import { CAUSES, PARTS, PLANTS, causeOf, isCause, isPart, isPlant, diseaseScore, partName } from '@/lib/diseases';
 import { pageSuffix } from '@/lib/posts';
 import { allDiseases } from '@/server/diseases';
+import { withShare } from '@/lib/seo';
 
 const PER_PAGE = 20;
 
@@ -18,12 +19,12 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   const filtered = !!(sp.bo_phan || sp.nguyen_nhan || sp.cay || sp.q?.trim());
   const page = Number(sp.trang);
   const nth = !filtered && Number.isInteger(page) ? pageSuffix(page) : '';
-  return {
+  return withShare({
     title: `Tìm hiểu bệnh cây trồng${nth}`,
     description: `Tra cứu bệnh cây theo bộ phận bị bệnh, nguyên nhân hoặc triệu chứng: nhận biết, cách xử lý và phòng bệnh.${nth ? pageSuffix(page, ' ') + '.' : ''}`,
     alternates: { canonical: !filtered && Number.isInteger(page) && page > 1 ? `/benh-cay?trang=${page}` : '/benh-cay' },
     robots: filtered ? { index: false, follow: true } : undefined,
-  };
+  });
 }
 
 /** Link giữ các bộ lọc đang chọn, đổi những gì truyền vào (undefined = bỏ lọc đó), về trang 1. */

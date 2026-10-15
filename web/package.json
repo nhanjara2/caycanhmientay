@@ -16,6 +16,9 @@
     "seo:sitemap": "tsx scripts/check-sitemap.mts",
     "seo:canonical": "tsx scripts/check-canonical.mts",
     "seo:metadata": "tsx scripts/check-metadata.mts",
+    "seo:html": "tsx scripts/check-html.mts",
+    "seo:head": "tsx scripts/check-head.mts",
+    "seo:images": "tsx scripts/check-images.mts",
     "db:setup": "tsx --env-file-if-exists=.env.local scripts/db-setup.mts"
   },
   "dependencies": {

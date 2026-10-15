@@ -95,7 +95,7 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
     <div className="vx-buy">
       <div className="vx-buy__brand">
         <span className="vx-badge vx-badge--origin">{p.origin}</span>
-        <span>Thương hiệu: <a>Cây Cảnh Miền Tây</a></span>
+        <span>Thương hiệu: <Link href="/chinh-sach/gioi-thieu">Cây Cảnh Miền Tây</Link></span>
       </div>
       <h1 className="vx-buy__title">{seoNameOf(p)}</h1>
       <div className="vx-buy__meta">

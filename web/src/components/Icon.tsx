@@ -9,6 +9,7 @@
 // Iconoir — MIT License, Copyright (c) 2021 Luca Burgio. https://iconoir.com
 // Toàn văn giấy phép: web/THIRD_PARTY_ICONS.md
 import type { CSSProperties } from 'react';
+import { thumbUrl } from '@/lib/images';
 
 const PATHS = {
   // — Giao diện chung (Lucide)
@@ -100,5 +101,5 @@ export function Art({ name }: { name: IconName }) {
 
 /** Ảnh chính của sản phẩm nếu có, chưa có thì hiện icon — đặt trong .vx-item__img / .ad-thumb. */
 export function Thumb({ src, icon, alt = '' }: { src?: string | null; icon: string; alt?: string }) {
-  return src ? <img src={src} alt={alt} loading="lazy" /> : <Art name={icon as IconName} />;
+  return src ? <img src={thumbUrl(src, 320)} alt={alt} loading="lazy" /> : <Art name={icon as IconName} />;
 }

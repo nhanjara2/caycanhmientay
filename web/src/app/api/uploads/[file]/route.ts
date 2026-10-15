@@ -20,6 +20,6 @@ export async function GET(_req: Request, ctx: { params: Promise<{ file: string }
   const data = await readUpload(file);
   if (!data) return new Response('Not found', { status: 404 });
   return new Response(new Uint8Array(data), {
-    headers: { 'content-type': row.mime, 'cache-control': 'private, max-age=86400', 'x-content-type-options': 'nosniff' },
+    headers: { 'content-type': row.mime, 'cache-control': 'private, max-age=86400', 'x-content-type-options': 'nosniff', 'x-robots-tag': 'noindex, nofollow' },
   });
 }

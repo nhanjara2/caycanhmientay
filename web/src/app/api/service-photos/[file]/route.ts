@@ -13,6 +13,6 @@ export async function GET(_req: Request, ctx: { params: Promise<{ file: string }
   if (!row?.data) return new Response('Not found', { status: 404 });
   if (user.role === 'customer' && row.owner !== user.id) return new Response('Forbidden', { status: 403 });
   return new Response(new Uint8Array(row.data), {
-    headers: { 'content-type': row.mime, 'cache-control': 'private, max-age=86400', 'x-content-type-options': 'nosniff' },
+    headers: { 'content-type': row.mime, 'cache-control': 'private, max-age=86400', 'x-content-type-options': 'nosniff', 'x-robots-tag': 'noindex, nofollow' },
   });
 }

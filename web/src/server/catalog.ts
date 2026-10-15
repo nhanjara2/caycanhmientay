@@ -16,7 +16,7 @@ async function hydrate(rows: Row[]): Promise<Product[]> {
   const slugs = rows.map((r) => r.slug);
   const [opts, imgs] = await Promise.all([
     db.select().from(O).where(and(inArray(O.productSlug, slugs), eq(O.deleted, false))).orderBy(asc(O.idx)),
-    db.select({ slug: I.productSlug, file: I.file }).from(I).where(inArray(I.productSlug, slugs)).orderBy(asc(I.idx), asc(I.id)),
+    db.select({ slug: I.productSlug, file: I.file, alt: I.alt }).from(I).where(inArray(I.productSlug, slugs)).orderBy(asc(I.idx), asc(I.id)),
   ]);
   // ảnh đã xếp theo thứ tự, ảnh đầu của mỗi sản phẩm là ảnh chính
   const mainFile = (slug: string) => imgs.find((i) => i.slug === slug)?.file;
@@ -28,7 +28,8 @@ async function hydrate(rows: Row[]): Promise<Product[]> {
     options: opts.filter((o) => o.productSlug === r.slug).map((o) => ({
       idx: o.idx, label: o.label, price: o.price, oldPrice: o.oldPrice ?? undefined, combo2: o.combo2 ?? undefined, bulky: o.bulky || undefined,
     })),
-    images: imgs.filter((i) => i.slug === r.slug).map((i) => productImageUrl(i.file)),
+    images: imgs.filter((i) => i.slug === r.slug).map((i) => productImageUrl(i.file, i.slug)),
+    imageAlts: imgs.some((i) => i.slug === r.slug && i.alt) ? imgs.filter((i) => i.slug === r.slug).map((i) => i.alt ?? '') : undefined,
     realImg: Boolean(mainFile(r.slug)) || undefined,
     youtubeId: r.youtubeId ?? undefined,
     fengshui: r.fengshui ?? undefined,
@@ -42,8 +43,8 @@ async function hydrate(rows: Row[]): Promise<Product[]> {
  *  Tự ghi "bảng"."cột": truy vấn một bảng Drizzle bỏ tên bảng, khi đó cột bên ngoài bị hiểu nhầm thành cột của product_images. */
 export const mainImageOf = (slug: AnyPgColumn) => {
   const outer = sql`${sql.identifier(getTableName(slug.table))}.${sql.identifier(slug.name)}`;
-  return sql<string | null>`(select pi.file from ${I} pi where pi.product_slug = ${outer} order by pi.idx, pi.id limit 1)`
-    .mapWith((f: string | null) => (f ? productImageUrl(f) : null));
+  return sql<string | null>`(select pi.product_slug || '-' || pi.file from ${I} pi where pi.product_slug = ${outer} order by pi.idx, pi.id limit 1)`
+    .mapWith((f: string | null) => (f ? productImageUrl(f) : null)); // "slug-file" như productImageUrl(file, slug)
 };
 
 const active = eq(P.active, true);

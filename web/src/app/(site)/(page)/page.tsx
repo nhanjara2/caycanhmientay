@@ -21,6 +21,7 @@ import { liveBanners } from '@/server/home-banners';
 import { publishedPosts, publishedVideos } from '@/server/posts';
 import { publishedProjects } from '@/server/projects';
 import '@/styles/home.css';
+import { withShare } from '@/lib/seo';
 
 // Trang chủ (từ 09/10/2026): trang giới thiệu nhiều ảnh — banner sự kiện chủ shop tự tải ở /admin/trang-chu,
 // danh mục bằng ảnh, Flash sale, ảnh vườn, bệnh cây theo mùa, tin sự kiện, công trình, video. Trang chủ cũ (mỗi danh mục
@@ -57,10 +58,10 @@ function seasonNow() {
     : { key: 'khô', name: 'Mùa khô' };
 }
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withShare({
   description: 'Cây Cảnh Miền Tây – nhà vườn tại Làng hoa Sa Đéc từ 2007: cây cảnh, cây văn phòng, cây công trình giá tại vườn, giá sỉ cho đối tác, giao toàn quốc.',
   alternates: { canonical: '/' },
-};
+});
 
 export default async function HomePage() {
   const [banners, products, flash, categories, counts, posts, allVideos, projects, diseases] = await Promise.all([

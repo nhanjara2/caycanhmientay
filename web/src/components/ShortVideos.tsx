@@ -5,6 +5,7 @@ import { useEffect, useId, useRef, useState, type KeyboardEvent, type MouseEvent
 import { TIKTOK_NAME, YOUTUBE_NAME } from '@/lib/contact';
 import { videoPlayer, videoShareUrl, type ShortVideo } from '@/lib/posts';
 import '@/styles/shorts.css';
+import { responsive } from '@/lib/images';
 
 const clock = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
@@ -140,7 +141,7 @@ export function ShortVideos({ videos, layout, openSlug }: { videos: ShortVideo[]
         {videos.map((x, i) => (
           <Link key={x.id} href={x.href} prefetch={false} className="shv-card app-plain" onClick={(e) => onCardClick(e, i)}>
             <span className={x.zoomThumb ? 'shv-card__img shv-card__img--zoom' : 'shv-card__img'}>
-              {x.thumb ? <img src={x.thumb} alt="" loading="lazy" /> : <span className="shv-card__blank" aria-hidden="true" />}
+              {x.thumb ? <img {...responsive(x.thumb, '(max-width: 47.9375em) 46vw, 220px', 640)} alt="" loading="lazy" /> : <span className="shv-card__blank" aria-hidden="true" />}
               <SourceLogo source={x.source} />
               <span className="shv-card__play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg></span>
               {x.seconds ? <small className="shv-card__time">{clock(x.seconds)}</small> : null}
@@ -178,7 +179,7 @@ export function ShortVideos({ videos, layout, openSlug }: { videos: ShortVideo[]
                     </button>
                   </>
                 )}
-                <Link href={v.href} prefetch={false} className="shv-btn">Chi tiết</Link>
+                <Link href={v.href} prefetch={false} className="shv-btn" aria-label={`Chi tiết: ${v.title}`}>Chi tiết</Link>
                 <button type="button" className="shv-btn" onClick={share}>{copied ? 'Đã chép link' : 'Chia sẻ'}</button>
               </div>
             </div>

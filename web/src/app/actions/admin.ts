@@ -7,7 +7,7 @@ import { requireAccess, requireStaff, staffName } from '@/server/auth';
 import { countLot, deleteLot, recentMoves, transferStock } from '@/server/inventory';
 import { cleanText, MAX_DOC_NO, MAX_RECEIPT_NOTE, MAX_SUPPLIER, receiveGoods } from '@/server/receipts';
 import { todayVN, tracksLots } from '@/lib/stock';
-import { addProductImage, deleteProduct, deleteProductImage, listProductImages, moveProductImage, ProductInputSchema, replaceProductImage, saveProduct, setProductActive } from '@/server/products-admin';
+import { addProductImage, deleteProduct, deleteProductImage, listProductImages, moveProductImage, ProductInputSchema, replaceProductImage, saveProduct, setProductActive, setProductImageAlt } from '@/server/products-admin';
 import { applyStockImport, DuplicateImportError, findDuplicateImport, MAX_IMPORT_BYTES, parseStockImport } from '@/server/stock-import';
 import { saveImage } from '@/server/uploads';
 import { db, schema } from '@/server/db';
@@ -90,6 +90,18 @@ export async function editProductImageAction(input: unknown) {
   if (!ok) return { ok: false as const, error: 'Không tìm thấy ảnh' };
   refreshCatalog(slug);
   return { ok: true as const, images: await listProductImages(slug) };
+}
+
+const ImageAlt = z.object({ slug: slugSchema, id: z.number().int().positive(), alt: z.string().max(500) });
+
+/** Lưu mô tả ảnh (alt) — ô dưới từng ảnh trong form sản phẩm, lưu khi rời ô. */
+export async function setProductImageAltAction(input: unknown) {
+  await requireStaff('admin');
+  const p = ImageAlt.safeParse(input);
+  if (!p.success) return { ok: false as const, error: 'Yêu cầu không hợp lệ' };
+  if (!(await setProductImageAlt(p.data.slug, p.data.id, p.data.alt))) return { ok: false as const, error: 'Không tìm thấy ảnh' };
+  refreshCatalog(p.data.slug);
+  return { ok: true as const, images: await listProductImages(p.data.slug) };
 }
 
 const ymd = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Hạn dùng chưa đúng');

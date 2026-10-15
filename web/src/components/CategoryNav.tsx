@@ -8,6 +8,7 @@ import { ZALO_URL } from '@/lib/contact';
 import { money } from '@/lib/format';
 import { shortCategoryName, type MegaMenuData, type MegaProduct } from '@/lib/mega-menu';
 import { Art, Icon, type IconName } from './Icon';
+import { thumbUrl } from '@/lib/images';
 
 /** Lối tắt riêng của vài danh mục hệ thống (theo slug trong SYSTEM_CATEGORIES). */
 const SHORTCUTS: Record<string, { href: string; label: string; icon: IconName }[]> = {
@@ -145,7 +146,7 @@ export function CategoryNav({ categories }: { categories: Category[] }) {
           <span className="app-mm__title">
             Bán chạy <span>· {subName ?? cat.name}</span>
           </span>
-          <Link href={href} className="vx-link app-mm__all">
+          <Link href={href} className="vx-link app-mm__all" aria-label={`Xem tất cả ${subName ?? cat.name}`}>
             Xem tất cả <Icon name="chevron" />
           </Link>
         </div>
@@ -230,7 +231,7 @@ function MiniCard({ p }: { p: MegaProduct }) {
   return (
     <Link href={`/san-pham/${p.slug}`} className="app-mm__card" title={p.name}>
       <span className="app-mm__img">
-        {p.image ? <img src={p.image} alt="" loading="lazy" /> : <Art name={p.icon} />}
+        {p.image ? <img src={thumbUrl(p.image, 320)} alt="" width={320} height={320} loading="lazy" /> : <Art name={p.icon} />}
         {pct > 0 && <span className="vx-badge vx-badge--sale">-{pct}%</span>}
       </span>
       <span className="app-mm__name">{p.name}</span>

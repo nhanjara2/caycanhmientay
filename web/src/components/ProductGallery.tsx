@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
-import type { Product } from '@/lib/catalog';
+import { imageAlt, type Product } from '@/lib/catalog';
+import { responsive, thumbUrl } from '@/lib/images';
 import { Art } from './Icon';
 import { ProductStickers } from './ProductStickers';
 
@@ -67,7 +68,7 @@ export function ProductGallery({ p }: { p: Product }) {
         onMouseMove={images.length ? move : undefined}
         onMouseLeave={() => setLens(null)}
       >
-        {images.length ? <img ref={imgRef} src={images[cur]} alt={p.name} /> : <Art name={p.icon} />}
+        {images.length ? <img ref={imgRef} {...responsive(images[cur], '(max-width: 47.9375em) 100vw, 600px')} alt={imageAlt(p, cur)} fetchPriority={cur === 0 ? 'high' : undefined} /> : <Art name={p.icon} />}
         {p.ship === 'plant' && images.length > 0 && <span className="vx-gal__tag vx-badge vx-badge--origin">Ảnh chụp tại vườn</span>}
         {/* Dấu "Ảnh thật 100%" nằm trong dải sticker; chưa có ảnh thì không có dấu này */}
         <ProductStickers p={p} size="lg" real={images.length > 0} />
@@ -84,7 +85,7 @@ export function ProductGallery({ p }: { p: Product }) {
         <div className="vx-thumbs">
           {images.map((src, i) => (
             <button key={src} type="button" className="vx-thumb" aria-current={i === cur} aria-label={`Ảnh ${i + 1}`} onClick={() => setCur(i)} onMouseEnter={() => setCur(i)}>
-              <img src={src} alt="" loading="lazy" />
+              <img src={thumbUrl(src, 160)} alt="" width={160} height={160} loading="lazy" />
             </button>
           ))}
         </div>

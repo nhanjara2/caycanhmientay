@@ -39,7 +39,7 @@ export default async function SearchPage({ searchParams }: Props) {
         </h1>
       </div>
       {items.length ? (
-        <ProductGrid products={items} />
+        <ProductGrid products={items} level={2} />
       ) : (
         <EmptyState
           icon="search"

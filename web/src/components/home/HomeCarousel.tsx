@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties } from 'react';
 import { isExternal } from '@/lib/home-banners';
 import { Icon } from '../Icon';
+import { responsive, thumbUrl } from '@/lib/images';
 
 /** Một ảnh banner trang chủ — ảnh chủ shop tải lên hoặc ảnh dựng sẵn từ dữ liệu thật (sản phẩm, đối tác). */
 export type Slide = {
@@ -26,21 +27,24 @@ export type Slide = {
   bg?: { image?: string; imageMobile?: string; color?: string };
 };
 
+/** Bề rộng ảnh banner: khung hẹp thì phủ cả màn hình, máy tính tối đa băng rộng 1240px. */
+const BANNER_SIZES = '(max-width: 63.9375em) 100vw, 1240px';
+
 /** Ảnh + chữ (nếu có) của một banner; cả ô là link khi có `href`. */
 export function SlideBody({ s, eager }: { s: Slide; eager?: boolean }) {
   const inner = (
     <>
       {s.contain?.length ? (
         <span className={`hm-collage hm-tone--${s.tone ?? 'green'}`} aria-hidden="true">
-          {s.contain.slice(0, 3).map((src) => <img key={src} src={src} alt="" loading={eager ? 'eager' : 'lazy'} />)}
+          {s.contain.slice(0, 3).map((src) => <img key={src} src={thumbUrl(src, 640)} alt="" loading={eager ? 'eager' : 'lazy'} />)}
         </span>
       ) : (
         <>
           {/* Ảnh đã có sẵn chữ, không có ảnh riêng điện thoại: khung điện thoại cao hơn thì đặt vừa ảnh (không cắt chữ) trên nền chính ảnh đó làm mờ */}
           {!s.showText && !s.imageMobile && <img className="hm-slide__fill" src={s.image} alt="" aria-hidden="true" loading="lazy" />}
           <picture>
-            {s.imageMobile && <source media="(max-width: 47.9375em)" srcSet={s.imageMobile} />}
-            <img src={s.image} alt={s.showText ? '' : s.title} loading={eager ? 'eager' : 'lazy'} fetchPriority={eager ? 'high' : undefined} />
+            {s.imageMobile && <source media="(max-width: 47.9375em)" srcSet={responsive(s.imageMobile, '100vw').srcSet ?? s.imageMobile} sizes="100vw" />}
+            <img {...responsive(s.image, BANNER_SIZES, 1920)} alt={s.showText ? '' : s.title} loading={eager ? 'eager' : 'lazy'} fetchPriority={eager ? 'high' : undefined} />
           </picture>
         </>
       )}

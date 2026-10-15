@@ -11,6 +11,8 @@ import { allDiseases } from '@/server/diseases';
 import { addPostView, getPost, publishedPosts, type PostFull } from '@/server/posts';
 import { PostHelpful, ShareButton } from './PostClient';
 import { PostBody, PostLinks, postDate, TikTok, YouTube } from './PostParts';
+import { withShare } from '@/lib/seo';
+import { responsive } from '@/lib/images';
 
 export type PostPageProps = { params: Promise<{ slug: string }>; searchParams: Promise<{ 'xem-truoc'?: string }> };
 
@@ -29,14 +31,18 @@ const describe = (p: PostFull) => clipText(
 export async function postMetadata(props: PostPageProps): Promise<Metadata> {
   const { post: p, preview } = await load(props);
   if (!p) return { title: 'Không tìm thấy bài viết' };
-  return {
+  return withShare({
     // Tiêu đề dài thì bỏ đuôi "| Cây Cảnh Miền Tây" cho Google khỏi cắt mất phần cuối tiêu đề.
     title: p.title.length > 45 ? { absolute: p.title } : p.title,
     description: describe(p) || undefined,
     alternates: { canonical: postPath(p) },
-    openGraph: { type: 'article', title: p.title, description: describe(p) || undefined, images: p.thumb ? [p.thumb] : undefined },
     robots: preview && postState(p) !== 'published' ? { index: false } : undefined,
-  };
+  }, {
+    // Ảnh bìa, không có thì ảnh của video YouTube; video TikTok chưa có ảnh bìa → ảnh mặc định.
+    images: [p.thumb], alt: p.title,
+    type: p.kind === 'video' ? 'video.other' : 'article',
+    article: { publishedTime: p.publishedAt, modifiedTime: p.updatedAt, author: p.authorName, section: categoryOf(p.category)?.name, tags: p.tags },
+  });
 }
 
 /** "Nguyễn Thu Hà" → "TH" (chữ đầu của 2 từ cuối). */
@@ -125,7 +131,7 @@ export async function PostDetail({ section, ...props }: PostPageProps & { sectio
         {p.kind === 'video' && p.tiktokId ? <TikTok id={p.tiktokId} title={p.title} />
           : p.kind === 'video' && p.youtubeId
           ? <YouTube id={p.youtubeId} title={p.title} vertical={p.videoVertical} />
-          : p.coverFile && <div className="ar-cover app-ar-cover"><img src={p.thumb!} alt={p.title} /></div>}
+          : p.coverFile && <div className="ar-cover app-ar-cover"><img {...responsive(p.thumb!, '(max-width: 47.9375em) 100vw, 800px')} alt={p.title} fetchPriority="high" /></div>}
 
         {toc.length > 1 && (
           <details className="app-ar-toc">
@@ -134,7 +140,7 @@ export async function PostDetail({ section, ...props }: PostPageProps & { sectio
           </details>
         )}
 
-        <PostBody body={p.body} products={products} />
+        <PostBody body={p.body} products={products} slug={p.slug} title={p.title} />
 
         {p.tags.length > 0 && section === 'blog' && (
           <div className="ad-tags app-ar-tags">

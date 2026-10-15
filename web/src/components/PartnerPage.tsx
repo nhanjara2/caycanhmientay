@@ -9,6 +9,7 @@ import { ServiceCta, ServiceFaq } from './LandingParts';
 import { PartnerSignup, type SignupProfile } from './PartnerSignup';
 import { ProjectList } from './ProjectList';
 import { ProjectShowcase } from './ProjectShowcase';
+import { responsive } from '@/lib/images';
 
 // Trang Đối tác sỉ (/doi-tac). Từ 09/10/2026 shop thôi làm dịch vụ, chỉ cung cấp sỉ cho 3 nhóm đối tác (lib/partners.ts).
 // Nguyên tắc giữ từ trang Khách doanh nghiệp cũ: chỉ đăng điều có thật — số liệu chủ shop đã xác nhận, công trình nhập ở /admin/du-an;
@@ -95,7 +96,7 @@ export function PartnerPage({ projects, profile }: { projects: Project[]; profil
         </div>
         {featured ? (
           <Link href={projectPath(featured.slug)} className="dn-hero__media">
-            <img src={projectImageUrl(featured.images[0].file)} alt={featured.images[0].caption || featured.title} />
+            <img {...responsive(projectImageUrl(featured.images[0].file, featured.slug), '(max-width: 63.9375em) 100vw, 600px')} alt={featured.images[0].caption || featured.title} fetchPriority="high" />
             <span className="dn-hero__tag"><b>Công trình tiêu biểu</b>{featured.title}{featured.location && ` · ${featured.location}`}</span>
           </Link>
         ) : (

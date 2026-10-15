@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import type { Product } from '@/lib/catalog';
+import { imageAlt, type Product } from '@/lib/catalog';
 import { diseaseImageUrl, type Disease } from '@/lib/diseases';
 import { postPath } from '@/lib/posts';
 import type { PostCard } from '@/server/posts';
 import { Art, Icon, type IconName } from '../Icon';
 import { PostMeta, PostThumb } from '../PostParts';
+import { responsive, thumbUrl } from '@/lib/images';
 
 // Khối trình bày của trang chủ (/) — CSS lớp `hm-*` trong styles/home.css.
 
@@ -20,7 +21,8 @@ export function HomeHead({ icon, title, sub, href, more = 'Xem tất cả', ligh
         <h2>{title}</h2>
         {sub && <p>{sub}</p>}
       </div>
-      {href && <Link href={href} className="hm-head__more">{more}<Icon name="chevron" size={16} /></Link>}
+      {/* "Xem tất cả" chung chung → aria-label ghi rõ đích (chữ link cho Google + trình đọc màn hình) */}
+      {href && <Link href={href} className="hm-head__more" aria-label={typeof title === 'string' ? `${more} ${title}` : undefined}>{more}<Icon name="chevron" size={16} /></Link>}
     </div>
   );
 }
@@ -49,7 +51,7 @@ export function CategoryMosaic({ items }: { items: MosaicItem[] }) {
       {items.map((m) => (
         <Link key={m.key} href={m.href} className="hm-tile app-plain">
           <span className="hm-tile__img">
-            {m.image ? <img src={m.image} alt="" loading="lazy" /> : <span className="hm-tile__art"><Art name={m.icon} /></span>}
+            {m.image ? <img src={thumbUrl(m.image, 320)} alt="" width={320} height={320} loading="lazy" /> : <span className="hm-tile__art"><Art name={m.icon} /></span>}
           </span>
           <span className="hm-tile__txt">
             <b>{m.name}</b>
@@ -67,7 +69,7 @@ export function PhotoWall({ products }: { products: Product[] }) {
     <div className="hm-wall">
       {products.map((p) => (
         <Link key={p.slug} href={`/san-pham/${p.slug}`} className="hm-wall__item app-plain">
-          <img src={p.images![0]} alt={p.name} loading="lazy" />
+          <img {...responsive(p.images![0], '(max-width: 47.9375em) 33vw, 400px', 960)} alt={imageAlt(p, 0)} loading="lazy" />
           <span className="hm-wall__cap">{p.name}</span>
         </Link>
       ))}
@@ -89,7 +91,7 @@ export function SeasonDiseases({ season, diseases }: { season: string; diseases:
           const img = d.symptoms.find((s) => s.image)?.image;
           return (
             <Link key={d.slug} href={`/benh-cay/${d.slug}`} className="hm-dcard app-plain">
-              <span className="hm-dcard__img">{img ? <img src={diseaseImageUrl(img)} alt="" loading="lazy" /> : <Art name="bug" />}</span>
+              <span className="hm-dcard__img">{img ? <img {...responsive(diseaseImageUrl(img, d.slug), '(max-width: 47.9375em) 44vw, 260px', 640)} alt="" loading="lazy" /> : <Art name="bug" />}</span>
               <span className="hm-dcard__b">
                 <b>{d.name}</b>
                 <small>{d.summary}</small>

@@ -2,6 +2,7 @@
 // Dữ liệu do chủ shop tự nhập ở /admin/du-an; web KHÔNG tự đặt ra dự án, tên khách hay số liệu.
 
 import type { IconName } from '@/components/Icon';
+import { imageUrl } from './images';
 
 /** Loại công trình: lọc trên trang /doi-tac. Thêm loại mới = thêm 1 dòng (key không đổi sau khi đã dùng). */
 export const PROJECT_TYPES = [
@@ -40,7 +41,7 @@ export const MAX_PROJECT_SCOPE = 12;
 export const MAX_PROJECT_PLANTS = 30;
 
 export const PROJECT_IMAGE_FILE = /^[a-f0-9]{32}\.(jpg|png|webp)$/;
-export const projectImageUrl = (file: string) => `/api/project-images/${file}`;
+export const projectImageUrl = (file: string, slug?: string) => imageUrl('project-images', file, slug);
 export const projectPath = (slug: string) => `/doi-tac/cong-trinh/${slug}`;
 
 /** Thông tin dự án hiện trên web (đã bỏ cột nội bộ). */

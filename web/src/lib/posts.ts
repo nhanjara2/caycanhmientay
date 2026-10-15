@@ -2,6 +2,7 @@
 // Dùng chung trình duyệt (trình soạn bài admin) và server (trang khách, lưu bài).
 import type { IconName } from '@/components/Icon';
 import { normalize } from './catalog';
+import { imageUrl } from './images';
 
 export type PostSection = 'blog' | 'news';
 export type PostKind = 'article' | 'video';
@@ -230,7 +231,7 @@ export function durationLabel(sec: number | null | undefined) {
 
 // ---- Ảnh -------------------------------------------------------------------------------------
 
-export const postImageUrl = (file: string) => `/api/post-images/${file}`;
+export const postImageUrl = (file: string, slug?: string) => imageUrl('post-images', file, slug);
 
 // ---- Trạng thái ------------------------------------------------------------------------------
 

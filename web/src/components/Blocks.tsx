@@ -10,7 +10,7 @@ export function SectionHeader({ icon, title, href }: { icon: IconName; title: Re
         {title}
       </h2>
       {href && (
-        <Link className="vx-link" href={href}>
+        <Link className="vx-link" href={href} aria-label={typeof title === 'string' ? `Xem tất cả ${title}` : undefined}>
           Xem tất cả <Icon name="chevron" size={16} />
         </Link>
       )}

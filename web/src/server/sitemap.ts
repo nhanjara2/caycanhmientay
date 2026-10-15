@@ -4,8 +4,8 @@ import { asc, eq } from 'drizzle-orm';
 import { productImageUrl } from '@/lib/catalog';
 import { diseaseImageUrl } from '@/lib/diseases';
 import { policies } from '@/lib/policies';
-import { postImageUrl, postPath, SECTIONS, sectionOf, VIDEO_PAGE } from '@/lib/posts';
-import { projectImageUrl, projectPath } from '@/lib/projects';
+import { postImageUrl, postPath, SECTIONS, sectionOf, tiktokPlayer, VIDEO_PAGE, youtubeEmbed } from '@/lib/posts';
+import { hasProjectDetail, projectImageUrl, projectPath } from '@/lib/projects';
 import { absoluteUrl } from '@/lib/site';
 import { canonicalPath } from '@/lib/slug';
 import { db, schema } from './db';
@@ -24,7 +24,10 @@ import { publishedPosts } from './posts';
  * trang chính sách); trang không có ngày thật (trang chủ, trang giới thiệu dịch vụ…) thì bỏ trống — không ghi ngày deploy.
  */
 
-export type SitemapEntry = { loc: string; lastmod?: Date; images?: string[] };
+/** Video trên trang (thẻ <video:video> — Google bắt buộc ảnh thu nhỏ, tiêu đề, mô tả, link trình phát). */
+export type SitemapVideo = { thumbnail: string; title: string; description: string; player: string; seconds?: number | null; published: Date };
+
+export type SitemapEntry = { loc: string; lastmod?: Date; images?: string[]; videos?: SitemapVideo[] };
 
 /** Google cho tối đa 50.000 URL / 50MB mỗi file; mỗi sản phẩm kèm tới 10 ảnh nên chia nhỏ hơn nhiều cho chắc. */
 export const SITEMAP_MAX_URLS = 10_000;
@@ -58,7 +61,7 @@ async function productRows() {
   ]);
   const files = new Map<string, string[]>();
   for (const i of imgs) files.set(i.slug, [...(files.get(i.slug) ?? []), i.file]);
-  return rows.map((r) => ({ ...r, images: (files.get(r.slug) ?? []).map(productImageUrl) }));
+  return rows.map((r) => ({ ...r, images: (files.get(r.slug) ?? []).map((f) => productImageUrl(f, r.slug)) }));
 }
 
 async function products(): Promise<SitemapEntry[]> {
@@ -110,18 +113,25 @@ async function pages(): Promise<SitemapEntry[]> {
 async function diseases(): Promise<SitemapEntry[]> {
   const D = schema.diseases;
   const rows = await db.select({ slug: D.slug, symptoms: D.symptoms, updatedAt: D.updatedAt }).from(D).where(eq(D.active, true)).orderBy(asc(D.name));
-  return rows.flatMap((d) => entry(`/benh-cay/${d.slug}`, d.updatedAt, d.symptoms.flatMap((s) => (s.image ? [diseaseImageUrl(s.image)] : []))));
+  return rows.flatMap((d) => entry(`/benh-cay/${d.slug}`, d.updatedAt, d.symptoms.flatMap((s) => (s.image ? [diseaseImageUrl(s.image, d.slug)] : []))));
 }
 
 async function posts(): Promise<SitemapEntry[]> {
   // Ảnh: chỉ ảnh bìa trên web mình (ảnh YouTube / TikTok nằm ở tên miền khác).
-  return (await publishedPosts()).flatMap((p) => entry(postPath(p), latest([p.publishedAt, p.updatedAt]), p.coverFile ? [postImageUrl(p.coverFile)] : undefined));
+  // Video: bài video có ảnh thu nhỏ (YouTube luôn có; TikTok chỉ khi đã có ảnh bìa — TikTok không có link ảnh cố định).
+  return (await publishedPosts()).flatMap((p) => entry(postPath(p), latest([p.publishedAt, p.updatedAt]), p.coverFile ? [postImageUrl(p.coverFile, p.slug)] : undefined)
+    .map((e) => {
+      const player = p.kind !== 'video' ? null : p.tiktokId ? tiktokPlayer(p.tiktokId) : p.youtubeId ? youtubeEmbed(p.youtubeId) : null;
+      if (!player || !p.thumb) return e;
+      return { ...e, videos: [{ thumbnail: absoluteUrl(p.thumb), title: p.title, description: p.excerpt || p.title, player, seconds: p.videoSeconds, published: p.publishedAt }] };
+    }));
 }
 
 async function projects(): Promise<SitemapEntry[]> {
   const PJ = schema.projects;
-  const rows = await db.select({ slug: PJ.slug, images: PJ.images, updatedAt: PJ.updatedAt }).from(PJ).where(eq(PJ.published, true)).orderBy(asc(PJ.id));
-  return rows.flatMap((p) => entry(projectPath(p.slug), p.updatedAt, p.images.map((i) => projectImageUrl(i.file))));
+  const rows = await db.select({ slug: PJ.slug, images: PJ.images, body: PJ.body, scope: PJ.scope, quote: PJ.quote, updatedAt: PJ.updatedAt }).from(PJ).where(eq(PJ.published, true)).orderBy(asc(PJ.id));
+  // Dự án chỉ có tên (chưa ảnh / mô tả / hạng mục / ý kiến khách): trang mỏng, noindex, không link từ /doi-tac → không vào sitemap.
+  return rows.filter(hasProjectDetail).flatMap((p) => entry(projectPath(p.slug), p.updatedAt, p.images.map((i) => projectImageUrl(i.file, p.slug))));
 }
 
 /** Các loại sitemap con: tên file /sitemaps/<key>.xml (trang thứ 2 trở đi: <key>-2.xml…). */
@@ -169,9 +179,24 @@ export function urlsetXml(entries: SitemapEntry[]) {
     `<loc>${esc(e.loc)}</loc>`,
     e.lastmod ? `<lastmod>${iso(e.lastmod)}</lastmod>` : '',
     ...(e.images ?? []).slice(0, 1000).map((i) => `<image:image><image:loc>${esc(i)}</image:loc></image:image>`),
+    ...(e.videos ?? []).map(videoXml),
     '</url>',
   ].join('')).join('\n');
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n${body}\n</urlset>\n`;
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">\n${body}\n</urlset>\n`;
+}
+
+/** Một <video:video>: tiêu đề ≤ 100 ký tự, mô tả ≤ 2048, thời lượng 1–28800 giây (giới hạn của Google). */
+function videoXml(v: SitemapVideo) {
+  return [
+    '<video:video>',
+    `<video:thumbnail_loc>${esc(v.thumbnail)}</video:thumbnail_loc>`,
+    `<video:title>${esc(v.title.slice(0, 100))}</video:title>`,
+    `<video:description>${esc(v.description.slice(0, 2048))}</video:description>`,
+    `<video:player_loc>${esc(v.player)}</video:player_loc>`,
+    v.seconds && v.seconds >= 1 && v.seconds <= 28_800 ? `<video:duration>${Math.round(v.seconds)}</video:duration>` : '',
+    `<video:publication_date>${iso(v.published)}</video:publication_date>`,
+    '</video:video>',
+  ].join('');
 }
 
 export function indexXml(items: { loc: string; lastmod?: Date }[]) {

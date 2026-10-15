@@ -10,9 +10,10 @@ import { ServiceCta } from '@/components/LandingParts';
 import { formatPhone, SALES_PHONE, ZALO_URL } from '@/lib/contact';
 import { clipText } from '@/lib/format';
 import { WHOLESALE_QUOTE_URL, WHOLESALE_URL } from '@/lib/partners';
-import { paragraphs, projectImageUrl, projectPath, projectTypeOf, roleName } from '@/lib/projects';
+import { hasProjectDetail, paragraphs, projectImageUrl, projectPath, projectTypeOf, roleName } from '@/lib/projects';
 import { getCurrentUser } from '@/server/auth';
 import { getProject, publishedProjects } from '@/server/projects';
+import { withShare } from '@/lib/seo';
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ 'xem-truoc'?: string }> };
 
@@ -27,19 +28,18 @@ async function load({ params, searchParams }: Props) {
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const { p } = await load(props);
   if (!p) return { title: 'Không tìm thấy dự án' };
-  const cover = p.images[0];
   // Chưa viết tóm tắt thì ghép từ loại công trình, địa điểm, năm, cây đã cung cấp.
   const description = clipText(p.summary || [
     `${p.title}: ${projectTypeOf(p.type).name.toLowerCase()} do Cây Cảnh Miền Tây cung cấp cây`,
     p.location && `tại ${p.location}`, p.year && `năm ${p.year}`, p.plants.length && `gồm ${p.plants.slice(0, 5).join(', ')}`,
   ].filter(Boolean).join(', ') + '.', 170);
-  return {
+  return withShare({
     title: `${p.title} — Dự án cây xanh`,
     description,
     alternates: { canonical: projectPath(p.slug) },
-    openGraph: { title: p.title, description, images: cover ? [projectImageUrl(cover.file)] : undefined },
-    robots: p.published ? undefined : { index: false },
-  };
+    // Ẩn (xem trước) → noindex; dự án chỉ có tên (chưa ảnh / mô tả…) là trang mỏng, trang Đối tác không link tới → noindex tới khi có nội dung.
+    robots: !p.published ? { index: false } : hasProjectDetail(p) ? undefined : { index: false, follow: true },
+  }, { images: p.images.map((i) => projectImageUrl(i.file, p.slug)), alt: p.title });
 }
 
 export default async function ProjectPage(props: Props) {
@@ -77,7 +77,7 @@ export default async function ProjectPage(props: Props) {
       </header>
 
       <div className={p.images.length ? 'dn-wrap dn-ptop' : 'dn-wrap dn-ptop dn-ptop--noimg'}>
-        <ProjectGallery images={p.images} title={p.title} />
+        <ProjectGallery images={p.images} title={p.title} slug={p.slug} />
         <aside className="dn-pinfo">
           <dl>
             {facts.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}

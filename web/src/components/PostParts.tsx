@@ -6,6 +6,7 @@ import {
 } from '@/lib/posts';
 import { Art, Icon, type IconName } from './Icon';
 import { ArticleProducts } from './PostClient';
+import { responsive } from '@/lib/images';
 
 export const postDate = (d: Date) => d.toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', day: '2-digit', month: '2-digit', year: 'numeric' });
 
@@ -17,7 +18,7 @@ export const iconOf = (category: string): IconName => categoryOf(category)?.icon
 export function PostThumb({ p, className = 'vx-thumbimg', tone }: { p: Pick<CardLike, 'thumb' | 'category' | 'title'>; className?: string; tone?: string }) {
   return (
     <span className={tone ? `${className} ${tone}` : className}>
-      {p.thumb ? <img src={p.thumb} alt="" loading="lazy" /> : <Art name={iconOf(p.category)} />}
+      {p.thumb ? <img {...responsive(p.thumb, '(max-width: 47.9375em) 50vw, 400px', 960)} alt="" loading="lazy" /> : <Art name={iconOf(p.category)} />}
     </span>
   );
 }
@@ -71,8 +72,9 @@ export function YouTube({ id, title, vertical }: { id: string; title: string; ve
 
 const NOTE_ICON = <Icon name="alert" />;
 
-/** Nội dung bài. `products`: sản phẩm đang bán, theo slug (ẩn/ngừng bán thì tự bỏ khỏi khối). */
-export function PostBody({ body, products }: { body: PostBlock[]; products: Map<string, Product> }) {
+/** Nội dung bài. `products`: sản phẩm đang bán, theo slug (ẩn/ngừng bán thì tự bỏ khỏi khối).
+ *  `slug` gắn vào tên file ảnh; ảnh chưa có chú thích dùng `title` làm alt (ảnh nội dung không để alt trống). */
+export function PostBody({ body, products, slug, title }: { body: PostBlock[]; products: Map<string, Product>; slug?: string; title?: string }) {
   const ids = new Map(tableOfContents(body).map((t) => [t.index, t.id]));
   const out: ReactNode[] = body.map((b, i) => {
     switch (b.type) {
@@ -86,7 +88,7 @@ export function PostBody({ body, products }: { body: PostBlock[]; products: Map<
       case 'image':
         return (
           <figure key={i} className="ar-fig">
-            <img src={postImageUrl(b.file)} alt={b.caption} loading="lazy" />
+            <img {...responsive(postImageUrl(b.file, slug), '(max-width: 47.9375em) 100vw, 760px')} alt={b.caption || title || ''} loading="lazy" />
             {b.caption && <figcaption>{b.caption}</figcaption>}
           </figure>
         );

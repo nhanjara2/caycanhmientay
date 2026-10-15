@@ -6,6 +6,7 @@ import { CookieConsent } from './CookieConsent';
 import { DeliverToDialog } from './DeliverTo';
 import { Footer } from './Footer';
 import { Header } from './Header';
+import { ImageFallback } from './ImageFallback';
 import { NavProgress } from './NavProgress';
 import { ContactFab, Toaster } from './Overlays';
 import { PhonePrompt } from './PhoneModal';
@@ -27,6 +28,7 @@ export async function SiteChrome({ children }: { children: ReactNode }) {
       <PhonePrompt />
       <CookieConsent />
       <ScrollReveal />
+      <ImageFallback />
     </div>
   );
 }

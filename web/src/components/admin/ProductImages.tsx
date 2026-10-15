@@ -2,15 +2,15 @@
 
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
-import { editProductImageAction, replaceProductImageAction, uploadProductImageAction } from '@/app/actions/admin';
+import { editProductImageAction, replaceProductImageAction, setProductImageAltAction, uploadProductImageAction } from '@/app/actions/admin';
 import { compressImage, WATERMARK } from '@/lib/compress-image';
-import { MAX_PRODUCT_IMAGES } from '@/lib/catalog';
+import { imageAlt, MAX_IMAGE_ALT, MAX_PRODUCT_IMAGES } from '@/lib/catalog';
 import { PRODUCT_ASPECTS, useImageCrop } from './ImageCropper';
 
-export type AdminImage = { id: number; url: string };
+export type AdminImage = { id: number; url: string; alt: string };
 
 /** Ảnh sản phẩm: tải lên ngay (không cần bấm Lưu), ảnh đầu tiên là ảnh đại diện. */
-export function ProductImages({ slug, initial, canEdit }: { slug?: string; initial: AdminImage[]; canEdit: boolean }) {
+export function ProductImages({ slug, name, initial, canEdit }: { slug?: string; name: string; initial: AdminImage[]; canEdit: boolean }) {
   const router = useRouter();
   const [images, setImages] = useState(initial);
   const [busy, setBusy] = useState('');
@@ -80,6 +80,16 @@ export function ProductImages({ slug, initial, canEdit }: { slug?: string; initi
     router.refresh();
   };
 
+  /** Lưu mô tả ảnh khi rời ô (không đổi thì thôi). */
+  const saveAlt = async (id: number, alt: string) => {
+    if ((images.find((x) => x.id === id)?.alt ?? '') === alt.trim()) return;
+    setError('');
+    const r = await setProductImageAltAction({ slug, id, alt }).catch(() => ({ ok: false as const, error: 'Có lỗi, vui lòng thử lại' }));
+    if (!r.ok) return setError(r.error);
+    setImages(r.images);
+    router.refresh();
+  };
+
   const edit = async (id: number, op: 'delete' | 'first' | 'left' | 'right') => {
     if (op === 'delete' && !confirm('Xóa ảnh này?')) return;
     setError('');
@@ -126,6 +136,21 @@ export function ProductImages({ slug, initial, canEdit }: { slug?: string; initi
       {busy && images.length >= MAX_PRODUCT_IMAGES && <span className="hint">{busy}</span>}
       {error && <span className="vx-err" role="alert">{error}</span>}
       {cropDialog}
+      {images.length > 0 && (
+        <details className="pi-alts">
+          <summary>Mô tả ảnh cho Google ({images.filter((x) => x.alt).length}/{images.length} ảnh đã viết)</summary>
+          <span className="hint">Tả đúng thứ có trong ảnh, ngắn gọn (vd. “Chậu kim tiền cao 60cm đặt cạnh cửa sổ”), không liệt kê từ khóa. Để trống thì web dùng tên sản phẩm.</span>
+          {images.map((img, i) => (
+            <label key={`${img.id}-${img.alt}`} className="pi-alt">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={img.url} alt="" loading="lazy" />
+              <span>{i === 0 ? 'Ảnh chính' : `Ảnh phụ ${i}`}</span>
+              <input className="vx-input" defaultValue={img.alt} maxLength={MAX_IMAGE_ALT} disabled={!canEdit}
+                placeholder={imageAlt({ name: name || 'Tên sản phẩm' }, i)} onBlur={(e) => saveAlt(img.id, e.target.value)} />
+            </label>
+          ))}
+        </details>
+      )}
       <span className="hint">
         {images.length}/{MAX_PRODUCT_IMAGES} ảnh · Chọn nhiều ảnh một lần được, chỉnh khung cắt từng ảnh (✂ để cắt lại ảnh đã tải), ảnh tự thu nhỏ và đóng chữ ký “{WATERMARK}” chống lấy ảnh. <b>Ảnh chính</b> (khung lớn) hiện trên thẻ sản phẩm, giỏ hàng và đầu trang chi tiết; <b>ảnh phụ</b> hiện ở dải ảnh nhỏ bên dưới. Ảnh lưu ngay, không cần bấm Lưu.
       </span>
