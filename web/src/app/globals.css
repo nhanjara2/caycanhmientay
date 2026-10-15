@@ -19,6 +19,30 @@ body { overflow-wrap: break-word; }
 /* Nền chung của web khách là TRẮNG (11/10/2026, chủ shop yêu cầu; design system là xám xanh #eef3ef).
    Chỉ trang có `.app-site` (SiteChrome) — admin / POS / app nhân viên giữ nền xám xanh để thẻ trắng nổi lên. */
 body:has(.app-site) { --surface-page: #fff; }
+/* Cụm nội dung có viền (15/10/2026, chủ shop: "nơi thì chia từng cụm rõ ràng, nơi thì một tuồng từ trên xuống — đồng nhất giao diện").
+   Thẻ của design system là trắng trên nền xám xanh nên không cần viền; từ khi nền web khách thành trắng (dòng trên) các thẻ này
+   hòa vào nền → trang đặt hàng thành công, giỏ hàng, thanh toán, tài khoản, chi tiết sản phẩm… đọc như một dải liền, trong khi
+   trang có viền riêng (báo giá sỉ, tư vấn chọn cây, đối tác…) vẫn chia cụm. Một luật chung: mọi thẻ cấp cụm trên web khách có viền
+   `--border` (đúng quy ước "đừng dựa vào nền xám để tách thẻ"). Thẻ lồng trong thẻ (ô bấm, vé, dòng sản phẩm) giữ viền riêng của chúng.
+   Thẻ mới của web khách: viết `border: 1px solid var(--border)` hoặc thêm class vào danh sách này. Admin / POS không đụng (không có `.app-site`). */
+.app-site :is(.vx-card, .vx-panel, .vx-sum, .vx-pd, .vx-content, .vx-order, .vx-od__card, .vx-profile, .vx-addrs, .vx-acct__nav,
+  .vx-cblock, .vx-experts, .vx-sfind, .vx-sdetail, .vx-pmap, .nw-card, .nw-box, .pl-head, .os-hero, .os-box, .qf-card, .es, .gd-card, .cs-list,
+  .gd-sum > div, .cp-steps > div, .cp-cal > div) {
+  border: 1px solid var(--border);
+}
+/* Phiếu thanh toán ở chi tiết đơn: viền răng cưa dưới đáy chỉ hợp nền xám — trên nền trắng thành thẻ thường. Khối "bước tiếp theo"
+   của trang đặt thành công là ba ô có viền riêng, bỏ phần đệm của khung ngoài để mép thẳng hàng với các thẻ phía trên. */
+.app-site .vx-receipt { border: 1px solid var(--border); border-radius: var(--radius-lg); margin-bottom: 0; }
+.app-site .vx-receipt::after { content: none; }
+.app-site .os-next { padding: 0; background: none; }
+/* Dòng sản phẩm trong đơn hàng trên điện thoại: bốn cột (ảnh | tên | giá | số lượng) bóp tên còn một chữ mỗi dòng — tên rộng hết hàng trên, số lượng + giá nằm hàng dưới. */
+@media (max-width: 47.9375em) {
+  .app-site .vx-oline { grid-template-columns: 56px minmax(0, 1fr) auto; align-items: start; }
+  .app-site .vx-oline .vx-item__img { grid-column: 1; grid-row: 1 / span 2; }
+  .app-site .vx-oline p { grid-column: 2 / -1; grid-row: 1; }
+  .app-site .vx-oline .qt { grid-column: 2; grid-row: 2; text-align: left; }
+  .app-site .vx-oline .pr { grid-column: 3; grid-row: 2; }
+}
 /* Nhãn % giảm giá (và nhãn Flash sale) trên web khách: nền đỏ #d0011b thay cam đậm --sale (11/10/2026, chủ shop yêu cầu) */
 body:has(.app-site) .vx-badge--sale { background: #d0011b; color: #fff; }
 /* iPhone Safari tự phóng to trang khi chạm vào ô nhập có chữ < 16px, sau đó trang lệch và phải kéo tới lui. */
@@ -2129,6 +2153,7 @@ a.app-mm__card:hover .app-mm__name { color: var(--primary); }
 .dn-ptop--noimg .dn-pinfo { display: contents; }
 .dn-card { position: relative; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; transition: box-shadow .2s, transform .2s; }
 .dn-card:hover { box-shadow: var(--shadow-pop); transform: translateY(-2px); }
+.dn-card[hidden] { display: none; }
 .dn-card:focus-within { outline: 2px solid var(--primary); outline-offset: 2px; }
 .dn-card__media { position: relative; aspect-ratio: 4 / 3; background: var(--surface-sunken); overflow: hidden; }
 .dn-card__media img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s; }
