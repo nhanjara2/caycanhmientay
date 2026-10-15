@@ -1,8 +1,5 @@
 import type { NextConfig } from 'next';
 
-/** Tên miền chính (trùng với SITE_ORIGIN trong src/lib/site.ts). Giá trị là biểu thức chính quy nên dấu chấm được thoát. */
-const CANONICAL_HOST = 'www\\.caycanhmientay\\.com';
-
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   // Đọc/ghi file Excel (nhập hàng): để Node tự nạp, không gộp vào bundle.
@@ -15,17 +12,6 @@ const nextConfig: NextConfig = {
       { source: '/dich-vu/:path*', destination: '/doi-tac', permanent: false },
       { source: '/doanh-nghiep/du-an/:slug', destination: '/doi-tac/cong-trinh/:slug', permanent: true },
       { source: '/doanh-nghiep', destination: '/doi-tac', permanent: true },
-    ];
-  },
-  // SEO: chỉ tên miền chính được Google lập chỉ mục. Bản *.vercel.app (production + preview) trả cùng nội dung →
-  // gắn noindex để không thành trang trùng (canonical trong trang vẫn trỏ về tên miền chính — src/lib/site.ts).
-  async headers() {
-    return [
-      {
-        source: '/:path*',
-        missing: [{ type: 'host', value: CANONICAL_HOST }],
-        headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
-      },
     ];
   },
   experimental: {

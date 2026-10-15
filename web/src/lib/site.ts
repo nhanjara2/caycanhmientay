@@ -1,8 +1,8 @@
 /**
  * Địa chỉ chuẩn duy nhất của web. Vercel tự chuyển http → https và caycanhmientay.com → www, nên mọi URL tuyệt đối
  * (canonical, JSON-LD, sitemap) đều ghi theo địa chỉ này — kể cả khi chạy trên máy dev hay tên miền *.vercel.app
- * (các tên miền đó còn bị gắn `X-Robots-Tag: noindex` trong next.config.ts để Google không lập chỉ mục bản trùng).
- * Đổi tên miền: sửa ở đây + `CANONICAL_HOST` trong next.config.ts.
+ * (bản *.vercel.app còn bị gắn `X-Robots-Tag: noindex` trong src/proxy.ts để Google không lập chỉ mục bản trùng).
+ * Đổi tên miền: chỉ sửa ở đây.
  */
 export const SITE_ORIGIN = 'https://www.caycanhmientay.com';
 

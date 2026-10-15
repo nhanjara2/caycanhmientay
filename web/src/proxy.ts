@@ -27,6 +27,15 @@ export function proxy(request: NextRequest) {
     url.pathname = clean;
     return NextResponse.redirect(url, 308);
   }
+
+  // Bản trên *.vercel.app trùng nội dung tên miền chính → noindex (canonical trong trang vẫn trỏ về tên miền chính).
+  // Chỉ xét đuôi .vercel.app: lỡ đọc sai host thì tên miền chính cũng không bao giờ bị noindex.
+  const host = (request.headers.get('x-forwarded-host') ?? request.headers.get('host') ?? '').toLowerCase();
+  if (host.endsWith('.vercel.app')) {
+    const res = NextResponse.next();
+    res.headers.set('X-Robots-Tag', 'noindex, nofollow');
+    return res;
+  }
 }
 
 export const config = {
