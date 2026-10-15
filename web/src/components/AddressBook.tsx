@@ -64,7 +64,7 @@ export function AddressBook({ items, stores }: { items: AddressDTO[]; stores: St
         </div>
       ) : (
         <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-lg)' }}>
-          <EmptyState icon="pin" title="Chưa có địa chỉ nào" text="Lưu địa chỉ để đặt hàng nhanh hơn và giúp shop chuẩn bị xe phù hợp khi giao cây lớn." />
+          <EmptyState icon="pin" title="Chưa có địa chỉ nào" />
         </div>
       )}
       {editing && <AddressModal value={editing} stores={stores} onClose={() => setEditing(null)} />}
@@ -160,7 +160,6 @@ export function AddressModal({ value, stores, onClose, onSaved, onDeleted }: {
                     <button key={c} type="button" className="vx-chip" aria-pressed={v.conditions.includes(c)} onClick={() => toggle(c)}>{CONDITION_LABEL[c]}</button>
                   ))}
                 </span>
-                <span className="vx-help">Giúp shop chọn cách giao phù hợp với cây lớn, tránh giao lại.</span>
               </div>
             </div>
           </details>

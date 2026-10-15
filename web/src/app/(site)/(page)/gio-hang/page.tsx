@@ -47,7 +47,6 @@ export default function CartPage() {
         <EmptyState
           icon="cart"
           title="Giỏ hàng đang trống"
-          text="Chọn cây và vật tư — mua 2 cây cùng loại có giá combo. Cần số lượng lớn cho công trình thì gửi danh sách để shop báo giá sỉ."
           action={<Link className="vx-btn vx-btn--primary" href="/danh-muc/cay-canh">Xem cây cảnh</Link>}
         />
       </div>

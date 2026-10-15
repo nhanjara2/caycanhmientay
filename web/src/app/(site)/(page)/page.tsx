@@ -26,12 +26,12 @@ import '@/styles/home.css';
 // một khối sản phẩm) chuyển sang /danh-muc. Khối nào chưa có dữ liệu thật thì ẩn; banner chưa tải thì dựng từ ảnh sản phẩm.
 
 const QUICK = [
-  { label: 'Đăng ký đối tác', sub: 'Nhận chiết khấu riêng', icon: 'user', href: `${WHOLESALE_URL}#dang-ky` },
-  { label: 'Gửi báo giá sỉ', sub: 'Gửi danh sách cần mua', icon: 'receipt', href: WHOLESALE_QUOTE_URL },
-  { label: 'Tư vấn chọn cây', sub: 'Theo từng không gian', icon: 'spark', href: '/tu-van-chon-cay' },
-  { label: 'Bắt bệnh cho cây', sub: 'Tra theo triệu chứng', icon: 'bug', href: '/benh-cay' },
-  { label: 'Tìm vườn ươm', sub: 'Hệ thống cửa hàng', icon: 'pin', href: '/he-thong-cua-hang' },
-  { label: 'Tất cả sản phẩm', sub: 'Xem theo danh mục', icon: 'leaf', href: '/danh-muc' },
+  { label: 'Đăng ký đối tác', icon: 'user', href: `${WHOLESALE_URL}#dang-ky` },
+  { label: 'Gửi báo giá sỉ', icon: 'receipt', href: WHOLESALE_QUOTE_URL },
+  { label: 'Tư vấn chọn cây', icon: 'spark', href: '/tu-van-chon-cay' },
+  { label: 'Bắt bệnh cho cây', icon: 'bug', href: '/benh-cay' },
+  { label: 'Tìm vườn ươm', icon: 'pin', href: '/he-thong-cua-hang' },
+  { label: 'Tất cả sản phẩm', icon: 'leaf', href: '/danh-muc' },
 ] as const;
 
 const fromBanner = (b: Banner): Slide => ({
@@ -52,8 +52,8 @@ const pickImages = (list: Product[], n: number) => withImage(list).sort(bySold).
 function seasonNow() {
   const m = Number(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh', month: 'numeric' }));
   return m >= 5 && m <= 11
-    ? { key: 'mưa', name: 'Mùa mưa', intro: 'Mưa nhiều, đất úng và trời nóng ẩm là lúc nấm, thối rễ, đốm lá bùng phát. Kiểm tra cây sớm, thoát nước tốt và phun phòng đúng thuốc để không mất cả lô cây.' }
-    : { key: 'khô', name: 'Mùa khô', intro: 'Nắng gắt, ít mưa: nhện đỏ, bọ trĩ, rệp sáp phát triển mạnh, cây dễ cháy lá, héo đọt. Tưới đủ ẩm, che nắng cho cây non và kiểm tra mặt dưới lá thường xuyên.' };
+    ? { key: 'mưa', name: 'Mùa mưa' }
+    : { key: 'khô', name: 'Mùa khô' };
 }
 
 export default async function HomePage() {
@@ -63,7 +63,6 @@ export default async function HomePage() {
   ]);
   // Mỗi vị trí chỉ hiện tối đa `max` ảnh đầu (BANNER_SLOTS).
   const inSlot = (slot: Banner['slot']) => banners.filter((b) => b.slot === slot).slice(0, slotOf(slot).max).map(fromBanner);
-  const minOrder = 'Mua 2 cây có giá combo, giá sỉ công trình liên hệ báo giá';
 
   // ---- Khung đầu trang: ảnh chủ shop tải lên; chưa có thì dựng từ ảnh thật của shop ----
   const season = seasonNow();
@@ -184,7 +183,7 @@ export default async function HomePage() {
 
       <div className="hm-body">
         <section className="hm-sec">
-          <HomeHead icon="leaf" title="Mua sỉ theo danh mục" sub="Ảnh thật từng nhóm hàng — bấm vào để xem giá, quy cách" href="/danh-muc" />
+          <HomeHead icon="leaf" title="Mua sỉ theo danh mục" href="/danh-muc" />
           <CategoryMosaic items={mosaic} />
         </section>
 
@@ -200,7 +199,6 @@ export default async function HomePage() {
           <div className="hm-partner__txt">
             <span className="hm-partner__badge">Chương trình đối tác sỉ</span>
             <h2>Một giá sỉ chung, chiết khấu riêng cho từng đối tác</h2>
-            <p>{minOrder}. Đặt qua giỏ hàng hoặc gửi danh sách cây — shop báo giá, giữ hàng và giao chia đợt theo tiến độ công trình.</p>
             <div className="hm-partner__acts">
               <Link href={`${WHOLESALE_URL}#dang-ky`} className="vx-btn hm-btn-sun">Đăng ký đối tác</Link>
               <Link href={WHOLESALE_QUOTE_URL} className="vx-btn hm-btn-ghost">Gửi báo giá sỉ</Link>
@@ -220,29 +218,29 @@ export default async function HomePage() {
 
         {best.length > 0 && (
           <section className="hm-sec hm-sec--card">
-            <HomeHead icon="star" title="Bán chạy ở vườn" sub="Xếp theo số lượng đã bán" href="/tim-kiem?q=bán chạy" />
+            <HomeHead icon="star" title="Bán chạy ở vườn" href="/tim-kiem?q=bán chạy" />
             <ProductGrid products={best} />
           </section>
         )}
 
         {wall.length === 9 && (
           <section className="hm-sec">
-            <HomeHead icon="tree" title="Ảnh thật từ vườn" sub="Cây chụp tại vườn ươm — bấm vào ảnh để xem giá, quy cách" href="/danh-muc/cay-canh" />
+            <HomeHead icon="tree" title="Ảnh thật từ vườn" href="/danh-muc/cay-canh" />
             <PhotoWall products={wall} />
           </section>
         )}
 
         {videos.length > 0 && (
           <section className="hm-sec">
-            <HomeHead icon="camera" title="Video ngắn nổi bật" sub="Cây thật tại vườn, mẹo chăm cây — bấm là xem ngay" href={VIDEO_PAGE} />
+            <HomeHead icon="camera" title="Video ngắn nổi bật" href={VIDEO_PAGE} />
             <ShortVideos videos={videos} layout="row" />
           </section>
         )}
 
         {seasonal.length > 0 && (
           <section className="hm-sec">
-            <HomeHead icon="bug" title={`Bệnh cây ${season.name.toLowerCase()}`} sub="Nhận biết sớm, xử lý đúng thuốc" href="/benh-cay" />
-            <SeasonDiseases season={season.name} intro={season.intro} diseases={seasonal} />
+            <HomeHead icon="bug" title={`Bệnh cây ${season.name.toLowerCase()}`} href="/benh-cay" />
+            <SeasonDiseases season={season.name} diseases={seasonal} />
           </section>
         )}
 
@@ -255,14 +253,14 @@ export default async function HomePage() {
 
         {shownProjects.length > 0 && (
           <section className="hm-sec">
-            <HomeHead icon="trees" title="Công trình đã cung cấp cây" sub="Năng lực thật của vườn — ảnh chụp tại công trình" href={`${WHOLESALE_URL}#cong-trinh`} />
+            <HomeHead icon="trees" title="Công trình đã cung cấp cây" href={`${WHOLESALE_URL}#cong-trinh`} />
             <div className="hm-projects">{shownProjects.map((p) => <ProjectCard key={p.id} p={p} />)}</div>
           </section>
         )}
 
         {care.length > 0 && (
           <section className="hm-sec">
-            <HomeHead icon="sprout" title="Góc chăm cây" sub="Kinh nghiệm trồng, chăm, trị bệnh từ kỹ sư" href={SECTIONS.blog.path} />
+            <HomeHead icon="sprout" title="Góc chăm cây" href={SECTIONS.blog.path} />
             <PostCards posts={care} />
           </section>
         )}

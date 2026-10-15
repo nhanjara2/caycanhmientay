@@ -137,9 +137,7 @@ export function DeliverToDialog() {
                     </button>
                   ))}
                 </div>
-              ) : (
-                <span className="vx-help">Bạn chưa lưu địa chỉ nào. Hãy nhập địa chỉ ở bên dưới.</span>
-              )}
+              ) : null}
               <Link href="/tai-khoan/so-dia-chi" className="vx-link" onClick={closePicker} style={{ fontSize: '0.9375rem', marginTop: 8 }}>Quản lý sổ địa chỉ</Link>
             </div>
           )}
@@ -157,7 +155,6 @@ export function DeliverToDialog() {
               Có tài khoản? <button type="button" className="vx-link" style={{ background: 'none', border: 0, padding: 0, font: 'inherit', cursor: 'pointer' }} onClick={() => { closePicker(); openLogin(); }}>Đăng nhập</button> để chọn nhanh từ sổ địa chỉ.
             </span>
           )}
-          <span className="vx-help" style={{ fontSize: '0.875rem' }}>Chỉ để xem phí giao và khả năng giao hàng. Địa chỉ nhận hàng chính thức bạn chọn ở bước thanh toán.</span>
         </div>
         {place && (
           <div className="vx-modal__foot">

@@ -131,7 +131,7 @@ function VoucherDialog({ tickets, state, goods, shipFee, onClose }: {
             <button type="button" disabled={!typed || busy} onClick={applyTyped}>Áp dụng mã</button>
           </div>
           {error && <span className="vx-err" role="alert">{error}</span>}
-          {all.length === 0 && <p className="app-vempty">Hiện chưa có mã nào đang chạy. Có mã riêng thì nhập ở ô trên.</p>}
+          {all.length === 0 && <p className="app-vempty">Hiện chưa có mã nào đang chạy.</p>}
           {all.length > 0 && (
             <div className="vx-vlist">
               {GROUPS.map(({ kind, title }) => {
@@ -140,8 +140,7 @@ function VoucherDialog({ tickets, state, goods, shipFee, onClose }: {
                 const top = best(kind);
                 return (
                   <div key={kind} className="app-vgroup" role="radiogroup" aria-label={title}>
-                    <p className="vx-vgroup">{title} <span>· chọn 1</span></p>
-                    {kind === 'ship' && shipFee <= 0 && <p className="app-vnote">Đơn này đang được miễn phí giao (hoặc nhận tại vườn) nên chưa cần mã miễn phí giao.</p>}
+                    <p className="vx-vgroup">{title}</p>
                     {list.map((v) => {
                       const gain = est(v);
                       const on = pick[kind] === v.code;

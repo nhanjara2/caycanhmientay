@@ -103,8 +103,6 @@
 .hm-quick__item:hover { box-shadow: var(--shadow-pop); transform: translateY(-2px); }
 .hm-quick__ic { flex: none; display: grid; place-items: center; width: 2.75rem; height: 2.75rem; border-radius: 12px; background: var(--primary-soft); color: var(--primary); }
 .hm-quick__item b { display: block; font-size: 0.9375rem; line-height: 1.3; color: var(--ink); text-wrap: balance; }
-.hm-quick__item small { display: none; font-size: 0.875rem; line-height: 1.35; color: var(--ink-muted); }
-@media (min-width: 90em) { .hm-quick__item small { display: block; } }
 
 /* ---- Thân trang ------------------------------------------------------------------------------- */
 .hm-body { max-width: calc(var(--hm-max) + 2 * var(--hm-gut)); margin: 0 auto; padding: 32px var(--hm-gut) 0; display: flex; flex-direction: column; gap: 44px; }
@@ -293,7 +291,6 @@
   .hm-quick__item { flex-direction: column; justify-content: flex-start; gap: 4px; min-height: 0; padding: 8px 4px; text-align: center; border-radius: 12px; }
   .hm-quick__ic { width: 2.25rem; height: 2.25rem; border-radius: 10px; }
   .hm-quick__ic svg { width: 1.25rem; height: 1.25rem; }
-  .hm-quick__item small { display: none; }
   .hm-quick__item b { font-size: 0.875rem; line-height: 1.25; }
   .hm-body { padding-top: 16px; gap: 24px; }
   /* Tiêu đề + "Xem tất cả" một hàng, dòng phụ xuống hàng dưới rộng hết khung */

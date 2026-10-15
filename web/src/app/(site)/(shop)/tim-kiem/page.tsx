@@ -44,7 +44,6 @@ export default async function SearchPage({ searchParams }: Props) {
         <EmptyState
           icon="search"
           title={q ? 'Không tìm thấy sản phẩm phù hợp' : 'Nhập từ khóa để tìm'}
-          text="Thử từ khóa ngắn hơn, gõ không dấu cũng được, hoặc nhắn Zalo để shop tìm cây giúp bạn."
           action={<Link className="vx-btn vx-btn--primary" href="/">Về trang chủ</Link>}
         />
       )}

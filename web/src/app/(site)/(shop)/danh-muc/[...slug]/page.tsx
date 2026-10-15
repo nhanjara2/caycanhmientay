@@ -112,14 +112,12 @@ export default async function CategoryPage({ params, searchParams }: Props) {
         <EmptyState
           icon="leaf"
           title="Không có sản phẩm phù hợp"
-          text="Chưa có sản phẩm nào khớp tất cả bộ lọc bạn chọn. Thử bỏ bớt một vài bộ lọc nhé."
           action={<Link className="vx-btn vx-btn--outline" href={withQuery(base, {}, sortParam)} scroll={false}>Xóa bộ lọc</Link>}
         />
       ) : (
         <EmptyState
           icon="leaf"
           title="Chưa có sản phẩm"
-          text="Nhóm hàng này đang được nhà vườn chuẩn bị. Bạn xem các nhóm khác nhé."
           action={<Link className="vx-btn vx-btn--outline" href={`/danh-muc/${cat.slug}`}>Xem tất cả {cat.name}</Link>}
         />
       )}

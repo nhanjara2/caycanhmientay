@@ -26,13 +26,13 @@ export function HomeHead({ icon, title, sub, href, more = 'Xem tất cả', ligh
 }
 
 /** Lối tắt dưới khung đầu trang (thẻ trắng nổi lên nền ảnh). */
-export function QuickLinks({ items }: { items: { label: string; sub: string; icon: IconName; href: string }[] }) {
+export function QuickLinks({ items }: { items: { label: string; icon: IconName; href: string }[] }) {
   return (
     <nav className="hm-quick" aria-label="Lối tắt">
       {items.map((q) => (
         <Link key={q.label} href={q.href} className="hm-quick__item app-plain">
           <span className="hm-quick__ic"><Icon name={q.icon} /></span>
-          <span><b>{q.label}</b><small>{q.sub}</small></span>
+          <span><b>{q.label}</b></span>
         </Link>
       ))}
     </nav>
@@ -76,12 +76,11 @@ export function PhotoWall({ products }: { products: Product[] }) {
 }
 
 /** Bệnh cây theo mùa: khung giới thiệu mùa + thẻ bệnh có ảnh triệu chứng. */
-export function SeasonDiseases({ season, intro, diseases }: { season: string; intro: string; diseases: Disease[] }) {
+export function SeasonDiseases({ season, diseases }: { season: string; diseases: Disease[] }) {
   return (
     <div className="hm-season">
       <div className="hm-season__intro">
         <span className="hm-season__tag"><Icon name="rain" />{season}</span>
-        <p>{intro}</p>
         <Link href="/benh-cay" className="vx-btn hm-btn-light">Bắt bệnh cho cây</Link>
         <Link href="/danh-muc/thuoc-bvtv" className="hm-season__link">Thuốc BVTV giá sỉ<Icon name="chevron" size={16} /></Link>
       </div>

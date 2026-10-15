@@ -30,7 +30,7 @@ export function WishlistGrid({ products }: { products: Product[] }) {
           ))}
         </div>
       ) : (
-        <EmptyState icon="pin" title={tab === 'sale' ? 'Chưa có sản phẩm nào đang giảm giá' : 'Chưa có sản phẩm yêu thích'} text="Bấm tim ở trang chi tiết sản phẩm để lưu vào đây." />
+        <EmptyState icon="pin" title={tab === 'sale' ? 'Chưa có sản phẩm nào đang giảm giá' : 'Chưa có sản phẩm yêu thích'} />
       )}
     </div>
   );

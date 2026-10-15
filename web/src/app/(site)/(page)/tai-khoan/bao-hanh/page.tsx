@@ -38,7 +38,6 @@ export default async function WarrantyPage() {
               <EmptyState
                 icon="shield"
                 title="Chưa có cây nào trong hạn bảo hành"
-                text="Cây sống được bảo hành 7 ngày kể từ khi giao thành công. Cây đã có yêu cầu đang xử lý sẽ không hiện ở đây."
                 action={<Link className="vx-btn vx-btn--outline" href="/tai-khoan/don-hang">Xem đơn hàng</Link>}
               />
             </div>

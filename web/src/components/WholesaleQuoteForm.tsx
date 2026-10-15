@@ -205,7 +205,6 @@ export function WholesaleQuoteForm({ defaults, fromAdvisor = false }: { defaults
             )}
             <input ref={fileInput} type="file" accept="image/*" multiple hidden onChange={(e) => addPhotos(e.target.files)} />
           </div>
-          <span className="vx-help">Có file Excel / PDF (BOQ, hồ sơ mời thầu)? Gửi kèm qua Zalo hoặc email sau khi gửi form.</span>
         </div>
         <div className="ad-f">
           <label>Khi nào cần hàng?</label>

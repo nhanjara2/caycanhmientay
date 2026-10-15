@@ -46,7 +46,6 @@ export default async function OrdersPage({ searchParams }: Props) {
               <EmptyState
                 icon="receipt"
                 title={tab === 'tat-ca' ? 'Chưa có đơn hàng nào' : `Không có đơn ${ORDER_TABS[tab].label.toLowerCase()}`}
-                text="Đơn hàng của bạn sẽ hiện ở đây để theo dõi giao hàng và bảo hành cây."
                 action={<Link className="vx-btn vx-btn--primary" href="/danh-muc">Mua sắm ngay</Link>}
               />
             </div>

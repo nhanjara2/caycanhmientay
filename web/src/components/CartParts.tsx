@@ -28,8 +28,6 @@ export function Steps({ step }: { step: 1 | 2 | 3 }) {
 /** Danh sách sản phẩm chia nhóm Cây sống / Vật tư (giao khác nhau, tính phí riêng). */
 export function CartList({ editable }: { editable: boolean }) {
   const { lines, totals, setQty, remove } = useCart();
-  const { rules } = useShipping();
-  const vouchers = usePublicVouchers();
   const priced = (l: CartLine) => totals.lines[lines.indexOf(l)];
   const plants = lines.filter((l) => l.snap.ship === 'plant');
   const supplies = lines.filter((l) => l.snap.ship === 'supply');
@@ -37,18 +35,10 @@ export function CartList({ editable }: { editable: boolean }) {
   return (
     <div className="vx-card">
       <h3 className="vx-card__title">Danh sách sản phẩm</h3>
-      <div className="vx-ship-banner">
-        <Icon name="truck" />
-        <span>
-          <b>Miễn phí vận chuyển</b> cho đơn vật tư từ {money(rules.supply.freeFrom)} · Mua 2 cây cùng loại có giá combo
-          {vouchers.length > 0 && <> · Đơn từ {money(vouchers[0].minOrder)} có mã ưu đãi</>}
-        </span>
-      </div>
       {plants.length > 0 && (
         <>
           <div className="vx-group-head">
             <b><Icon name="plant" />Cây sống ({plants.length})</b>
-            <small>Đóng khung chống dập · giao toàn quốc</small>
           </div>
           {plants.map((l) => <Item key={`${l.slug}-${l.option}`} l={l} pr={priced(l)} editable={editable} setQty={setQty} remove={remove} />)}
         </>
@@ -57,7 +47,6 @@ export function CartList({ editable }: { editable: boolean }) {
         <>
           <div className="vx-group-head">
             <b><Icon name="box" />Vật tư – Thuốc – Phân bón ({supplies.length})</b>
-            <small>Giao nhanh 2h</small>
           </div>
           {supplies.map((l) => <Item key={`${l.slug}-${l.option}`} l={l} pr={priced(l)} editable={editable} setQty={setQty} remove={remove} />)}
         </>
@@ -131,7 +120,7 @@ export function OrderSummary({ totals: t, voucherHint = false, voucher, delivery
       <div className="vx-lines">
         <div><span>Tổng tiền</span><b>{money(t.subtotal)}</b></div>
         {t.comboDiscount > 0 && <div><span>Combo 2 cây</span><b className="neg">-{money(t.comboDiscount)}</b></div>}
-        {t.plantSubtotal > 0 && <div><span>Phí giao cây sống{t.shipRegion && plantFeeVaries(rules.plant) ? ` (${REGION_LABEL[t.shipRegion]})` : ''}</span>{plantGross ? <b>{money(plantGross)}</b> : <b className="pos">Miễn phí</b>}</div>}
+        {t.plantSubtotal > 0 && <div><span>Phí giao cây sống{t.shipRegion && plantFeeVaries(rules.plant) ? ` (${REGION_LABEL[t.shipRegion]})` : estimate ? ' (tạm tính)' : ''}</span>{plantGross ? <b>{money(plantGross)}</b> : <b className="pos">Miễn phí</b>}</div>}
         {t.bulkyShip > 0 && <div className="app-ship-sub"><span>Gồm phụ phí cây lớn</span><b>{money(t.bulkyShip)}</b></div>}
         {t.plantShipFree > 0 && <div><span>Giảm phí giao cây sống</span><b className="neg">-{money(t.plantShipFree)}</b></div>}
         {t.supplySubtotal > 0 && <div><span>Phí giao vật tư</span>{supplyGross ? <b>{money(supplyGross)}</b> : <b className="pos">Miễn phí</b>}</div>}
@@ -141,7 +130,6 @@ export function OrderSummary({ totals: t, voucherHint = false, voucher, delivery
         {t.partnerDiscount > 0 && <div><span>Chiết khấu đối tác</span><b className="neg">-{money(t.partnerDiscount)}</b></div>}
         {saved > 0 && <div><span>Tiết kiệm được</span><b className="neg">{money(saved)}</b></div>}
       </div>
-      {estimate && <p className="app-ship-est" role="status">Phí giao cây sống đang tạm tính theo mức thấp nhất; phí chính xác theo tỉnh / thành bạn nhận hàng.</p>}
       {voucher}
       {short > 0 && (
         <div className="vx-freeship app-minorder" role="status">

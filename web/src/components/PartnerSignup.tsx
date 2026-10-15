@@ -80,7 +80,6 @@ export function PartnerSignup({ profile }: { profile: SignupProfile | null }) {
           </button>
         ))}
       </div>
-      {locked && <span className="vx-help">Đổi loại đối tác: liên hệ shop.</span>}
       <div className="ad-frow">
         <div className="vx-field">
           <div className="vx-fl"><label htmlFor="pt-co">Tên đơn vị / cửa hàng (không bắt buộc)</label><input id="pt-co" value={f.company} maxLength={120} autoComplete="organization" onChange={(e) => setF((x) => ({ ...x, company: e.target.value }))} /></div>
@@ -92,7 +91,6 @@ export function PartnerSignup({ profile }: { profile: SignupProfile | null }) {
           <div className="vx-fl"><label htmlFor="pt-area">Khu vực hoạt động</label><input id="pt-area" value={f.area} maxLength={120} placeholder="Ví dụ: TP. Hồ Chí Minh, Đồng Nai" onChange={(e) => setF((x) => ({ ...x, area: e.target.value }))} /></div>
         </div>
       </div>
-      <span className="vx-help">Số điện thoại liên hệ: {user.phone || 'chưa có — shop sẽ hỏi khi bạn đặt hàng'} · tài khoản {user.name}</span>
       {msg && <span className={msg.ok ? 'vx-help' : 'vx-err'} role="alert">{msg.text}</span>}
       <div className="app-qf-actions">
         {editing && <button type="button" className="vx-btn vx-btn--ghost" onClick={() => setEditing(false)}>Hủy</button>}

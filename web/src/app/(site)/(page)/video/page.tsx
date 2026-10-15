@@ -39,7 +39,6 @@ export default async function VideoPage({ searchParams }: Props) {
       <Breadcrumb items={[{ label: 'Trang chủ', href: '/' }, { label: 'Video ngắn' }]} />
       <header className="shv-head">
         <h1>Video ngắn</h1>
-        <p>Cây thật tại vườn, mẹo chăm cây, bắt bệnh và dùng thuốc đúng cách. Bấm vào video để xem; bấm <b>Sau</b> hoặc vuốt lên để sang video kế tiếp.</p>
         {chips.length > 1 && (
           <nav className="shv-chips" aria-label="Chủ đề">
             <Link href={VIDEO_PAGE} className="vx-chip" aria-pressed={!cat}>Tất cả ({all.length})</Link>

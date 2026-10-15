@@ -117,7 +117,7 @@ export default function CheckoutPage() {
   if (!lines.length) {
     return (
       <div className="vx-checkout app-page" style={{ gridTemplateColumns: '1fr' }}>
-        <EmptyState icon="cart" title="Chưa có sản phẩm để thanh toán" text="Giỏ hàng đang trống." action={<Link className="vx-btn vx-btn--primary" href="/">Mua sắm ngay</Link>} />
+        <EmptyState icon="cart" title="Chưa có sản phẩm để thanh toán" action={<Link className="vx-btn vx-btn--primary" href="/">Mua sắm ngay</Link>} />
       </div>
     );
   }
@@ -250,7 +250,6 @@ export default function CheckoutPage() {
                   <div className="vx-field vx-field--full">
                     {savedId === null && <AddressFields value={addr} onChange={typeAddr} stores={stores} idPrefix="co" />}
                     {err('address')}
-                    {user && !saved.length && <span className="vx-help">Muốn lần sau chỉ cần bấm chọn? Bấm “Thêm địa chỉ mới” để lưu vào sổ địa chỉ.</span>}
                     {outOfZone && (
                       <span className="vx-err" role="alert">
                         Địa chỉ này cách cửa hàng gần nhất {zone!.km.toFixed(0)} km — ngoài vùng giao cây sống ({plantZoneKm} km). Chọn Nhận tại vườn hoặc bỏ cây sống khỏi giỏ.
@@ -258,9 +257,6 @@ export default function CheckoutPage() {
                     )}
                   </div>
                 </div>
-                {!slotsEnabled && (
-                  <div className="vx-note"><Icon name="truck" /><div><b>Shop gửi hàng qua đơn vị vận chuyển.</b> Sau khi bạn đặt, shop gọi hoặc nhắn Zalo xác nhận đơn và báo thời gian dự kiến nhận hàng.</div></div>
-                )}
                 {slotsEnabled && <>
                 <b style={{ fontSize: '0.875rem', display: 'flex', gap: 8, alignItems: 'center' }}><Icon name="clock" />Chọn khung giờ giao</b>
                 <div className="vx-slots2">
@@ -282,7 +278,7 @@ export default function CheckoutPage() {
                 </>}
               </>
             ) : (
-              <div className="vx-note"><Icon name="pin" /><div><b>Nhận tại {PICKUP_PLACE}.</b> Shop giữ hàng 3 ngày và nhắn Zalo khi cây sẵn sàng.</div></div>
+              <div className="vx-note"><Icon name="pin" /><div><b>Nhận tại {PICKUP_PLACE}</b></div></div>
             )}
             <textarea className="vx-input" placeholder="Ghi chú cho shop (không bắt buộc). Ví dụ: Gọi trước 15 phút, cây để ở sảnh." value={note} onChange={(e) => setNote(e.target.value)} />
           </div>
@@ -332,9 +328,6 @@ export default function CheckoutPage() {
             </label>
           )}
           {err('safety')}
-          {!SHOW_PAY_PICKER && (
-            <div className="vx-note"><Icon name="phone" /><div><b>Chưa cần thanh toán ngay.</b> Sau khi bạn đặt hàng, shop gọi hoặc nhắn Zalo trong 30 phút (8:00 – 21:00) để xác nhận đơn, hướng dẫn đặt cọc và giao hàng.</div></div>
-          )}
           {serverError && <div className="vx-note" role="alert"><Icon name="alert" /><div>{serverError}</div></div>}
           <button type="submit" className="vx-btn vx-btn--primary vx-btn--lg vx-btn--block" disabled={busy || short > 0}>{busy ? 'Đang đặt hàng…' : short > 0 ? 'Chưa đủ đơn tối thiểu để giao' : 'Đặt hàng'}</button>
           {short > 0 && <Link href="/gio-hang" className="vx-btn vx-btn--outline vx-btn--block">Quay lại giỏ hàng để mua thêm</Link>}

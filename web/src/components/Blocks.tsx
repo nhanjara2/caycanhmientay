@@ -31,7 +31,7 @@ export function Breadcrumb({ items }: { items: { label: string; href?: string }[
   );
 }
 
-export function EmptyState({ icon, title, text, action }: { icon: IconName; title: string; text: string; action?: ReactNode }) {
+export function EmptyState({ icon, title, text, action }: { icon: IconName; title: string; text?: string; action?: ReactNode }) {
   return (
     <div className="es">
       <span className="es-art">
@@ -41,7 +41,7 @@ export function EmptyState({ icon, title, text, action }: { icon: IconName; titl
         <span className="ic"><Icon name={icon} /></span>
       </span>
       <b>{title}</b>
-      <p>{text}</p>
+      {text && <p>{text}</p>}
       {action}
     </div>
   );

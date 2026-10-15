@@ -152,12 +152,7 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
           <div className="app-prow">
             <span className="app-prow__k">Mã giảm giá</span>
             <div className="app-prow__v">
-              {vouchers.length > 0 && (
-                <>
-                  <VoucherStrip vouchers={vouchers} />
-                  <small className="app-prow__note">Chọn mã ở giỏ hàng.</small>
-                </>
-              )}
+              {vouchers.length > 0 && <VoucherStrip vouchers={vouchers} />}
               {partnerPct > 0 && <small className="app-prow__note">Bạn được chiết khấu đối tác thêm <b>{partnerPct}%</b>.</small>}
             </div>
           </div>

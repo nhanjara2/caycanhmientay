@@ -173,9 +173,9 @@ export default async function ProductPage({ params }: Props) {
             {p.ship === 'plant' ? 'Mỗi cây là một cá thể, dáng lá có thể khác đôi chút so với ảnh.' : 'Bao bì có thể thay đổi theo lô sản xuất.'}
           </p>
           <div className="vx-trust">
-            <div><Icon name="truck" /><span><b>{p.ship === 'plant' ? 'Giao cây an toàn' : 'Giao nhanh 2h'}</b><small>{p.ship === 'plant' ? 'đóng khung, chống dập' : 'nội thành'}</small></span></div>
-            <div><Icon name="shield" /><span><b>{p.ship === 'plant' ? 'Bảo hành 7 ngày' : 'Hàng chính hãng'}</b><small>{p.ship === 'plant' ? 'đổi cây nếu héo, bệnh' : 'có hóa đơn'}</small></span></div>
-            <div><Icon name="chat" /><span><b>Kỹ sư tư vấn</b><small>miễn phí qua Zalo</small></span></div>
+            <div><Icon name="truck" /><span><b>{p.ship === 'plant' ? 'Giao cây an toàn' : 'Giao nhanh 2h'}</b></span></div>
+            <div><Icon name="shield" /><span><b>{p.ship === 'plant' ? 'Bảo hành 7 ngày' : 'Hàng chính hãng'}</b></span></div>
+            <div><Icon name="chat" /><span><b>Kỹ sư tư vấn</b></span></div>
           </div>
         </GalleryCol>
         <BuyBox product={{ ...p, rating: rs.avg, reviews: rs.count }} category={{ ...label, extra }} wishlisted={wishlisted} />

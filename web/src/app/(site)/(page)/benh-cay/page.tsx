@@ -102,7 +102,7 @@ export default async function DiseaseLibraryPage({ searchParams }: Props) {
             </div>
           ) : (
             <p style={{ margin: 0, color: 'var(--ink-muted)' }}>
-              Chưa có bài bệnh phù hợp. Thử từ khóa khác (ví dụ “vàng lá”, “đốm”, “rệp”) hoặc bỏ bớt bộ lọc.
+              Chưa có bài bệnh phù hợp.
             </p>
           )}
           {pages > 1 && (

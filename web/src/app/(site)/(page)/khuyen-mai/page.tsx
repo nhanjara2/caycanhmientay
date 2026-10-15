@@ -48,7 +48,6 @@ export default async function PromotionsPage() {
       <Breadcrumb items={[{ label: 'Trang chủ', href: '/' }, { label: 'Tin khuyến mãi' }]} />
       <header className="pm-head">
         <h1>Tin khuyến mãi</h1>
-        <p>Mã giảm giá, sản phẩm đang giảm giá và tin ưu đãi của Cây Cảnh Miền Tây. Giá và mã luôn lấy đúng từ cửa hàng, hết hạn là tự ẩn.</p>
         <nav className="pm-jump" aria-label="Chuyển nhanh">
           <a href="#ma-giam-gia" className="vx-chip">Mã giảm giá{vouchers.length > 0 && ` (${vouchers.length})`}</a>
           <a href="#dang-giam-gia" className="vx-chip">Đang giảm giá{onSale.length > 0 && ` (${onSale.length})`}</a>
@@ -88,7 +87,7 @@ export default async function PromotionsPage() {
             ))}
           </div>
         ) : (
-          <EmptyState icon="tag" title="Hiện chưa có mã giảm giá nào" text="Shop sẽ đăng mã mới ở đây. Theo dõi Zalo hoặc Facebook của shop để nhận mã sớm." />
+          <EmptyState icon="tag" title="Hiện chưa có mã giảm giá nào" />
         )}
         <ol className="pm-steps" aria-label="Cách dùng mã giảm giá">
           {STEPS.map(([t, d], i) => (
@@ -112,7 +111,7 @@ export default async function PromotionsPage() {
             )}
           </>
         ) : (
-          <EmptyState icon="bolt" title="Chưa có sản phẩm nào đang giảm giá" text="Khi shop giảm giá sản phẩm, bạn sẽ thấy ở đây ngay (kèm nhãn -%)." />
+          <EmptyState icon="bolt" title="Chưa có sản phẩm nào đang giảm giá" />
         )}
       </section>
 

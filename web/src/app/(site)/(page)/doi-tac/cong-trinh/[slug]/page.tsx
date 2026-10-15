@@ -120,7 +120,6 @@ export default async function ProjectPage(props: Props) {
             <div className="dn-tags">
               {p.plants.map((t) => <Link key={t} href={`/tim-kiem?q=${encodeURIComponent(t)}`} title={`Tìm “${t}” trong cửa hàng`}>{t}</Link>)}
             </div>
-            <small>Bấm tên cây để xem cây đang bán trên website.</small>
           </aside>
         )}
       </div> : null}
