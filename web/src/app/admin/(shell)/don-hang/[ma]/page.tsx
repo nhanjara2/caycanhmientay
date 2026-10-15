@@ -7,7 +7,7 @@ import { StatusActions } from '@/components/admin/StatusActions';
 import { Icon, Thumb } from '@/components/Icon';
 import { hasAccess } from '@/lib/permissions';
 import { money } from '@/lib/format';
-import { fmtDateTime, PAY_LABEL, STATUS_LABEL, TIMELINE } from '@/lib/order-labels';
+import { fmtDateTime, PAY_LABEL, payStatus, STATUS_LABEL, TIMELINE } from '@/lib/order-labels';
 import { requireAccess } from '@/server/auth';
 import { getOrderByCode, NEXT_STATUS } from '@/server/orders';
 
@@ -75,7 +75,7 @@ export default async function AdminOrderDetailPage({ params }: Props) {
             <div className="ad-card__h">Khách hàng</div>
             <div className="ad-card__b">
               <div className="ad-kv">
-                <span>Khách</span><span><b>{o.customerName}</b>{o.phone ? <> · <a href={`tel:${o.phone}`} style={{ color: 'var(--primary)' }}>{o.phone}</a></> : ' · không để số điện thoại'}</span>
+                <span>Khách</span><span><b>{o.customerName}</b>{o.phone ? <> · <a href={`tel:${o.phone}`} style={{ color: 'var(--primary)' }}>{o.phone}</a> · <a href={`https://zalo.me/${o.phone.replace(/\s/g, '').replace(/^\+84/, '0')}`} target="_blank" rel="noreferrer" style={{ color: 'var(--primary)' }}>Zalo</a></> : ' · không để số điện thoại'}</span>
                 <span>Nhận hàng</span><span>{o.delivery === 'ship' ? o.address : 'Nhận tại vườn'}</span>
                 {o.slot && <><span>Khung giờ</span><span>{o.slot}</span></>}
                 <span>Tài khoản</span><span>{o.userId ? `#${o.userId}` : 'Khách vãng lai'}</span>
@@ -96,7 +96,7 @@ export default async function AdminOrderDetailPage({ params }: Props) {
                 <div><span>Phương thức</span><b>{PAY_LABEL[o.paymentMethod]}</b></div>
               </div>
               <div className="vx-total" style={{ paddingTop: 8 }}>
-                <b>{o.paymentMethod === 'cod' && !o.paid ? 'Thu hộ COD' : o.paid ? 'Đã thanh toán' : 'Chờ thanh toán'}</b>
+                <b>{o.paymentMethod === 'cod' && !o.paid ? 'Thu hộ COD' : payStatus(o.paymentMethod, o.paid)}</b>
                 <span className="amt" style={{ fontSize: '1.125rem' }}>{money(o.total)}</span>
               </div>
               {fullOrders && o.kind === 'sale' && o.paymentMethod !== 'cod' && o.status !== 'cancelled' && (

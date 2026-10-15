@@ -76,7 +76,7 @@ export default async function AdminDashboardPage({ searchParams }: { searchParam
           <div className="ad-card__b" style={{ gap: 0 }}>
             <div className="ad-task"><span className={`n${s.pending ? ' hot' : ''}`}>{s.pending}</span>Đơn chờ xác nhận<Link href="/admin/don-hang?trang_thai=pending">Xử lý</Link></div>
             <div className="ad-task"><span className={`n${s.preparingPlants ? ' hot' : ''}`}>{s.preparingPlants}</span>Đơn có cây đang chuẩn bị<Link href="/admin/don-hang?trang_thai=preparing">Xử lý</Link></div>
-            <div className="ad-task"><span className={`n${awaiting ? ' hot' : ''}`}>{awaiting}</span>Đơn online chờ xác nhận đã nhận tiền<Link href="/admin/don-hang?thanh_toan=cho">Xử lý</Link></div>
+            <div className="ad-task"><span className={`n${awaiting ? ' hot' : ''}`}>{awaiting}</span>Đơn đặt cọc / trả trước chờ xác nhận đã nhận tiền<Link href="/admin/don-hang?thanh_toan=cho">Xử lý</Link></div>
             <div className="ad-task"><span className="n">{s.lowStock.length}</span>Quy cách dưới mức tồn tối thiểu<Link href="/admin/kho">Xem</Link></div>
           </div>
         </div>

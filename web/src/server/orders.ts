@@ -4,6 +4,7 @@ import { randomInt } from 'node:crypto';
 import * as z from 'zod';
 import { optionOf, type Product, type Unit } from '@/lib/catalog';
 import { money } from '@/lib/format';
+import { ONLINE_PAYMENT_METHODS, ONLINE_PAYMENTS_READY } from '@/lib/order-labels';
 import { computeTotals, minOrderShort } from '@/lib/pricing';
 import { accountPhone, normalizePhone, isPhone, partnerPct, type SessionUser } from './auth';
 import { getProducts, mainImageOf } from './catalog';
@@ -49,6 +50,8 @@ export type PlaceOrderResult = { ok: true; code: string } | { ok: false; error: 
 
 /** Tạo đơn: giá, phí giao, quy tắc Flash sale & thuốc BVTV đều tính lại từ database — không tin số liệu từ trình duyệt. */
 export async function createOrder(input: PlaceOrderInput, user: SessionUser | null): Promise<PlaceOrderResult> {
+  // Chưa nối cổng thanh toán trực tuyến: đơn chọn QR / ví / thẻ (trang thanh toán mở từ trước) chuyển thành "Đặt cọc" — shop liên hệ hướng dẫn.
+  if (!ONLINE_PAYMENTS_READY && ONLINE_PAYMENT_METHODS.includes(input.payment)) input = { ...input, payment: 'deposit' };
   // Tài khoản (Google) phải có SĐT liên hệ trước khi đặt — khách vãng lai thì SĐT nằm ngay trong đơn.
   if (user && !accountPhone(user)) return { ok: false, error: 'Vui lòng cập nhật số điện thoại cho tài khoản trước khi đặt hàng', needsPhone: true };
   const cfg = await getShippingConfig();
@@ -305,7 +308,7 @@ export async function listOrders({ status, q, unpaid, limit = 100 }: { status?: 
     .orderBy(desc(orders.id)).limit(limit));
 }
 
-/** Đơn thanh toán online (QR / ví / thẻ) còn đang chờ shop xác nhận đã nhận tiền. */
+/** Đơn trả trước (đặt cọc / QR / ví / thẻ) còn đang chờ shop xác nhận đã nhận tiền. */
 const awaitingPayment = and(eq(orders.kind, 'sale'), eq(orders.paid, false), ne(orders.paymentMethod, 'cod'), ne(orders.status, 'cancelled'));
 
 export async function countAwaitingPayment() {

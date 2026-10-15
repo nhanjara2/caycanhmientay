@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { Icon, Thumb } from '@/components/Icon';
 import { PICKUP_PLACE } from '@/lib/contact';
 import { money } from '@/lib/format';
-import { fmtDate, fmtDateTime, PAY_LABEL, PAY_LOGO, STATUS_LABEL, TIMELINE, type Status } from '@/lib/order-labels';
+import { fmtDate, fmtDateTime, PAY_LABEL, PAY_LOGO, payStatus, STATUS_LABEL, TIMELINE, type Status } from '@/lib/order-labels';
 import type { OrderFull } from '@/server/orders';
 import { ReorderButton } from './ReorderButton';
 
@@ -174,13 +174,13 @@ export function OrderDetail({ o }: { o: OrderFull }) {
           <div className="vx-total"><b>Thành tiền</b><span className="amt" style={{ fontSize: '1.25rem' }}>{money(o.total)}</span></div>
           <div className="vx-paid">
             <span>Phương thức thanh toán</span>
-            {o.paid ? <span className="ok"><Icon name="check" />Đã thanh toán</span> : <span>{o.paymentMethod === 'cod' ? 'Trả khi nhận hàng' : 'Chờ thanh toán'}</span>}
+            {o.paid ? <span className="ok"><Icon name="check" />Đã thanh toán</span> : <span>{payStatus(o.paymentMethod, false)}</span>}
           </div>
           <div className="vx-paym">
             <span className="vx-pay__mark app-pay-logo">
               {PAY_LOGO[o.paymentMethod]
                 ? <img src={`/images/pay/${PAY_LOGO[o.paymentMethod]}`} alt="" />
-                : <Icon name={o.paymentMethod === 'cod' ? 'cash' : o.paymentMethod === 'card' ? 'card' : 'wallet'} />}
+                : <Icon name={o.paymentMethod === 'cod' ? 'cash' : o.paymentMethod === 'card' ? 'card' : o.paymentMethod === 'deposit' ? 'phone' : 'wallet'} />}
             </span>
             {PAY_LABEL[o.paymentMethod]}
           </div>

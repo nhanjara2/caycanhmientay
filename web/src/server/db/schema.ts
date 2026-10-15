@@ -338,7 +338,8 @@ export const vouchers = pgTable('vouchers', {
 /** Tiến trình đơn theo OrderTimeline: Đặt hàng → Xác nhận → Chuẩn bị cây → Đang giao → Đã giao. */
 export const ORDER_STATUSES = ['pending', 'confirmed', 'preparing', 'shipping', 'delivered', 'cancelled'] as const;
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
-export const PAYMENT_METHODS = ['cod', 'qr', 'momo', 'zalopay', 'card'] as const;
+/** `deposit` = đặt cọc: shop gọi / nhắn Zalo hướng dẫn chuyển khoản (cột là text, thêm giá trị không cần migration). */
+export const PAYMENT_METHODS = ['cod', 'qr', 'momo', 'zalopay', 'card', 'deposit'] as const;
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 
 /** sale = đơn khách đặt; warranty = đơn đổi cây / tặng vật tư 0đ do bảo hành tạo. */

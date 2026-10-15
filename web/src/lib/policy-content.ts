@@ -331,12 +331,11 @@ const DOI_TRA: Section[] = [
 const THANH_TOAN: Section[] = [
   { h: 'Phương thức thanh toán', blocks: [
     { table: { head: ['Phương thức', 'Cách thực hiện', 'Lưu ý'], rows: [
+      ['Đặt cọc (shop liên hệ)', 'Bạn đặt hàng trên website, shop gọi hoặc nhắn Zalo xác nhận đơn rồi hướng dẫn chuyển khoản đặt cọc (xem [Chính sách đặt cọc](/chinh-sach/dat-coc)).', 'Chưa cần trả tiền khi đặt hàng. Đơn ghi nhận "Đã thanh toán" khi shop nhận đủ tiền.'],
       ['Tiền mặt khi nhận hàng', 'Trả trực tiếp cho người giao hàng sau khi kiểm tra hàng.', 'Không áp dụng cho đơn có sản phẩm Flash sale.'],
-      ['Chuyển khoản ngân hàng (QR)', 'Chuyển khoản theo hướng dẫn của nhân viên khi xác nhận đơn.', 'Đơn ghi nhận "Đã thanh toán" khi shop nhận được tiền.'],
-      ['Ví MoMo, ZaloPay', 'Thanh toán theo hướng dẫn của nhân viên khi xác nhận đơn.', 'Như trên.'],
-      ['Thẻ quốc tế (Visa, Mastercard, JCB)', 'Thanh toán theo hướng dẫn của nhân viên khi xác nhận đơn.', 'Như trên.'],
+      ['Chuyển khoản ngân hàng, ví MoMo / ZaloPay, thẻ quốc tế', 'Thanh toán theo hướng dẫn của nhân viên khi xác nhận đơn.', 'Cổng thanh toán trực tuyến trên website đang được tích hợp.'],
     ] } },
-    'Với các hình thức thanh toán trước, sau khi bạn đặt hàng, nhân viên liên hệ trong 30 phút (' + HOURS + ') để xác nhận đơn và hướng dẫn thanh toán. Khi shop xác nhận đã nhận tiền, bạn nhận thông báo "Đã nhận thanh toán".',
+    'Với đơn chọn Đặt cọc hoặc thanh toán trước, sau khi bạn đặt hàng, nhân viên liên hệ trong 30 phút (' + HOURS + ') để xác nhận đơn và hướng dẫn thanh toán. Khi shop xác nhận đã nhận tiền, bạn nhận thông báo "Đã nhận thanh toán".',
     'Mua trực tiếp tại cửa hàng, bạn thanh toán bằng tiền mặt, chuyển khoản QR hoặc thẻ.',
   ] },
   { h: 'Giá và giảm giá', blocks: [
@@ -373,7 +372,8 @@ const DAT_COC: Section[] = [
   { h: 'Khi nào cần đặt cọc', blocks: [
     { ul: [
       '**Cần đặt cọc:** cây lớn đặt trước và công trình sân vườn.',
-      '**Không cần đặt cọc:** cây có sẵn tại vườn và vật tư mua qua giỏ hàng; bạn thanh toán theo [Chính sách thanh toán](/chinh-sach/thanh-toan).',
+      '**Đơn đặt trên website:** chọn **Đặt cọc** ở bước thanh toán; shop gọi hoặc nhắn Zalo xác nhận đơn, báo mức cọc và hướng dẫn chuyển khoản.',
+      '**Không cần đặt cọc:** đơn chọn trả tiền mặt khi nhận hàng; bạn thanh toán theo [Chính sách thanh toán](/chinh-sach/thanh-toan).',
     ] },
   ] },
   { h: 'Mức cọc và phần còn lại', blocks: [
@@ -384,7 +384,7 @@ const DAT_COC: Section[] = [
   ] },
   { h: 'Quy trình', blocks: [
     { ol: [
-      'Liên hệ shop qua hotline, Zalo hoặc [gửi yêu cầu báo giá sỉ](/bao-gia-si) kèm danh sách cây / bảng khối lượng; shop gửi báo giá qua Zalo.',
+      'Đặt hàng trên website và chọn **Đặt cọc**, hoặc liên hệ shop qua hotline, Zalo, hoặc [gửi yêu cầu báo giá sỉ](/bao-gia-si) kèm danh sách cây / bảng khối lượng; shop xác nhận và gửi báo giá qua Zalo.',
       'Shop xác nhận cây, quy cách, số lượng, giá và thời gian giao bằng báo giá hay tin nhắn.',
       'Bạn chuyển khoản tiền cọc; shop xác nhận khi đã nhận tiền.',
       'Shop chuẩn bị cây hoặc triển khai công trình theo đúng thỏa thuận.',

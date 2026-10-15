@@ -14,7 +14,7 @@ import { placeOrderAction } from '@/app/actions/orders';
 import { slotOptionsAction } from '@/app/actions/shipping';
 import { fullAddress, type AddressDTO } from '@/lib/address-labels';
 import { PICKUP_PLACE } from '@/lib/contact';
-import { PAY_LABEL, PAY_LOGO } from '@/lib/order-labels';
+import { ONLINE_PAYMENT_METHODS, ONLINE_PAYMENTS_READY, PAY_LABEL, PAY_LOGO } from '@/lib/order-labels';
 import { useAuth } from '@/lib/auth';
 import { useCart } from '@/lib/cart';
 import { useDeliverTo } from '@/lib/deliver-to';
@@ -27,7 +27,8 @@ import { addrComplete, composeFull } from '@/lib/vn-provinces';
 import { VoucherBox } from '@/components/VoucherBox';
 
 // Logo lấy theo PAY_LOGO (public/images/pay/); cards: dải logo nhỏ dưới tên
-const PAYMENTS: { key: keyof typeof PAY_LABEL; label: string; note?: string; icon: IconName; cards?: [string, string][] }[] = [
+const ALL_PAYMENTS: { key: keyof typeof PAY_LABEL; label: string; note?: string; icon: IconName; cards?: [string, string][] }[] = [
+  { key: 'deposit', label: 'Đặt cọc — shop liên hệ hướng dẫn', note: 'Chưa cần trả tiền ngay. Sau khi đặt, shop gọi hoặc nhắn Zalo trong 30 phút (8:00 – 21:00) để xác nhận đơn và hướng dẫn chuyển khoản đặt cọc.', icon: 'phone' },
   { key: 'cod', label: 'Thanh toán tiền mặt khi nhận hàng', note: 'Không áp dụng cho đơn có sản phẩm Flash sale', icon: 'cash' },
   { key: 'qr', label: 'Chuyển khoản ngân hàng (QR Code)', note: 'Quét mã, xác nhận tự động', icon: 'qr' },
   { key: 'momo', label: 'Ví điện tử MoMo', icon: 'wallet' },
@@ -37,6 +38,9 @@ const PAYMENTS: { key: keyof typeof PAY_LABEL; label: string; note?: string; ico
     cards: [['Visa', 'visa.svg'], ['Mastercard', 'mastercard.svg'], ['JCB', 'jcb.svg'], ['Apple Pay', 'applepay.svg']],
   },
 ];
+// Chưa nối cổng thanh toán trực tuyến thì chỉ hiện Đặt cọc + tiền mặt (xem ONLINE_PAYMENTS_READY trong lib/order-labels.ts).
+const PAYMENTS = ALL_PAYMENTS.filter((m) => ONLINE_PAYMENTS_READY || !ONLINE_PAYMENT_METHODS.includes(m.key));
+const DEFAULT_PAY = PAYMENTS[0].key;
 
 const PHONE = /^(0|\+84)(3|5|7|8|9)\d{8}$/;
 
@@ -57,7 +61,7 @@ export default function CheckoutPage() {
   const [days, setDays] = useState<DayOption[] | null>(null);
   const [slot, setSlot] = useState<string | null>(null);
   const [note, setNote] = useState('');
-  const [picked, setPay] = useState('qr');
+  const [picked, setPay] = useState<string>(DEFAULT_PAY);
   const [safety, setSafety] = useState(false);
   const [touched, setTouched] = useState(false);
   const [serverError, setServerError] = useState('');
@@ -132,7 +136,7 @@ export default function CheckoutPage() {
   })();
 
   // Đơn có Flash sale không được trả tiền mặt.
-  const pay = picked === 'cod' && hasFlash ? 'qr' : picked;
+  const pay = picked === 'cod' && hasFlash ? DEFAULT_PAY : picked;
 
   const errors = {
     name: !name.trim() && 'Vui lòng nhập họ tên',

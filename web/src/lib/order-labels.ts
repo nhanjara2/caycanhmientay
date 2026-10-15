@@ -30,6 +30,7 @@ export const TIMELINE: { status: Status; label: string }[] = [
 ];
 
 export const PAY_LABEL = {
+  deposit: 'Đặt cọc (shop liên hệ)',
   cod: 'Tiền mặt khi nhận hàng',
   qr: 'Chuyển khoản ngân hàng (QR)',
   momo: 'Ví MoMo',
@@ -37,12 +38,29 @@ export const PAY_LABEL = {
   card: 'Thẻ quốc tế',
 } as const;
 
-/** Logo cổng thanh toán trong public/images/pay/ (tiền mặt, thẻ dùng icon). */
+/** Logo cổng thanh toán trong public/images/pay/ (tiền mặt, thẻ, đặt cọc dùng icon). */
 export const PAY_LOGO: Partial<Record<keyof typeof PAY_LABEL, string>> = {
   qr: 'vietqr.svg',
   momo: 'momo.svg',
   zalopay: 'zalopay.svg',
 };
+
+/**
+ * Cổng thanh toán trực tuyến (VietQR / MoMo / ZaloPay / thẻ) đã nối chưa.
+ * false (hiện tại): trang thanh toán chỉ cho chọn "Đặt cọc" (shop gọi / nhắn Zalo hướng dẫn) hoặc tiền mặt khi nhận hàng,
+ * và `createOrder` đổi mọi đơn chọn cổng trực tuyến (trang mở từ trước) thành "Đặt cọc".
+ * Nối cổng xong: đổi thành true, rồi làm bước chuyển sang cổng + webhook đánh dấu đã trả ở trang thanh toán / `createOrder`.
+ */
+export const ONLINE_PAYMENTS_READY = false;
+export const ONLINE_PAYMENT_METHODS: readonly string[] = ['qr', 'momo', 'zalopay', 'card'];
+
+/** Dòng trạng thái thanh toán của một đơn chưa trả đủ / đã trả (trang khách + admin). */
+export function payStatus(method: string, paid: boolean) {
+  if (paid) return 'Đã thanh toán';
+  if (method === 'cod') return 'Trả khi nhận hàng';
+  if (method === 'deposit') return 'Chờ đặt cọc';
+  return 'Chờ thanh toán';
+}
 
 const tz = { timeZone: 'Asia/Ho_Chi_Minh' } as const;
 export const fmtDate = (d: Date) => d.toLocaleDateString('vi-VN', { ...tz, day: '2-digit', month: '2-digit', year: 'numeric' });
