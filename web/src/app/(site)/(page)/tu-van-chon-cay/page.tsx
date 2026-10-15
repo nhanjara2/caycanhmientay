@@ -5,7 +5,7 @@ import { allProducts } from '@/server/catalog';
 
 export const metadata: Metadata = {
   title: 'Tư vấn chọn cây',
-  description: 'Chọn loại không gian (để bàn, văn phòng, trong nhà, ban công, sân vườn, công trình), trả lời vài câu hỏi để biết nên trồng cây gì, bao nhiêu cây và cao bao nhiêu cho từng vị trí.',
+  description: 'Trả lời vài câu hỏi về không gian (để bàn, văn phòng, ban công, sân vườn, công trình) để biết nên trồng cây gì, bao nhiêu cây, cao bao nhiêu.',
   alternates: { canonical: '/tu-van-chon-cay' },
 };
 

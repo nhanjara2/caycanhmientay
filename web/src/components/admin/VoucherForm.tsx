@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition, type FormEvent } from 'react';
 import { saveVoucherAction } from '@/app/actions/vouchers';
+import type { ScopeOptions } from '@/server/vouchers';
+import type { VoucherScope } from '@/lib/voucher-scope';
 import { WELCOME_CODE, WELCOME_DAYS, type DiscountType, type VoucherKind } from '@/lib/voucher-labels';
 
 export type VoucherFormValue = {
@@ -20,12 +22,14 @@ export type VoucherFormValue = {
   startsAt: string;
   endsAt: string;
   active: boolean;
+  /** null = mọi sản phẩm. */
+  scope: VoucherScope | null;
 };
 
 const digits = (s: string) => s.replace(/\D/g, '');
 
 /** AdminVoucherForm: /admin/khuyen-mai/moi để tạo, /admin/khuyen-mai/<id> để sửa. Mã không đổi được sau khi tạo. */
-export function VoucherForm({ initial }: { initial: VoucherFormValue }) {
+export function VoucherForm({ initial, options }: { initial: VoucherFormValue; options: ScopeOptions }) {
   const router = useRouter();
   const [v, setV] = useState(initial);
   const [error, setError] = useState('');
@@ -50,6 +54,7 @@ export function VoucherForm({ initial }: { initial: VoucherFormValue }) {
       startsAt: v.startsAt || undefined,
       endsAt: v.endsAt || undefined,
       active: v.active,
+      scope: v.scope,
     };
     start(async () => {
       const r = await saveVoucherAction(payload).catch(() => ({ ok: false as const, error: 'Có lỗi, vui lòng thử lại' }));
@@ -144,6 +149,7 @@ export function VoucherForm({ initial }: { initial: VoucherFormValue }) {
               <input id="vc-end" className="vx-input" type="date" value={v.endsAt} onChange={(e) => set('endsAt', e.target.value)} />
             </div>
           </div>
+          <ScopePicker value={v.scope} options={options} onChange={(s) => set('scope', s)} />
           <label className="vx-check">
             <input type="checkbox" checked={v.active} onChange={(e) => set('active', e.target.checked)} />
             Bật mã này (hiện trong hộp ưu đãi của khách ngay khi trong thời gian áp dụng)
@@ -158,5 +164,68 @@ export function VoucherForm({ initial }: { initial: VoucherFormValue }) {
         </span>
       </div>
     </form>
+  );
+}
+
+const NO_SCOPE: VoucherScope = { cats: [], subs: [], products: [] };
+const fold = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/gi, 'd').toLowerCase();
+
+/** Ô "Áp dụng cho": mọi sản phẩm, hoặc chọn danh mục / nhóm con / từng sản phẩm. */
+function ScopePicker({ value, options, onChange }: { value: VoucherScope | null; options: ScopeOptions; onChange: (s: VoucherScope | null) => void }) {
+  const [limited, setLimited] = useState(value !== null);
+  const [q, setQ] = useState('');
+  const s = value ?? NO_SCOPE;
+  const toggle = (k: keyof VoucherScope, x: string) => {
+    const list = s[k].includes(x) ? s[k].filter((y) => y !== x) : [...s[k], x];
+    onChange({ ...s, [k]: list });
+  };
+  const name = new Map(options.products.map((p) => [p.slug, p.name]));
+  const hits = q.trim() ? options.products.filter((p) => !s.products.includes(p.slug) && fold(p.name).includes(fold(q.trim()))).slice(0, 8) : [];
+  const empty = limited && !s.cats.length && !s.subs.length && !s.products.length;
+  return (
+    <div className="ad-f">
+      <label>Áp dụng cho</label>
+      <div className="vx-seg">
+        <button type="button" className="vx-chip" aria-pressed={!limited} onClick={() => { setLimited(false); onChange(null); }}>Mọi sản phẩm</button>
+        <button type="button" className="vx-chip" aria-pressed={limited} onClick={() => { setLimited(true); onChange(value ?? NO_SCOPE); }}>Chỉ danh mục / nhóm cây / sản phẩm</button>
+      </div>
+      {limited && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8 }}>
+          {options.cats.map((c) => {
+            const whole = s.cats.includes(c.slug);
+            const subs = c.subs.filter((x) => x.active || s.subs.includes(`${c.slug}/${x.slug}`));
+            return (
+              <div key={c.slug}>
+                <label className="vx-check"><input type="checkbox" checked={whole} onChange={() => toggle('cats', c.slug)} /> <b>{c.name}</b>{subs.length > 0 && ' (cả danh mục)'}</label>
+                {!whole && subs.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6, paddingLeft: 28 }}>
+                    {subs.map((x) => {
+                      const key = `${c.slug}/${x.slug}`;
+                      return <button key={key} type="button" className="vx-chip" aria-pressed={s.subs.includes(key)} onClick={() => toggle('subs', key)}>{x.name}</button>;
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+          <div className="ad-f">
+            <label htmlFor="vc-scope-q">Thêm từng sản phẩm</label>
+            <input id="vc-scope-q" className="vx-input" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Gõ tên cây…" autoComplete="off" />
+            {hits.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {hits.map((p) => <button key={p.slug} type="button" className="vx-chip" onClick={() => { toggle('products', p.slug); setQ(''); }}>+ {p.name}{!p.active && ' (ẩn)'}</button>)}
+              </div>
+            )}
+            {s.products.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {s.products.map((slug) => <button key={slug} type="button" className="vx-chip" aria-pressed onClick={() => toggle('products', slug)} aria-label={`Bỏ ${name.get(slug) ?? slug}`}>{name.get(slug) ?? slug} ✕</button>)}
+              </div>
+            )}
+          </div>
+          {empty && <span className="vx-err">Chưa chọn gì — lưu lúc này mã áp dụng cho mọi sản phẩm.</span>}
+        </div>
+      )}
+      <span className="vx-help">Có phạm vi thì đơn tối thiểu và số tiền giảm chỉ tính trên sản phẩm thuộc phạm vi. Sản phẩm bật “Không áp mã giảm giá” không bao giờ được giảm.</span>
+    </div>
   );
 }

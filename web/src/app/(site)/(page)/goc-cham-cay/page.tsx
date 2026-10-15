@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Icon } from '@/components/Icon';
 import { EmptyPosts, PostMeta, PostThumb } from '@/components/PostParts';
-import { CATEGORIES, categoryOf, durationLabel, isCategory, plainText, postPath, SECTIONS, sectionOf, VIDEO_PAGE } from '@/lib/posts';
+import { CATEGORIES, CATEGORY_DESCRIPTION, categoryOf, durationLabel, isCategory, pageSuffix, plainText, postPath, SECTIONS, sectionOf, VIDEO_PAGE } from '@/lib/posts';
 import { publishedPosts, type PostCard } from '@/server/posts';
 
 type SP = { 'chuyen-muc'?: string; the?: string; loai?: string; trang?: string };
@@ -28,9 +28,10 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   const thin = !!tag || video;
   // Chưa có bài nào (trong chuyên mục đang xem) → trang trống, noindex tới khi có bài (tránh soft 404).
   const empty = !(await publishedPosts()).some((p) => sectionOf(p.category) === 'blog' && (!cat || p.category === cat));
+  const nth = cat ? pageSuffix(page) : ''; // chỉ trang chuyên mục có phân trang được index
   return {
-    title: name ? `${name} · Góc chăm cây` : 'Góc chăm cây',
-    description: 'Kinh nghiệm chăm cây, bắt bệnh, dùng thuốc và phân bón đúng cách từ nhà vườn Cây Cảnh Miền Tây.',
+    title: `${name ? `${name} · Góc chăm cây` : 'Góc chăm cây'}${nth}`,
+    description: `${cat ? CATEGORY_DESCRIPTION[cat] : 'Kinh nghiệm chăm cây, bắt bệnh, dùng thuốc và phân bón đúng cách từ nhà vườn Cây Cảnh Miền Tây.'}${pageSuffix(cat ? page : 1, ' ')}`,
     alternates: { canonical: thin ? BASE : href({ 'chuyen-muc': cat, trang: cat && page > 1 ? page : undefined }) },
     robots: thin || empty ? { index: false, follow: true } : undefined,
   };

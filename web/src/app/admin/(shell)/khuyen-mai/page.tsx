@@ -5,7 +5,7 @@ import { money } from '@/lib/format';
 import { fmtDate } from '@/lib/order-labels';
 import { VOUCHER_STATUS_LABEL, voucherStatus, voucherValueText, WELCOME_CODE, WELCOME_DAYS } from '@/lib/voucher-labels';
 import { requireAccess } from '@/server/auth';
-import { listVouchers } from '@/server/vouchers';
+import { listVouchers, scopeTexts } from '@/server/vouchers';
 
 export const metadata: Metadata = { title: 'Khuyến mãi' };
 
@@ -14,6 +14,7 @@ const STATUS_PILL = { active: 'done', scheduled: 'prep', expired: 'cancel', off:
 export default async function AdminVouchersPage() {
   const me = await requireAccess('promotions');
   const rows = await listVouchers();
+  const scopes = await scopeTexts(rows.map((r) => r.v));
   const isAdmin = me.role === 'admin';
 
   return (
@@ -39,7 +40,7 @@ export default async function AdminVouchersPage() {
                       {v.code === WELCOME_CODE && <small><span className="vx-badge vx-badge--info">Quà tài khoản mới</span> tự tặng khi đăng nhập lần đầu, dùng trong {WELCOME_DAYS} ngày</small>}
                     </td>
                     <td data-label="Giá trị">{voucherValueText(v, money)}</td>
-                    <td data-label="Điều kiện">{v.minOrder > 0 ? `Đơn từ ${money(v.minOrder)}` : 'Không điều kiện'}<small>Tối đa {v.perCustomerLimit} lượt/khách</small></td>
+                    <td data-label="Điều kiện">{v.minOrder > 0 ? `Đơn từ ${money(v.minOrder)}` : 'Không điều kiện'}<small>Tối đa {v.perCustomerLimit} lượt/khách</small><small>{scopes.get(v.code) ? `Áp dụng: ${scopes.get(v.code)}` : 'Mọi sản phẩm'}</small></td>
                     <td data-label="Thời gian" data-wide>
                       {v.startsAt ? fmtDate(v.startsAt) : 'Không giới hạn'} → {v.endsAt ? fmtDate(v.endsAt) : 'Không giới hạn'}
                     </td>

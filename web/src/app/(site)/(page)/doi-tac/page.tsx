@@ -6,7 +6,7 @@ import { publishedProjects } from '@/server/projects';
 
 export const metadata: Metadata = {
   title: 'Đối tác sỉ — cây cảnh & vật tư giá sỉ',
-  description: 'Cung cấp sỉ cây cảnh, cây công trình, phân bón, thuốc BVTV và vật tư cho đơn vị dịch vụ cảnh quan, nhà thầu công trình, cửa hàng và đại lý. Nguồn cây từ gần 200 nhà vườn miền Nam, giao toàn quốc.',
+  description: 'Cung cấp sỉ cây cảnh, cây công trình, phân bón, thuốc BVTV cho đơn vị cảnh quan, nhà thầu, cửa hàng, đại lý. Gần 200 nhà vườn miền Nam, giao toàn quốc.',
   alternates: { canonical: '/doi-tac' },
 };
 

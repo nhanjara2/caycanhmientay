@@ -21,6 +21,9 @@ export type CartSnap = {
   bulky?: boolean;
   /** Không áp mã giảm giá (giỏ không tính tiền dòng này vào tiền hàng xét mã; server tính lại). */
   noVoucher?: boolean;
+  /** Danh mục + nhóm con (chính + phụ) — xét phạm vi mã giảm giá. */
+  category?: string;
+  subs?: string[];
 };
 export type CartLine = { slug: string; option: number; qty: number; snap: CartSnap };
 
@@ -30,6 +33,7 @@ export const snapOf = (p: Product, option: number): CartSnap => {
   return {
     name: p.name, label: u.label, unit: p.unit, icon: p.icon, image: p.images?.[0], ship: p.ship, pesticide: p.pesticide,
     flash: Boolean(p.flash), price: u.price, oldPrice: u.oldPrice, combo2: u.combo2, bulky: u.bulky, noVoucher: p.noVoucher,
+    category: p.category, subs: [p.sub, ...(p.extraSubs ?? [])],
   };
 };
 

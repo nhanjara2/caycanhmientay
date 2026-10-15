@@ -1,17 +1,21 @@
 import 'server-only';
-import { and, desc, eq, ne, or, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, ne, or, sql } from 'drizzle-orm';
 import * as z from 'zod';
 import { money } from '@/lib/format';
 import { fmtDate } from '@/lib/order-labels';
 import { discountOf, voucherStatus, WELCOME_CODE, WELCOME_DAYS, welcomeText, type VoucherKind, type WelcomeOffer, type WelcomeProgram } from '@/lib/voucher-labels';
+import type { Totals } from '@/lib/pricing';
+import { isScoped, voucherAmount, type VoucherScope } from '@/lib/voucher-scope';
+import { getCategories } from './categories';
 import { db, schema } from './db';
 import type { Tx } from './inventory';
 import { notifyEvent } from './notify';
 
-const { vouchers, orders, users } = schema;
+const { vouchers, orders, users, products } = schema;
 
 export type Voucher = typeof vouchers.$inferSelect;
 
+const SLUG_PART = /^[a-z0-9-]+$/;
 const ymd = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Ngày chưa đúng');
 
 export const VoucherInputSchema = z.object({
@@ -28,6 +32,12 @@ export const VoucherInputSchema = z.object({
   startsAt: ymd.optional(),
   endsAt: ymd.optional(),
   active: z.boolean().default(true),
+  /** Phạm vi áp dụng; bỏ trống / rỗng = mọi sản phẩm. */
+  scope: z.object({
+    cats: z.array(z.string().regex(SLUG_PART)).max(50).default([]),
+    subs: z.array(z.string().regex(/^[a-z0-9-]+\/[a-z0-9-]+$/)).max(200).default([]),
+    products: z.array(z.string().regex(SLUG_PART)).max(500).default([]),
+  }).nullable().optional(),
 }).superRefine((v, ctx) => {
   if (v.kind === 'ship' && v.discountType !== 'amount') ctx.addIssue({ code: 'custom', path: ['discountType'], message: 'Mã miễn phí giao nhập số tiền giảm phí giao tối đa' });
   if (v.discountType === 'percent' && v.discountValue > 100) ctx.addIssue({ code: 'custom', path: ['discountValue'], message: 'Phần trăm tối đa 100' });
@@ -48,7 +58,48 @@ const toRow = (input: VoucherInput) => ({
   startsAt: input.startsAt ? new Date(`${input.startsAt}T00:00:00`) : null,
   endsAt: input.endsAt ? new Date(`${input.endsAt}T23:59:59`) : null,
   active: input.active,
+  scope: cleanScope(input.scope),
 });
+
+/** Bỏ trùng; rỗng hết thì null (= mọi sản phẩm). */
+function cleanScope(s: VoucherInput['scope']): VoucherScope | null {
+  if (!s) return null;
+  const out = { cats: [...new Set(s.cats)], subs: [...new Set(s.subs)], products: [...new Set(s.products)] };
+  return isScoped(out) ? out : null;
+}
+
+/** Lựa chọn cho ô "Áp dụng cho" ở form mã giảm giá: danh mục + nhóm con, mọi sản phẩm (kể cả đang ẩn). */
+export async function scopeOptions() {
+  const [cats, list] = await Promise.all([
+    getCategories(),
+    db.select({ slug: products.slug, name: products.name, active: products.active }).from(products).orderBy(products.name),
+  ]);
+  return { cats: cats.map((c) => ({ slug: c.slug, name: c.name, subs: c.subs.map((s) => ({ slug: s.slug, name: s.name, active: s.active })) })), products: list };
+}
+export type ScopeOptions = Awaited<ReturnType<typeof scopeOptions>>;
+
+/** Tên phạm vi cho khách xem: "Cây sân vườn, Cây công trình, Cây kim tiền" (tối đa 3 tên, còn lại "+N"). null = mọi sản phẩm. */
+export async function scopeTexts(list: Pick<Voucher, 'code' | 'scope'>[]): Promise<Map<string, string | null>> {
+  const scoped = list.filter((v) => isScoped(v.scope));
+  const out = new Map<string, string | null>(list.map((v) => [v.code, null]));
+  if (!scoped.length) return out;
+  const slugs = [...new Set(scoped.flatMap((v) => v.scope!.products))];
+  const [cats, names] = await Promise.all([
+    getCategories(),
+    slugs.length ? db.select({ slug: products.slug, name: products.name }).from(products).where(inArray(products.slug, slugs)) : Promise.resolve([]),
+  ]);
+  const productName = new Map(names.map((p) => [p.slug, p.name]));
+  for (const v of scoped) {
+    const s = v.scope!;
+    const parts = [
+      ...s.cats.map((c) => cats.find((x) => x.slug === c)?.name),
+      ...s.subs.map((k) => { const [c, sub] = k.split('/'); return cats.find((x) => x.slug === c)?.subs.find((x) => x.slug === sub)?.name; }),
+      ...s.products.map((p) => productName.get(p)),
+    ].filter((x): x is string => !!x);
+    out.set(v.code, parts.length ? (parts.length > 3 ? `${parts.slice(0, 3).join(', ')} +${parts.length - 3}` : parts.join(', ')) : 'Sản phẩm chọn riêng');
+  }
+  return out;
+}
 
 /** Tạo mới — mã không đổi được sau khi tạo (giống slug bệnh cây, slug sản phẩm). */
 export async function createVoucher(input: VoucherInput) {
@@ -105,7 +156,7 @@ const usedCode = (code: string) => or(eq(orders.voucherCode, code), eq(orders.sh
 export async function checkVoucher(
   executor: Tx | typeof db,
   rawCode: string,
-  ctx: { subtotal: number; shipFee?: number; userId: number | null; phone: string },
+  ctx: { subtotal: number; /** Có thì mã có phạm vi tính trên đúng sản phẩm thuộc phạm vi (voucherAmount); không có thì dùng `subtotal`. */ totals?: Totals; shipFee?: number; userId: number | null; phone: string },
   opts: { lock?: boolean } = {},
 ): Promise<VoucherCheck> {
   const code = rawCode.trim().toUpperCase();
@@ -122,7 +173,9 @@ export async function checkVoucher(
     const [u] = await executor.select({ createdAt: users.createdAt }).from(users).where(eq(users.id, ctx.userId));
     if (!u || welcomeEnds(u.createdAt) < new Date()) return { ok: false, error: `Mã chỉ dùng trong ${WELCOME_DAYS} ngày đầu kể từ khi tạo tài khoản` };
   }
-  if (ctx.subtotal < v.minOrder) return { ok: false, error: `Đơn cần từ ${v.minOrder.toLocaleString('vi-VN')}đ để dùng mã này` };
+  const amount = ctx.totals ? voucherAmount(v.scope, ctx.totals) : ctx.subtotal;
+  if (isScoped(v.scope) && amount <= 0) return { ok: false, error: 'Mã không áp dụng cho sản phẩm trong đơn này' };
+  if (amount < v.minOrder) return { ok: false, error: isScoped(v.scope) ? `Sản phẩm thuộc phạm vi mã cần từ ${v.minOrder.toLocaleString('vi-VN')}đ để dùng mã này` : `Đơn cần từ ${v.minOrder.toLocaleString('vi-VN')}đ để dùng mã này` };
 
   if (v.usageLimit != null) {
     const [{ n }] = await executor.select({ n: sql<number>`count(*)`.mapWith(Number) }).from(orders)
@@ -136,7 +189,7 @@ export async function checkVoucher(
     ));
   if (mine >= v.perCustomerLimit) return { ok: false, error: 'Bạn đã dùng hết lượt cho mã này' };
 
-  const discount = discountOf(v, ctx.subtotal, ctx.shipFee ?? 0);
+  const discount = discountOf(v, amount, ctx.shipFee ?? 0);
   if (v.kind === 'ship' && discount <= 0) return { ok: false, error: 'Đơn này không có phí giao nên không cần mã miễn phí giao' };
   return { ok: true, code: v.code, kind: v.kind, discount };
 }

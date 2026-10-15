@@ -9,6 +9,7 @@ import { seoNameOf } from '@/lib/seo-name';
 import { ClockPercentIcon, VoucherCheckIcon } from './FlashIcons';
 import { Art } from './Icon';
 import { ProductStickers } from './ProductStickers';
+import { inScope, productScopeItem } from '@/lib/voucher-scope';
 import { usePublicVouchers } from '@/lib/vouchers-client';
 import { WishlistHeart } from './WishlistHeart';
 
@@ -23,7 +24,10 @@ export function ProductCard({ product: p, showFlash = false, onRemoveFromWishlis
   onRemoveFromWishlist?: () => void;
 }) {
   const wish = useWishlist();
-  const vouchers = usePublicVouchers();
+  const publics = usePublicVouchers();
+  // Chỉ mã áp dụng cho sản phẩm này; shop có mã mà không mã nào áp dụng thì không hiện vé
+  const vouchers = publics.filter((v) => inScope(v.scope, productScopeItem(p)));
+  const showTicket = !p.noVoucher && (vouchers.length > 0 || publics.length === 0);
   const u = p.options[cheapestOption(p.options)];
   const from = p.options.some((o) => o !== u && (isQuote(o) || o.price !== u.price));
   const pct = isQuote(u) ? 0 : discountPct(u);
@@ -68,7 +72,7 @@ export function ProductCard({ product: p, showFlash = false, onRemoveFromWishlis
               <span className="app-pcard__amt">{from && <small>Từ </small>}{moneyNum(u.price)}<span className="app-dong">đ</span></span>
               <small className="app-pcard__unit">/ {p.unit}</small>
               {/* Giá nào cũng kèm vé voucher có dấu tích (chủ shop dặn: giá nào cũng có voucher) */}
-              {!p.noVoucher && <VoucherCheckIcon title={vouchers.length ? `Đơn này dùng được mã giảm giá: ${(vouchers.find((v) => v.kind === 'discount') ?? vouchers[0]).code}` : 'Có voucher ưu đãi cho đơn này'} />}
+              {showTicket && <VoucherCheckIcon title={vouchers.length ? `Đơn này dùng được mã giảm giá: ${(vouchers.find((v) => v.kind === 'discount') ?? vouchers[0]).code}` : 'Có voucher ưu đãi cho đơn này'} />}
             </>
           )}
         </div>

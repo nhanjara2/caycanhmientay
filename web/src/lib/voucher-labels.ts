@@ -1,4 +1,5 @@
 // Nhãn mã giảm giá — dùng chung trang khách, thanh toán và admin.
+import type { VoucherScope } from './voucher-scope';
 
 export const DISCOUNT_TYPE_LABEL = { percent: 'Phần trăm', amount: 'Số tiền cố định' } as const;
 export type DiscountType = keyof typeof DISCOUNT_TYPE_LABEL;
@@ -29,7 +30,11 @@ export function voucherValueText(v: { kind?: VoucherKind; discountType: Discount
 // ---- Mã công khai theo giá trị đơn (CAMON5…CAMON20) ------------------------------------------
 
 /** Mã đang áp dụng mà khách thấy ở giỏ / thanh toán / trang sản phẩm (không gồm quà tài khoản mới). */
-export type PublicVoucher = { code: string; label: string; kind: VoucherKind; discountType: DiscountType; discountValue: number; maxDiscount: number | null; minOrder: number };
+export type PublicVoucher = {
+  code: string; label: string; kind: VoucherKind; discountType: DiscountType; discountValue: number; maxDiscount: number | null; minOrder: number;
+  /** Phạm vi áp dụng (null = mọi sản phẩm) + tên phạm vi để hiện cho khách ("Cây sân vườn, Cây kim tiền"). */
+  scope?: VoucherScope | null; scopeText?: string | null;
+};
 
 /** Số tiền giảm của một mã: mã giảm tiền hàng tính trên `amount`; mã miễn phí giao giảm tối đa bằng phí giao `shipFee`. Dùng chung client (ước tính) và server (chốt). */
 export function discountOf(v: Pick<PublicVoucher, 'kind' | 'discountType' | 'discountValue' | 'maxDiscount'>, amount: number, shipFee: number) {
@@ -50,13 +55,15 @@ export function bestVoucher(list: PublicVoucher[], kind: VoucherKind, amount: nu
 }
 
 /** Mã giảm tiền hàng nhiều nhất đang dùng được + mã kế tiếp (đơn tối thiểu cao hơn, giảm nhiều hơn) để gợi ý "mua thêm …". */
-export function voucherTiers(all: PublicVoucher[], amount: number) {
+export function voucherTiers(all: PublicVoucher[], amountOf: (v: PublicVoucher) => number) {
   const list = all.filter((v) => v.kind === 'discount');
-  const best = list.filter((v) => voucherDiscount(v, amount) > 0).sort((a, b) => voucherDiscount(b, amount) - voucherDiscount(a, amount))[0] ?? null;
-  const gain = best ? voucherDiscount(best, amount) : 0;
+  const est = (v: PublicVoucher) => voucherDiscount(v, amountOf(v));
+  const best = list.filter((v) => est(v) > 0).sort((a, b) => est(b) - est(a))[0] ?? null;
+  const gain = best ? est(best) : 0;
+  // Mã có phạm vi mà đơn chưa có sản phẩm nào thuộc phạm vi thì không gợi ý "mua thêm"
   const next = list
-    .filter((v) => v.minOrder > amount && voucherDiscount(v, v.minOrder) > gain)
-    .sort((a, b) => a.minOrder - b.minOrder)[0] ?? null;
+    .filter((v) => amountOf(v) > 0 && v.minOrder > amountOf(v) && voucherDiscount(v, v.minOrder) > gain)
+    .sort((a, b) => a.minOrder - amountOf(a) - (b.minOrder - amountOf(b)))[0] ?? null;
   return { best, next };
 }
 

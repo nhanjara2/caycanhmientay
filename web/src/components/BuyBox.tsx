@@ -14,6 +14,7 @@ import { computeTotals } from '@/lib/pricing';
 import { seoNameOf } from '@/lib/seo-name';
 import { useShipping } from '@/lib/shipping-client';
 import type { PublicVoucher } from '@/lib/voucher-labels';
+import { inScope, productScopeItem } from '@/lib/voucher-scope';
 import { usePublicVouchers } from '@/lib/vouchers-client';
 import { DeliverToNote } from './DeliverTo';
 import { FlashPriceBar } from './FlashSale';
@@ -35,7 +36,7 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
   const { rules } = useShipping();
   // Sản phẩm không áp mã (admin đánh dấu) thì không hiện vé voucher
   const allVouchers = usePublicVouchers();
-  const vouchers = p.noVoucher ? [] : allVouchers;
+  const vouchers = p.noVoucher ? [] : allVouchers.filter((v) => inScope(v.scope, productScopeItem(p)));
   const partner = useAuth().user?.partner;
   const partnerPct = partner?.discount ?? 0;
   const partnerType = partner?.type;

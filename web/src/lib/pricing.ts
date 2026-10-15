@@ -1,4 +1,5 @@
 // Cách tính tiền đơn hàng — dùng chung: client để hiển thị, server để tính số tiền thật khi đặt hàng.
+import type { ScopeItem } from './voucher-scope';
 import type { ShipGroup } from './catalog';
 import { partnerDiscountOf } from './partners';
 import { DEFAULT_SHIPPING, type FeeRule, type PlantRule, type ShipRegion } from './shipping';
@@ -35,7 +36,8 @@ export const SHIP_RULES: ShipRules = { plant: DEFAULT_SHIPPING.plant, supply: DE
 /** Ba vùng khác mức phí thì khách chưa chọn nơi nhận chỉ thấy số tạm tính (theo vùng rẻ nhất). */
 export const plantFeeVaries = (r: PlantRule) => new Set(Object.values(r.regionFee)).size > 1;
 
-export type PricedLine = { price: number; oldPrice?: number | null; combo2?: number | null; qty: number; ship: ShipGroup; pesticide?: boolean; /** Cây lớn / cồng kềnh: tính thêm phụ phí giao mỗi cây. */ bulky?: boolean; /** Không áp mã giảm giá: không tính vào `voucherBase`. */ noVoucher?: boolean };
+export type PricedLine = { price: number; oldPrice?: number | null; combo2?: number | null; qty: number; ship: ShipGroup; pesticide?: boolean; /** Cây lớn / cồng kềnh: tính thêm phụ phí giao mỗi cây. */ bulky?: boolean; /** Không áp mã giảm giá: không tính vào `voucherBase`. */ noVoucher?: boolean;
+  /** Để xét phạm vi mã giảm giá (lib/voucher-scope.ts): slug, danh mục, nhóm con chính + phụ. */ slug?: string; category?: string; subs?: string[] };
 
 /** Giá thật của một dòng sau khi xét combo 2 cây (cùng thứ tự với dòng đưa vào). */
 export type LinePrice = {
@@ -46,6 +48,8 @@ export type LinePrice = {
   /** Số cặp tính giá combo và tiền bớt nhờ combo. */
   combos: number;
   comboSaving: number;
+  /** Sản phẩm của dòng — xét phạm vi mã giảm giá. */
+  item: ScopeItem;
 };
 
 export type Totals = {
@@ -92,6 +96,7 @@ export function linePrice(l: PricedLine): LinePrice {
     total: l.price * l.qty - comboSaving,
     strike: (l.oldPrice && l.oldPrice > l.price ? l.oldPrice : l.price) * l.qty,
     combos, comboSaving,
+    item: { slug: l.slug, category: l.category, subs: l.subs, noVoucher: l.noVoucher },
   };
 }
 

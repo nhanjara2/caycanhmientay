@@ -6,6 +6,7 @@ import { PartIcon } from '@/components/DiseaseArt';
 import { Icon } from '@/components/Icon';
 import { ProductGrid } from '@/components/ProductCard';
 import { SEVERITY, causeOf, diseaseImageUrl, partName, plantName } from '@/lib/diseases';
+import { clipText } from '@/lib/format';
 import { getProducts } from '@/server/catalog';
 import { allDiseases, getDisease } from '@/server/diseases';
 import { categoryOf, postPath } from '@/lib/posts';
@@ -15,7 +16,7 @@ type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const d = await getDisease((await params).slug);
-  return d ? { title: d.name, description: d.summary, alternates: { canonical: `/benh-cay/${d.slug}` } } : { title: 'Không tìm thấy bài bệnh' };
+  return d ? { title: d.name, description: clipText(d.summary || `${d.name}: dấu hiệu nhận biết, nguyên nhân, cách xử lý và phòng bệnh.`, 170), alternates: { canonical: `/benh-cay/${d.slug}` } } : { title: 'Không tìm thấy bài bệnh' };
 }
 
 /** Tên ngắn cho câu hỏi: "Thối rễ (úng rễ do nấm)" → "thối rễ". */

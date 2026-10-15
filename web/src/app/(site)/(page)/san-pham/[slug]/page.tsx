@@ -11,6 +11,7 @@ import { categoryLabel, elementName, isQuote, type Product } from '@/lib/catalog
 import { YOUTUBE_URL } from '@/lib/contact';
 import { reviewStats } from '@/lib/reviews';
 import { seoNameOf } from '@/lib/seo-name';
+import { clipText } from '@/lib/format';
 import { absoluteUrl } from '@/lib/site';
 import { boughtTogether, getProduct } from '@/server/catalog';
 import { getCurrentUser } from '@/server/auth';
@@ -27,10 +28,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!p) return { title: 'Không tìm thấy' };
   // tên chi tiết đã đủ dài, không nối thêm "| Cây Cảnh Miền Tây" (Google cắt phần đuôi)
   const title = seoNameOf(p);
+  const description = clipText(p.lead, 170);
   return {
-    title: { absolute: title }, description: p.lead,
+    title: { absolute: title }, description,
     alternates: { canonical: `/san-pham/${p.slug}` },
-    openGraph: { type: 'website', title, description: p.lead, images: p.images?.length ? [p.images[0]] : undefined },
+    openGraph: { type: 'website', title, description, images: p.images?.length ? [p.images[0]] : undefined },
   };
 }
 

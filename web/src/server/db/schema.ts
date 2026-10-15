@@ -10,6 +10,7 @@ import type { SavedPlan } from '../../lib/plant-advisor';
 import { STAFF_ROLES } from '../../lib/permissions';
 import { PARTNER_STATUSES, PARTNER_TYPES } from '../../lib/partners';
 import { SERVICE_STAGES, SERVICE_TYPES, SOURCES } from '../../lib/service-labels';
+import type { VoucherScope } from '../../lib/voucher-scope';
 import { boolean, customType, doublePrecision, index, integer, jsonb, pgTable, primaryKey, serial, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 
 const ts = (name: string) => timestamp(name, { withTimezone: true, mode: 'date' });
@@ -87,6 +88,9 @@ export const categories = pgTable('categories', {
   /** false = ẩn khỏi menu, trang chủ, chân trang (trang danh mục và sản phẩm vẫn mở được). */
   active: boolean('active').notNull().default(true),
   specs: jsonb('specs').$type<SpecField[]>().notNull().default(sql`'[]'::jsonb`),
+  /** Tiêu đề / mô tả trên Google do admin tự viết; null = web tự tạo (lib/category-seo.ts). */
+  seoTitle: text('seo_title'),
+  seoDescription: text('seo_description'),
   createdAt: createdAt(),
 });
 
@@ -98,6 +102,8 @@ export const subcategories = pgTable('subcategories', {
   sort: integer('sort').notNull().default(0),
   active: boolean('active').notNull().default(true),
   specs: jsonb('specs').$type<SpecField[]>().notNull().default(sql`'[]'::jsonb`),
+  seoTitle: text('seo_title'),
+  seoDescription: text('seo_description'),
   createdAt: createdAt(),
 }, (t) => [primaryKey({ columns: [t.categorySlug, t.slug] })]);
 
@@ -333,6 +339,8 @@ export const vouchers = pgTable('vouchers', {
   /** null = không giới hạn tổng lượt dùng. */
   usageLimit: integer('usage_limit'),
   perCustomerLimit: integer('per_customer_limit').notNull().default(1),
+  /** Phạm vi áp dụng (danh mục / nhóm con / sản phẩm, lib/voucher-scope.ts); null = mọi sản phẩm. */
+  scope: jsonb('scope').$type<VoucherScope>(),
   startsAt: ts('starts_at'),
   endsAt: ts('ends_at'),
   active: boolean('active').notNull().default(true),

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { VoucherForm, type VoucherFormValue } from '@/components/admin/VoucherForm';
 import { requireAccess } from '@/server/auth';
-import { getVoucher } from '@/server/vouchers';
+import { getVoucher, scopeOptions } from '@/server/vouchers';
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -14,7 +14,7 @@ const ymd = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : '');
 
 const EMPTY: VoucherFormValue = {
   code: '', label: '', kind: 'discount', discountType: 'percent', discountValue: '', maxDiscount: '', minOrder: '',
-  usageLimit: '', perCustomerLimit: '1', startsAt: '', endsAt: '', active: true,
+  usageLimit: '', perCustomerLimit: '1', startsAt: '', endsAt: '', active: true, scope: null,
 };
 
 /** AdminVoucherForm: /admin/khuyen-mai/moi để tạo, /admin/khuyen-mai/<id> để sửa. */
@@ -30,8 +30,8 @@ export default async function AdminVoucherPage({ params }: Props) {
       id: v.id, code: v.code, label: v.label, kind: v.kind, discountType: v.discountType,
       discountValue: String(v.discountValue), maxDiscount: v.maxDiscount ? String(v.maxDiscount) : '',
       minOrder: v.minOrder ? String(v.minOrder) : '', usageLimit: v.usageLimit ? String(v.usageLimit) : '',
-      perCustomerLimit: String(v.perCustomerLimit), startsAt: ymd(v.startsAt), endsAt: ymd(v.endsAt), active: v.active,
+      perCustomerLimit: String(v.perCustomerLimit), startsAt: ymd(v.startsAt), endsAt: ymd(v.endsAt), active: v.active, scope: v.scope ?? null,
     };
   }
-  return <VoucherForm key={id} initial={initial} />;
+  return <VoucherForm key={id} initial={initial} options={await scopeOptions()} />;
 }

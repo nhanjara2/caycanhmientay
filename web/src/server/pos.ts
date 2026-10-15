@@ -94,7 +94,7 @@ export async function createPosOrder(input: PosOrderInput, staff: SessionUser): 
       const owner = phone ? (await tx.select({ id: users.id, name: users.name }).from(users).where(eq(users.phone, phone)))[0] : undefined;
       let voucherCode: string | null = null, voucherDiscount = 0;
       if (input.voucherCode) {
-        const v = await checkVoucher(tx, input.voucherCode, { subtotal: totals.voucherBase, userId: owner?.id ?? null, phone }, { lock: true });
+        const v = await checkVoucher(tx, input.voucherCode, { subtotal: totals.voucherBase, totals, userId: owner?.id ?? null, phone }, { lock: true });
         if (!v.ok) throw new PosError(v.error);
         voucherCode = v.code; voucherDiscount = v.discount;
       }

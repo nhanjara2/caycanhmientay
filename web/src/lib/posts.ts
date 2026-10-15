@@ -39,6 +39,26 @@ export const CATEGORIES = [
 ] as const satisfies readonly Category[];
 
 export type CategoryKey = (typeof CATEGORIES)[number]['key'];
+
+/** Mô tả Google của trang từng chuyên mục (/goc-cham-cay?chuyen-muc=…, /tin-tuc?chuyen-muc=…) — mỗi chuyên mục một câu riêng. */
+export const CATEGORY_DESCRIPTION: Record<CategoryKey, string> = {
+  'cham-soc': 'Hướng dẫn chăm sóc cây cảnh: tưới nước, ánh sáng, đất trồng, bón phân, thay chậu cho cây trong nhà, văn phòng, ban công và sân vườn.',
+  'bat-benh': 'Nhận biết và xử lý bệnh cây: thối rễ, vàng lá, nấm, sâu rệp… dấu hiệu sớm, nguyên nhân và cách cứu cây.',
+  'thuoc-phan-bon': 'Cách chọn và dùng thuốc bảo vệ thực vật, phân bón đúng liều, đúng lúc, an toàn cho người, thú cưng và cây trồng.',
+  'rau-sach': 'Trồng rau sạch tại nhà trong thùng xốp, chậu, ban công: chọn giống, đất trồng, tưới nước và thu hoạch.',
+  'phong-thuy': 'Ý nghĩa phong thủy của cây cảnh, cây hợp mệnh, hợp tuổi và cách đặt cây trong nhà, văn phòng.',
+  'decor': 'Ý tưởng trang trí không gian bằng cây xanh cho phòng khách, bàn làm việc, ban công, văn phòng và quán cà phê.',
+  'theo-mua': 'Chăm cây theo mùa ở miền Tây: mùa mưa, mùa khô, cây Tết, lịch bón phân và phòng bệnh theo thời tiết.',
+  'khuyen-mai': 'Chương trình khuyến mãi, mã giảm giá và ưu đãi khi mua cây cảnh, vật tư làm vườn tại Cây Cảnh Miền Tây.',
+  'su-kien': 'Workshop trồng cây, sự kiện và hoạt động trải nghiệm do Cây Cảnh Miền Tây tổ chức.',
+  'tin-tuc': 'Tin tức, sự kiện và thông báo mới của Cây Cảnh Miền Tây – nhà vườn cây cảnh tại Làng hoa Sa Đéc, Đồng Tháp.',
+  'cong-dong': 'Các hoạt động cộng đồng của Cây Cảnh Miền Tây – nhà vườn cây cảnh tại Làng hoa Sa Đéc, Đồng Tháp.',
+  'bao-chi': 'Báo chí, truyền hình viết về Cây Cảnh Miền Tây – nhà vườn cung cấp sỉ cây cảnh tại Làng hoa Sa Đéc, Đồng Tháp.',
+  'tuyen-dung': 'Tin tuyển dụng của Cây Cảnh Miền Tây: vị trí đang tuyển, quyền lợi và cách ứng tuyển.',
+};
+
+/** Trang 2, 3… của danh sách: thêm "Trang n" vào title / mô tả để không trùng trang 1. */
+export const pageSuffix = (page: number, sep = ' · ') => (page > 1 ? `${sep}Trang ${page}` : '');
 export const CATEGORY_KEYS = CATEGORIES.map((c) => c.key) as [CategoryKey, ...CategoryKey[]];
 export const categoryOf = (key: string): Category | undefined => CATEGORIES.find((c) => c.key === key);
 export const isCategory = (key: string | undefined): key is CategoryKey => !!key && CATEGORIES.some((c) => c.key === key);

@@ -6,7 +6,9 @@ import { welcomeOfferAction } from '@/app/actions/vouchers';
 import { useAuth } from '@/lib/auth';
 import { money } from '@/lib/format';
 import { fmtDate } from '@/lib/order-labels';
-import { bestVoucher, voucherDiscount, voucherValueText, type PublicVoucher, type VoucherKind, type WelcomeOffer } from '@/lib/voucher-labels';
+import type { Totals } from '@/lib/pricing';
+import { voucherAmount } from '@/lib/voucher-scope';
+import { voucherDiscount, voucherValueText, type PublicVoucher, type VoucherKind, type WelcomeOffer } from '@/lib/voucher-labels';
 import type { VoucherState } from '@/lib/voucher-pick';
 import { usePublicVouchers } from '@/lib/vouchers-client';
 import { Icon } from './Icon';
@@ -23,10 +25,10 @@ const GROUPS: { kind: VoucherKind; title: string }[] = [
  * Khách không phải gõ mã: chọn một mã miễn phí giao + một mã giảm giá trong danh sách (vẫn có ô gõ mã riêng).
  * Không chọn thì đơn không có mã — không tự áp. Số tiền trong hộp là ước tính; bấm Áp dụng thì server kiểm lại (lượt dùng…).
  */
-export function VoucherBox({ state, goods, shipFee }: {
+export function VoucherBox({ state, totals, shipFee }: {
   state: VoucherState;
-  /** Tiền hàng sau combo — so với đơn tối thiểu của mã. */
-  goods: number;
+  /** Tổng tiền của giỏ — mỗi mã xét tiền hàng thuộc phạm vi của nó (voucherAmount), so với đơn tối thiểu. */
+  totals: Totals;
   /** Tổng phí giao của đơn — mã miễn phí giao giảm tối đa bằng số này. */
   shipFee: number;
 }) {
@@ -44,7 +46,8 @@ export function VoucherBox({ state, goods, shipFee }: {
   const tickets: Ticket[] = [...gift, ...publics];
   const { applied } = state;
   const chosen = [applied.ship, applied.discount].filter((v) => v !== null);
-  const usable = tickets.filter((v) => voucherDiscount(v, goods, shipFee) > 0).length;
+  const amountOf = (v: Ticket) => voucherAmount(v.scope, totals);
+  const usable = tickets.filter((v) => voucherDiscount(v, amountOf(v), shipFee) > 0).length;
 
   return (
     <>
@@ -63,16 +66,16 @@ export function VoucherBox({ state, goods, shipFee }: {
       {state.dropped.map((e) => (
         <div key={e.code} className="vx-note app-vdrop" role="status"><Icon name="alert" /><div>Đã bỏ mã <b>{e.code}</b>: {e.error}</div></div>
       ))}
-      {open && <VoucherDialog tickets={tickets} state={state} goods={goods} shipFee={shipFee} onClose={() => setOpen(false)} />}
+      {open && <VoucherDialog tickets={tickets} state={state} amountOf={amountOf} shipFee={shipFee} onClose={() => setOpen(false)} />}
     </>
   );
 }
 
-function VoucherDialog({ tickets, state, goods, shipFee, onClose }: {
-  tickets: Ticket[]; state: VoucherState; goods: number; shipFee: number; onClose: () => void;
+function VoucherDialog({ tickets, state, amountOf, shipFee, onClose }: {
+  tickets: Ticket[]; state: VoucherState; amountOf: (v: Ticket) => number; shipFee: number; onClose: () => void;
 }) {
-  const est = (v: Ticket) => voucherDiscount(v, goods, shipFee);
-  const best = (kind: VoucherKind) => bestVoucher(tickets, kind, goods, shipFee)?.code ?? null;
+  const est = (v: Ticket) => voucherDiscount(v, amountOf(v), shipFee);
+  const best = (kind: VoucherKind) => tickets.filter((v) => v.kind === kind && est(v) > 0).sort((a, b) => est(b) - est(a))[0]?.code ?? null;
   // Mở hộp: giữ mã đang áp dụng; chưa có thì chọn sẵn mã giảm nhiều nhất của từng loại (khách bỏ chọn được, phải bấm Áp dụng mới tính)
   const [pick, setPick] = useState<Pick>(() => {
     const { ship, discount } = state.applied;
@@ -144,7 +147,9 @@ function VoucherDialog({ tickets, state, goods, shipFee, onClose }: {
                     {list.map((v) => {
                       const gain = est(v);
                       const on = pick[kind] === v.code;
-                      const need = v.minOrder - goods;
+                      const amount = amountOf(v);
+                      const need = v.minOrder - amount;
+                      const outside = Boolean(v.scopeText) && amount <= 0;
                       const off = gain <= 0 && !on;
                       return (
                         <button
@@ -156,15 +161,16 @@ function VoucherDialog({ tickets, state, goods, shipFee, onClose }: {
                             {v.code === top && gain > 0 && <span className="vx-voucher__tag">Giảm nhiều nhất</span>}
                             <b>{v.gift ? `Quà tài khoản mới — ${voucherValueText(v, money).toLowerCase()}` : voucherValueText(v, money)}</b>
                             <span className="cond">
-                              {v.minOrder > 0 ? `Đơn từ ${money(v.minOrder)}` : 'Không cần đơn tối thiểu'} · Mã {v.code}
+                              {v.scopeText && `${v.scopeText} · `}{v.minOrder > 0 ? `Đơn từ ${money(v.minOrder)}` : 'Không cần đơn tối thiểu'} · Mã {v.code}
                               {v.gift && ` · dùng đến ${fmtDate(new Date(v.gift.expiresAt))}`}
                             </span>
                             {gain > 0
                               ? <span className="need">Giảm {money(gain)} cho đơn này</span>
+                              : outside ? <span className="exp">Không áp dụng cho sản phẩm trong giỏ</span>
                               : need > 0 && (
                                 <>
                                   <span className="exp">Mua thêm {money(need)} để dùng mã này</span>
-                                  <span className="left"><span className="bar"><i style={{ width: `${Math.min(100, (goods / v.minOrder) * 100)}%` }} /></span></span>
+                                  <span className="left"><span className="bar"><i style={{ width: `${Math.min(100, (amount / v.minOrder) * 100)}%` }} /></span></span>
                                 </>
                               )}
                           </span>

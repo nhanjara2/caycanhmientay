@@ -2,6 +2,7 @@ import { cheapestOption, discountPct, isQuote, type Product } from './catalog';
 import { money } from './format';
 import type { ShipRules } from './pricing';
 import type { ActiveStickerDay } from './sticker-days';
+import { inScope, productScopeItem } from './voucher-scope';
 import type { PublicVoucher } from './voucher-labels';
 
 /** Sticker nhỏ ở góc dưới trái ảnh sản phẩm (thẻ + trang chi tiết), kiểu dải nhãn của Shopee: mời gọi khách mua, chỉ là điểm nhấn nên nhỏ, không cần đọc kỹ.
@@ -32,7 +33,7 @@ export function productStickers(p: Product, ctx: StickerContext, opts: { real?: 
   const u = p.options[cheapestOption(p.options)];
   const priced = !!u && !isQuote(u);
   const pct = priced ? discountPct(u) : 0;
-  const easiest = (kind: PublicVoucher['kind']) => ctx.vouchers.filter((v) => v.kind === kind).sort((a, b) => a.minOrder - b.minOrder)[0];
+  const easiest = (kind: PublicVoucher['kind']) => ctx.vouchers.filter((v) => v.kind === kind && inScope(v.scope, productScopeItem(p))).sort((a, b) => a.minOrder - b.minOrder)[0];
 
   const first: Sticker[] = [];
   if (ctx.day) first.push({ key: 'day', small: ctx.day.text, big: ctx.day.label, title: ctx.day.title });

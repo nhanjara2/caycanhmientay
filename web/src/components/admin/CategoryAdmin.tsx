@@ -9,6 +9,7 @@ import {
 } from '@/app/actions/categories';
 import { Art, type IconName } from '@/components/Icon';
 import { CATEGORY_ICONS, ICON_LABELS, toSlug, type SpecField } from '@/lib/catalog';
+import { autoCategoryDescription, SEO_DESCRIPTION_MAX, SEO_TITLE_MAX } from '@/lib/category-seo';
 import { Select } from '@/components/Select';
 
 const FAIL = { ok: false as const, error: 'Có lỗi, vui lòng thử lại' };
@@ -85,13 +86,51 @@ function SpecFieldsEditor({ rows, onChange, disabled }: { rows: Row[]; onChange:
 /** Bỏ dòng chưa đặt tên trước khi gửi. */
 const cleanRows = (rows: Row[]) => rows.map((r) => ({ name: r.name.trim(), required: r.required })).filter((r) => r.name);
 
+// ---- Chữ trên Google ------------------------------------------------------------------------
+
+type Seo = { seoTitle: string; seoDescription: string };
+
+/** Tiêu đề + mô tả trên Google: để trống = web tự tạo (hiện mờ trong ô và trong khung xem trước). */
+function SeoFields({ id, path, name, productNames, value, onChange }: {
+  id: string; path: string; name: string;
+  /** Tên sản phẩm đang bán trong trang này — để xem trước mô tả tự tạo. */
+  productNames: string[];
+  value: Seo; onChange: (v: Seo) => void;
+}) {
+  const autoTitle = name || 'Tên danh mục';
+  const autoDesc = autoCategoryDescription(name || 'Tên danh mục', productNames);
+  return (
+    <>
+      <div className="ad-f">
+        <label htmlFor={`${id}-st`}>Tiêu đề trên Google</label>
+        <input id={`${id}-st`} className="vx-input" value={value.seoTitle} maxLength={SEO_TITLE_MAX} placeholder={autoTitle}
+          onChange={(e) => onChange({ ...value, seoTitle: e.target.value })} />
+        <span className="hint">{value.seoTitle.length}/{SEO_TITLE_MAX} ký tự · Để trống thì dùng tên.</span>
+      </div>
+      <div className="ad-f">
+        <label htmlFor={`${id}-sd`}>Mô tả trên Google</label>
+        <textarea id={`${id}-sd`} className="vx-input" style={{ minHeight: 72 }} value={value.seoDescription} maxLength={SEO_DESCRIPTION_MAX} placeholder={autoDesc}
+          onChange={(e) => onChange({ ...value, seoDescription: e.target.value })} />
+        <span className="hint">{value.seoDescription.length}/{SEO_DESCRIPTION_MAX} ký tự · Để trống thì web tự viết theo sản phẩm đang bán (chữ mờ trong ô).</span>
+      </div>
+      <div className="pe-serp" aria-label="Xem trước trên Google">
+        <small>caycanhmientay · {path}</small>
+        <b>{(value.seoTitle.trim() || autoTitle)} | Cây Cảnh Miền Tây</b>
+        <span>{value.seoDescription.trim() || autoDesc}</span>
+      </div>
+    </>
+  );
+}
+
 // ---- Form danh mục --------------------------------------------------------------------------
 
-export type CategoryValues = { slug: string; name: string; icon: IconName; active: boolean; specs: SpecField[] };
+export type CategoryValues = { slug: string; name: string; icon: IconName; active: boolean; specs: SpecField[]; seoTitle?: string; seoDescription?: string };
 
 /** Thêm (initial = null) hoặc sửa danh mục: tên, đường dẫn, biểu tượng, hiện trên menu, bộ thông số chung. */
-export function CategoryForm({ initial, system, productCount, canEdit }: {
+export function CategoryForm({ initial, system, productCount, productNames, canEdit }: {
   initial: CategoryValues | null;
+  /** Tên sản phẩm đang bán trong danh mục (xem trước mô tả Google tự tạo). */
+  productNames: string[];
   /** Lý do là danh mục hệ thống (không xóa được), null = danh mục thường. */
   system: string | null;
   productCount: number;
@@ -105,6 +144,7 @@ export function CategoryForm({ initial, system, productCount, canEdit }: {
   const [icon, setIcon] = useState<IconName>(initial?.icon ?? 'leaf');
   const [active, setActive] = useState(initial?.active ?? true);
   const [rows, setRows] = useState<Row[]>(toRows(initial?.specs ?? []));
+  const [seo, setSeo] = useState<Seo>({ seoTitle: initial?.seoTitle ?? '', seoDescription: initial?.seoDescription ?? '' });
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, start] = useTransition();
   const shownSlug = creating ? (slugTouched ? slug : toSlug(name)) : initial.slug;
@@ -114,7 +154,7 @@ export function CategoryForm({ initial, system, productCount, canEdit }: {
     setMsg(null);
     const r = await saveCategoryAction({
       mode: creating ? 'create' : 'update', slug: creating ? (slugTouched ? slug.trim() : '') : initial.slug,
-      name, icon, active, specs: cleanRows(rows),
+      name, icon, active, specs: cleanRows(rows), ...seo,
     }).catch(() => FAIL);
     if (!r.ok) { setMsg({ ok: false, text: r.error }); return; }
     if (creating) { router.push(`/admin/danh-muc/${r.slug}`); return; }
@@ -184,6 +224,13 @@ export function CategoryForm({ initial, system, productCount, canEdit }: {
             <SpecFieldsEditor rows={rows} onChange={(r) => { setRows(r); dirty(); }} disabled={!canEdit} />
           </div>
         </div>
+
+        <div className="ad-card">
+          <div className="ad-card__h">Hiện trên Google</div>
+          <div className="ad-card__b">
+            <SeoFields id="cf" path={`/danh-muc/${shownSlug || '…'}`} name={name.trim()} productNames={productNames} value={seo} onChange={(v) => { setSeo(v); dirty(); }} />
+          </div>
+        </div>
       </fieldset>
 
       {canEdit && (
@@ -206,7 +253,7 @@ export function CategoryForm({ initial, system, productCount, canEdit }: {
 
 // ---- Nhóm con -------------------------------------------------------------------------------
 
-export type AdminSub = { slug: string; name: string; active: boolean; specs: SpecField[]; products: number };
+export type AdminSub = { slug: string; name: string; active: boolean; specs: SpecField[]; products: number; seoTitle?: string; seoDescription?: string; productNames: string[] };
 
 /** Thêm / sửa nhóm con ngay trong danh sách. */
 function SubForm({ category, sub, onDone }: { category: string; sub: AdminSub | null; onDone: () => void }) {
@@ -216,6 +263,7 @@ function SubForm({ category, sub, onDone }: { category: string; sub: AdminSub | 
   const [slugTouched, setSlugTouched] = useState(false);
   const [active, setActive] = useState(sub?.active ?? true);
   const [rows, setRows] = useState<Row[]>(toRows(sub?.specs ?? []));
+  const [seo, setSeo] = useState<Seo>({ seoTitle: sub?.seoTitle ?? '', seoDescription: sub?.seoDescription ?? '' });
   const [error, setError] = useState('');
   const [pending, start] = useTransition();
 
@@ -223,7 +271,7 @@ function SubForm({ category, sub, onDone }: { category: string; sub: AdminSub | 
     setError('');
     const r = await saveSubcategoryAction({
       mode: sub ? 'update' : 'create', category, slug: sub ? sub.slug : slugTouched ? slug.trim() : '',
-      name, active, specs: cleanRows(rows),
+      name, active, specs: cleanRows(rows), ...seo,
     }).catch(() => FAIL);
     if (!r.ok) { setError(r.error); return; }
     router.refresh();
@@ -254,6 +302,8 @@ function SubForm({ category, sub, onDone }: { category: string; sub: AdminSub | 
         <label>Thông số riêng của nhóm con (thêm sau bộ chung)</label>
         <SpecFieldsEditor rows={rows} onChange={setRows} />
       </div>
+      <SeoFields id={`sf-${sub?.slug ?? 'new'}`} path={`/danh-muc/${category}/${sub ? sub.slug : (slugTouched ? slug : toSlug(name)) || '…'}`}
+        name={name.trim()} productNames={sub?.productNames ?? []} value={seo} onChange={setSeo} />
       {error && <span className="vx-err" role="alert">{error}</span>}
       <div className="row">
         <button type="button" className="vx-btn vx-btn--primary vx-btn--sm" disabled={pending} onClick={save}>{pending ? 'Đang lưu…' : sub ? 'Lưu nhóm con' : 'Thêm nhóm con'}</button>

@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound, permanentRedirect } from 'next/navigation';
 import { after } from 'next/server';
 import { CATEGORIES, categoryOf, plainText, postPath, postState, SECTIONS, sectionOf, tableOfContents, tiktokPlayer, type PostSection } from '@/lib/posts';
+import { clipText } from '@/lib/format';
 import { SITE_ORIGIN } from '@/lib/site';
 import { getCurrentUser } from '@/server/auth';
 import { getProducts } from '@/server/catalog';
@@ -21,13 +22,16 @@ async function load({ params, searchParams }: PostPageProps) {
   return { post: await getPost(slug, preview), preview };
 }
 
-const describe = (p: PostFull) => (p.seoDescription || plainText(p.excerpt)).slice(0, 300);
+/** Mô tả Google: mô tả SEO admin viết → đoạn dẫn → đoạn văn đầu bài → tiêu đề (không bao giờ rơi về mô tả chung của web). */
+const describe = (p: PostFull) => clipText(
+  p.seoDescription || plainText(p.excerpt) || plainText(p.body.find((b) => b.type === 'p')?.text ?? '') || p.title, 170);
 
 export async function postMetadata(props: PostPageProps): Promise<Metadata> {
   const { post: p, preview } = await load(props);
   if (!p) return { title: 'Không tìm thấy bài viết' };
   return {
-    title: p.title,
+    // Tiêu đề dài thì bỏ đuôi "| Cây Cảnh Miền Tây" cho Google khỏi cắt mất phần cuối tiêu đề.
+    title: p.title.length > 45 ? { absolute: p.title } : p.title,
     description: describe(p) || undefined,
     alternates: { canonical: postPath(p) },
     openGraph: { type: 'article', title: p.title, description: describe(p) || undefined, images: p.thumb ? [p.thumb] : undefined },

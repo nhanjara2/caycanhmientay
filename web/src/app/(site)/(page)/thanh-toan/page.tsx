@@ -125,7 +125,7 @@ export default function CheckoutPage() {
   // Nhận tại vườn thì không tính phí giao. Server tính lại đúng công thức này (kể cả mã giảm giá) khi tạo đơn.
   // Combo 2 cây tính ngay ở đây; server tính lại khi tạo đơn.
   const totals = withVouchers(
-    computeTotals(lines.map((l) => ({ ...l.snap, qty: l.qty })), delivery, 0, rules, user?.partner?.discount ?? 0, region),
+    computeTotals(lines.map((l) => ({ ...l.snap, slug: l.slug, qty: l.qty })), delivery, 0, rules, user?.partner?.discount ?? 0, region),
     vouchers.applied.discount?.discount ?? 0, vouchers.applied.ship?.discount ?? 0,
   );
 
@@ -320,7 +320,7 @@ export default function CheckoutPage() {
           )}
         </div>
 
-        <OrderSummary totals={totals} delivery={delivery} voucher={totals.voucherBase > 0 || !totals.goods ? <VoucherBox state={vouchers} goods={totals.voucherBase} shipFee={totals.plantShip + totals.supplyShip} /> : undefined}>
+        <OrderSummary totals={totals} delivery={delivery} voucher={totals.voucherBase > 0 || !totals.goods ? <VoucherBox state={vouchers} totals={totals} shipFee={totals.plantShip + totals.supplyShip} /> : undefined}>
           {totals.hasPesticide && (
             <label className="vx-check">
               <input type="checkbox" checked={safety} onChange={(e) => setSafety(e.target.checked)} />

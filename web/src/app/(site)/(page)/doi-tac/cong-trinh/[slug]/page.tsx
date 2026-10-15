@@ -8,6 +8,7 @@ import { ProjectGallery } from '@/components/ProjectGallery';
 import { ProjectCard } from '@/components/ProjectParts';
 import { ServiceCta } from '@/components/LandingParts';
 import { formatPhone, SALES_PHONE, ZALO_URL } from '@/lib/contact';
+import { clipText } from '@/lib/format';
 import { WHOLESALE_QUOTE_URL, WHOLESALE_URL } from '@/lib/partners';
 import { paragraphs, projectImageUrl, projectPath, projectTypeOf, roleName } from '@/lib/projects';
 import { getCurrentUser } from '@/server/auth';
@@ -27,11 +28,16 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   const { p } = await load(props);
   if (!p) return { title: 'Không tìm thấy dự án' };
   const cover = p.images[0];
+  // Chưa viết tóm tắt thì ghép từ loại công trình, địa điểm, năm, cây đã cung cấp.
+  const description = clipText(p.summary || [
+    `${p.title}: ${projectTypeOf(p.type).name.toLowerCase()} do Cây Cảnh Miền Tây cung cấp cây`,
+    p.location && `tại ${p.location}`, p.year && `năm ${p.year}`, p.plants.length && `gồm ${p.plants.slice(0, 5).join(', ')}`,
+  ].filter(Boolean).join(', ') + '.', 170);
   return {
     title: `${p.title} — Dự án cây xanh`,
-    description: p.summary.slice(0, 300),
+    description,
     alternates: { canonical: projectPath(p.slug) },
-    openGraph: { title: p.title, description: p.summary.slice(0, 300), images: cover ? [projectImageUrl(cover.file)] : undefined },
+    openGraph: { title: p.title, description, images: cover ? [projectImageUrl(cover.file)] : undefined },
     robots: p.published ? undefined : { index: false },
   };
 }

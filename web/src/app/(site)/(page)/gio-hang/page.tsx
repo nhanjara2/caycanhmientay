@@ -63,7 +63,7 @@ export default function CartPage() {
       <OrderSummary
         totals={withVouchers(totals, vouchers.applied.discount?.discount ?? 0, vouchers.applied.ship?.discount ?? 0)}
         voucherHint
-        voucher={totals.voucherBase > 0 || !totals.goods ? <VoucherBox state={vouchers} goods={totals.voucherBase} shipFee={totals.plantShip + totals.supplyShip} /> : undefined}
+        voucher={totals.voucherBase > 0 || !totals.goods ? <VoucherBox state={vouchers} totals={totals} shipFee={totals.plantShip + totals.supplyShip} /> : undefined}
       >
         <Link href="/thanh-toan" className="vx-btn vx-btn--primary vx-btn--lg vx-btn--block">Tiến hành đặt hàng</Link>
         <Link href={WHOLESALE_QUOTE_URL} className="vx-btn vx-btn--outline vx-btn--block">Gửi danh sách, nhận báo giá sỉ</Link>

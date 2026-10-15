@@ -11,6 +11,7 @@ import { ProductGrid } from '@/components/ProductCard';
 import {
   filterProducts, groupsFor, groupTitle, originOptions, parseSel, selectedCount, staticOptions, toFacet, withQuery, without,
 } from '@/lib/product-filters';
+import { categorySeo } from '@/lib/category-seo';
 import { productsIn } from '@/server/catalog';
 import { getCategory } from '@/server/categories';
 import { SORTS, sortProducts } from '@/lib/sort';
@@ -42,9 +43,13 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   if (!r) return { title: 'Không tìm thấy' };
   const sp = await searchParams;
   const varied = typeof sp.sap_xep === 'string' || selectedCount(parseSel(sp, groupsFor(r.cat.slug))) > 0;
-  const empty = !(await listOf(r.cat.slug, r.sub?.slug)).length;
+  const list = await listOf(r.cat.slug, r.sub?.slug);
+  const empty = !list.length;
+  // Tiêu đề / mô tả: admin viết ở /admin/danh-muc, không có thì tự tạo từ tên + sản phẩm đang bán.
+  const seo = categorySeo(r.sub ?? r.cat, list.map((p) => p.name));
   return {
-    title: r.sub?.name ?? r.cat.name,
+    title: seo.title,
+    description: seo.description,
     alternates: { canonical: r.sub ? `/danh-muc/${r.cat.slug}/${r.sub.slug}` : `/danh-muc/${r.cat.slug}` },
     robots: varied || empty ? { index: false, follow: true } : undefined,
   };

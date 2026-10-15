@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { CategoryForm, SubcategoryManager } from '@/components/admin/CategoryAdmin';
 import { SYSTEM_CATEGORIES } from '@/lib/catalog';
 import { requireAccess } from '@/server/auth';
-import { categoryProductCounts, getCategory } from '@/server/categories';
+import { categoryProductCounts, categoryProductNames, getCategory } from '@/server/categories';
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -22,7 +22,7 @@ export default async function AdminCategoryPage({ params }: Props) {
   const creating = slug === 'moi';
   const cat = creating ? undefined : await getCategory(slug);
   if (!creating && !cat) notFound();
-  const counts = cat ? await categoryProductCounts() : {};
+  const [counts, names]: [Record<string, number>, Record<string, string[]>] = cat ? await Promise.all([categoryProductCounts(), categoryProductNames()]) : [{}, {}];
 
   return (
     <div className="ad-body app-catpage">
@@ -38,7 +38,8 @@ export default async function AdminCategoryPage({ params }: Props) {
       </div>
       <CategoryForm
         key={slug}
-        initial={cat ? { slug: cat.slug, name: cat.name, icon: cat.icon, active: cat.active, specs: cat.specs } : null}
+        initial={cat ? { slug: cat.slug, name: cat.name, icon: cat.icon, active: cat.active, specs: cat.specs, seoTitle: cat.seoTitle, seoDescription: cat.seoDescription } : null}
+        productNames={cat ? names[cat.slug] ?? [] : []}
         system={cat ? SYSTEM_CATEGORIES[cat.slug] ?? null : null}
         productCount={cat ? counts[cat.slug] ?? 0 : 0}
         canEdit={canEdit}
@@ -46,7 +47,7 @@ export default async function AdminCategoryPage({ params }: Props) {
       {cat ? (
         <SubcategoryManager
           category={cat.slug}
-          subs={cat.subs.map((s) => ({ ...s, products: counts[`${cat.slug}/${s.slug}`] ?? 0 }))}
+          subs={cat.subs.map((s) => ({ ...s, products: counts[`${cat.slug}/${s.slug}`] ?? 0, productNames: names[`${cat.slug}/${s.slug}`] ?? [] }))}
           baseSpecs={cat.specs}
           canEdit={canEdit}
         />

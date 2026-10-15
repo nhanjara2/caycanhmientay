@@ -11,8 +11,9 @@ export type ShipGroup = 'plant' | 'supply';
 export type SpecField = { name: string; required?: boolean };
 
 /** Danh mục + nhóm con nằm trong database (bảng categories, subcategories) — đọc qua src/server/categories.ts. */
-export type SubCategory = { slug: string; name: string; active: boolean; specs: SpecField[] };
-export type Category = { slug: string; name: string; icon: IconName; active: boolean; specs: SpecField[]; subs: SubCategory[] };
+/** `seoTitle` / `seoDescription`: chữ hiện trên Google do admin viết (không có = tự tạo, lib/category-seo.ts). */
+export type SubCategory = { slug: string; name: string; active: boolean; specs: SpecField[]; seoTitle?: string; seoDescription?: string };
+export type Category = { slug: string; name: string; icon: IconName; active: boolean; specs: SpecField[]; seoTitle?: string; seoDescription?: string; subs: SubCategory[] };
 
 /** Ngũ hành — mệnh hợp với cây. */
 export const ELEMENTS = [

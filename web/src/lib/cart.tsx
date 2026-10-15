@@ -99,7 +99,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const partnerPct = useAuth().user?.partner?.discount ?? 0;
   // Phí giao cây sống tính theo nơi nhận: lấy từ "Giao đến" nếu khách đã chọn, chưa chọn thì tạm tính theo vùng rẻ nhất (thanh toán chốt theo địa chỉ thật).
   const region = useMemo(() => (place ? regionOfAddress(place.detail || place.label, regionProvinces) : null), [place, regionProvinces]);
-  const totals = useMemo(() => computeTotals(lines.map((l) => ({ ...l.snap, qty: l.qty })), 'ship', 0, rules, partnerPct, region), [lines, rules, partnerPct, region]);
+  const totals = useMemo(() => computeTotals(lines.map((l) => ({ ...l.snap, slug: l.slug, qty: l.qty })), 'ship', 0, rules, partnerPct, region), [lines, rules, partnerPct, region]);
 
   return (
     <Ctx.Provider value={{ lines, totals, region, ready, add, setQty, remove, replace: setLines, merge, clear, toast, notify: setToast }}>

@@ -5,6 +5,7 @@ import { and, asc, count, eq, sql } from 'drizzle-orm';
 import * as z from 'zod';
 import type { IconName } from '@/components/Icon';
 import { CATEGORY_ICONS, SLUG_RE, SYSTEM_CATEGORIES, toSlug, type Category } from '@/lib/catalog';
+import { SEO_DESCRIPTION_MAX, SEO_TITLE_MAX } from '@/lib/category-seo';
 import { db, schema } from './db';
 
 const { categories: C, subcategories: S, products: P } = schema;
@@ -18,9 +19,12 @@ export const getCategories = cache(async (): Promise<Category[]> => {
     db.select().from(C).orderBy(asc(C.sort), asc(C.createdAt)),
     db.select().from(S).orderBy(asc(S.sort), asc(S.createdAt)),
   ]);
+  const seo = (r: { seoTitle: string | null; seoDescription: string | null }) => ({
+    ...(r.seoTitle ? { seoTitle: r.seoTitle } : {}), ...(r.seoDescription ? { seoDescription: r.seoDescription } : {}),
+  });
   return cats.map((c) => ({
-    slug: c.slug, name: c.name, icon: c.icon as IconName, active: c.active, specs: c.specs,
-    subs: subs.filter((s) => s.categorySlug === c.slug).map((s) => ({ slug: s.slug, name: s.name, active: s.active, specs: s.specs })),
+    slug: c.slug, name: c.name, icon: c.icon as IconName, active: c.active, specs: c.specs, ...seo(c),
+    subs: subs.filter((s) => s.categorySlug === c.slug).map((s) => ({ slug: s.slug, name: s.name, active: s.active, specs: s.specs, ...seo(s) })),
   }));
 });
 
@@ -46,6 +50,17 @@ export async function categoryProductCounts(): Promise<Record<string, number>> {
   return out;
 }
 
+/** Tên sản phẩm ĐANG BÁN theo "danh mục" và "danh mục/nhóm con" (cùng thứ tự trang khách) — xem trước mô tả Google tự tạo. */
+export async function categoryProductNames(): Promise<Record<string, string[]>> {
+  const out: Record<string, string[]> = {};
+  const add = (k: string, n: string) => (out[k] ??= []).push(n);
+  for (const r of await db.select({ c: P.category, s: P.sub, x: P.extraSubs, n: P.name }).from(P).where(eq(P.active, true)).orderBy(asc(P.createdAt), asc(P.slug))) {
+    add(r.c, r.n);
+    for (const s of new Set([r.s, ...r.x])) add(`${r.c}/${s}`, r.n);
+  }
+  return out;
+}
+
 export const SPEC_FIELDS_MAX = 20;
 
 const SpecFields = z.array(z.object({
@@ -67,6 +82,9 @@ const Base = {
   name: z.string().trim().min(2, 'Tên cần ít nhất 2 ký tự').max(60, 'Tên tối đa 60 ký tự'),
   active: z.boolean(),
   specs: SpecFields,
+  // Chữ trên Google: trống = web tự tạo. Không nhận < > (không để thẻ HTML / mã lọt vào thẻ meta).
+  seoTitle: z.string().trim().max(SEO_TITLE_MAX, `Tiêu đề Google tối đa ${SEO_TITLE_MAX} ký tự`).refine((v) => !/[<>]/.test(v), 'Tiêu đề Google không dùng dấu < >').default('').transform((v) => v || null),
+  seoDescription: z.string().trim().max(SEO_DESCRIPTION_MAX, `Mô tả Google tối đa ${SEO_DESCRIPTION_MAX} ký tự`).refine((v) => !/[<>]/.test(v), 'Mô tả Google không dùng dấu < >').default('').transform((v) => v || null),
 };
 export const CategorySchema = z.object({ ...Base, icon: z.enum(CATEGORY_ICONS) });
 export const SubcategorySchema = z.object({ ...Base, category: z.string().max(60) });
@@ -90,7 +108,7 @@ async function newSlug(input: { slug: string; name: string }, taken: (s: string)
 }
 
 export async function saveCategory(v: CategoryInput): Promise<CatResult> {
-  const values = { name: v.name, icon: v.icon, active: v.active, specs: v.specs };
+  const values = { name: v.name, icon: v.icon, active: v.active, specs: v.specs, seoTitle: v.seoTitle, seoDescription: v.seoDescription };
   if (v.mode === 'update') {
     const r = await db.update(C).set(values).where(eq(C.slug, v.slug)).returning({ slug: C.slug });
     return r.length ? { ok: true, slug: v.slug } : { ok: false, error: 'Không tìm thấy danh mục' };
@@ -103,7 +121,7 @@ export async function saveCategory(v: CategoryInput): Promise<CatResult> {
 }
 
 export async function saveSubcategory(v: SubcategoryInput): Promise<CatResult> {
-  const values = { name: v.name, active: v.active, specs: v.specs };
+  const values = { name: v.name, active: v.active, specs: v.specs, seoTitle: v.seoTitle, seoDescription: v.seoDescription };
   if (v.mode === 'update') {
     const r = await db.update(S).set(values).where(and(eq(S.categorySlug, v.category), eq(S.slug, v.slug))).returning({ slug: S.slug });
     return r.length ? { ok: true, slug: v.slug } : { ok: false, error: 'Không tìm thấy nhóm con' };

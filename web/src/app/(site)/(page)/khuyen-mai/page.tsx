@@ -14,7 +14,7 @@ import { categoryOf, postPath, SECTIONS } from '@/lib/posts';
 import { voucherValueText, WELCOME_CODE, WELCOME_DAYS } from '@/lib/voucher-labels';
 import { allProducts } from '@/server/catalog';
 import { publishedPosts } from '@/server/posts';
-import { listActiveVouchers } from '@/server/vouchers';
+import { listActiveVouchers, scopeTexts } from '@/server/vouchers';
 
 export const metadata: Metadata = {
   title: 'Tin khuyến mãi',
@@ -43,6 +43,7 @@ export default async function PromotionsPage() {
     .filter((p) => bestDiscount(p) > 0)
     .sort((a, b) => bestDiscount(b) - bestDiscount(a) || a.name.localeCompare(b.name, 'vi'));
   const news = posts.filter((p) => categoryOf(p.category)?.promo);
+  const scopes = await scopeTexts(vouchers);
 
   return (
     <div className="pm-page">
@@ -70,7 +71,7 @@ export default async function PromotionsPage() {
                   <span className="pm-voucher__txt">
                     <b>{v.label}</b>
                     <span>
-                      {voucherValueText(v, money)} · {v.minOrder > 0 ? `Đơn từ ${money(v.minOrder)}` : 'Không điều kiện đơn tối thiểu'}
+                      {voucherValueText(v, money)} · {v.minOrder > 0 ? `Đơn từ ${money(v.minOrder)}` : 'Không điều kiện đơn tối thiểu'}{scopes.get(v.code) ? ` · Áp dụng: ${scopes.get(v.code)}` : ''}
                     </span>
                     {v.code === WELCOME_CODE && (
                       <span>

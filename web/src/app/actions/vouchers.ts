@@ -6,7 +6,7 @@ import { getCurrentUser, requireStaff } from '@/server/auth';
 import { previewVouchers } from '@/server/orders';
 import { SHIP_REGIONS } from '@/lib/shipping';
 import { WELCOME_CODE, type PublicVoucher } from '@/lib/voucher-labels';
-import { createVoucher, listActiveVouchers, setVoucherActive, updateVoucher, VoucherInputSchema, welcomeOffer } from '@/server/vouchers';
+import { createVoucher, listActiveVouchers, scopeTexts, setVoucherActive, updateVoucher, VoucherInputSchema, welcomeOffer } from '@/server/vouchers';
 
 const ItemsSchema = z.array(z.object({ slug: z.string().max(120), option: z.number().int().min(0).max(20), qty: z.number().int().min(1).max(99) })).min(1).max(50);
 
@@ -24,9 +24,10 @@ export async function applyVouchersAction(codes: unknown, items: unknown, phone:
 
 /** Mã giảm giá + mã miễn phí giao đang áp dụng (trừ quà tài khoản mới), đơn tối thiểu thấp trước — giỏ / thanh toán / trang sản phẩm gợi ý mã. Công khai như trang /khuyen-mai. */
 export async function publicVouchersAction(): Promise<PublicVoucher[]> {
-  return (await listActiveVouchers())
-    .filter((v) => v.code !== WELCOME_CODE)
-    .map(({ code, label, kind, discountType, discountValue, maxDiscount, minOrder }) => ({ code, label, kind, discountType, discountValue, maxDiscount, minOrder }))
+  const list = (await listActiveVouchers()).filter((v) => v.code !== WELCOME_CODE);
+  const texts = await scopeTexts(list);
+  return list
+    .map(({ code, label, kind, discountType, discountValue, maxDiscount, minOrder, scope }) => ({ code, label, kind, discountType, discountValue, maxDiscount, minOrder, scope, scopeText: texts.get(code) ?? null }))
     .sort((a, b) => a.minOrder - b.minOrder);
 }
 

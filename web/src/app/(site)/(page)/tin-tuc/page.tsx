@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { Art, Icon } from '@/components/Icon';
 import { EmptyPosts, iconOf, PostLinks, postDate } from '@/components/PostParts';
 import { FACEBOOK_URL, SALES_PHONE } from '@/lib/contact';
-import { CATEGORIES, categoryOf, isCategory, plainText, postPath, SECTIONS, sectionOf } from '@/lib/posts';
+import { CATEGORIES, CATEGORY_DESCRIPTION, categoryOf, isCategory, pageSuffix, plainText, postPath, SECTIONS, sectionOf } from '@/lib/posts';
 import { publishedPosts, type PostCard } from '@/server/posts';
 
 type SP = { 'chuyen-muc'?: string; trang?: string };
@@ -33,8 +33,8 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   // Chưa có bài nào (trong chuyên mục đang xem) → trang trống, noindex tới khi có bài (tránh soft 404).
   const empty = !(await publishedPosts()).some((p) => sectionOf(p.category) === 'news' && (!cat || p.category === cat));
   return {
-    title: cat ? `${categoryOf(cat)?.name} · Truyền thông` : 'Truyền thông',
-    description: 'Tin tức, hoạt động cộng đồng, báo chí và tuyển dụng của Cây Cảnh Miền Tây.',
+    title: `${cat ? `${categoryOf(cat)?.name} · Truyền thông` : 'Truyền thông'}${pageSuffix(page)}`,
+    description: `${cat ? CATEGORY_DESCRIPTION[cat] : 'Tin tức, hoạt động cộng đồng, báo chí và tuyển dụng của Cây Cảnh Miền Tây – nhà vườn cây cảnh tại Làng hoa Sa Đéc.'}${pageSuffix(page, ' ')}`,
     alternates: { canonical: link({ cat, page }) },
     robots: empty ? { index: false, follow: true } : undefined,
   };

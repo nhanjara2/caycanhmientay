@@ -8,6 +8,7 @@ import { REGION_LABEL } from '@/lib/shipping';
 import { useShipping } from '@/lib/shipping-client';
 import { money } from '@/lib/format';
 import { voucherTiers, voucherValueText } from '@/lib/voucher-labels';
+import { voucherAmount, type VoucherScope } from '@/lib/voucher-scope';
 import { usePublicVouchers } from '@/lib/vouchers-client';
 import { Art, Icon } from './Icon';
 
@@ -115,7 +116,8 @@ export function OrderSummary({ totals: t, voucherHint = false, voucher, delivery
   // không tính vào "Tiết kiệm được" (chỉ gồm khoản bớt thật: combo, giảm phí giao, mã, chiết khấu đối tác).
   const saved = t.comboDiscount + t.plantShipFree + t.supplyShipFree + t.voucherDiscount + t.shipVoucherDiscount + t.partnerDiscount;
   // Mã chỉ xét tiền hàng áp được mã (`voucherBase`); giỏ chỉ toàn sản phẩm không áp mã thì không gợi ý.
-  const tiers = voucherHint && t.voucherBase > 0 ? voucherTiers(vouchers, t.voucherBase) : { best: null, next: null };
+  const amountOf = (v: { scope?: VoucherScope | null }) => voucherAmount(v.scope, t);
+  const tiers = voucherHint ? voucherTiers(vouchers, amountOf) : { best: null, next: null };
   return (
     <aside className="vx-sum">
       <div className="vx-lines">
@@ -140,8 +142,8 @@ export function OrderSummary({ totals: t, voucherHint = false, voucher, delivery
       )}
       {!short && tiers.next && (
         <div className="vx-freeship app-minorder" role="status">
-          <span>Mua thêm <b>{money(tiers.next.minOrder - t.voucherBase)}</b> để dùng mã <b>{tiers.next.code}</b> — {voucherValueText(tiers.next, money).toLowerCase()}</span>
-          <div className="bar"><i style={{ width: `${Math.min(100, (t.voucherBase / tiers.next.minOrder) * 100)}%` }} /></div>
+          <span>Mua thêm <b>{money(tiers.next.minOrder - amountOf(tiers.next))}</b>{tiers.next.scopeText ? ` ${tiers.next.scopeText}` : ''} để dùng mã <b>{tiers.next.code}</b> — {voucherValueText(tiers.next, money).toLowerCase()}</span>
+          <div className="bar"><i style={{ width: `${Math.min(100, (amountOf(tiers.next) / tiers.next.minOrder) * 100)}%` }} /></div>
         </div>
       )}
       {plantLeft > 0 && (
