@@ -29,15 +29,34 @@ function drawWatermark(g: CanvasRenderingContext2D, w: number, h: number, text: 
   g.restore();
 }
 
-/** Nén ảnh: cạnh dài tối đa `max` px, JPEG ~80%. Có `watermark` thì đóng chữ ký lên ảnh. */
-export async function compressImage(file: File, max = 1600, watermark?: string): Promise<File> {
+/** Vùng cắt (từ hộp Cắt ảnh): xoay `rotate` độ trước, rồi lấy khung x, y, w, h — tính bằng pixel của ảnh ĐÃ xoay. */
+export type Crop = { rotate: 0 | 90 | 180 | 270; x: number; y: number; w: number; h: number };
+
+/** Nén ảnh: cạnh dài tối đa `max` px, JPEG ~80%. Có `watermark` thì đóng chữ ký lên ảnh; có `crop` thì xoay + cắt trước. */
+export async function compressImage(file: Blob, max = 1600, watermark?: string, crop?: Crop): Promise<File> {
   const bmp = await createImageBitmap(file);
-  const scale = Math.min(1, max / Math.max(bmp.width, bmp.height));
+  const rot = crop?.rotate ?? 0;
+  const side = rot % 180 !== 0;
+  const iw = side ? bmp.height : bmp.width, ih = side ? bmp.width : bmp.height;
+  // kẹp khung cắt vào trong ảnh (làm tròn ở hộp cắt có thể lệch nửa pixel)
+  const x = Math.max(0, Math.min(iw - 1, crop?.x ?? 0)), y = Math.max(0, Math.min(ih - 1, crop?.y ?? 0));
+  const w = Math.max(1, Math.min(iw - x, crop?.w ?? iw)), h = Math.max(1, Math.min(ih - y, crop?.h ?? ih));
+  const scale = Math.min(1, max / Math.max(w, h));
   const canvas = document.createElement('canvas');
-  canvas.width = Math.round(bmp.width * scale);
-  canvas.height = Math.round(bmp.height * scale);
+  canvas.width = Math.max(1, Math.round(w * scale));
+  canvas.height = Math.max(1, Math.round(h * scale));
   const g = canvas.getContext('2d')!;
-  g.drawImage(bmp, 0, 0, canvas.width, canvas.height);
+  // nền trắng: ảnh PNG nền trong suốt đổi sang JPEG không bị thành nền đen
+  g.fillStyle = '#fff';
+  g.fillRect(0, 0, canvas.width, canvas.height);
+  g.imageSmoothingQuality = 'high';
+  g.save();
+  g.scale(canvas.width / w, canvas.height / h);
+  g.translate(iw / 2 - x, ih / 2 - y);
+  g.rotate((rot * Math.PI) / 180);
+  g.drawImage(bmp, -bmp.width / 2, -bmp.height / 2);
+  g.restore();
+  bmp.close();
   if (watermark) drawWatermark(g, canvas.width, canvas.height, watermark);
   const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, 'image/jpeg', 0.8));
   if (!blob) throw new Error('Không đọc được ảnh');

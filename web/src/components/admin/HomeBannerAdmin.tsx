@@ -9,6 +9,7 @@ import { SlideBody, type Slide } from '@/components/home/HomeCarousel';
 import { Icon } from '@/components/Icon';
 import { Select } from '@/components/Select';
 import { compressImage } from '@/lib/compress-image';
+import { ORIGINAL, useImageCrop } from './ImageCropper';
 import { BANNER_SLOTS, bannerImageUrl, slotOf, type Banner, type BannerSlot } from '@/lib/home-banners';
 import '@/styles/home.css';
 
@@ -72,16 +73,22 @@ function Editor({ initial, onClose }: { initial: Draft; onClose: () => void }) {
   const mob = useRef<HTMLInputElement>(null);
   const bg = useRef<HTMLInputElement>(null);
   const bgm = useRef<HTMLInputElement>(null);
+  const { crop, cropDialog } = useImageCrop();
   const slot = slotOf(d.slot);
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setD((x) => ({ ...x, [k]: v }));
 
   const upload = async (f: File | undefined, key: 'image' | 'imageMobile' | 'bgImage' | 'bgImageMobile') => {
     if (!f) return;
     setError('');
+    // khung cắt đúng tỉ lệ ô trên trang chủ (ảnh nền băng rộng: 1920 × 940 / 720 × 900)
+    const ratio = { image: slot.ratio, imageMobile: slot.mobile?.ratio ?? slot.ratio, bgImage: 1920 / 940, bgImageMobile: 720 / 900 }[key];
+    const c = await crop(f, { aspects: [{ label: 'Đúng khung banner', ratio }, ORIGINAL], max: 1920, minSide: ratio >= 1 ? Math.round(1200 / ratio) : 600 });
+    for (const r of [main, mob, bg, bgm]) if (r.current) r.current.value = '';
+    if (c === 'cancel' || c === 'skip') return;
     setBusy({ image: 'Đang tải ảnh…', imageMobile: 'Đang tải ảnh điện thoại…', bgImage: 'Đang tải ảnh nền…', bgImageMobile: 'Đang tải ảnh nền điện thoại…' }[key]);
     try {
       const fd = new FormData();
-      fd.set('photo', await compressImage(f, 1920));
+      fd.set('photo', await compressImage(f, 1920, undefined, c));
       const r = await uploadBannerImageAction(fd);
       if (r.ok) set(key, r.file); else setError(r.error);
     } catch {
@@ -137,6 +144,7 @@ function Editor({ initial, onClose }: { initial: Draft; onClose: () => void }) {
           <input ref={mob} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(e) => void upload(e.target.files?.[0], 'imageMobile')} />
           <input ref={bg} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(e) => void upload(e.target.files?.[0], 'bgImage')} />
           <input ref={bgm} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(e) => void upload(e.target.files?.[0], 'bgImageMobile')} />
+          {cropDialog}
           {d.image ? (
             <div className="ad-bnr-imgs">
               <Preview d={d} />

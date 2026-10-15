@@ -4,7 +4,10 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useRef, useState, useTransition, type FormEvent, type ReactNode } from 'react';
 import { deleteProjectAction, saveProjectAction, uploadProjectImageAction } from '@/app/actions/projects';
-import { compressImage } from '@/lib/compress-image';
+import { compressImage, type Crop } from '@/lib/compress-image';
+import { ORIGINAL, useImageCrop } from './ImageCropper';
+
+const PROJECT_ASPECTS = [{ label: 'Ngang 3:2', ratio: 3 / 2 }, { label: 'Ngang 4:3', ratio: 4 / 3 }, ORIGINAL];
 import {
   MAX_PROJECT_IMAGES, MAX_PROJECT_METRICS, MAX_PROJECT_PLANTS, MAX_PROJECT_SCOPE, PROJECT_ROLES, PROJECT_TYPES, projectImageUrl, projectPath,
   type ProjectImage, type ProjectMetric, type ProjectQuote, type ProjectRole, type ProjectType,
@@ -51,12 +54,13 @@ export function ProjectForm({ initial, canEdit }: { initial: ProjectFormValue; c
   const [pending, start] = useTransition();
   const photoInput = useRef<HTMLInputElement>(null);
   const logoInput = useRef<HTMLInputElement>(null);
+  const { crop, cropDialog } = useImageCrop();
   const set = <K extends keyof ProjectFormValue>(k: K, val: ProjectFormValue[K]) => { setV((x) => ({ ...x, [k]: val })); setSaved(false); };
 
-  const upload = async (file: File, logo: boolean) => {
+  const upload = async (file: File, logo: boolean, c?: Crop) => {
     const fd = new FormData();
     fd.set('id', String(v.id));
-    fd.set('photo', logo ? await shrinkLogo(file) : await compressImage(file, 1600));
+    fd.set('photo', logo ? await shrinkLogo(file) : await compressImage(file, 1600, undefined, c));
     return uploadProjectImageAction(fd);
   };
 
@@ -66,9 +70,12 @@ export function ProjectForm({ initial, canEdit }: { initial: ProjectFormValue; c
     const list = [...files].slice(0, MAX_PROJECT_IMAGES - v.images.length);
     if (list.length < files.length) setError(`Mỗi dự án tối đa ${MAX_PROJECT_IMAGES} ảnh — đã bỏ bớt ảnh thừa`);
     for (const [i, f] of list.entries()) {
+      const c = await crop(f, { aspects: PROJECT_ASPECTS, step: list.length > 1 ? `Ảnh ${i + 1}/${list.length}` : undefined, max: 1600, minSide: 600 });
+      if (c === 'cancel') break;
+      if (c === 'skip') continue;
       setBusy(`Đang tải ảnh ${i + 1}/${list.length}…`);
       try {
-        const r = await upload(f, false);
+        const r = await upload(f, false, c);
         if (!r.ok) { setError(r.error); break; }
         setV((x) => ({ ...x, images: [...x.images, { file: r.file, caption: '' }] }));
         setSaved(false);
@@ -207,6 +214,7 @@ export function ProjectForm({ initial, canEdit }: { initial: ProjectFormValue; c
               ) : (
                 <>
                   <input ref={photoInput} type="file" accept="image/jpeg,image/png,image/webp" multiple hidden onChange={(e) => void addPhotos(e.target.files)} />
+                  {cropDialog}
                   <div className="pi-grid">
                     {v.images.map((img, i) => {
                       const main = i === 0;

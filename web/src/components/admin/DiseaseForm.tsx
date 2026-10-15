@@ -6,6 +6,7 @@ import { useRef, useState, useTransition, type FormEvent, type ReactNode } from 
 import { saveDiseaseAction, uploadDiseaseImageAction } from '@/app/actions/diseases';
 import { normalize } from '@/lib/catalog';
 import { compressImage } from '@/lib/compress-image';
+import { LANDSCAPE_ASPECTS, useImageCrop } from './ImageCropper';
 import { CAUSES, diseaseImageUrl, PARTS, PLANTS, SEVERITY, type Disease, type PartKey } from '@/lib/diseases';
 import { Select } from '@/components/Select';
 
@@ -46,15 +47,19 @@ function SymptomPhoto({ slug, file, onChange }: { slug: string; file?: string; o
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const { crop, cropDialog } = useImageCrop();
 
   const pick = async (f?: File) => {
     if (!f) return;
     setError('');
+    const c = await crop(f, { aspects: LANDSCAPE_ASPECTS, max: 1200, minSide: 400 });
+    if (input.current) input.current.value = '';
+    if (c === 'cancel' || c === 'skip') return;
     setBusy(true);
     try {
       const fd = new FormData();
       fd.set('slug', slug);
-      fd.set('photo', await compressImage(f, 1200));
+      fd.set('photo', await compressImage(f, 1200, undefined, c));
       const r = await uploadDiseaseImageAction(fd);
       if (r.ok) onChange(r.file); else setError(r.error);
     } catch {
@@ -75,6 +80,7 @@ function SymptomPhoto({ slug, file, onChange }: { slug: string; file?: string; o
       </button>
       {file && !busy && <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" onClick={() => onChange(undefined)}>Bỏ ảnh</button>}
       {error && <span className="vx-err" role="alert">{error}</span>}
+      {cropDialog}
     </div>
   );
 }

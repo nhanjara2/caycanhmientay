@@ -7,7 +7,7 @@ import { requireAccess, requireStaff, staffName } from '@/server/auth';
 import { countLot, deleteLot, recentMoves, transferStock } from '@/server/inventory';
 import { cleanText, MAX_DOC_NO, MAX_RECEIPT_NOTE, MAX_SUPPLIER, receiveGoods } from '@/server/receipts';
 import { todayVN, tracksLots } from '@/lib/stock';
-import { addProductImage, deleteProduct, deleteProductImage, listProductImages, moveProductImage, ProductInputSchema, saveProduct, setProductActive } from '@/server/products-admin';
+import { addProductImage, deleteProduct, deleteProductImage, listProductImages, moveProductImage, ProductInputSchema, replaceProductImage, saveProduct, setProductActive } from '@/server/products-admin';
 import { applyStockImport, DuplicateImportError, findDuplicateImport, MAX_IMPORT_BYTES, parseStockImport } from '@/server/stock-import';
 import { saveImage } from '@/server/uploads';
 import { db, schema } from '@/server/db';
@@ -61,6 +61,20 @@ export async function uploadProductImageAction(fd: FormData) {
   if ('error' in img) return { ok: false as const, error: img.error };
   const r = await addProductImage(slug.data, img);
   if (!r.ok) return r;
+  refreshCatalog(slug.data);
+  return { ok: true as const, images: await listProductImages(slug.data) };
+}
+
+/** Cắt lại một ảnh sản phẩm đã có. FormData: slug, id, photo. */
+export async function replaceProductImageAction(fd: FormData) {
+  await requireStaff('admin');
+  const slug = slugSchema.safeParse(fd.get('slug'));
+  const id = z.coerce.number().int().positive().safeParse(fd.get('id'));
+  const f = fd.get('photo');
+  if (!slug.success || !id.success || !(f instanceof File)) return { ok: false as const, error: 'Thiếu ảnh' };
+  const img = await saveImage(f);
+  if ('error' in img) return { ok: false as const, error: img.error };
+  if (!(await replaceProductImage(slug.data, id.data, img))) return { ok: false as const, error: 'Không tìm thấy ảnh' };
   refreshCatalog(slug.data);
   return { ok: true as const, images: await listProductImages(slug.data) };
 }

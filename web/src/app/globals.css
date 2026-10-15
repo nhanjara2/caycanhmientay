@@ -298,6 +298,39 @@ button.vx-pay__opt:first-child { border-top: 0; }
 .pi-tile--add small { font-size: 0.6875rem; color: var(--ink-muted); }
 .pi-tile--add.pi-tile--main { border: 2px dashed var(--primary); }
 
+/* Hộp Cắt ảnh khi tải ảnh lên trong admin (components/admin/ImageCropper.tsx; gắn vào body) */
+.app-crop .app-crop__box { max-width: 640px; text-align: left; }
+.app-crop__step { margin-left: 8px; font-size: 0.875rem; font-weight: 500; color: var(--ink-muted); }
+.app-crop__stage { position: relative; height: min(56vh, 440px); overflow: hidden; background: #1c221e; touch-action: none; cursor: grab; user-select: none; outline: none; }
+.app-crop__stage:active { cursor: grabbing; }
+.app-crop__stage img { position: absolute; max-width: none; pointer-events: none; }
+.app-crop__frame { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); pointer-events: none; border: 2px solid #fff; box-shadow: 0 0 0 9999px rgba(0, 0, 0, .55);
+  background: linear-gradient(rgba(255, 255, 255, .35), rgba(255, 255, 255, .35)) 33.33% 0 / 1px 100% no-repeat, linear-gradient(rgba(255, 255, 255, .35), rgba(255, 255, 255, .35)) 66.66% 0 / 1px 100% no-repeat,
+    linear-gradient(rgba(255, 255, 255, .35), rgba(255, 255, 255, .35)) 0 33.33% / 100% 1px no-repeat, linear-gradient(rgba(255, 255, 255, .35), rgba(255, 255, 255, .35)) 0 66.66% / 100% 1px no-repeat; }
+.app-crop__msg { position: absolute; inset: 0; display: grid; place-items: center; padding: var(--space-4); color: #fff; text-align: center; }
+.app-crop .app-crop__tools { flex: none; overflow: visible; gap: var(--space-2); }
+.app-crop__aspects { display: flex; flex-wrap: wrap; gap: 6px; }
+.app-crop__aspects button { min-height: 2.25rem; padding: 0 12px; border: 1px solid var(--border); border-radius: var(--radius-pill); background: var(--surface); color: var(--ink); font: inherit; font-size: 0.875rem; cursor: pointer; }
+.app-crop__aspects button.is-on { border-color: var(--primary); background: var(--primary-soft); color: var(--primary-hover); font-weight: 600; }
+.app-crop__row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.app-crop__zoom { display: flex; align-items: center; gap: 6px; flex: 1 1 15rem; }
+.app-crop__zoom--fit { flex: none; }
+.app-crop__zoom input[type="range"] { flex: 1; min-width: 0; accent-color: var(--primary); }
+.app-crop__ic { flex: none; display: inline-grid; place-items: center; width: 2.25rem; height: 2.25rem; padding: 0; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--ink); font-size: 1.125rem; line-height: 1; cursor: pointer; }
+.app-crop__ic:disabled { opacity: .4; cursor: default; }
+.app-crop__size { font-size: 0.8125rem; color: var(--ink-muted); }
+.app-crop__size.is-small { color: var(--danger, #c62828); }
+.app-crop .app-crop__foot { display: flex; justify-content: flex-end; gap: var(--space-2); padding-bottom: var(--space-3); }
+@media (max-width: 47.9375em) {
+  .app-modal.app-crop { padding: 0; }
+  .app-crop .app-crop__box { max-width: none; height: 100%; max-height: none; border-radius: 0; }
+  .app-crop__stage { flex: 1; height: auto; min-height: 240px; }
+  .app-crop__ic { width: 2.75rem; height: 2.75rem; }
+  .app-crop__aspects { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .app-crop__aspects button { flex: none; min-height: 2.75rem; }
+  .app-crop .app-crop__foot > .vx-btn { flex: 1; }
+}
+
 /* Phong thủy trên trang sản phẩm */
 .app-fs { display: grid; gap: var(--space-2); margin: var(--space-2) 0; padding: var(--space-3); border-radius: var(--radius-md); background: var(--surface-sunken); }
 .app-fs > div { display: grid; grid-template-columns: 110px 1fr; gap: var(--space-2); align-items: baseline; }

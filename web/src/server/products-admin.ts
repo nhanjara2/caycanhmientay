@@ -158,6 +158,13 @@ export async function addProductImage(slug: string, img: SavedImage): Promise<{ 
   });
 }
 
+/** Thay nội dung một ảnh (cắt lại) — giữ nguyên vị trí; tên file mới vì ảnh được cache 1 năm theo tên. */
+export async function replaceProductImage(slug: string, id: number, img: SavedImage) {
+  const r = await db.update(productImages).set({ file: img.file, mime: img.mime, data: img.data })
+    .where(and(eq(productImages.productSlug, slug), eq(productImages.id, id))).returning({ id: productImages.id });
+  return r.length > 0;
+}
+
 export async function deleteProductImage(slug: string, id: number) {
   const r = await db.delete(productImages).where(and(eq(productImages.productSlug, slug), eq(productImages.id, id))).returning({ id: productImages.id });
   return r.length > 0;

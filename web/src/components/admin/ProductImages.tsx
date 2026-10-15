@@ -2,9 +2,10 @@
 
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
-import { editProductImageAction, uploadProductImageAction } from '@/app/actions/admin';
+import { editProductImageAction, replaceProductImageAction, uploadProductImageAction } from '@/app/actions/admin';
 import { compressImage, WATERMARK } from '@/lib/compress-image';
 import { MAX_PRODUCT_IMAGES } from '@/lib/catalog';
+import { PRODUCT_ASPECTS, useImageCrop } from './ImageCropper';
 
 export type AdminImage = { id: number; url: string };
 
@@ -15,6 +16,7 @@ export function ProductImages({ slug, initial, canEdit }: { slug?: string; initi
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
   const input = useRef<HTMLInputElement>(null);
+  const { crop, cropDialog } = useImageCrop();
 
   if (!slug) {
     return <span className="hint">Bấm <b>Lưu sản phẩm</b> trước, sau đó tải ảnh lên ở trang sửa.</span>;
@@ -27,11 +29,15 @@ export function ProductImages({ slug, initial, canEdit }: { slug?: string; initi
     if (list.length < files.length) setError(`Mỗi sản phẩm tối đa ${MAX_PRODUCT_IMAGES} ảnh — đã bỏ bớt ảnh thừa`);
     // gửi lần lượt từng ảnh: mỗi request nhỏ, không vượt giới hạn 4,5MB của Vercel
     for (const [i, f] of list.entries()) {
+      // chọn khung cắt cho từng ảnh trước khi tải
+      const c = await crop(f, { aspects: PRODUCT_ASPECTS, step: list.length > 1 ? `Ảnh ${i + 1}/${list.length}` : undefined, max: 1600, minSide: 600 });
+      if (c === 'cancel') break;
+      if (c === 'skip') continue;
       setBusy(`Đang tải ảnh ${i + 1}/${list.length}…`);
       try {
         const fd = new FormData();
         fd.set('slug', slug);
-        fd.set('photo', await compressImage(f, 1600, WATERMARK));
+        fd.set('photo', await compressImage(f, 1600, WATERMARK, c));
         const r = await uploadProductImageAction(fd);
         if (!r.ok) { setError(r.error); break; }
         setImages(r.images);
@@ -42,6 +48,35 @@ export function ProductImages({ slug, initial, canEdit }: { slug?: string; initi
     }
     setBusy('');
     if (input.current) input.current.value = '';
+    router.refresh();
+  };
+
+  /** Cắt lại ảnh đã tải: ảnh lưu sẵn đã có chữ ký phủ kín nên không đóng thêm lần nữa. */
+  const recrop = async (id: number, url: string) => {
+    setError('');
+    let blob: Blob;
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error();
+      blob = await res.blob();
+    } catch {
+      setError('Không mở được ảnh này, vui lòng tải lại trang');
+      return;
+    }
+    const c = await crop(blob, { aspects: PRODUCT_ASPECTS, max: 1600, minSide: 600, okLabel: 'Lưu ảnh' });
+    if (c === 'cancel' || c === 'skip') return;
+    setBusy('Đang lưu ảnh…');
+    try {
+      const fd = new FormData();
+      fd.set('slug', slug);
+      fd.set('id', String(id));
+      fd.set('photo', await compressImage(blob, 1600, undefined, c));
+      const r = await replaceProductImageAction(fd);
+      if (!r.ok) setError(r.error); else setImages(r.images);
+    } catch {
+      setError('Có lỗi, vui lòng thử lại');
+    }
+    setBusy('');
     router.refresh();
   };
 
@@ -71,6 +106,7 @@ export function ProductImages({ slug, initial, canEdit }: { slug?: string; initi
                 <figcaption>
                   {!main && <button type="button" className="pi-primary" onClick={() => edit(img.id, 'first')} disabled={!!busy}>★ Làm ảnh chính</button>}
                   <span className="pi-tools">
+                    <button type="button" onClick={() => recrop(img.id, img.url)} disabled={!!busy} aria-label="Cắt lại ảnh" title="Cắt lại ảnh">✂</button>
                     {i > 1 && <button type="button" onClick={() => edit(img.id, 'left')} disabled={!!busy} aria-label="Dời sang trái" title="Dời sang trái">‹</button>}
                     {i > 0 && i < images.length - 1 && <button type="button" onClick={() => edit(img.id, 'right')} disabled={!!busy} aria-label="Dời sang phải" title="Dời sang phải">›</button>}
                     <button type="button" onClick={() => edit(img.id, 'delete')} disabled={!!busy} aria-label="Xóa ảnh" title="Xóa ảnh">✕</button>
@@ -89,8 +125,9 @@ export function ProductImages({ slug, initial, canEdit }: { slug?: string; initi
       </div>
       {busy && images.length >= MAX_PRODUCT_IMAGES && <span className="hint">{busy}</span>}
       {error && <span className="vx-err" role="alert">{error}</span>}
+      {cropDialog}
       <span className="hint">
-        {images.length}/{MAX_PRODUCT_IMAGES} ảnh · Chọn nhiều ảnh một lần được, ảnh tự thu nhỏ và đóng chữ ký “{WATERMARK}” chống lấy ảnh. <b>Ảnh chính</b> (khung lớn) hiện trên thẻ sản phẩm, giỏ hàng và đầu trang chi tiết; <b>ảnh phụ</b> hiện ở dải ảnh nhỏ bên dưới. Ảnh lưu ngay, không cần bấm Lưu.
+        {images.length}/{MAX_PRODUCT_IMAGES} ảnh · Chọn nhiều ảnh một lần được, chỉnh khung cắt từng ảnh (✂ để cắt lại ảnh đã tải), ảnh tự thu nhỏ và đóng chữ ký “{WATERMARK}” chống lấy ảnh. <b>Ảnh chính</b> (khung lớn) hiện trên thẻ sản phẩm, giỏ hàng và đầu trang chi tiết; <b>ảnh phụ</b> hiện ở dải ảnh nhỏ bên dưới. Ảnh lưu ngay, không cần bấm Lưu.
       </span>
     </>
   );

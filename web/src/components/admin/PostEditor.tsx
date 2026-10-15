@@ -6,6 +6,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode, 
 import { deletePostAction, lookupVideosAction, savePostAction, uploadPostImageAction } from '@/app/actions/posts';
 import { normalize, parseYoutubeId } from '@/lib/catalog';
 import { compressImage } from '@/lib/compress-image';
+import { ARTICLE_ASPECTS, COVER_ASPECTS, useImageCrop } from './ImageCropper';
 import { money } from '@/lib/format';
 import {
   blockingChecks, BLOCK_NAMES, CATEGORIES, durationLabel, isShortsUrl, isTiktokShortLink, MAX_BLOCK_PRODUCTS, NOTE_TITLE, parseTiktokId,
@@ -103,6 +104,7 @@ export function PostEditor({ initial, role, products, diseases, people, stats }:
   const lastField = useRef<Field | null>(null);
   const coverInput = useRef<HTMLInputElement>(null);
   const imageInput = useRef<HTMLInputElement>(null);
+  const { crop, cropDialog } = useImageCrop();
   const replaceAt = useRef<number | null>(null);
 
   const canEdit = isAdmin || v.status !== 'published';
@@ -203,11 +205,15 @@ export function PostEditor({ initial, role, products, diseases, people, stats }:
     const replacing = replaceAt.current !== null;
     for (const [i, f] of list.entries()) {
       if (!id) break;
+      const one = mode === 'cover' || replacing || list.length === 1;
+      const c = await crop(f, { aspects: mode === 'cover' ? COVER_ASPECTS : ARTICLE_ASPECTS, step: one ? undefined : `Ảnh ${i + 1}/${list.length}`, max: 1600, minSide: 600 });
+      if (c === 'cancel') break;
+      if (c === 'skip') continue;
       setBusy(list.length > 1 ? `Đang tải ảnh ${i + 1}/${list.length}…` : 'Đang tải ảnh…');
       try {
         const fd = new FormData();
         fd.set('postId', String(id));
-        fd.set('photo', await compressImage(f, 1600));
+        fd.set('photo', await compressImage(f, 1600, undefined, c));
         const r = await uploadPostImageAction(fd);
         if (!r.ok) { setError(r.error); break; }
         if (mode === 'cover') set('coverFile', r.file);
@@ -269,6 +275,7 @@ export function PostEditor({ initial, role, products, diseases, people, stats }:
 
       <input ref={coverInput} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(e) => upload(e.target.files, 'cover')} />
       <input ref={imageInput} type="file" accept="image/jpeg,image/png,image/webp" multiple hidden onChange={(e) => upload(e.target.files, 'block')} />
+      {cropDialog}
 
       <fieldset disabled={!canEdit} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
         <div className="ad-editor">
