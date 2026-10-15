@@ -142,6 +142,9 @@ export async function getProductAdmin(slug: string) {
 
 // ---- Ảnh sản phẩm ---------------------------------------------------------------------------
 
+/** Đổi ảnh = nội dung trang sản phẩm đổi → ghi ngày sửa (lastmod của sitemap). */
+const touch = (tx: Pick<typeof db, 'update'>, slug: string) => tx.update(products).set({ updatedAt: new Date() }).where(eq(products.slug, slug));
+
 export async function listProductImages(slug: string) {
   const rows = await db.select({ id: productImages.id, file: productImages.file }).from(productImages)
     .where(eq(productImages.productSlug, slug)).orderBy(asc(productImages.idx), asc(productImages.id));
@@ -156,6 +159,7 @@ export async function addProductImage(slug: string, img: SavedImage): Promise<{ 
     const [{ n, last }] = await tx.select({ n: count(), last: sql<number | null>`max(${productImages.idx})` }).from(productImages).where(eq(productImages.productSlug, slug));
     if (n >= MAX_PRODUCT_IMAGES) return { ok: false as const, error: `Mỗi sản phẩm tối đa ${MAX_PRODUCT_IMAGES} ảnh` };
     await tx.insert(productImages).values({ productSlug: slug, idx: (last ?? -1) + 1, file: img.file, mime: img.mime, data: img.data });
+    await touch(tx, slug);
     return { ok: true as const };
   });
 }
@@ -164,11 +168,13 @@ export async function addProductImage(slug: string, img: SavedImage): Promise<{ 
 export async function replaceProductImage(slug: string, id: number, img: SavedImage) {
   const r = await db.update(productImages).set({ file: img.file, mime: img.mime, data: img.data })
     .where(and(eq(productImages.productSlug, slug), eq(productImages.id, id))).returning({ id: productImages.id });
+  if (r.length) await touch(db, slug);
   return r.length > 0;
 }
 
 export async function deleteProductImage(slug: string, id: number) {
   const r = await db.delete(productImages).where(and(eq(productImages.productSlug, slug), eq(productImages.id, id))).returning({ id: productImages.id });
+  if (r.length) await touch(db, slug);
   return r.length > 0;
 }
 
@@ -183,6 +189,7 @@ export async function moveProductImage(slug: string, id: number, to: 'first' | '
     ids.splice(i, 1);
     ids.splice(to === 'first' ? 0 : to === 'left' ? Math.max(0, i - 1) : Math.min(ids.length, i + 1), 0, id);
     for (const [idx, imgId] of ids.entries()) await tx.update(productImages).set({ idx }).where(eq(productImages.id, imgId));
+    await touch(tx, slug);
     return true;
   });
 }
@@ -205,6 +212,22 @@ function lotStockError(input: ProductInput, editing: boolean): string | null {
   if (!tracksLots({ pesticide: input.pesticide, category: input.category })) return null;
   if (!input.options.some((o) => (!editing || o.idx === undefined) && (o.stock ?? 0) > 0)) return null;
   return 'Hàng theo lô (thuốc BVTV, phân bón, hạt giống) không nhập Tồn đầu kỳ ở đây. Để Tồn đầu kỳ = 0, lưu sản phẩm rồi nhập hàng ở trang Nhập hàng kèm Số lô và Hạn dùng.';
+}
+
+/** JSON không phụ thuộc thứ tự khóa (jsonb trong database tự xếp lại khóa) — chỉ để so sánh. */
+const stable = (v: unknown): string =>
+  Array.isArray(v) ? `[${v.map(stable).join(',')}]`
+    : v && typeof v === 'object' ? `{${Object.keys(v).filter((k) => (v as Record<string, unknown>)[k] !== undefined).sort().map((k) => `${JSON.stringify(k)}:${stable((v as Record<string, unknown>)[k])}`).join(',')}}`
+      : JSON.stringify(v ?? null);
+
+type Shown = Pick<typeof products.$inferSelect, 'name' | 'seoName' | 'category' | 'sub' | 'extraSubs' | 'icon' | 'origin' | 'ship' | 'pesticide' | 'unit' | 'spec' | 'lead' | 'specs' | 'youtubeId' | 'keywords' | 'fengshui' | 'attrs'>;
+type ShownOption = { label: string; price: number; oldPrice?: number | null; combo2?: number | null; bulky?: boolean | null };
+
+/** Phần nội dung khách thấy trên trang sản phẩm (không gồm Đang bán / Ẩn, tồn kho, giá vườn / giá gốc). */
+function shownContent(p: { [K in keyof Shown]?: Shown[K] | null }, options: ShownOption[]) {
+  const { name, seoName, category, sub, extraSubs, icon, origin, ship, pesticide, unit, spec, lead, specs, youtubeId, keywords, fengshui, attrs } = p;
+  const opts = options.map((o) => stable([o.label, o.price, o.oldPrice ?? null, o.combo2 ?? null, !!o.bulky])).sort();
+  return stable([name, seoName, category, sub, extraSubs, icon, origin, ship, !!pesticide, unit, spec, lead, specs, youtubeId, keywords, fengshui, attrs, opts]);
 }
 
 export async function saveProduct(input: ProductInput, actor: string): Promise<SaveResult> {
@@ -252,6 +275,8 @@ export async function saveProduct(input: ProductInput, actor: string): Promise<S
         ...values,
         flashTotal: input.flash ? (existing.flashTotal ?? 50) : null,
         flashSold: input.flash ? (existing.flashSold ?? 0) : null,
+        // Bấm Lưu mà không đổi gì khách thấy (hoặc chỉ bật / tắt bán) thì giữ ngày sửa cũ — sitemap không báo "vừa sửa" giả.
+        ...(shownContent(existing, existing.options) !== shownContent(values, input.options) ? { updatedAt: new Date() } : {}),
       }).where(eq(products.slug, slug));
       // Số thứ tự mới nối sau số lớn nhất từng dùng (kể cả quy cách đã xóa) — không bao giờ dùng lại.
       let next = Math.max(-1, ...rows.map((r) => r.idx)) + 1;

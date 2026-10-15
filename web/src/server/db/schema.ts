@@ -132,6 +132,8 @@ export const products = pgTable('products', {
   fengshui: jsonb('fengshui').$type<FengShui>(),
   /** Đặc điểm cây cho bộ lọc: vị trí đặt, kích thước, màu (lib/product-filters.ts). null = chưa gắn. */
   attrs: jsonb('attrs').$type<ProductAttrs>(),
+  /** Lần cuối nội dung khách thấy thay đổi (tên, mô tả, thông số, quy cách / giá, ảnh) — lastmod của sitemap. Bật / tắt bán không tính. */
+  updatedAt: ts('updated_at').notNull().defaultNow(),
   createdAt: createdAt(),
 }, (t) => [index('products_cat_idx').on(t.category, t.sub)]);
 
