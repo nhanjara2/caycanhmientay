@@ -1,12 +1,14 @@
-import { NextResponse, type NextRequest } from 'next/server';
+import { NextResponse, type NextFetchEvent, type NextRequest } from 'next/server';
+import { botOf } from '@/lib/monitor';
 import { canonicalPath } from '@/lib/slug';
+import { monitorKey } from '@/server/monitor-key';
 
 const STAFF = /^\/(admin|nhan-vien)(\/|$)/;
 const STAFF_LOGIN = /^\/admin\/dang-nhap(\/|$)/;
 /** Đường dẫn có mã đơn / mã phiếu viết hoa (DH-…, PN-…) — không đổi chữ. */
 const KEEP_CASE = /^\/(tai-khoan|dat-hang-thanh-cong)(\/|$)/;
 
-export function proxy(request: NextRequest) {
+export function proxy(request: NextRequest, event: NextFetchEvent) {
   const { pathname } = request.nextUrl;
 
   // Kiểm tra sơ bộ: chưa có cookie phiên thì đưa về trang đăng nhập quản trị.
@@ -17,6 +19,19 @@ export function proxy(request: NextRequest) {
     }
     return;
   }
+  // Giám sát SEO (mục 19): máy tìm kiếm / mạng xã hội tải trang khách → ghi một lượt (nhóm trang, đã xác minh DNS chưa) ở
+  // /api/giam-sat/crawl sau khi đã trả trang (waitUntil — máy tìm kiếm không phải chờ). Người thật không ghi gì.
+  const bot = botOf(request.headers.get('user-agent'));
+  const key = bot && monitorKey();
+  if (bot && key) {
+    const ip = request.headers.get('x-real-ip') ?? request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? '';
+    event.waitUntil(fetch(new URL('/api/giam-sat/crawl', request.url), {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-monitor-key': key },
+      body: JSON.stringify({ bot, ip, path: pathname, query: request.nextUrl.search.length > 1 }),
+    }).then((r) => r.body?.cancel()).catch(() => {}));
+  }
+
   if (KEEP_CASE.test(pathname)) return;
 
   // SEO: mỗi trang chỉ một đường dẫn — "/San-Pham/Kim%20Tiền" chuyển hẳn (308) về "/san-pham/kim-tien" (giữ ?tham số).
@@ -42,12 +57,13 @@ export function proxy(request: NextRequest) {
   // Chỉ xét đuôi .vercel.app: lỡ đọc sai host thì tên miền chính cũng không bao giờ bị noindex.
   // Link xem trước của admin (?xem-truoc=1 — bài / dự án chưa đăng) cũng noindex ngay ở header, kể cả khi lỡ bị chia sẻ
   // ra ngoài (SEO mục 13); trang chưa đăng còn tự có meta noindex.
+  // Đường dẫn khách đang mở → trang 404 (app/not-found.tsx) đọc header này để ghi đường dẫn hỏng (giám sát SEO mục 19).
+  const headers = new Headers(request.headers);
+  headers.set('x-ccmt-path', pathname);
+  const res = NextResponse.next({ request: { headers } });
   const host = (request.headers.get('x-forwarded-host') ?? request.headers.get('host') ?? '').toLowerCase();
-  if (host.endsWith('.vercel.app') || params.has('xem-truoc')) {
-    const res = NextResponse.next();
-    res.headers.set('X-Robots-Tag', 'noindex, nofollow');
-    return res;
-  }
+  if (host.endsWith('.vercel.app') || params.has('xem-truoc')) res.headers.set('X-Robots-Tag', 'noindex, nofollow');
+  return res;
 }
 
 export const config = {

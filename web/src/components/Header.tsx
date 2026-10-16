@@ -125,8 +125,9 @@ function SearchForm({ initial, placeholder, below }: SearchBoxProps & { initial:
     if (q.trim()) router.push(`/tim-kiem?q=${encodeURIComponent(q.trim())}`);
   };
   return (
-    <form className="vx-search" role="search" onSubmit={submit}>
-      <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={placeholder ?? hint} aria-label="Tìm kiếm" />
+    // action + name="q": chưa chạy JavaScript (hoặc script lỗi) vẫn gửi đúng tới /tim-kiem?q=…, không sinh URL lạ trên trang đang xem (SEO mục 18)
+    <form className="vx-search" role="search" action="/tim-kiem" method="get" onSubmit={submit}>
+      <input name="q" value={q} onChange={(e) => setQ(e.target.value)} placeholder={placeholder ?? hint} aria-label="Tìm kiếm" />
       <button className="vx-btn vx-btn--primary" aria-label="Tìm">
         <Icon name="search" />
       </button>

@@ -36,9 +36,9 @@ export function SeoEditButton({ path, initial, live }: { path: string; initial: 
 type Redirect = { fromPath: string; toPath: string; reason: string; note: string; hits: number; lastHit: string | null; createdBy: string | null; created: string };
 
 /** Bảng chuyển hướng + form thêm (chỉ Quản lý). `suggest` = trang đã gỡ / đang ẩn chưa có chuyển hướng. */
-export function RedirectAdmin({ redirects, suggest }: { redirects: Redirect[]; suggest: { path: string; why: string }[] }) {
+export function RedirectAdmin({ redirects, suggest, initialFrom }: { redirects: Redirect[]; suggest: { path: string; why: string }[]; initialFrom?: string }) {
   const router = useRouter();
-  const [from, setFrom] = useState('');
+  const [from, setFrom] = useState(initialFrom ?? '');
   const [to, setTo] = useState('');
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);

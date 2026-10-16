@@ -7,6 +7,8 @@ import { plainText } from '@/lib/slug';
 import { requireAccess } from '@/server/auth';
 import { listRedirects, listSeoAudit } from '@/server/seo-cms';
 import { seoIssues, seoPages } from '@/server/seo-report';
+import { listNotFound } from '@/server/monitor';
+import { MonitorTab } from './MonitorTab';
 
 export const metadata: Metadata = { title: 'SEO & chuyển hướng' };
 
@@ -14,10 +16,11 @@ const TABS = [
   { key: '', label: 'Trang' },
   { key: 'canh-bao', label: 'Cảnh báo' },
   { key: 'chuyen-huong', label: 'Chuyển hướng' },
+  { key: 'theo-doi', label: 'Theo dõi' },
   { key: 'nhat-ky', label: 'Nhật ký' },
 ] as const;
 
-type Props = { searchParams: Promise<{ tab?: string; q?: string; loc?: string }> };
+type Props = { searchParams: Promise<{ tab?: string; q?: string; loc?: string; tu?: string }> };
 
 /**
  * Quản lý SEO toàn web (mục 14 checklist SEO, chỉ Quản lý): danh sách mọi trang công khai + SEO đặt tay, cảnh báo thiếu
@@ -28,7 +31,7 @@ export default async function AdminSeoPage({ searchParams }: Props) {
   const sp = await searchParams;
   const tab = TABS.some((t) => t.key === sp.tab) ? sp.tab ?? '' : '';
   const q = plainText(sp.q?.slice(0, 80) ?? '');
-  const [pages, issues, redirects] = await Promise.all([seoPages(), seoIssues(), listRedirects()]);
+  const [pages, issues, redirects, notFound] = await Promise.all([seoPages(), seoIssues(), listRedirects(), tab === 'chuyen-huong' ? listNotFound(30, 100).catch(() => []) : []]);
   const overrides = pages.filter((p) => p.override).length;
   const inSitemap = pages.filter((p) => p.inSitemap).length;
   const errors = issues.filter((i) => i.level === 'error').length;
@@ -131,11 +134,13 @@ export default async function AdminSeoPage({ searchParams }: Props) {
         )}
 
         {tab === 'nhat-ky' && <AuditLog />}
+        {tab === 'theo-doi' && <MonitorTab />}
       </div>
 
       {tab === 'chuyen-huong' && (
         <div style={{ marginTop: 12 }}>
           <RedirectAdmin
+            initialFrom={sp.tu?.slice(0, 300)}
             redirects={redirects.map((r) => ({
               fromPath: r.fromPath, toPath: r.toPath, reason: r.reason, note: r.note, hits: r.hits,
               lastHit: r.lastHitAt ? `Gần nhất ${seoTime(r.lastHitAt)}` : null, createdBy: r.createdBy, created: seoTime(r.createdAt),
@@ -143,6 +148,8 @@ export default async function AdminSeoPage({ searchParams }: Props) {
             suggest={[
               ...issues.filter((i) => i.text.startsWith('Trang đã xóa')).map((i) => ({ path: i.path, why: 'đã xóa' })),
               ...pages.filter((p) => p.status === 'Đang ẩn' && !p.redirectTo).map((p) => ({ path: p.path, why: `${p.kind.toLowerCase()} đang ẩn` })),
+              ...notFound.filter((n) => !n.redirect && (n.hits >= 2 || n.external || n.botHits)).slice(0, 20)
+                .map((n) => ({ path: n.path, why: `404 · ${n.hits} lượt${n.external ? ' · có link từ web khác' : ''}${n.botHits ? ' · Google đã ghé' : ''}` })),
             ]}
           />
         </div>

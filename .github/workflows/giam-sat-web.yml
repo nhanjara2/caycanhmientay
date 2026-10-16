@@ -52,3 +52,25 @@ jobs:
       - name: Kiểm URL quan trọng
         if: success() || failure()
         run: npx --yes tsx@4.23.15 scripts/check-migration.mts https://www.caycanhmientay.com seo/url-quan-trong.txt
+      # Giám sát SEO (mục 19): trang sitemap lỗi / chuyển hướng / noindex / canonical lệch / mồ côi, thời gian phản hồi,
+      # 404 mới, lỗi máy chủ, Googlebot thật. Phần số liệu máy chủ cần secret SEO_MONITOR_TOKEN (= biến cùng tên trên Vercel).
+      - name: Lấy mốc giám sát SEO
+        if: success() || failure()
+        uses: actions/cache/restore@v4
+        with:
+          path: web/.seo-monitor.json
+          key: seo-monitor-${{ github.run_id }}
+          restore-keys: seo-monitor-
+      - name: Giám sát SEO (log, 404, lỗi máy chủ)
+        id: monitor
+        if: success() || failure()
+        env:
+          SEO_MONITOR_TOKEN: ${{ secrets.SEO_MONITOR_TOKEN }}
+          MONITOR_BASELINE: .seo-monitor.json
+        run: npx --yes tsx@4.23.15 scripts/check-monitor.mts https://www.caycanhmientay.com
+      - name: Lưu mốc giám sát SEO
+        if: steps.monitor.outcome == 'success'
+        uses: actions/cache/save@v4
+        with:
+          path: web/.seo-monitor.json
+          key: seo-monitor-${{ github.run_id }}
