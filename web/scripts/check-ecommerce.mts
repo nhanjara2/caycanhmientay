@@ -6,8 +6,9 @@
  *  - URL ổn định: đúng dạng /san-pham/<slug> (một đoạn, chữ thường không dấu, không chứa danh mục / mã số database) → đổi tên,
  *    đổi danh mục không đổi URL; 200, canonical tự trỏ chính nó, không noindex;
  *  - đúng MỘT schema Product (trừ sản phẩm chỉ "Liên hệ báo giá" chưa có đánh giá — khi đó trang không được hiện giá nào);
- *  - giá + tình trạng khớp giữa trang và schema: đọc các ô quy cách (giá, "Hết hàng") → giá thấp / cao / số quy cách / availability
- *    phải đúng như schema (tính trên quy cách còn hàng, hết cả thì trên mọi quy cách có giá); quy cách chọn sẵn = giá thấp nhất
+ *  - giá + tình trạng khớp giữa trang và schema: đọc các ô quy cách (giá, "Hết hàng") → schema là MỘT Offer (không AggregateOffer —
+ *    Google chỉ nhận Offer cho danh sách người bán) có price = giá thấp nhất còn hàng (hết cả thì thấp nhất có giá), availability đúng,
+ *    có shippingDetails + hasMerchantReturnPolicy (thiếu → cảnh báo); quy cách chọn sẵn = giá thấp nhất
  *    còn hàng = giá ở khung giá; đang chọn quy cách hết hàng thì có nhãn "Hết hàng" và KHÔNG có nút Thêm vào giỏ / Mua ngay;
  *  - giá gạch ngang > giá bán và nhãn -% đúng phép tính; chưa có đánh giá thì schema không có rating / review;
  *  - thương hiệu trên trang = brand trong schema; ảnh trong schema là URL cố định của chính sản phẩm (không token / hết hạn);
@@ -167,15 +168,11 @@ async function checkProduct(loc: string) {
   } else if (!isObj(offers)) err('Trang có giá mà schema không có offers', at);
   else {
     if (offers.priceCurrency !== 'VND') err(`priceCurrency ${String(offers.priceCurrency)} (cần VND)`, at);
-    const prices = basis.map((t) => t.price!);
-    const lo = Math.min(...prices), hi = Math.max(...prices);
-    const agg = typesOf(offers).includes('AggregateOffer');
-    if (agg !== prices.length > 1) err(`Schema dùng ${typesOf(offers)[0]} nhưng trang có ${prices.length} quy cách tính giá`, at);
-    if (agg) {
-      if (offers.lowPrice !== lo) err(`lowPrice ${String(offers.lowPrice)} ≠ giá thấp nhất trên trang ${lo}`, at);
-      if (offers.highPrice !== hi) err(`highPrice ${String(offers.highPrice)} ≠ giá cao nhất trên trang ${hi}`, at);
-      if (offers.offerCount !== prices.length) err(`offerCount ${String(offers.offerCount)} ≠ ${prices.length} quy cách`, at);
-    } else if (offers.price !== lo) err(`price ${String(offers.price)} ≠ giá trên trang ${lo}`, at);
+    const lo = Math.min(...basis.map((t) => t.price!));
+    if (!typesOf(offers).includes('Offer')) err(`Schema dùng ${typesOf(offers)[0]} (cần một Offer — Google không nhận AggregateOffer cho danh sách người bán)`, at);
+    else if (offers.price !== lo) err(`price ${String(offers.price)} ≠ giá quy cách chọn sẵn trên trang ${lo}`, at);
+    if (!isObj(offers.shippingDetails)) warn('Offer chưa có shippingDetails (phí giao)', at);
+    if (!isObj(offers.hasMerchantReturnPolicy)) warn('Offer chưa có hasMerchantReturnPolicy (đổi trả)', at);
     const want = live.length ? IN_STOCK : OUT_OF_STOCK;
     if (offers.availability !== want) err(`availability ${String(offers.availability)} — trang ${live.length ? 'còn quy cách bán được' : 'hết hàng mọi quy cách'} (cần ${want})`, at);
     products.set(slug, { schemaOut: offers.availability === OUT_OF_STOCK });

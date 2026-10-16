@@ -7,6 +7,7 @@ import {
   breadcrumbLd, cleanLd, normalizeCrumbs, collectionLd, diseaseLd, faqLd, intlPhone, jsonLdHtml, ORG_ID, organizationLd, postLd, productLd, storesLd, websiteLd,
 } from '../src/lib/jsonld.ts';
 import { cheapestOption, type Product } from '../src/lib/catalog.ts';
+import { DEFAULT_SHIPPING, type ShippingConfig } from '../src/lib/shipping.ts';
 import type { PublicStore } from '../src/lib/stores.ts';
 
 const ORIGIN = 'https://www.caycanhmientay.com';
@@ -19,7 +20,7 @@ function test(name: string, fn: () => void) {
 const round = (x: unknown) => JSON.parse(jsonLdHtml(x));
 
 const product = (over: Partial<Product> = {}) => ({
-  slug: 'kim-tien', sku: 'MT-90001', name: 'Cây kim tiền', lead: 'Cây kim tiền dễ chăm.', unit: 'Chậu', specs: [] as [string, string][],
+  slug: 'kim-tien', sku: 'MT-90001', name: 'Cây kim tiền', lead: 'Cây kim tiền dễ chăm.', unit: 'Chậu', specs: [] as [string, string][], ship: 'plant' as const,
   images: ['/api/product-images/kim-tien-0123456789abcdef0123456789abcdef.jpg'],
   options: [{ idx: 0, label: 'Cao 30cm', price: 68000 }, { idx: 1, label: 'Cao 60cm', price: 150000 }, { idx: 2, label: 'Cao 1m2', price: 0 }],
   ...over,
@@ -86,13 +87,13 @@ test('Breadcrumb: tự thêm Trang chủ, bỏ Trang chủ lặp / URL trùng kh
   assert.deepEqual(b.itemListElement.map((x: { name: string }) => x.name), ['Trang chủ', 'Giới thiệu']);
 });
 
-test('Product nhiều quy cách: AggregateOffer từ giá thấp nhất, bỏ quy cách "Liên hệ báo giá"', () => {
+test('Product nhiều quy cách: MỘT Offer theo quy cách rẻ nhất (= chọn sẵn), không AggregateOffer, bỏ "Liên hệ báo giá"', () => {
   const ld = round(productLd(product(), { seoName: 'Cây kim tiền để bàn', rating: noRating }));
   assert.equal(ld['@id'], `${ORIGIN}/san-pham/kim-tien#product`);
-  assert.equal(ld.offers['@type'], 'AggregateOffer');
-  assert.equal(ld.offers.lowPrice, 68000);
-  assert.equal(ld.offers.highPrice, 150000);
-  assert.equal(ld.offers.offerCount, 2);
+  assert.equal(ld.offers['@type'], 'Offer');
+  assert.equal(ld.offers.price, 68000);
+  assert.equal(ld.offers.lowPrice, undefined);
+  assert.equal(ld.offers.shippingDetails, undefined, 'không truyền cài đặt giao hàng thì không khai phí giao');
   assert.equal(ld.offers.priceCurrency, 'VND');
   assert.equal(ld.offers.availability, 'https://schema.org/InStock');
   assert.ok(ld.image[0].startsWith(`${ORIGIN}/api/product-images/`));
@@ -115,15 +116,14 @@ test('Product: quy cách rẻ nhất hết hàng → giá thấp nhất tính tr
     specs: [['Hoạt chất', 'Mancozeb'], ['Nhà sản xuất', 'Bayer']],
   });
   const ld = round(productLd(p, { seoName: 'x', rating: noRating }));
-  assert.equal(ld.offers.lowPrice, 150000);
-  assert.equal(ld.offers.offerCount, 2);
+  assert.equal(ld.offers.price, 150000);
   assert.equal(ld.offers.availability, 'https://schema.org/InStock');
   assert.equal(ld.brand.name, 'Bayer');
   assert.equal(p.options[cheapestOption(p.options)].label, 'Cao 60cm', 'trang chọn sẵn đúng quy cách có giá = lowPrice');
   const allOut = product({ options: [{ idx: 0, label: 'A', price: 90000, soldOut: true }, { idx: 1, label: 'B', price: 50000, soldOut: true }] });
   const out = round(productLd(allOut, { seoName: 'x', rating: noRating }));
   assert.equal(out.offers.availability, 'https://schema.org/OutOfStock');
-  assert.equal(out.offers.lowPrice, 50000);
+  assert.equal(out.offers.price, 50000);
   assert.equal(allOut.options[cheapestOption(allOut.options)].label, 'B');
   assert.equal(round(productLd(product(), { seoName: 'x', rating: noRating })).brand.name, 'Cây Cảnh Miền Tây');
 });
@@ -140,6 +140,30 @@ test('Product chỉ "Liên hệ báo giá" và chưa có đánh giá → không 
   assert.equal(ld.aggregateRating.reviewCount, 3);
   assert.equal(ld.review.length, 1, 'bỏ đánh giá không có chữ');
   assert.equal(ld.review[0].datePublished, '2026-10-01T00:00:00.000Z');
+});
+
+test('Offer: phí giao theo Cài đặt giao hàng (miễn phí khi đủ mức, cây lớn cộng phụ phí, vùng đắt nhất) + chính sách đổi trả', () => {
+  const cfg: ShippingConfig = {
+    ...DEFAULT_SHIPPING,
+    plant: { fee: 30000, freeFrom: 300000, regionFee: { hcm: 30000, west: 40000, far: 60000 }, bulky: 50000 },
+    supply: { fee: 20000, freeFrom: 300000 },
+  };
+  const rate = (ld: { offers: { shippingDetails: { shippingRate: { value: number; currency: string } } } }) => ld.offers.shippingDetails.shippingRate;
+  const plant = round(productLd(product(), { seoName: 'x', rating: noRating, shipping: cfg }));
+  assert.deepEqual(rate(plant), { '@type': 'MonetaryAmount', value: 60000, currency: 'VND' }, '3 vùng khác phí → khai mức cao nhất');
+  assert.equal(plant.offers.shippingDetails.shippingDestination.addressCountry, 'VN');
+  assert.equal(plant.offers.hasMerchantReturnPolicy.returnPolicyCategory, 'https://schema.org/MerchantReturnNotPermitted');
+  assert.equal(plant.offers.hasMerchantReturnPolicy.merchantReturnLink, `${ORIGIN}/chinh-sach/doi-tra`);
+  const big = round(productLd(product({ options: [{ idx: 0, label: 'Cao 2m', price: 900000, bulky: true }] }), { seoName: 'x', rating: noRating, shipping: cfg }));
+  assert.equal(rate(big).value, 50000, 'đủ mức miễn phí giao nhưng cây lớn vẫn có phụ phí');
+  const supply = round(productLd(product({ ship: 'supply', options: [{ idx: 0, label: 'Chai', price: 350000 }] }), { seoName: 'x', rating: noRating, shipping: cfg }));
+  assert.equal(rate(supply).value, 0, 'vật tư đủ mức miễn phí giao → 0đ');
+  assert.equal(supply.offers.hasMerchantReturnPolicy.returnPolicyCategory, 'https://schema.org/MerchantReturnFiniteReturnWindow');
+  assert.equal(supply.offers.hasMerchantReturnPolicy.merchantReturnDays, 7);
+  assert.equal(supply.offers.hasMerchantReturnPolicy.itemDefectReturnFees, 'https://schema.org/FreeReturn');
+  const zone = round(productLd(product(), { seoName: 'x', rating: noRating, shipping: { ...cfg, plantZoneEnabled: true } }));
+  assert.equal(zone.offers.shippingDetails, undefined, 'cây sống chỉ giao trong bán kính → không khai phí giao toàn quốc');
+  assert.ok(zone.offers.hasMerchantReturnPolicy);
 });
 
 test('FAQPage: bỏ câu trống, không câu nào → null', () => {

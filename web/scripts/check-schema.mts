@@ -8,7 +8,7 @@
  *  - URL là https tuyệt đối, URL của web nằm trên tên miền chính (không localhost / *.vercel.app);
  *  - url / mainEntityOfPage của thực thể chính (Product, bài viết, CollectionPage…) = canonical của trang;
  *  - không hai thực thể chính cùng loại trên một trang (vd. 2 Product, 2 Organization) — schema mâu thuẫn;
- *  - đủ thuộc tính bắt buộc theo loại: Organization, WebSite, BreadcrumbList, Product + Offer / AggregateOffer
+ *  - đủ thuộc tính bắt buộc theo loại: Organization, WebSite, BreadcrumbList, Product + Offer (+ phí giao, đổi trả)
  *    (giá > 0, VND, availability), AggregateRating / Review, FAQPage, BlogPosting / NewsArticle / Article, VideoObject,
  *    CollectionPage + ItemList, GardenStore (LocalBusiness);
  *  - schema KHỚP NỘI DUNG ĐANG HIỆN: breadcrumb = breadcrumb trên trang (tên + link), giá thấp nhất có trên trang,
@@ -211,6 +211,19 @@ function checkPage(loc: string, html: string, list: Obj[]) {
         const low = is(of, 'AggregateOffer') ? of.lowPrice : of.price;
         if (typeof low !== 'number' || low <= 0) { err(`${types(of)[0]}: giá phải là số > 0 (${String(low)})`, loc); continue; }
         if (is(of, 'AggregateOffer') && !(typeof of.highPrice === 'number' && of.highPrice >= low)) err('AggregateOffer: highPrice < lowPrice', loc);
+        if (is(of, 'AggregateOffer')) warn('AggregateOffer chỉ dùng được cho kết quả thường — danh sách người bán của Google cần Offer', loc);
+        const sd = of.shippingDetails as Obj | undefined;
+        if (sd) {
+          const rate = isObj(sd.shippingRate) ? sd.shippingRate : undefined;
+          if (!rate || typeof rate.value !== 'number' || rate.value < 0 || rate.currency !== 'VND') err('shippingDetails: shippingRate cần value ≥ 0 và currency VND', loc);
+          if (!isObj(sd.shippingDestination) || !sd.shippingDestination.addressCountry) err('shippingDetails: thiếu shippingDestination.addressCountry', loc);
+        }
+        const rp = of.hasMerchantReturnPolicy as Obj | undefined;
+        if (rp) {
+          if (!rp.applicableCountry) err('MerchantReturnPolicy: thiếu applicableCountry', loc);
+          if (!/^https:\/\/schema\.org\/MerchantReturn(FiniteReturnWindow|NotPermitted|UnlimitedWindow)$/.test(String(rp.returnPolicyCategory))) err(`MerchantReturnPolicy: returnPolicyCategory sai "${String(rp.returnPolicyCategory)}"`, loc);
+          if (String(rp.returnPolicyCategory).endsWith('FiniteReturnWindow') && !(Number(rp.merchantReturnDays) > 0)) err('MerchantReturnPolicy: thời hạn đổi trả có hạn mà thiếu merchantReturnDays', loc);
+        }
         // Giá thấp nhất = giá trang chọn sẵn khi mở → phải có trên trang
         if (!rawNoLd.includes(vnd(low))) err(`Giá trong schema (${vnd(low)}đ) không có trên trang`, loc);
       }

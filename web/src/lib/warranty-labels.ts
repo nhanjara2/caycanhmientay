@@ -3,6 +3,9 @@
 /** Số ngày bảo hành cây sống, tính từ lúc đơn chuyển "Đã giao" (server chặn gửi yêu cầu sau hạn; trang Chính sách bảo hành đọc số này). */
 export const WARRANTY_DAYS = 7;
 
+/** Vật tư (không phải cây sống) chưa mở bao bì: đổi trả trong bấy nhiêu ngày kể từ khi nhận — Chính sách đổi trả + schema Product đọc số này. */
+export const SUPPLY_RETURN_DAYS = 7;
+
 /** Chip triệu chứng (WarrantyRequest) — form khách + nhân viên tạo thay khách. */
 export const SYMPTOMS = ['Lá vàng', 'Lá mềm, rũ', 'Đốm nâu', 'Rụng lá', 'Thối gốc', 'Có sâu, rệp', 'Dập, gãy khi nhận'] as const;
 

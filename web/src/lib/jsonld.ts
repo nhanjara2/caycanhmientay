@@ -4,7 +4,7 @@
  *
  * Mỗi loại trang một schema, lấy từ CHÍNH dữ liệu trang đang hiện (không viết cứng giá, tồn, đánh giá):
  *  - trang chủ: Organization + WebSite;  Hệ thống cửa hàng: GardenStore cho từng cửa hàng của shop đang hiện;
- *  - sản phẩm: Product (+ Offer / AggregateOffer, đánh giá thật) + FAQPage khi có câu hỏi thường gặp;
+ *  - sản phẩm: Product (+ Offer kèm phí giao + chính sách đổi trả, đánh giá thật) + FAQPage khi có câu hỏi thường gặp;
  *  - danh mục / nhóm con / tất cả sản phẩm: CollectionPage + ItemList các sản phẩm đang hiện;
  *  - bài viết: BlogPosting (Góc chăm cây) / NewsArticle (Truyền thông) / VideoObject (bài video có ảnh);
  *  - bài bệnh cây: Article;  mọi trang có breadcrumb: BreadcrumbList (sinh từ chính component <Breadcrumb>).
@@ -12,11 +12,14 @@
  * Không làm (chưa có nội dung đúng loại): HowTo (Google đã bỏ), QAPage (trang sản phẩm không phải trang một câu hỏi),
  * Event, Recipe, SoftwareApplication. Kiểm trên trang đã dựng bằng `npm run seo:schema -- <địa chỉ web>`.
  */
-import { brandOf, pricedOptions, type Product } from './catalog';
+import { brandOf, cheapestOption, pricedOptions, type Product, type ShipGroup, type Unit } from './catalog';
 import { CARE_PHONE, FACEBOOK_URL, LEGAL, SALES_PHONE, SHOP_ADDRESS, SHOP_EMAIL, LINKEDIN_URL, SUPPORT_PHONE, TIKTOK_URL, YOUTUBE_URL } from './contact';
+import { computeTotals } from './pricing';
 import { DEFAULT_SHARE_IMAGE, SITE_NAME } from './seo';
+import { SHIP_REGIONS, type ShippingConfig } from './shipping';
 import { absoluteUrl, SITE_ORIGIN } from './site';
 import type { PublicStore } from './stores';
+import { SUPPLY_RETURN_DAYS } from './warranty-labels';
 
 type Json = Record<string, unknown>;
 const CONTEXT = 'https://schema.org';
@@ -150,38 +153,76 @@ export function breadcrumbLd(items: Crumb[]): Json | null {
 
 const IN_STOCK = 'https://schema.org/InStock';
 const OUT_OF_STOCK = 'https://schema.org/OutOfStock';
+const SO = (x: string) => `https://schema.org/${x}`;
 
 export type LdReview = { name: string; stars: number; content: string; createdAt: number };
 
 /**
- * Product: tên chi tiết, ảnh, mã, giá theo các quy cách đang có giá (quy cách "Liên hệ báo giá" không vào). Một quy cách
- * có giá → Offer; nhiều quy cách → AggregateOffer từ giá thấp nhất (= giá trang chọn sẵn khi mở) tới cao nhất — web cố ý
- * chỉ có MỘT URL cho mỗi sản phẩm (không ?quy-cach=) nên không khai ProductGroup / biến thể (Google đòi mỗi biến thể một URL).
- * Hết hàng → OutOfStock; ngừng bán thì trang 404 nên không có schema. Đánh giá chỉ ghi khi có đánh giá thật đang hiện.
+ * Phí giao khi mua MỘT đơn vị quy cách này, giao tận nơi — tính bằng chính `computeTotals` của giỏ hàng (đủ mức miễn phí giao
+ * → 0đ, cây lớn cộng phụ phí). Phí cây sống khác nhau theo vùng thì khai mức CAO nhất cho cả nước (không bao giờ thấp hơn số
+ * khách trả). Bật giới hạn bán kính giao cây sống → không khai (Google không có cách ghi "trong X km quanh cửa hàng").
+ * Không khai thời gian giao: shop không hẹn số ngày cố định (Chính sách giao hàng).
+ */
+export function shippingDetailsLd(ship: ShipGroup, u: Pick<Unit, 'price' | 'bulky'>, s: ShippingConfig): Json | undefined {
+  if (ship === 'plant' && s.plantZoneEnabled) return undefined;
+  const region = SHIP_REGIONS.reduce((a, r) => (s.plant.regionFee[r] > s.plant.regionFee[a] ? r : a));
+  const t = computeTotals([{ price: u.price, qty: 1, ship, bulky: u.bulky }], 'ship', 0, s, 0, region);
+  return {
+    '@type': 'OfferShippingDetails',
+    shippingRate: { '@type': 'MonetaryAmount', value: t.plantShip + t.supplyShip, currency: 'VND' },
+    shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'VN' },
+  };
+}
+
+/**
+ * Chính sách đổi trả đúng như trang /chinh-sach/doi-tra: cây sống không nhận trả (hàng tươi sống — hư, héo, bệnh xử lý bằng
+ * bảo hành đổi cây / hoàn tiền, khách không gửi cây về); vật tư chưa mở bao bì đổi trả trong `SUPPLY_RETURN_DAYS` ngày, gửi về
+ * hoặc mang tới vườn, lỗi của shop thì shop chịu phí, đổi ý thì khách tự gửi.
+ */
+export function returnPolicyLd(ship: ShipGroup): Json {
+  const base = { '@type': 'MerchantReturnPolicy', applicableCountry: 'VN', merchantReturnLink: absoluteUrl('/chinh-sach/doi-tra') };
+  if (ship === 'plant') return { ...base, returnPolicyCategory: SO('MerchantReturnNotPermitted') };
+  return {
+    ...base,
+    returnPolicyCountry: 'VN',
+    returnPolicyCategory: SO('MerchantReturnFiniteReturnWindow'),
+    merchantReturnDays: SUPPLY_RETURN_DAYS,
+    returnMethod: [SO('ReturnByMail'), SO('ReturnInStore')],
+    customerRemorseReturnFees: SO('ReturnFeesCustomerResponsibility'),
+    itemDefectReturnFees: SO('FreeReturn'),
+  };
+}
+
+/**
+ * Product: tên chi tiết, ảnh, mã, giá, đánh giá thật. `offers` là MỘT Offer theo quy cách trang chọn sẵn khi mở (rẻ nhất còn
+ * hàng, hết cả thì rẻ nhất có giá — `cheapestOption`), không dùng AggregateOffer vì Google chỉ nhận Offer cho danh sách người
+ * bán (khung sản phẩm có ảnh + giá); quy cách "Liên hệ báo giá" không tính. Web cố ý chỉ có MỘT URL cho mỗi sản phẩm
+ * (không ?quy-cach=) nên không khai ProductGroup / biến thể (Google đòi mỗi biến thể một URL).
+ * Còn ≥ 1 quy cách có giá còn hàng → InStock; hết cả → OutOfStock; ngừng bán thì trang 404 nên không có schema.
+ * Có `shipping` (Cài đặt giao hàng) → Offer kèm phí giao + chính sách đổi trả.
  * Sản phẩm chỉ có "Liên hệ báo giá" và chưa có đánh giá → null (Google bắt Product phải có offers / review / rating).
  */
 export function productLd(
-  p: Pick<Product, 'slug' | 'sku' | 'name' | 'lead' | 'images' | 'options' | 'specs' | 'unit'>,
-  o: { seoName: string; category?: string; rating: { avg: number; count: number }; reviews?: LdReview[] },
+  p: Pick<Product, 'slug' | 'sku' | 'name' | 'lead' | 'images' | 'options' | 'specs' | 'unit' | 'ship'>,
+  o: { seoName: string; category?: string; rating: { avg: number; count: number }; reviews?: LdReview[]; shipping?: ShippingConfig },
 ): Json | null {
   const url = absoluteUrl(`/san-pham/${p.slug}`);
-  // Giá + tình trạng khớp đúng trang (mục 15 checklist): chỉ quy cách có giá (bán online được); còn ≥ 1 quy cách có giá còn hàng
-  // → InStock và giá thấp / cao tính trên các quy cách còn hàng (trang chọn sẵn quy cách rẻ nhất còn hàng); hết cả → OutOfStock.
+  // Giá + tình trạng khớp đúng trang (mục 15 checklist): giá = quy cách chọn sẵn = giá ở khung giá khi mở trang.
   const priced = pricedOptions(p.options);
-  const live = priced.filter((u) => !u.soldOut);
-  const prices = (live.length ? live : priced).map((u) => u.price);
+  const unit = priced.length ? p.options[cheapestOption(p.options)] : undefined;
   const shown = (o.reviews ?? []).filter((r) => r.content.trim()).slice(0, 5);
-  if (!prices.length && o.rating.count === 0) return null;
-  const common = {
+  if (!unit && o.rating.count === 0) return null;
+  const offers = unit && {
+    '@type': 'Offer',
+    price: unit.price,
     priceCurrency: 'VND',
-    availability: live.length ? IN_STOCK : OUT_OF_STOCK,
-    itemCondition: 'https://schema.org/NewCondition',
+    availability: priced.some((u) => !u.soldOut) ? IN_STOCK : OUT_OF_STOCK,
+    itemCondition: SO('NewCondition'),
     url,
     seller: { '@id': ORG_ID },
+    shippingDetails: o.shipping && shippingDetailsLd(p.ship, unit, o.shipping),
+    hasMerchantReturnPolicy: o.shipping && returnPolicyLd(p.ship),
   };
-  const offers = !prices.length ? undefined
-    : prices.length === 1 ? { '@type': 'Offer', price: prices[0], ...common }
-    : { '@type': 'AggregateOffer', lowPrice: Math.min(...prices), highPrice: Math.max(...prices), offerCount: prices.length, ...common };
   return {
     '@context': CONTEXT,
     '@type': 'Product',

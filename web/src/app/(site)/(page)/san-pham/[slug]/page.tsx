@@ -20,6 +20,7 @@ import { productFaqs } from '@/server/faqs';
 import { productQuestions } from '@/server/questions';
 import { productReviews } from '@/server/reviews';
 import { isWishlisted } from '@/server/wishlist';
+import { getShippingConfig } from '@/server/shipping';
 import { withShare } from '@/lib/seo';
 import { movedOrNotFound, redirectIfMoved, withSeo } from '@/server/seo-cms';
 import { JsonLd } from '@/components/JsonLd';
@@ -127,7 +128,7 @@ export default async function ProductPage({ params }: Props) {
   ]);
   // Số sao ở BuyBox tính từ đánh giá thật (products.rating/reviews là số mẫu, không dùng để hiển thị)
   const rs = reviewStats(reviews);
-  const categories = await getCategories();
+  const [categories, shipping] = await Promise.all([getCategories(), getShippingConfig()]);
   const label = categoryLabel(categories, p.category, p.sub);
   const extra = (p.extraSubs ?? []).flatMap((s) => {
     const sub = categories.find((c) => c.slug === p.category)?.subs.find((x) => x.slug === s && x.active);
@@ -136,12 +137,13 @@ export default async function ProductPage({ params }: Props) {
 
   return (
     <div className="vx-pdpage app-page">
-      {/* Schema Product: giá theo quy cách đang có giá, còn / hết hàng, đánh giá thật đang hiện (lib/jsonld.ts) */}
+      {/* Schema Product: giá quy cách chọn sẵn, còn / hết hàng, phí giao + đổi trả, đánh giá thật đang hiện (lib/jsonld.ts) */}
       <JsonLd data={productLd(p, {
         seoName: seoNameOf(p),
         category: [label.cat, label.sub].filter(Boolean).join(' > '),
         rating: rs,
         reviews: reviews.filter((r) => !r.mine),
+        shipping,
       })} />
       <Breadcrumb
         items={[

@@ -5,7 +5,7 @@
 import { CARE_PHONE, formatPhone, SALES_PHONE, SHOP_ADDRESS, SHOP_EMAIL, SUPPORT_PHONE, ZALO_URL } from './contact';
 import { money } from './format';
 import { REGION_LABEL, SLOT_CLOSE_BEFORE_END_MIN, slotTime, type ShippingConfig } from './shipping';
-import { WARRANTY_DAYS } from './warranty-labels';
+import { SUPPLY_RETURN_DAYS, WARRANTY_DAYS } from './warranty-labels';
 
 export type Block =
   | string // đoạn văn
@@ -301,7 +301,7 @@ const DOI_TRA: Section[] = [
     ] },
   ] },
   { h: 'Điều kiện đổi trả vật tư', blocks: [
-    'Bạn được đổi trả trong **7 ngày** kể từ khi nhận hàng nếu:',
+    `Bạn được đổi trả trong **${SUPPLY_RETURN_DAYS} ngày** kể từ khi nhận hàng nếu:`,
     { ul: [
       'Sản phẩm còn nguyên tem, nhãn, chưa mở bao bì và chưa sử dụng.',
       'Có mã đơn hàng (hoặc hóa đơn) để shop đối chiếu.',
