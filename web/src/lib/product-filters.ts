@@ -3,7 +3,7 @@
 //
 // Luật lọc: trong cùng một nhóm chọn nhiều giá trị = khớp MỘT trong số đó (Trong nhà HOẶC Văn phòng);
 // giữa các nhóm = khớp TẤT CẢ; nhóm "Khác" (giảm giá, còn hàng…) mỗi mục là một điều kiện riêng nên cũng phải khớp tất cả.
-import { ELEMENTS, normalize, type Product } from './catalog';
+import { ELEMENTS, isSoldOut, normalize, type Product } from './catalog';
 
 export type FilterOption = { key: string; name: string; /** Chấm màu cạnh chữ (nhóm Màu sắc). */ swatch?: string };
 
@@ -122,7 +122,7 @@ export const toFacet = (p: Product): FacetItem => ({
   mau: p.attrs?.mau ?? [],
   menh: p.fengshui?.elements ?? [],
   sale: p.options.some((o) => o.oldPrice != null),
-  stock: p.inStock !== false,
+  stock: p.inStock !== false && !isSoldOut(p.options),
   isNew: Boolean(p.isNew),
   pot: hasPot(p),
   nv: originKey(p.origin),

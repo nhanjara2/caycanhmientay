@@ -1795,6 +1795,9 @@ button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .app-pcard__play { position: absolute; right: 0.375rem; bottom: calc(1.75rem + 0.375rem); z-index: 2; display: grid; place-items: center; width: 1.75rem; height: 1.75rem; border-radius: 50%; background: rgb(0 0 0 / .62); box-shadow: 0 0 0 1.5px rgb(255 255 255 / .9); pointer-events: none; }
 .app-pcard__play svg { width: 0.875rem; height: 0.875rem; fill: #fff; margin-left: 1px; }
 .app-pcard__mediawrap:not(:has(.app-stk)) .app-pcard__play { bottom: 0.375rem; }
+/* Thẻ sản phẩm hết hàng (mọi quy cách có giá): nhãn giữa ảnh, ảnh mờ đi */
+.app-pcard__out { position: absolute; left: 50%; top: 50%; z-index: 2; transform: translate(-50%, -50%); padding: 0.375rem 0.875rem; border-radius: 999px; background: rgb(0 0 0 / .62); color: #fff; font-size: 0.875rem; font-weight: 600; line-height: 1.3; white-space: nowrap; pointer-events: none; }
+.app-pcard__mediawrap:has(.app-pcard__out) .vx-pcard__media > * { opacity: .55; }
 /* Dòng thông số luôn chiếm đủ 2 dòng / 2 hàng nhãn (dài hơn thì cắt) → giá / giá gạch ngang thẳng hàng giữa các thẻ cùng hàng, không lệch khi thông số 1 hay 2 dòng */
 .vx-pcard .vx-spec { min-height: 2lh; }
 /* Dòng thông số = các nhãn viền cam chữ cam (13/10/2026, kiểu "Cheap on Shopee"): mỗi cụm cách nhau bằng "·" là một nhãn; khung cao đúng 2 hàng nhãn
@@ -1945,6 +1948,11 @@ button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .app-vopt__l { font-size: 0.9375rem; line-height: 1.3; font-weight: 600; overflow-wrap: anywhere; }
 .app-vopt small { font-size: 0.875rem; line-height: 1.3; color: var(--ink-muted); }
 .app-vopt[aria-pressed="true"] { border-color: var(--primary); box-shadow: inset 0 0 0 1px var(--primary); background: #f2f8f4; }
+/* Hết hàng (mục 15 SEO — trang khớp schema OutOfStock): quy cách hết hàng nền xám + chữ đỏ; nhãn cạnh giá khi đang chọn quy cách hết hàng */
+.app-vopt[data-stock="out"] { background: var(--surface-sunken); }
+.app-vopt[data-stock="out"] .app-vopt__l, .app-vopt[data-stock="out"] small:not(.app-vopt__out) { color: var(--ink-muted); }
+.app-vopt .app-vopt__out { color: var(--danger); font-weight: 600; }
+.app-soldout { display: block; width: fit-content; margin-top: 0.375rem; padding: 0.125rem 0.625rem; border-radius: 999px; background: var(--ink); color: #fff; font-size: 0.875rem; font-weight: 600; line-height: 1.5; }
 .app-vopt[aria-pressed="true"] .app-vopt__l { color: var(--primary-hover); }
 .app-vopt[aria-pressed="true"] small { color: var(--primary-hover); font-weight: 600; }
 .app-vopt[aria-pressed="true"]::after { content: '✓'; position: absolute; right: 0; bottom: 0; width: 1.375rem; height: 1.375rem; display: flex; align-items: flex-end; justify-content: flex-end; padding: 0 0.125rem 0.0625rem 0; box-sizing: border-box; background: var(--primary); clip-path: polygon(100% 0, 100% 100%, 0 100%); color: #fff; font-size: 0.6875rem; line-height: 1; font-weight: 700; }

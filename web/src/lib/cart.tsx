@@ -63,6 +63,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const add = useCallback((p: Product, option = p.options[0]?.idx ?? 0, qty = 1) => {
     const u = optionOf(p, option);
     if (!u || isQuote(u)) return; // chưa có giá: chỉ hỏi giá, không vào giỏ
+    if (u.soldOut) { setToast('Quy cách này đang hết hàng'); return; }
     setLines((prev) => {
       const i = prev.findIndex((l) => l.slug === p.slug && l.option === option);
       if (i < 0) return [...prev, { slug: p.slug, option, qty, snap: snapOf(p, option) }];

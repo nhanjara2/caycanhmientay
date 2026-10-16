@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { cheapestOption, discountPct, isQuote, optionOrder, QUOTE_TEXT, type Product } from '@/lib/catalog';
+import { brandOf, cheapestOption, discountPct, isQuote, optionOrder, QUOTE_TEXT, SOLD_OUT_TEXT, type Product } from '@/lib/catalog';
 import { useAuth } from '@/lib/auth';
 import { useCart } from '@/lib/cart';
 import { SALES_PHONE, ZALO_URL } from '@/lib/contact';
@@ -47,6 +47,10 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
   const [qty, setQty] = useState(1);
   const u = p.options[opt];
   const quote = isQuote(u);
+  // Quy cách đang chọn hết hàng: trang vẫn hiện giá, nhưng không cho vào giỏ — gọi / Zalo hỏi ngày có hàng (schema ghi OutOfStock)
+  const out = !quote && Boolean(u.soldOut);
+  const buyable = !quote && !out;
+  const brand = brandOf(p);
   const pct = discountPct(u);
   // Giá theo số lượng: 1 cây = giá lẻ, mỗi 2 cây cùng quy cách = giá combo; giá sỉ công trình liên hệ báo giá
   const unit = p.unit.toLowerCase();
@@ -84,10 +88,12 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
       <button type="button" aria-label="Tăng" disabled={qty >= 99} onClick={() => setQty((q) => Math.min(99, q + 1))}>+</button>
     </span>
   );
+  // Chưa có giá → hỏi giá; hết hàng → hỏi ngày có hàng
+  const ask = out ? 'hàng' : 'giá';
   const contactLinks = (callCls: string, zaloCls: string, short = false) => (
     <>
-      <a href={`tel:${SALES_PHONE}`} className={callCls}><Icon name="phone" />{short ? 'Gọi' : 'Gọi báo giá'}</a>
-      <a href={ZALO_URL} target="_blank" rel="noreferrer" className={zaloCls}>{!short && <Icon name="chat" />}Hỏi giá qua Zalo</a>
+      <a href={`tel:${SALES_PHONE}`} className={callCls}><Icon name="phone" />{short ? 'Gọi' : `Gọi hỏi ${ask}`}</a>
+      <a href={ZALO_URL} target="_blank" rel="noreferrer" className={zaloCls}>{!short && <Icon name="chat" />}Hỏi {ask} qua Zalo</a>
     </>
   );
 
@@ -95,7 +101,7 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
     <div className="vx-buy">
       <div className="vx-buy__brand">
         <span className="vx-badge vx-badge--origin">{p.origin}</span>
-        <span>Thương hiệu: <Link href="/chinh-sach/gioi-thieu">Cây Cảnh Miền Tây</Link></span>
+        <span>Thương hiệu: {brand ?? <Link href="/chinh-sach/gioi-thieu">Cây Cảnh Miền Tây</Link>}</span>
       </div>
       <h1 className="vx-buy__title">{seoNameOf(p)}</h1>
       <div className="vx-buy__meta">
@@ -125,11 +131,12 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
             <span className="vx-badge vx-badge--sale">-{pct}%</span>
           </div>
         )}
+        {out && <span className="app-soldout" data-stock="out">{SOLD_OUT_TEXT}</span>}
         {p.options.length > 1 && <small className="app-pp__opt">Giá cho quy cách <b>{u.label}</b></small>}
       </div>
       </div>
       <div className="app-prows">
-        {!quote && (
+        {buyable && (
           <div className="app-prow app-prow--stack-md">
             <span className="app-prow__k">Giá theo số lượng</span>
             <div className="app-prow__v">
@@ -172,23 +179,24 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
               {order.map((i) => {
                 const o = p.options[i];
                 return (
-                  <button key={o.label} type="button" className="app-vopt" aria-pressed={i === opt} onClick={() => setOpt(i)}>
+                  <button key={o.label} type="button" className="app-vopt" aria-pressed={i === opt} onClick={() => setOpt(i)} data-stock={!isQuote(o) && o.soldOut ? 'out' : undefined}>
                     <span className="app-vopt__l">{o.label}</span>
                     <small>{isQuote(o) ? 'Liên hệ báo giá' : money(o.price)}</small>
+                    {!isQuote(o) && o.soldOut && <small className="app-vopt__out">{SOLD_OUT_TEXT}</small>}
                   </button>
                 );
               })}
             </div>
           </div>
         </div>
-        {!quote && (
+        {buyable && (
           <div className="app-prow">
             <span className="app-prow__k">Số lượng</span>
             <div className="app-prow__v app-qtyrow">{stepper('vx-stepper')}</div>
           </div>
         )}
       </div>
-      {quote ? (
+      {!buyable ? (
         <div className="vx-buy__cta" ref={ctaRef}>
           {contactLinks('vx-btn vx-btn--primary vx-btn--lg', 'vx-btn vx-btn--soft vx-btn--lg')}
         </div>
@@ -209,7 +217,7 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
           <span className="app-buybar__img"><Thumb src={p.images?.[0]} icon={p.icon} /></span>
           <span className="app-buybar__info">
             <b className="app-buybar__name" title={seoNameOf(p)}>{p.name}</b>
-            <small className="app-buybar__meta">{p.options.length > 1 ? u.label : p.unit}{!quote && qty > 1 && ` · SL ${qty}`}</small>
+            <small className="app-buybar__meta">{p.options.length > 1 ? u.label : p.unit}{buyable && qty > 1 && ` · SL ${qty}`}{out && ` · ${SOLD_OUT_TEXT}`}</small>
           </span>
           <span className="app-buybar__price">
             {quote ? <b className="app-quote">{QUOTE_TEXT}</b> : <b>{money(u.price)}</b>}
@@ -220,12 +228,12 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
           <label className="app-buybar__opt">
             <span className="app-sr">Chọn quy cách</span>
             <Select value={opt} onChange={(e) => setOpt(Number(e.target.value))}>
-              {order.map((i) => <option key={p.options[i].label} value={i}>{p.options[i].label}</option>)}
+              {order.map((i) => <option key={p.options[i].label} value={i}>{p.options[i].label}{p.options[i].soldOut && !isQuote(p.options[i]) ? ` (${SOLD_OUT_TEXT})` : ''}</option>)}
             </Select>
           </label>
         )}
-        {!quote && stepper('vx-stepper app-buybar__qty')}
-        {quote ? (
+        {buyable && stepper('vx-stepper app-buybar__qty')}
+        {!buyable ? (
           <div className="app-buybar__acts">
             {contactLinks('vx-btn vx-btn--outline vx-btn--lg app-buybar__call', 'vx-btn vx-btn--primary vx-btn--lg app-buybar__buy', true)}
           </div>

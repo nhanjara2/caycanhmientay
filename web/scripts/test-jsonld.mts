@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import {
   breadcrumbLd, cleanLd, normalizeCrumbs, collectionLd, diseaseLd, faqLd, intlPhone, jsonLdHtml, ORG_ID, organizationLd, postLd, productLd, storesLd, websiteLd,
 } from '../src/lib/jsonld.ts';
-import type { Product } from '../src/lib/catalog.ts';
+import { cheapestOption, type Product } from '../src/lib/catalog.ts';
 import type { PublicStore } from '../src/lib/stores.ts';
 
 const ORIGIN = 'https://www.caycanhmientay.com';
@@ -19,7 +19,7 @@ function test(name: string, fn: () => void) {
 const round = (x: unknown) => JSON.parse(jsonLdHtml(x));
 
 const product = (over: Partial<Product> = {}) => ({
-  slug: 'kim-tien', sku: 'MT-90001', name: 'Cây kim tiền', lead: 'Cây kim tiền dễ chăm.', unit: 'Chậu', inStock: true,
+  slug: 'kim-tien', sku: 'MT-90001', name: 'Cây kim tiền', lead: 'Cây kim tiền dễ chăm.', unit: 'Chậu', specs: [] as [string, string][],
   images: ['/api/product-images/kim-tien-0123456789abcdef0123456789abcdef.jpg'],
   options: [{ idx: 0, label: 'Cao 30cm', price: 68000 }, { idx: 1, label: 'Cao 60cm', price: 150000 }, { idx: 2, label: 'Cao 1m2', price: 0 }],
   ...over,
@@ -102,11 +102,30 @@ test('Product nhiều quy cách: AggregateOffer từ giá thấp nhất, bỏ qu
 });
 
 test('Product một quy cách có giá: Offer với price; hết hàng → OutOfStock', () => {
-  const ld = round(productLd(product({ inStock: false, options: [{ idx: 0, label: 'Bộ', price: 53000000 }] }), { seoName: 'Cây kim tiền', rating: noRating }));
+  const ld = round(productLd(product({ options: [{ idx: 0, label: 'Bộ', price: 53000000, soldOut: true }] }), { seoName: 'Cây kim tiền', rating: noRating }));
   assert.equal(ld.offers['@type'], 'Offer');
   assert.equal(ld.offers.price, 53000000);
   assert.equal(ld.offers.availability, 'https://schema.org/OutOfStock');
   assert.equal(ld.alternateName, undefined, 'tên chi tiết trùng tên ngắn thì không ghi alternateName');
+});
+
+test('Product: quy cách rẻ nhất hết hàng → giá thấp nhất tính trên quy cách còn hàng; thương hiệu lấy từ thông số', () => {
+  const p = product({
+    options: [{ idx: 0, label: 'Cao 30cm', price: 68000, soldOut: true }, { idx: 1, label: 'Cao 60cm', price: 150000 }, { idx: 2, label: 'Cao 1m', price: 220000 }],
+    specs: [['Hoạt chất', 'Mancozeb'], ['Nhà sản xuất', 'Bayer']],
+  });
+  const ld = round(productLd(p, { seoName: 'x', rating: noRating }));
+  assert.equal(ld.offers.lowPrice, 150000);
+  assert.equal(ld.offers.offerCount, 2);
+  assert.equal(ld.offers.availability, 'https://schema.org/InStock');
+  assert.equal(ld.brand.name, 'Bayer');
+  assert.equal(p.options[cheapestOption(p.options)].label, 'Cao 60cm', 'trang chọn sẵn đúng quy cách có giá = lowPrice');
+  const allOut = product({ options: [{ idx: 0, label: 'A', price: 90000, soldOut: true }, { idx: 1, label: 'B', price: 50000, soldOut: true }] });
+  const out = round(productLd(allOut, { seoName: 'x', rating: noRating }));
+  assert.equal(out.offers.availability, 'https://schema.org/OutOfStock');
+  assert.equal(out.offers.lowPrice, 50000);
+  assert.equal(allOut.options[cheapestOption(allOut.options)].label, 'B');
+  assert.equal(round(productLd(product(), { seoName: 'x', rating: noRating })).brand.name, 'Cây Cảnh Miền Tây');
 });
 
 test('Product chỉ "Liên hệ báo giá" và chưa có đánh giá → không có schema; có đánh giá thật → chỉ rating', () => {

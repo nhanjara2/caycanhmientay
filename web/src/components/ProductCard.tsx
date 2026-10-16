@@ -2,7 +2,7 @@
 
 import type { CSSProperties } from 'react';
 import Link from 'next/link';
-import { cheapestOption, discountPct, imageAlt, isQuote, QUOTE_TEXT, type Product } from '@/lib/catalog';
+import { cheapestOption, discountPct, imageAlt, isQuote, isSoldOut, QUOTE_TEXT, SOLD_OUT_TEXT, type Product } from '@/lib/catalog';
 import { responsive } from '@/lib/images';
 import { useWishlist } from '@/lib/wishlist';
 import { moneyNum } from '@/lib/format';
@@ -51,6 +51,8 @@ export function ProductCard({ product: p, showFlash = false, level = 3, eager = 
         <Link href={href} className="vx-pcard__media" aria-label={fullName} tabIndex={-1}>
           {p.images?.[0] ? <img {...responsive(p.images[0], CARD_SIZES, 640)} alt={imageAlt(p, 0)} width={600} height={600} loading={eager ? 'eager' : 'lazy'} /> : <Art name={p.icon} />}
         </Link>
+        {/* Mọi quy cách có giá đều hết hàng: nhãn giữa ảnh (trang sản phẩm + schema cùng ghi hết hàng) */}
+        {isSoldOut(p.options) && <span className="app-pcard__out" data-stock="out">{SOLD_OUT_TEXT}</span>}
         {/* Dải góc dưới trái: ô "Hàng mới" (nếu có) + sticker ưu đãi (ảnh thật, siêu sale, free ship…) cùng một kiểu ô */}
         <ProductStickers p={p} isNew={p.isNew} />
         {/* Có video (YouTube) → biểu tượng play góc dưới phải ảnh, kiểu Shopee; chỉ để báo hiệu, bấm vẫn mở trang sản phẩm */}

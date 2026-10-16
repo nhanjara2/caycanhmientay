@@ -1,4 +1,4 @@
-import { discountPct, type Product } from './catalog';
+import { discountPct, isSoldOut, type Product } from './catalog';
 
 export const SORTS = [
   { key: 'pho-bien', label: 'Phổ biến' },
@@ -10,7 +10,13 @@ export const SORTS = [
 
 export type SortKey = (typeof SORTS)[number]['key'];
 
+/** Sắp xếp danh sách; sản phẩm hết hàng (mọi quy cách có giá) luôn xuống cuối, giữ nguyên thứ tự trong từng nhóm. */
 export function sortProducts(list: Product[], key: string | undefined): Product[] {
+  const sorted = rank(list, key);
+  return [...sorted.filter((p) => !isSoldOut(p.options)), ...sorted.filter((p) => isSoldOut(p.options))];
+}
+
+function rank(list: Product[], key: string | undefined): Product[] {
   const out = [...list];
   // giá thấp nhất có giá; sản phẩm chỉ "Liên hệ báo giá" xếp cuối cả hai chiều
   const prices = (p: Product) => p.options.map((o) => o.price).filter((v) => v > 0);

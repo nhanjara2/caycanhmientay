@@ -12,7 +12,7 @@
  * Không làm (chưa có nội dung đúng loại): HowTo (Google đã bỏ), QAPage (trang sản phẩm không phải trang một câu hỏi),
  * Event, Recipe, SoftwareApplication. Kiểm trên trang đã dựng bằng `npm run seo:schema -- <địa chỉ web>`.
  */
-import { isQuote, type Product } from './catalog';
+import { brandOf, pricedOptions, type Product } from './catalog';
 import { CARE_PHONE, FACEBOOK_URL, LEGAL, SALES_PHONE, SHOP_ADDRESS, SHOP_EMAIL, LINKEDIN_URL, SUPPORT_PHONE, TIKTOK_URL, YOUTUBE_URL } from './contact';
 import { DEFAULT_SHARE_IMAGE, SITE_NAME } from './seo';
 import { absoluteUrl, SITE_ORIGIN } from './site';
@@ -161,16 +161,20 @@ export type LdReview = { name: string; stars: number; content: string; createdAt
  * Sản phẩm chỉ có "Liên hệ báo giá" và chưa có đánh giá → null (Google bắt Product phải có offers / review / rating).
  */
 export function productLd(
-  p: Pick<Product, 'slug' | 'sku' | 'name' | 'lead' | 'images' | 'options' | 'inStock' | 'unit'>,
+  p: Pick<Product, 'slug' | 'sku' | 'name' | 'lead' | 'images' | 'options' | 'specs' | 'unit'>,
   o: { seoName: string; category?: string; rating: { avg: number; count: number }; reviews?: LdReview[] },
 ): Json | null {
   const url = absoluteUrl(`/san-pham/${p.slug}`);
-  const prices = p.options.filter((u) => !isQuote(u)).map((u) => u.price);
+  // Giá + tình trạng khớp đúng trang (mục 15 checklist): chỉ quy cách có giá (bán online được); còn ≥ 1 quy cách có giá còn hàng
+  // → InStock và giá thấp / cao tính trên các quy cách còn hàng (trang chọn sẵn quy cách rẻ nhất còn hàng); hết cả → OutOfStock.
+  const priced = pricedOptions(p.options);
+  const live = priced.filter((u) => !u.soldOut);
+  const prices = (live.length ? live : priced).map((u) => u.price);
   const shown = (o.reviews ?? []).filter((r) => r.content.trim()).slice(0, 5);
   if (!prices.length && o.rating.count === 0) return null;
   const common = {
     priceCurrency: 'VND',
-    availability: p.inStock === false ? OUT_OF_STOCK : IN_STOCK,
+    availability: live.length ? IN_STOCK : OUT_OF_STOCK,
     itemCondition: 'https://schema.org/NewCondition',
     url,
     seller: { '@id': ORG_ID },
@@ -189,7 +193,7 @@ export function productLd(
     description: p.lead,
     image: (p.images ?? []).map(absoluteUrl),
     category: o.category,
-    brand: { '@type': 'Brand', name: SITE_NAME },
+    brand: { '@type': 'Brand', name: brandOf(p) ?? SITE_NAME },
     offers,
     aggregateRating: o.rating.count > 0
       ? { '@type': 'AggregateRating', ratingValue: Number(o.rating.avg.toFixed(1)), reviewCount: o.rating.count, bestRating: 5, worstRating: 1 }

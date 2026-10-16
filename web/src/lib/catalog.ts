@@ -44,6 +44,9 @@ export type Unit = {
   label: string; price: number; oldPrice?: number; combo2?: number;
   /** Cây lớn / cồng kềnh: tính thêm phụ phí giao mỗi cây (Cài đặt giao hàng). */
   bulky?: boolean;
+  /** Tồn kho = 0 (tính trên server; không gửi số tồn xuống trình duyệt): trang sản phẩm ghi "Hết hàng", không cho vào giỏ,
+   *  schema Offer ghi OutOfStock. Trang sản phẩm vẫn mở (200, được index) — hết hàng không phải ngừng bán. */
+  soldOut?: boolean;
 };
 
 /** Quy cách theo số thứ tự database (`Unit.idx`); undefined khi quy cách đã bị xóa. */
@@ -52,10 +55,31 @@ export const optionOf = (p: { options: Unit[] }, idx: number) => p.options.find(
 /** Giá 0 = chưa có giá: hiện "Liên hệ báo giá", khách gọi / Zalo hỏi giá, không cho vào giỏ hay đặt online. */
 export const isQuote = (u: Pick<Unit, 'price'>) => u.price <= 0;
 export const QUOTE_TEXT = 'Liên hệ báo giá';
+export const SOLD_OUT_TEXT = 'Hết hàng';
 
-/** Vị trí trong mảng của quy cách rẻ nhất có giá (bỏ "Liên hệ báo giá"); không quy cách nào có giá thì 0. Thẻ sản phẩm hiện giá này, trang sản phẩm chọn sẵn quy cách này. */
-export const cheapestOption = (options: Unit[]) =>
-  options.reduce((b, o, i) => (!isQuote(o) && (isQuote(options[b]) || o.price < options[b].price) ? i : b), 0);
+/** Vị trí trong mảng của quy cách rẻ nhất có giá (bỏ "Liên hệ báo giá"), ưu tiên quy cách còn hàng; không quy cách nào có giá thì 0. Thẻ sản phẩm hiện giá này, trang sản phẩm chọn sẵn quy cách này. */
+export const cheapestOption = (options: Unit[]) => {
+  const cheapest = (ok: (o: Unit) => boolean) =>
+    options.reduce<number>((b, o, i) => (!isQuote(o) && ok(o) && (b < 0 || o.price < options[b].price) ? i : b), -1);
+  // Ưu tiên quy cách còn hàng: giá "Từ …" ở thẻ, quy cách chọn sẵn ở trang sản phẩm và giá thấp nhất trong schema khớp nhau
+  const i = cheapest((o) => !o.soldOut);
+  return i >= 0 ? i : Math.max(0, cheapest(() => true));
+};
+
+const BRAND_SPECS = new Set(['thuong hieu', 'hang san xuat', 'nha san xuat']);
+/** Thương hiệu ghi trong thông số (thuốc, phân bón, chậu… của hãng khác); không có = hàng của shop ("Cây Cảnh Miền Tây").
+ *  Trang sản phẩm và schema Product dùng chung để không lệch nhau. */
+export const brandOf = (p: Pick<Product, 'specs'>) => p.specs.find(([k, v]) => BRAND_SPECS.has(normalize(k)) && v.trim())?.[1].trim();
+
+/** Quy cách có giá còn bán online được (bỏ "Liên hệ báo giá") — dùng chung cho schema Product và kiểm tra. */
+export const pricedOptions = (options: Unit[]) => options.filter((o) => !isQuote(o));
+
+/** Mọi quy cách có giá đều hết hàng (sản phẩm chỉ "Liên hệ báo giá" không tính là hết) — thẻ sản phẩm ghi "Hết hàng",
+ *  danh sách xếp xuống cuối, schema OutOfStock. */
+export const isSoldOut = (options: Unit[]) => {
+  const priced = pricedOptions(options);
+  return priced.length > 0 && priced.every((o) => o.soldOut);
+};
 
 /** Thứ tự hiện quy cách ở trang sản phẩm: giá thấp → cao, "Liên hệ báo giá" cuối. Chỉ đổi thứ tự hiện —
  *  số thứ tự trong database giữ nguyên vì đơn hàng / giỏ hàng tham chiếu theo đó (vd. quy cách "Mini" gộp vào sau cỡ lớn). */

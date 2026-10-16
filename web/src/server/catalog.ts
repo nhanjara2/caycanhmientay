@@ -1,23 +1,29 @@
 import 'server-only';
 import { connection } from 'next/server';
 import { cache } from 'react';
-import { and, asc, eq, getTableName, inArray, isNotNull, or, sql } from 'drizzle-orm';
+import { and, asc, eq, getTableName, gt, gte, inArray, isNotNull, isNull, or, sql } from 'drizzle-orm';
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import type { IconName } from '@/components/Icon';
 import { isNewProduct, normalize, productImageUrl, type Product } from '@/lib/catalog';
+import { todayVN } from '@/lib/stock';
 import { db, schema } from './db';
 
-const { products: P, productOptions: O, productImages: I } = schema;
+const { products: P, productOptions: O, productImages: I, stockLots: L } = schema;
 
 type Row = typeof P.$inferSelect;
 
 async function hydrate(rows: Row[]): Promise<Product[]> {
   if (!rows.length) return [];
   const slugs = rows.map((r) => r.slug);
-  const [opts, imgs] = await Promise.all([
+  const [opts, imgs, lots] = await Promise.all([
     db.select().from(O).where(and(inArray(O.productSlug, slugs), eq(O.deleted, false))).orderBy(asc(O.idx)),
     db.select({ slug: I.productSlug, file: I.file, alt: I.alt }).from(I).where(inArray(I.productSlug, slugs)).orderBy(asc(I.idx), asc(I.id)),
+    // Quy cách bán được = còn lô có hàng chưa hết hạn (đặt hàng không xuất lô hết hạn) — "Hết hàng" trên trang khớp lúc đặt
+    db.selectDistinct({ slug: L.productSlug, idx: L.optionIdx }).from(L)
+      .where(and(inArray(L.productSlug, slugs), gt(L.qty, 0), or(isNull(L.expiry), gte(L.expiry, todayVN())))),
   ]);
+  const sellable = new Set(lots.map((l) => `${l.slug}:${l.idx}`));
+  const canSell = (o: { productSlug: string; idx: number; stock: number }) => o.stock > 0 && sellable.has(`${o.productSlug}:${o.idx}`);
   // ảnh đã xếp theo thứ tự, ảnh đầu của mỗi sản phẩm là ảnh chính
   const mainFile = (slug: string) => imgs.find((i) => i.slug === slug)?.file;
   return rows.map((r) => ({
@@ -27,6 +33,7 @@ async function hydrate(rows: Row[]): Promise<Product[]> {
     flash: r.flashTotal ? { sold: r.flashSold ?? 0, total: r.flashTotal } : undefined,
     options: opts.filter((o) => o.productSlug === r.slug).map((o) => ({
       idx: o.idx, label: o.label, price: o.price, oldPrice: o.oldPrice ?? undefined, combo2: o.combo2 ?? undefined, bulky: o.bulky || undefined,
+      soldOut: !canSell(o) || undefined,
     })),
     images: imgs.filter((i) => i.slug === r.slug).map((i) => productImageUrl(i.file, i.slug)),
     imageAlts: imgs.some((i) => i.slug === r.slug && i.alt) ? imgs.filter((i) => i.slug === r.slug).map((i) => i.alt ?? '') : undefined,
@@ -34,7 +41,7 @@ async function hydrate(rows: Row[]): Promise<Product[]> {
     youtubeId: r.youtubeId ?? undefined,
     fengshui: r.fengshui ?? undefined,
     attrs: r.attrs ?? undefined,
-    inStock: opts.some((o) => o.productSlug === r.slug && o.stock > 0),
+    inStock: opts.some((o) => o.productSlug === r.slug && canSell(o)),
     isNew: isNewProduct(r.createdAt) || undefined,
   }));
 }
