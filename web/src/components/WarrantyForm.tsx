@@ -87,11 +87,11 @@ export function WarrantyForm({ items }: { items: WarrantyItem[] }) {
         {steps.map((s, i) => (
           <span key={s} style={{ display: 'contents' }}>
             {i > 0 && <i />}
-            <span className={i + 1 < step ? 'done' : i + 1 === step ? 'on' : undefined}><b>{i + 1}</b>{s}</span>
+            <span className={i + 1 < step ? 'done' : i + 1 === step ? 'on' : undefined}><b>{i + 1}</b><em>{s}</em></span>
           </span>
         ))}
       </div>
-      <div className="app-cols" style={{ display: 'grid', '--cols': 'minmax(0,1fr) 300px', gap: 12, alignItems: 'start' }}>
+      <div className="app-wr-cols">
         <section className="vx-profile" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
           {step === 1 && (
             <>

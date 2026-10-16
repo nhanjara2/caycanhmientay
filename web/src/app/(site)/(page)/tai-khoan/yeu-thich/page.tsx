@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { AccountSidebar } from '@/components/AccountSidebar';
+import { Breadcrumb } from '@/components/Blocks';
 import { WishlistGrid } from '@/components/WishlistGrid';
 import { getCurrentUser } from '@/server/auth';
 import { listWishlist } from '@/server/wishlist';
@@ -13,9 +13,7 @@ export default async function WishlistPage() {
   const products = await listWishlist(user.id);
   return (
     <div className="vx-acctpage">
-      <div className="vx-crumb">
-        <Link href="/">Trang chủ</Link>/<Link href="/tai-khoan">Tài khoản</Link>/<span>Sản phẩm yêu thích</span>
-      </div>
+      <Breadcrumb items={[{ label: 'Tài khoản', href: '/tai-khoan' }, { label: 'Sản phẩm yêu thích' }]} />
       <div className="vx-acctgrid">
         <AccountSidebar />
         <WishlistGrid products={products} />

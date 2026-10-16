@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { AccountSidebar } from '@/components/AccountSidebar';
+import { Breadcrumb } from '@/components/Blocks';
 import { AddressBook } from '@/components/AddressBook';
 import { listAddresses } from '@/server/addresses';
 import { getCurrentUser } from '@/server/auth';
@@ -14,9 +14,7 @@ export default async function AddressBookPage() {
   const items = (await listAddresses(user.id)).map(({ createdAt: _c, userId: _u, ...a }) => a);
   return (
     <div className="vx-acctpage">
-      <div className="vx-crumb">
-        <Link href="/">Trang chủ</Link>/<Link href="/tai-khoan">Tài khoản</Link>/<span>Sổ địa chỉ nhận hàng</span>
-      </div>
+      <Breadcrumb items={[{ label: 'Tài khoản', href: '/tai-khoan' }, { label: 'Sổ địa chỉ nhận hàng' }]} />
       <div className="vx-acctgrid">
         <AccountSidebar />
         <AddressBook items={items} stores={(await listStores()).map(({ id, code, name, lat, lng }) => ({ id, code, name, lat, lng }))} />

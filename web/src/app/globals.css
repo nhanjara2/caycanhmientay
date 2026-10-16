@@ -148,6 +148,14 @@ h2.vx-flash__title { margin: 0; }
 /* Header: nút Đăng nhập / tên người dùng + menu tài khoản */
 .app-hbtn { display: flex; align-items: center; gap: 6px; background: none; border: 0; color: inherit; font: inherit; font-weight: 600; cursor: pointer; padding: 0; }
 .app-dd { position: absolute; right: 0; top: calc(100% + 10px); z-index: 50; color: var(--ink); font-weight: 400; }
+/* Menu tài khoản: xoay ngang điện thoại thì cuộn trong menu thay vì bị cắt; nút Đăng xuất (button) trông như các dòng link */
+.vx-user .app-dd { max-height: calc(100dvh - var(--header-h, 96px) - 1rem); overflow-y: auto; overscroll-behavior: contain; }
+.app-dd-out { display: flex; align-items: center; gap: var(--space-3); min-height: 44px; padding: 10px var(--space-4); border: 0; background: none; font: inherit; font-size: 0.875rem; color: var(--danger); text-align: left; cursor: pointer; }
+.app-dd-out:hover { background: var(--surface-sunken); }
+.app-dd-out .vx-ico { width: 18px; height: 18px; }
+/* Chữ cái đầu luôn giữa vòng tròn (responsive.css đổi .vx-avatar thành flex trên điện thoại nên place-items không còn căn ngang) */
+.vx-avatar { justify-content: center; align-items: center; }
+.vx-dd__head .vx-avatar { flex: none; }
 
 /* Cookie: hộp nhỏ góc trái dưới */
 .app-ck { position: fixed; left: var(--space-4); bottom: var(--space-4); z-index: 75; max-width: calc(100vw - 32px); }
@@ -969,6 +977,54 @@ a.app-kb-card[data-dragging="true"] { opacity: .45; }
   .vx-acct__card { padding: var(--space-4); }
   .vx-acct__card .vx-avatar--lg { width: 56px; height: 56px; font-size: 1.25rem; }
   .vx-acct__points { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* Khu tài khoản — sửa giao diện các trang ít đụng tới (16/10/2026): Bảo hành, Vườn của tôi, Lịch chăm cây, Đơn hàng */
+.app-wr-cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; align-items: start; }
+@media (min-width: 75em) { .app-wr-cols { grid-template-columns: minmax(0, 1fr) 300px; } }
+.wr-steps em { font-style: normal; }
+.wr-steps i { flex: 0 1 28px; min-width: 12px; }
+.app-ohmeta { display: inline-flex; align-items: center; gap: var(--space-2); }
+.app-site .cs-task { grid-template-columns: 40px minmax(0, 1fr) auto; }
+.app-cs-done { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.app-cs-done .vx-ico { width: 16px; height: 16px; }
+.gd-card__f .vx-btn { display: inline-flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap; }
+@media (max-width: 47.9375em) {
+  /* Bảo hành: chỉ ghi chữ bước đang làm, bước khác chỉ còn số — 3 bước nằm một hàng */
+  .wr-steps { flex-wrap: nowrap; font-size: 0.875rem; }
+  .wr-steps span:not(.on) > em { display: none; }
+  .wr-steps i { flex: 1 1 12px; }
+  /* Thẻ đơn hàng: dòng 1 = ngày + trạng thái, dòng 2 = cách nhận · mã đơn */
+  .vx-order__head > b { order: 0; }
+  .vx-order__head .vx-status { order: 1; }
+  .vx-order__head .vx-badge { order: 2; }
+  .app-ohmeta { order: 3; flex-basis: 100%; }
+  .app-ohmeta > .dot:first-child { display: none; }
+  /* Chi tiết đơn: người nhận / giao đến xếp dọc thì vạch chia nằm ngang; khung bảo hành: nút xuống hàng riêng */
+  .vx-od__cols > div + div { border-left: 0; border-top: 1px solid var(--border); }
+  .vx-warranty { flex-wrap: wrap; }
+  .vx-warranty > div { flex: 1 1 12rem; }
+  .vx-warranty > .vx-btn { flex: 1 1 100%; justify-content: center; }
+  .vx-tl__step > span:last-child { white-space: nowrap; }
+  /* Vườn của tôi: mỗi cây một thẻ ngang (ảnh trái, thông tin phải, 2 nút dưới) thay vì 2 cột hẹp làm nút vỡ chữ */
+  .gd-grid { grid-template-columns: minmax(0, 1fr); }
+  .gd-card { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); }
+  .gd-card__img { aspect-ratio: auto; min-height: 7.5rem; }
+  .gd-card__img svg { width: 48%; height: 48%; }
+  .gd-card__b { padding: var(--space-3) var(--space-3) var(--space-2); }
+  .gd-card__f { grid-column: 1 / -1; padding-top: var(--space-1); }
+  /* Yêu thích: hai nút lọc nằm trái dưới tiêu đề */
+  .gd-head .acts { margin-left: 0; }
+}
+/* Tablet + máy tính nhỏ: thẻ vườn tự chia cột theo bề rộng (3 cột cố định làm nút "Lịch chăm" bị cắt ở 820px) */
+@media (min-width: 48em) {
+  .gd-grid { grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); }
+  .gd-card__f { flex-wrap: wrap; }
+  .gd-card__f .vx-btn { flex: 1 1 auto; }
+}
+/* Đầu trang khi đã đăng nhập, < 1200px: chỉ còn ảnh đại diện — tên dài chèn mất ô tìm kiếm ở tablet */
+@media (max-width: 74.9375em) {
+  .vx-user > .app-hbtn > .app-hide-sm { display: none; }
 }
 
 /* ---- Footer: nhóm liên kết thu gọn trên mobile (components/FooterGroup.tsx, theo design-system/components/Footer/README.md) ---- */

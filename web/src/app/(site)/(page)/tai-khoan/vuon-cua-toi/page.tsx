@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { AccountSidebar } from '@/components/AccountSidebar';
+import { Breadcrumb } from '@/components/Blocks';
 import { GardenGrid, type GardenCardData } from '@/components/GardenGrid';
 import { plantAgeDays } from '@/lib/garden-labels';
 import { getCurrentUser } from '@/server/auth';
@@ -26,9 +26,7 @@ export default async function MyGardenPage() {
 
   return (
     <div className="vx-acctpage">
-      <div className="vx-crumb">
-        <Link href="/">Trang chủ</Link>/<Link href="/tai-khoan">Tài khoản</Link>/<span>Vườn của tôi</span>
-      </div>
+      <Breadcrumb items={[{ label: 'Tài khoản', href: '/tai-khoan' }, { label: 'Vườn của tôi' }]} />
       <div className="vx-acctgrid">
         <AccountSidebar />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0 }}>

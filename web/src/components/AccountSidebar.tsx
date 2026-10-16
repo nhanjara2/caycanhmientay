@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/auth';
 import { Avatar } from './Avatar';
 import { Icon, type IconName } from './Icon';
 
-const NAV: { href: string; label: string; icon: IconName; badge?: number }[] = [
+export const ACCOUNT_NAV: { href: string; label: string; icon: IconName; badge?: number }[] = [
   { href: '/tai-khoan', label: 'Thông tin cá nhân', icon: 'user' },
   { href: '/tai-khoan/don-hang', label: 'Đơn hàng của tôi', icon: 'receipt' },
   { href: '/tai-khoan/so-dia-chi', label: 'Sổ địa chỉ nhận hàng', icon: 'pin' },
@@ -48,7 +48,7 @@ export function AccountSidebar() {
           </div>
         </div>
         <nav className="vx-acct__nav">
-          {NAV.map((n) => (
+          {ACCOUNT_NAV.map((n) => (
             <Link key={n.href + n.label} href={n.href} aria-current={current(n.href) ? 'true' : undefined}>
               <Icon name={n.icon} />
               {n.label}

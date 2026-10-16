@@ -4,18 +4,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/lib/auth';
+import { ACCOUNT_NAV } from './AccountSidebar';
 import { Avatar } from './Avatar';
-import { Icon, type IconName } from './Icon';
-
-const ITEMS: { href: string; label: string; icon: IconName; badge?: number }[] = [
-  { href: '/tai-khoan', label: 'Thông tin cá nhân', icon: 'user' },
-  { href: '/tai-khoan/don-hang', label: 'Đơn hàng của tôi', icon: 'receipt' },
-  { href: '/tai-khoan/so-dia-chi', label: 'Sổ địa chỉ nhận hàng', icon: 'pin' },
-  { href: '/tai-khoan/vuon-cua-toi', label: 'Vườn của tôi', icon: 'plant' },
-  { href: '/tai-khoan/lich-cham-cay', label: 'Lịch chăm cây', icon: 'clock' },
-  { href: '/tai-khoan/bao-hanh', label: 'Bảo hành cây', icon: 'shield' },
-  { href: '/tai-khoan/yeu-thich', label: 'Sản phẩm yêu thích', icon: 'star' },
-];
+import { Icon } from './Icon';
 
 /** Tên người dùng trên Header; bấm mở menu tài khoản. Chưa đăng nhập thì mở AuthModal. */
 export function AccountMenu() {
@@ -28,8 +19,14 @@ export function AccountMenu() {
   useEffect(() => {
     if (!open) return;
     const close = (e: MouseEvent) => !ref.current?.contains(e.target as Node) && setOpen(false);
+    const esc = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      setOpen(false);
+      ref.current?.querySelector<HTMLButtonElement>('.app-hbtn')?.focus();
+    };
     document.addEventListener('mousedown', close);
-    return () => document.removeEventListener('mousedown', close);
+    document.addEventListener('keydown', esc);
+    return () => { document.removeEventListener('mousedown', close); document.removeEventListener('keydown', esc); };
   }, [open]);
 
   if (!ready || !user) {
@@ -55,16 +52,16 @@ export function AccountMenu() {
             <span><b>{user.name}</b><small>{user.phoneMasked}</small></span>
             <span className="vx-tier" style={{ marginLeft: 'auto' }}>{user.points.toLocaleString('vi-VN')} điểm</span>
           </div>
-          {ITEMS.map((i) => (
+          {ACCOUNT_NAV.map((i) => (
             <Link key={i.href} href={i.href}>
               <Icon name={i.icon} />{i.label}{i.badge ? <em>{i.badge}</em> : null}
             </Link>
           ))}
           {user.role !== 'customer' && <Link href="/admin"><Icon name="gauge" />Trang quản trị</Link>}
           <hr />
-          <a style={{ color: 'var(--danger)', cursor: 'pointer' }} onClick={() => { void logout(); setOpen(false); }}>
+          <button type="button" className="app-dd-out" onClick={() => { void logout(); setOpen(false); }}>
             <Icon name="close" />Đăng xuất
-          </a>
+          </button>
         </div>
       )}
     </div>

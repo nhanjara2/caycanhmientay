@@ -64,5 +64,10 @@ export function payStatus(method: string, paid: boolean) {
 
 const tz = { timeZone: 'Asia/Ho_Chi_Minh' } as const;
 export const fmtDate = (d: Date) => d.toLocaleDateString('vi-VN', { ...tz, day: '2-digit', month: '2-digit', year: 'numeric' });
-export const fmtDateTime = (d: Date) =>
-  `${d.toLocaleTimeString('vi-VN', { ...tz, hour: '2-digit', minute: '2-digit' })}, ${d.toLocaleDateString('vi-VN', { ...tz, day: '2-digit', month: '2-digit' })}`;
+export const fmtTime = (d: Date) => d.toLocaleTimeString('vi-VN', { ...tz, hour: '2-digit', minute: '2-digit' });
+/** "26/09" — toLocaleDateString('vi-VN') bỏ năm thì ra "26-09", nên ghép tay. */
+export const fmtDayMonth = (d: Date) => {
+  const p = Object.fromEntries(new Intl.DateTimeFormat('vi-VN', { ...tz, day: '2-digit', month: '2-digit' }).formatToParts(d).map((x) => [x.type, x.value]));
+  return `${p.day}/${p.month}`;
+};
+export const fmtDateTime = (d: Date) => `${fmtTime(d)}, ${fmtDayMonth(d)}`;

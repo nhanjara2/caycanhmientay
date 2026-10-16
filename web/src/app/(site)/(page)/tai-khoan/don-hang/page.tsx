@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { AccountSidebar } from '@/components/AccountSidebar';
-import { EmptyState } from '@/components/Blocks';
+import { Breadcrumb, EmptyState } from '@/components/Blocks';
 import { OrderCard } from '@/components/orders/OrderParts';
 import { getCurrentUser } from '@/server/auth';
 import { countOrdersByTab, listOrdersForUser, ORDER_TABS, type OrderTab } from '@/server/orders';
@@ -21,9 +21,7 @@ export default async function OrdersPage({ searchParams }: Props) {
 
   return (
     <div className="vx-acctpage">
-      <div className="vx-crumb">
-        <Link href="/">Trang chủ</Link>/<Link href="/tai-khoan">Tài khoản</Link>/<span>Đơn hàng của tôi</span>
-      </div>
+      <Breadcrumb items={[{ label: 'Tài khoản', href: '/tai-khoan' }, { label: 'Đơn hàng của tôi' }]} />
       <div className="vx-acctgrid">
         <AccountSidebar />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

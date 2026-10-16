@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { Breadcrumb } from '@/components/Blocks';
 import { OrderDetail } from '@/components/orders/OrderParts';
 import { getCurrentUser } from '@/server/auth';
 import { canViewOrder, getOrderByCode } from '@/server/orders';
@@ -18,10 +18,7 @@ export default async function OrderDetailPage({ params }: Props) {
 
   return (
     <div className="vx-acctpage">
-      <div className="vx-crumb">
-        <Link href="/">Trang chủ</Link>/<Link href="/tai-khoan">Tài khoản</Link>/
-        <Link href="/tai-khoan/don-hang">Đơn hàng của tôi</Link>/<span>Chi tiết đơn hàng</span>
-      </div>
+      <Breadcrumb items={[{ label: 'Tài khoản', href: '/tai-khoan' }, { label: 'Đơn hàng của tôi', href: '/tai-khoan/don-hang' }, { label: 'Chi tiết đơn hàng' }]} />
       <OrderDetail o={order} />
     </div>
   );

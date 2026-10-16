@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { Icon, Thumb } from '@/components/Icon';
 import { PICKUP_PLACE } from '@/lib/contact';
 import { money } from '@/lib/format';
-import { fmtDate, fmtDateTime, PAY_LABEL, PAY_LOGO, payStatus, STATUS_LABEL, TIMELINE, type Status } from '@/lib/order-labels';
+import { fmtDate, fmtDateTime, fmtDayMonth, fmtTime, PAY_LABEL, PAY_LOGO, payStatus, STATUS_LABEL, TIMELINE, type Status } from '@/lib/order-labels';
 import type { OrderFull } from '@/server/orders';
 import { ReorderButton } from './ReorderButton';
 
@@ -45,8 +45,7 @@ export function OrderCard({ o }: { o: OrderFull }) {
     <article className="vx-order">
       <div className="vx-order__head">
         <b>Đơn hàng {fmtDate(o.createdAt)}</b>
-        <span className="dot" /><span>{deliveryLabel(o)}</span>
-        <span className="dot" /><span>#{o.code}</span>{o.kind === 'warranty' && <span className="vx-badge vx-badge--info">Bảo hành</span>}
+        <span className="app-ohmeta"><span className="dot" />{deliveryLabel(o)}<span className="dot" />#{o.code}</span>{o.kind === 'warranty' && <span className="vx-badge vx-badge--info">Bảo hành</span>}
         <StatusText status={o.status} />
       </div>
       <div className="vx-order__body">
@@ -83,7 +82,7 @@ export function OrderTimeline({ o }: { o: OrderFull }) {
           <div key={t.status} className={`vx-tl__step ${state}`}>
             <span className="vx-tl__dot">{state === 'done' ? <Icon name="check" /> : <span>{idx + 1}</span>}</span>
             <b>{t.label}</b>
-            <span>{at ? fmtDateTime(at) : '—'}</span>
+            <span>{at ? <>{fmtTime(at)}<br />{fmtDayMonth(at)}</> : '—'}</span>
           </div>
         );
       })}

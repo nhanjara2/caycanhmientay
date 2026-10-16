@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { AccountSidebar } from '@/components/AccountSidebar';
+import { Breadcrumb } from '@/components/Blocks';
 import { CareScheduleList, type CareTask } from '@/components/CareScheduleList';
 import { getCurrentUser } from '@/server/auth';
 import { listGarden } from '@/server/garden';
@@ -29,9 +30,7 @@ export default async function CareSchedulePage() {
 
   return (
     <div className="vx-acctpage">
-      <div className="vx-crumb">
-        <Link href="/">Trang chủ</Link>/<Link href="/tai-khoan">Tài khoản</Link>/<span>Lịch chăm cây</span>
-      </div>
+      <Breadcrumb items={[{ label: 'Tài khoản', href: '/tai-khoan' }, { label: 'Lịch chăm cây' }]} />
       <div className="vx-acctgrid">
         <AccountSidebar />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0 }}>

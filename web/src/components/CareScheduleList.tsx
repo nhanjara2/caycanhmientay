@@ -37,20 +37,15 @@ export function CareScheduleList({ today, upcoming }: { today: CareTask[]; upcom
           const k = KIND[t.kind];
           return (
             <div key={`${t.plantId}-${t.kind}`} className="cs-task">
-              {t.kind !== 'check' ? (
-                <button type="button" className="cs-check" aria-label="Đánh dấu đã xong" onClick={() => done(t)} disabled={pending}>
-                  <Icon name="check" />
-                </button>
-              ) : <span />}
               <span className={`t ${k.cls}`}><Icon name={k.icon} /></span>
               <span><b>{k.label(t.name)}</b><small>{k.hint}</small></span>
               {t.kind === 'check'
                 ? <Link href="/benh-cay" className="vx-btn vx-btn--primary vx-btn--sm">Bắt bệnh</Link>
-                : <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" onClick={() => done(t)} disabled={pending}>Xong</button>}
+                : <button type="button" className="vx-btn vx-btn--outline vx-btn--sm app-cs-done" onClick={() => done(t)} disabled={pending}><Icon name="check" />Xong</button>}
             </div>
           );
         })}
-        {!today.length && <div className="cs-task" style={{ gridTemplateColumns: '1fr' }}><span style={{ color: 'var(--ink-muted)' }}>Không có việc nào hôm nay. Xem &quot;Sắp tới&quot; bên dưới.</span></div>}
+        {!today.length && <div className="cs-task" style={{ gridTemplateColumns: '1fr' }}><span style={{ color: 'var(--ink-muted)' }}>Không có việc nào hôm nay.</span></div>}
       </div>
       {upcoming.length > 0 && (
         <div className="cs-list">
@@ -59,10 +54,8 @@ export function CareScheduleList({ today, upcoming }: { today: CareTask[]; upcom
             const k = KIND[t.kind];
             return (
               <div key={`${t.plantId}-${t.kind}`} className="cs-task">
-                <span />
                 <span className={`t ${k.cls}`}><Icon name={k.icon} /></span>
                 <span><b>{k.label(t.name)}</b><small>{fmtDate(new Date(t.due))}</small></span>
-                <span />
               </div>
             );
           })}
