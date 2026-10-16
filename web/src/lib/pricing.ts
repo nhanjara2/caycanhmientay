@@ -33,8 +33,11 @@ export const minOrderShort = (goods: number, minOrder: number, delivery: 'ship' 
 export type ShipRules = { plant: PlantRule; supply: FeeRule };
 export const SHIP_RULES: ShipRules = { plant: DEFAULT_SHIPPING.plant, supply: DEFAULT_SHIPPING.supply };
 
+/** Mức miễn phí giao cây sống của vùng nhận hàng; chưa biết nơi nhận thì mức thấp nhất (`freeFrom`). */
+export const plantFreeFrom = (r: PlantRule, region: ShipRegion | null) => (region ? r.regionFree[region] : r.freeFrom);
+
 /** Ba vùng khác mức phí thì khách chưa chọn nơi nhận chỉ thấy số tạm tính (theo vùng rẻ nhất). */
-export const plantFeeVaries = (r: PlantRule) => new Set(Object.values(r.regionFee)).size > 1;
+export const plantFeeVaries = (r: PlantRule) => new Set(Object.values(r.regionFee)).size > 1 || new Set(Object.values(r.regionFree)).size > 1;
 
 export type PricedLine = { price: number; oldPrice?: number | null; combo2?: number | null; qty: number; ship: ShipGroup; pesticide?: boolean; /** Cây lớn / cồng kềnh: tính thêm phụ phí giao mỗi cây. */ bulky?: boolean; /** Không áp mã giảm giá: không tính vào `voucherBase`. */ noVoucher?: boolean;
   /** Để xét phạm vi mã giảm giá (lib/voucher-scope.ts): slug, danh mục, nhóm con chính + phụ. */ slug?: string; category?: string; subs?: string[] };
@@ -85,6 +88,8 @@ export type Totals = {
   total: number;
   hasPesticide: boolean;
   lines: LinePrice[];
+  /** Khoản giảm bị cắt bớt vì chạm giá sàn (lib/margin-guard.ts) — chỉ có sau khi server tính. */
+  capped?: { partner: boolean; voucher: boolean; ship: boolean };
 };
 
 /** Mỗi 2 cây cùng quy cách tính giá combo (khi combo rẻ hơn 2 lần giá lẻ). */
@@ -124,7 +129,7 @@ export function computeTotals(lines: PricedLine[], delivery: 'ship' | 'pickup' =
   };
   // Phí cây sống theo vùng nhận hàng (chưa biết thì mức thấp nhất); phụ phí cây lớn tính thêm cho từng cây, kể cả khi đơn đã miễn phí giao.
   const bulkyShip = delivery === 'ship' ? bulkyQty * rules.plant.bulky : 0;
-  const plant = ship(plantSubtotal, { fee: region ? rules.plant.regionFee[region] : rules.plant.fee, freeFrom: rules.plant.freeFrom });
+  const plant = ship(plantSubtotal, { fee: region ? rules.plant.regionFee[region] : rules.plant.fee, freeFrom: plantFreeFrom(rules.plant, region) });
   const supply = ship(supplySubtotal, rules.supply);
   const plantShip = plant.pay + bulkyShip;
   const supplyShip = supply.pay;
@@ -145,8 +150,15 @@ export function computeTotals(lines: PricedLine[], delivery: 'ship' | 'pickup' =
   };
 }
 
-/** Trừ thêm mã khách đã chọn (mã giảm tiền hàng + mã miễn phí giao) vào tổng đã tính — giỏ hàng, thanh toán hiển thị; server tự tính lại khi tạo đơn. */
-export function withVouchers(t: Totals, discount: number, shipDiscount: number): Totals {
+/**
+ * Trừ thêm mã khách đã chọn (mã giảm tiền hàng + mã miễn phí giao) vào tổng đã tính — giỏ hàng, thanh toán hiển thị; server tự tính lại khi tạo đơn.
+ * `partner` = chiết khấu đối tác server đã cắt theo giá sàn (null = chưa hỏi server, giữ số tính ở trình duyệt). `capped` = khoản bị cắt bớt vì giá sàn.
+ */
+export function withVouchers(t: Totals, discount: number, shipDiscount: number, partner: number | null = null, capped?: Totals['capped']): Totals {
   const ship = Math.min(shipDiscount, t.plantShip + t.supplyShip);
-  return { ...t, voucherDiscount: discount, shipVoucherDiscount: ship, total: Math.max(0, t.total + t.voucherDiscount - discount - ship) };
+  const pd = partner ?? t.partnerDiscount;
+  return {
+    ...t, voucherDiscount: discount, shipVoucherDiscount: ship, partnerDiscount: pd, capped,
+    total: Math.max(0, t.total + t.voucherDiscount + t.partnerDiscount - discount - ship - pd),
+  };
 }

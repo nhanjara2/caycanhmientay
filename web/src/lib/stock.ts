@@ -7,6 +7,13 @@ export const tracksLots = (p: { pesticide: boolean; category: string }) =>
 /** Cảnh báo lô sắp hết hạn trước bấy nhiêu ngày. */
 export const EXPIRY_WARN_DAYS = 60;
 
+/** Hạng chất lượng của lô (cùng một cây, nhà vườn khác nhau thì chất lượng khác nhau). */
+export const LOT_GRADES = ['1', '2', '3'] as const;
+export type LotGrade = (typeof LOT_GRADES)[number];
+export const GRADE_LABEL: Record<LotGrade, string> = { '1': 'Loại 1', '2': 'Loại 2', '3': 'Loại 3' };
+export const isGrade = (v: unknown): v is LotGrade => typeof v === 'string' && (LOT_GRADES as readonly string[]).includes(v);
+export const gradeText = (v: string | null | undefined) => (isGrade(v) ? GRADE_LABEL[v] : '');
+
 /** Ngày hôm nay dạng YYYY-MM-DD theo giờ Việt Nam. */
 export const todayVN = () => new Date(Date.now() + 7 * 3_600_000).toISOString().slice(0, 10);
 

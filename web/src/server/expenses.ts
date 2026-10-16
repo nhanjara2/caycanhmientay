@@ -13,7 +13,8 @@ import type { SavedImage } from './uploads';
 const { expenses: E, expenseCategories: C, recurringExpenses: R, expensePhotos: P, stores, suppliers, purchaseReceipts: PR, purchaseReceiptLines: PL } = schema;
 
 // Sổ chi phí của cửa hàng: mọi khoản tiền đã chi. Tiền mua cây / hàng về bán ghi ở nhóm GOODS_EXPENSE_CATEGORY — báo cáo cộng nhóm này
-// vào "Tiền mua hàng" cùng với phiếu nhập có giá nhập (server/receipts.ts). Một lần mua chỉ ghi MỘT nơi (sổ này hoặc giá nhập trên phiếu), ghi cả hai là tính hai lần.
+// vào "Tiền mua hàng" cùng với phiếu nhập có giá nhập (server/receipts.ts) — phiếu hàng ký gửi không tính (chưa trả tiền; tiền trả nhà vườn
+// ghi ở trang Đối soát nhà vườn thành khoản chi nhóm mua hàng, `expenses.consign = true`). Một lần mua chỉ ghi MỘT nơi (sổ này hoặc giá nhập trên phiếu), ghi cả hai là tính hai lần.
 
 const VN_OFFSET = 7 * 3_600_000;
 const ymdOf = (ms: number) => new Date(ms + VN_OFFSET).toISOString().slice(0, 10);
@@ -206,9 +207,9 @@ export async function periodFinance(fromMs: number, toMs: number): Promise<Finan
       goods: sql`coalesce(sum(${E.amount}::bigint) filter (where ${E.categorySlug} = ${GOODS_EXPENSE_CATEGORY}), 0)`.mapWith(Number),
     }).from(E).where(inRange).groupBy(E.storeId),
     db.select({ id: PL.storeId, total: sql`coalesce(sum(${PL.qty}::bigint * ${PL.unitCost}), 0)`.mapWith(Number) }).from(PL).innerJoin(PR, eq(PR.id, PL.receiptId))
-      .where(and(gte(PR.createdAt, new Date(fromMs)), lt(PR.createdAt, new Date(toMs)))).groupBy(PL.storeId),
+      .where(and(gte(PR.createdAt, new Date(fromMs)), lt(PR.createdAt, new Date(toMs)), eq(PR.consign, false))).groupBy(PL.storeId),
     db.select({ n: sql`count(*) filter (where ${PL.unitCost} is null)`.mapWith(Number) }).from(PL).innerJoin(PR, eq(PR.id, PL.receiptId))
-      .where(and(gte(PR.createdAt, new Date(fromMs)), lt(PR.createdAt, new Date(toMs)))),
+      .where(and(gte(PR.createdAt, new Date(fromMs)), lt(PR.createdAt, new Date(toMs)), eq(PR.consign, false))),
     db.select({ id: stores.id, name: stores.name }).from(stores).orderBy(asc(stores.id)),
   ]);
   const exp = new Map(byStoreExp.map((r) => [r.id, r.total]));

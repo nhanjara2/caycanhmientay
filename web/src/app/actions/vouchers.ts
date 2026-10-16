@@ -10,10 +10,11 @@ import { createVoucher, listActiveVouchers, scopeTexts, setVoucherActive, update
 
 const ItemsSchema = z.array(z.object({ slug: z.string().max(120), option: z.number().int().min(0).max(20), qty: z.number().int().min(1).max(99) })).min(1).max(50);
 
-/** Khách chọn / nhập mã ở trang thanh toán (tối đa một mã giảm tiền hàng + một mã miễn phí giao) — chưa chốt lượt dùng, chỉ xem trước số tiền giảm. */
+/** Khách chọn / nhập mã ở giỏ / thanh toán (tối đa một mã giảm tiền hàng + một mã miễn phí giao) — chưa chốt lượt dùng, chỉ xem trước số tiền giảm (đã cắt theo giá sàn). */
 export async function applyVouchersAction(codes: unknown, items: unknown, phone: unknown, delivery: unknown, region?: unknown) {
   const user = await getCurrentUser();
-  const pCodes = z.array(z.string().trim().min(1).max(30)).min(1, 'Chọn hoặc nhập mã giảm giá').max(4).safeParse(codes);
+  // Không có mã vẫn hỏi được: tài khoản đối tác cần server tính chiết khấu đã cắt theo giá sàn.
+  const pCodes = z.array(z.string().trim().min(1).max(30)).max(4).safeParse(codes);
   const pItems = ItemsSchema.safeParse(items);
   if (!pCodes.success) return { ok: false as const, error: 'Chọn hoặc nhập mã giảm giá' };
   if (!pItems.success) return { ok: false as const, error: 'Giỏ hàng không hợp lệ' };

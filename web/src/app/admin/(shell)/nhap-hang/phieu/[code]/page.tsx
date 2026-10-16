@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { money } from '@/lib/format';
-import { fmtYmd } from '@/lib/stock';
+import { fmtYmd, gradeText } from '@/lib/stock';
 import { requireAccess } from '@/server/auth';
 import { getReceipt } from '@/server/receipts';
 
@@ -37,7 +37,7 @@ export default async function ReceiptDetailPage({ params }: Props) {
             <span>Thời gian</span><b>{when(r.createdAt)}</b>
             <span>Người nhập</span><b>{r.actor}</b>
             <span>Nguồn</span><b>{r.source === 'excel' ? `File Excel${r.fileName ? ` · ${r.fileName}` : ''}` : 'Nhập tay ở trang Kho'}</b>
-            <span>Nhà cung cấp</span><b>{r.supplier ?? '—'}</b>
+            <span>Nhà cung cấp</span><b>{r.supplier ?? '—'}{r.consign ? ' · Hàng ký gửi (trả tiền theo số đã bán)' : ''}</b>
             <span>Số chứng từ</span><b>{r.docNo ?? '—'}</b>
             <span>Ghi chú</span><b>{r.note ?? '—'}</b>
             <span>Tổng</span>
@@ -62,7 +62,7 @@ export default async function ReceiptDetailPage({ params }: Props) {
                   <td className="num" data-label="Số lượng">{l.qty.toLocaleString('vi-VN')}</td>
                   <td className="num" data-label="Giá nhập">{l.unitCost === null ? '—' : money(l.unitCost)}</td>
                   <td className="num" data-label="Thành tiền">{l.unitCost === null ? '—' : money(l.qty * l.unitCost)}</td>
-                  <td data-label="Số lô">{l.lotCode ?? '—'}</td>
+                  <td data-label="Số lô">{[l.lotCode, gradeText(l.grade)].filter(Boolean).join(' · ') || '—'}</td>
                   <td data-label="Hạn dùng">{l.expiry ? fmtYmd(l.expiry) : '—'}</td>
                   <td data-label="Ghi chú">{l.note ?? '—'}</td>
                 </tr>

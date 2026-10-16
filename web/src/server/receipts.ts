@@ -2,7 +2,7 @@ import 'server-only';
 import { randomUUID } from 'node:crypto';
 import { and, desc, eq, inArray, isNotNull, sql } from 'drizzle-orm';
 import { db, schema, type DB } from './db';
-import { applyStock, type Tx } from './inventory';
+import { applyStock, syncGardenFromLots, type Tx } from './inventory';
 
 const { products, productOptions, stores, suppliers, purchaseReceipts: R, purchaseReceiptLines: RL } = schema;
 
@@ -22,8 +22,10 @@ export type ReceiptLineIn = {
   idx: number;
   storeId: number;
   qty: number;
-  /** Giá nhập 1 đơn vị (đồng). */
+  /** Giá nhập 1 đơn vị (đồng) = giá vườn. */
   unitCost: number | null;
+  /** Hạng chất lượng ('1' | '2' | '3'). */
+  grade?: string | null;
   lotCode: string | null;
   expiry: string | null;
   note: string | null;
@@ -37,6 +39,8 @@ export type ReceiptMeta = {
   source: (typeof schema.RECEIPT_SOURCES)[number];
   linesHash?: string | null;
   fileName?: string | null;
+  /** Hàng ký gửi: cây ở vườn nhà cung cấp, chưa trả tiền — bắt buộc có nhà cung cấp. */
+  consign?: boolean;
 };
 
 /** Nhà cung cấp theo tên (không phân biệt hoa/thường); chưa có thì tạo. */
@@ -58,11 +62,12 @@ export async function receiveGoods(tx: Tx, lines: ReceiptLineIn[], meta: Receipt
   const infoOf = new Map(info.map((i) => [`${i.slug}#${i.idx}`, i]));
   for (const l of lines) if (!infoOf.has(`${l.slug}#${l.idx}`)) throw new Error(`${l.ref ?? 'Dòng'}: không tìm thấy quy cách`);
 
+  if (meta.consign && !meta.supplier) throw new Error('Hàng ký gửi: nhập tên nhà vườn gửi cây');
   const sid = meta.supplier ? await supplierId(tx, meta.supplier) : null;
   // Mã phiếu theo số thứ tự (id): chèn bằng mã tạm rồi đặt mã thật — hai phiếu cùng lúc không thể trùng mã.
   const [rc] = await tx.insert(R).values({
     code: `tmp-${randomUUID()}`, supplierId: sid, docNo: meta.docNo, note: meta.note, source: meta.source,
-    linesHash: meta.linesHash ?? null, fileName: meta.fileName ?? null, actor,
+    linesHash: meta.linesHash ?? null, fileName: meta.fileName ?? null, consign: !!meta.consign, actor,
   }).returning({ id: R.id });
   const code = receiptCode(rc.id);
   await tx.update(R).set({ code }).where(eq(R.id, rc.id));
@@ -71,7 +76,7 @@ export async function receiveGoods(tx: Tx, lines: ReceiptLineIn[], meta: Receipt
     const i = infoOf.get(`${l.slug}#${l.idx}`)!;
     return {
       receiptId: rc.id, productSlug: l.slug, optionIdx: l.idx, sku: i.sku, name: i.name, label: i.label, unit: i.unit,
-      storeId: l.storeId, qty: l.qty, unitCost: l.unitCost, lotCode: l.lotCode, expiry: l.expiry, note: l.note,
+      storeId: l.storeId, qty: l.qty, unitCost: l.unitCost, grade: l.grade ?? null, lotCode: l.lotCode, expiry: l.expiry, note: l.note,
     };
   }));
 
@@ -79,8 +84,16 @@ export async function receiveGoods(tx: Tx, lines: ReceiptLineIn[], meta: Receipt
   const sorted = lines.toSorted((a, b) => a.slug.localeCompare(b.slug) || a.idx - b.idx);
   for (const l of sorted) {
     const note = meta.source === 'excel' ? (l.note ? `Excel · ${l.note}` : 'Nhập từ Excel') : (l.note ?? undefined);
-    const after = await applyStock(tx, l.slug, l.idx, l.qty, 'import', actor, note, { storeId: l.storeId, lotCode: l.lotCode, expiry: l.expiry, receiptId: rc.id });
+    const after = await applyStock(tx, l.slug, l.idx, l.qty, 'import', actor, note, {
+      storeId: l.storeId, lotCode: l.lotCode, expiry: l.expiry, receiptId: rc.id,
+      supplierId: sid, unitCost: l.unitCost, grade: l.grade ?? null, consign: !!meta.consign,
+    });
     if (after === null) throw new Error(`${l.ref ?? 'Dòng'}: không tìm thấy quy cách`);
+  }
+  // Giá vườn / giá gốc của quy cách theo lô còn hàng → giá sàn và bảng giá tính từ đó.
+  for (const k of new Set(sorted.filter((l) => l.unitCost != null).map((l) => `${l.slug}#${l.idx}`))) {
+    const [slug, idx] = k.split('#');
+    await syncGardenFromLots(tx, slug, Number(idx));
   }
   return { id: rc.id, code, lines: lines.length, units: lines.reduce((s, l) => s + l.qty, 0) };
 }
@@ -106,7 +119,7 @@ export async function lastCosts() {
 /** Danh sách phiếu mới nhất kèm tổng số dòng, số lượng, tiền hàng (chỉ cộng các dòng đã ghi giá nhập). */
 export async function listReceipts(limit = 20) {
   return db.select({
-    id: R.id, code: R.code, createdAt: R.createdAt, actor: R.actor, source: R.source, docNo: R.docNo, supplier: suppliers.name,
+    id: R.id, code: R.code, createdAt: R.createdAt, actor: R.actor, source: R.source, docNo: R.docNo, supplier: suppliers.name, consign: R.consign,
     lines: sql`count(${RL.id})`.mapWith(Number),
     units: sql`coalesce(sum(${RL.qty}), 0)`.mapWith(Number),
     costed: sql`count(${RL.unitCost})`.mapWith(Number),
@@ -117,12 +130,12 @@ export async function listReceipts(limit = 20) {
 
 export async function getReceipt(code: string) {
   const [r] = await db.select({
-    id: R.id, code: R.code, createdAt: R.createdAt, actor: R.actor, source: R.source, docNo: R.docNo, note: R.note, fileName: R.fileName, supplier: suppliers.name,
+    id: R.id, code: R.code, createdAt: R.createdAt, actor: R.actor, source: R.source, docNo: R.docNo, note: R.note, fileName: R.fileName, supplier: suppliers.name, consign: R.consign,
   }).from(R).leftJoin(suppliers, eq(suppliers.id, R.supplierId)).where(eq(R.code, code));
   if (!r) return null;
   const lines = await db.select({
     id: RL.id, slug: RL.productSlug, sku: RL.sku, optionIdx: RL.optionIdx, name: RL.name, label: RL.label, unit: RL.unit, store: stores.code,
-    qty: RL.qty, unitCost: RL.unitCost, lotCode: RL.lotCode, expiry: RL.expiry, note: RL.note,
+    qty: RL.qty, unitCost: RL.unitCost, grade: RL.grade, lotCode: RL.lotCode, expiry: RL.expiry, note: RL.note,
   }).from(RL).innerJoin(stores, eq(stores.id, RL.storeId)).where(eq(RL.receiptId, r.id)).orderBy(RL.id);
   return { ...r, lines };
 }

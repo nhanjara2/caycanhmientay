@@ -173,17 +173,17 @@ const DOI_NGU: Section[] = [
 
 // ---- Giao hàng (số liệu lấy từ Cài đặt giao hàng) ------------------------------------------------------------
 
-const plantVaries = (s: ShippingConfig) => new Set(Object.values(s.plant.regionFee)).size > 1;
+const plantVaries = (s: ShippingConfig) => new Set(Object.values(s.plant.regionFee)).size > 1 || new Set(Object.values(s.plant.regionFree)).size > 1;
 
 /** Dòng bảng phí cây sống: một dòng khi ba vùng cùng mức, ngược lại mỗi vùng một dòng kèm tỉnh / thành thuộc vùng đó. */
 function plantFeeRows(s: ShippingConfig): string[][] {
-  const { regionFee: fee, freeFrom } = s.plant;
-  if (!plantVaries(s)) return [['Cây sống', money(fee.hcm), money(freeFrom)]];
+  const { regionFee: fee, regionFree: free } = s.plant;
+  if (!plantVaries(s)) return [['Cây sống', money(fee.hcm), money(free.hcm)]];
   const { hcm, west } = s.regionProvinces;
   return [
-    ...(hcm.length ? [[`Cây sống — giao ${hcm.join(', ')}`, money(fee.hcm), money(freeFrom)]] : []),
-    ...(west.length ? [[`Cây sống — giao ${REGION_LABEL.west} (${west.join(', ')})`, money(fee.west), money(freeFrom)]] : []),
-    ['Cây sống — giao các tỉnh / thành còn lại', money(fee.far), money(freeFrom)],
+    ...(hcm.length ? [[`Cây sống — giao ${hcm.join(', ')}`, money(fee.hcm), money(free.hcm)]] : []),
+    ...(west.length ? [[`Cây sống — giao ${REGION_LABEL.west} (${west.join(', ')})`, money(fee.west), money(free.west)]] : []),
+    ['Cây sống — giao các tỉnh / thành còn lại', money(fee.far), money(free.far)],
   ];
 }
 

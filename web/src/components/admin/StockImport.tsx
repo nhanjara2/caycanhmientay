@@ -27,6 +27,7 @@ export function StockImport({ suppliers }: { suppliers: string[] }) {
   const [docNo, setDocNo] = useState('');
   const [note, setNote] = useState('');
   const [allowDup, setAllowDup] = useState(false);
+  const [consign, setConsign] = useState(false);
   const [pending, start] = useTransition();
 
   const reset = () => { setFile(null); setRes(null); setError(''); setAllowDup(false); if (input.current) input.current.value = ''; };
@@ -41,12 +42,13 @@ export function StockImport({ suppliers }: { suppliers: string[] }) {
       fd.set('docNo', docNo);
       fd.set('note', note);
       if (allowDup) fd.set('allowDuplicate', '1');
+      if (consign) fd.set('consign', '1');
       const r = await importStockAction(fd).catch(() => ({ ok: false as const, error: 'Có lỗi, vui lòng thử lại' }));
       if (!r.ok) { setError(r.error); setRes(null); return; }
       if (r.committed) {
         setDone({ lines: r.lines, units: r.units, code: r.code });
         reset();
-        setSupplier(''); setDocNo(''); setNote('');
+        setSupplier(''); setDocNo(''); setNote(''); setConsign(false);
         router.refresh();
         return;
       }
@@ -74,7 +76,7 @@ export function StockImport({ suppliers }: { suppliers: string[] }) {
     <div className="ad-card__b">
       <div className="ad-grid2">
         <div className="vx-fl">
-          <label htmlFor="si-supplier">Nhà cung cấp (không bắt buộc)</label>
+          <label htmlFor="si-supplier">Nhà vườn / nhà cung cấp{consign ? ' (bắt buộc)' : ' (không bắt buộc)'}</label>
           <input id="si-supplier" list="supplier-list" value={supplier} onChange={(e) => setSupplier(e.target.value)} maxLength={80} placeholder="Chọn hoặc gõ tên mới" autoComplete="off" />
           <datalist id="supplier-list">{suppliers.map((n) => <option key={n} value={n} />)}</datalist>
         </div>
@@ -83,6 +85,10 @@ export function StockImport({ suppliers }: { suppliers: string[] }) {
           <input id="si-doc" value={docNo} onChange={(e) => setDocNo(e.target.value)} maxLength={60} placeholder="HD-0123" autoComplete="off" />
         </div>
       </div>
+      <label className="vx-check">
+        <input type="checkbox" checked={consign} onChange={(e) => setConsign(e.target.checked)} />
+        <span><b>Hàng ký gửi</b> — cây vẫn ở vườn nhà cung cấp, trả tiền nhà vườn theo số đã bán (xem ở Đối soát nhà vườn)</span>
+      </label>
       <div className="vx-fl">
         <label htmlFor="si-note">Ghi chú phiếu</label>
         <input id="si-note" value={note} onChange={(e) => setNote(e.target.value)} maxLength={200} placeholder="Giao buổi sáng, kiểm hàng bởi…" autoComplete="off" />

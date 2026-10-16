@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, useTransition, type FormEvent } from 'react';
 import { adjustStockAction, deleteLotAction, stockHistoryAction } from '@/app/actions/admin';
 import { Icon } from '@/components/Icon';
-import { expiryLevel, fmtYmd } from '@/lib/stock';
+import { expiryLevel, fmtYmd, GRADE_LABEL, gradeText, LOT_GRADES } from '@/lib/stock';
 import { Select } from '@/components/Select';
 
 const REASON = { import: 'Nhập hàng', adjust: 'Kiểm kê', order: 'Bán', cancel: 'Hủy đơn', transfer: 'Chuyển kho', warranty: 'Bảo hành', discard: 'Xóa lô' } as const;
@@ -12,7 +12,11 @@ type Move = Awaited<ReturnType<typeof stockHistoryAction>>[number];
 type Mode = 'import' | 'count' | 'transfer';
 
 export type StoreOpt = { id: number; code: string; name: string };
-export type LotOpt = { id: number; storeId: number; lotCode: string | null; expiry: string | null; qty: number };
+export type LotOpt = {
+  id: number; storeId: number; lotCode: string | null; expiry: string | null; qty: number;
+  /** Nhà vườn, hạng, giá vườn, ký gửi của lô (lô nhập trước 16/10/2026 có thể trống). */
+  supplier?: string | null; grade?: string | null; unitCost?: number | null; consign?: boolean;
+};
 
 const digits = (s: string) => s.replace(/\D/g, '').slice(0, 6);
 const costDigits = (s: string) => s.replace(/\D/g, '').slice(0, 9);
@@ -32,6 +36,8 @@ export function StockDialog({ slug, idx, name, label, stock, lotTracked, stores,
   const [qty, setQty] = useState('');
   const [cost, setCost] = useState('');
   const [supplier, setSupplier] = useState('');
+  const [grade, setGrade] = useState('');
+  const [consign, setConsign] = useState(false);
   const [note, setNote] = useState('');
   const [error, setError] = useState('');
   const [moves, setMoves] = useState<Move[]>([]);
@@ -57,7 +63,10 @@ export function StockDialog({ slug, idx, name, label, stock, lotTracked, stores,
   }, [lots, lotId, mode]);
 
   const storeCode = (id: number) => stores.find((s) => s.id === id)?.code ?? '?';
-  const lotText = (l: Pick<LotOpt, 'lotCode' | 'expiry'>) => [l.lotCode && `Lô ${l.lotCode}`, l.expiry && `HSD ${fmtYmd(l.expiry)}`].filter(Boolean).join(' · ') || 'Không theo lô';
+  const lotText = (l: LotOpt) => [
+    l.lotCode && `Lô ${l.lotCode}`, l.expiry && `HSD ${fmtYmd(l.expiry)}`, l.supplier, gradeText(l.grade),
+    l.unitCost != null && `vườn ${l.unitCost.toLocaleString('vi-VN')}đ`, l.consign && 'Ký gửi',
+  ].filter(Boolean).join(' · ') || 'Không theo lô';
   const inStore = (id: number) => lots.filter((l) => l.storeId === id && expiryLevel(l.expiry) !== 'expired').reduce((s, l) => s + l.qty, 0);
   const n = Number(qty || 0);
   const lot = lots.find((l) => l.id === lotId);
@@ -86,13 +95,13 @@ export function StockDialog({ slug, idx, name, label, stock, lotTracked, stores,
     e.preventDefault();
     setError('');
     const payload =
-      mode === 'import' ? { mode, slug, idx, storeId, qty: n, lotCode: lotCode || undefined, expiry: expiry || undefined, note: note || undefined, unitCost: cost ? Number(cost) : undefined, supplier: supplier.trim() || undefined }
+      mode === 'import' ? { mode, slug, idx, storeId, qty: n, lotCode: lotCode || undefined, expiry: expiry || undefined, note: note || undefined, unitCost: cost ? Number(cost) : undefined, supplier: supplier.trim() || undefined, grade: grade || undefined, consign }
         : mode === 'count' ? { mode, lotId, qty: n, note: note || undefined }
         : { mode, slug, idx, from: storeId, to, qty: n, note: note || undefined };
     start(async () => {
       const r = await adjustStockAction(payload).catch(() => ({ ok: false as const, error: 'Có lỗi, vui lòng thử lại' }));
       if (!r.ok) { setError(r.error); return; }
-      setOpen(false); setQty(''); setNote(''); setLotCode(''); setExpiry(''); setCost(''); setSupplier('');
+      setOpen(false); setQty(''); setNote(''); setLotCode(''); setExpiry(''); setCost(''); setSupplier(''); setGrade(''); setConsign(false);
       router.refresh();
     });
   };
@@ -139,8 +148,21 @@ export function StockDialog({ slug, idx, name, label, stock, lotTracked, stores,
                     </div>
                   )}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
-                    <div className="vx-fl"><label htmlFor="sd-cost">Giá nhập (đ/đơn vị)</label><input id="sd-cost" inputMode="numeric" value={cost} onChange={(e) => setCost(costDigits(e.target.value))} placeholder="Không bắt buộc" /></div>
-                    <div className="vx-fl"><label htmlFor="sd-sup">Nhà cung cấp</label><input id="sd-sup" list="supplier-list" value={supplier} onChange={(e) => setSupplier(e.target.value)} maxLength={80} placeholder="Không bắt buộc" autoComplete="off" /></div>
+                    <div className="vx-fl"><label htmlFor="sd-cost">Giá vườn (đ/đơn vị)</label><input id="sd-cost" inputMode="numeric" value={cost} onChange={(e) => setCost(costDigits(e.target.value))} placeholder="Không bắt buộc" /></div>
+                    <div className="vx-fl"><label htmlFor="sd-sup">Nhà vườn / nhà cung cấp</label><input id="sd-sup" list="supplier-list" value={supplier} onChange={(e) => setSupplier(e.target.value)} maxLength={80} placeholder={consign ? 'Bắt buộc với hàng ký gửi' : 'Không bắt buộc'} autoComplete="off" /></div>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8, alignItems: 'end' }}>
+                    <div className="vx-fl">
+                      <label htmlFor="sd-grade">Hạng chất lượng</label>
+                      <Select id="sd-grade" value={grade} onChange={(e) => setGrade(e.target.value)}>
+                        <option value="">Không phân hạng</option>
+                        {LOT_GRADES.map((g) => <option key={g} value={g}>{GRADE_LABEL[g]}</option>)}
+                      </Select>
+                    </div>
+                    <label className="vx-check" style={{ paddingBottom: 10 }}>
+                      <input type="checkbox" checked={consign} onChange={(e) => setConsign(e.target.checked)} />
+                      <span>Hàng ký gửi (cây ở vườn nhà cung cấp, trả tiền khi bán)</span>
+                    </label>
                   </div>
                 </>
               )}

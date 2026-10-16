@@ -10,14 +10,13 @@ import { VoucherBox } from '@/components/VoucherBox';
 import { useAuth } from '@/lib/auth';
 import { useCart } from '@/lib/cart';
 import { WHOLESALE_QUOTE_URL } from '@/lib/partners';
-import { withVouchers } from '@/lib/pricing';
-import { useAppliedVouchers } from '@/lib/voucher-pick';
+import { useAppliedVouchers, withApplied } from '@/lib/voucher-pick';
 
 export default function CartPage() {
   const { lines, totals, region, ready, replace } = useCart();
   const { user } = useAuth();
   // Khách chọn mã ngay ở giỏ (hộp "Ưu đãi dành cho bạn"); mã đã chọn theo sang trang thanh toán
-  const vouchers = useAppliedVouchers({ items: lines.map(({ slug, option, qty }) => ({ slug, option, qty })), phone: user?.phone ?? '', delivery: 'ship', region, enabled: ready });
+  const vouchers = useAppliedVouchers({ items: lines.map(({ slug, option, qty }) => ({ slug, option, qty })), phone: user?.phone ?? '', delivery: 'ship', region, partner: (user?.partner?.discount ?? 0) > 0, enabled: ready });
   const [notice, setNotice] = useState('');
   const refreshed = useRef(false);
 
@@ -61,7 +60,7 @@ export default function CartPage() {
         <CartList editable />
       </div>
       <OrderSummary
-        totals={withVouchers(totals, vouchers.applied.discount?.discount ?? 0, vouchers.applied.ship?.discount ?? 0)}
+        totals={withApplied(totals, vouchers.applied)}
         voucherHint
         voucher={totals.voucherBase > 0 || !totals.goods ? <VoucherBox state={vouchers} totals={totals} shipFee={totals.plantShip + totals.supplyShip} /> : undefined}
       >

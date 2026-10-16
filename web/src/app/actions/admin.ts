@@ -6,7 +6,7 @@ import * as z from 'zod';
 import { requireAccess, requireStaff, staffName } from '@/server/auth';
 import { countLot, deleteLot, recentMoves, transferStock } from '@/server/inventory';
 import { cleanText, MAX_DOC_NO, MAX_RECEIPT_NOTE, MAX_SUPPLIER, receiveGoods } from '@/server/receipts';
-import { todayVN, tracksLots } from '@/lib/stock';
+import { LOT_GRADES, todayVN, tracksLots } from '@/lib/stock';
 import { addProductImage, deleteProduct, deleteProductImage, listProductImages, moveProductImage, ProductInputSchema, replaceProductImage, saveProduct, setProductActive, setProductImageAlt } from '@/server/products-admin';
 import { applyStockImport, DuplicateImportError, findDuplicateImport, MAX_IMPORT_BYTES, parseStockImport } from '@/server/stock-import';
 import { saveImage } from '@/server/uploads';
@@ -119,6 +119,9 @@ const AdjustSchema = z.discriminatedUnion('mode', [
     supplier: z.string().trim().max(MAX_SUPPLIER).optional(),
     /** Giá nhập 1 đơn vị (đồng). */
     unitCost: z.number().int().min(0).max(100_000_000).optional(),
+    grade: z.enum(LOT_GRADES).optional(),
+    /** Hàng ký gửi: cây ở vườn nhà cung cấp, trả tiền khi bán. */
+    consign: z.boolean().optional(),
   }),
   z.object({ mode: z.literal('count'), lotId: z.number().int().positive(), qty: z.number().int().min(0).max(100_000), note }),
   z.object({
@@ -144,8 +147,8 @@ export async function adjustStockAction(input: unknown) {
     // Nhập tay cũng thành một phiếu nhập (1 dòng) để mọi lần nhập nằm chung một sổ
     try {
       await db.transaction((tx) => receiveGoods(tx, [{
-        slug: v.slug, idx: v.idx, storeId: v.storeId, qty: v.qty, unitCost: v.unitCost ?? null, lotCode: v.lotCode || null, expiry: v.expiry ?? null, note: v.note || null,
-      }], { supplier: cleanText(v.supplier, MAX_SUPPLIER), docNo: null, note: null, source: 'manual' }, actor));
+        slug: v.slug, idx: v.idx, storeId: v.storeId, qty: v.qty, unitCost: v.unitCost ?? null, grade: v.grade ?? null, lotCode: v.lotCode || null, expiry: v.expiry ?? null, note: v.note || null,
+      }], { supplier: cleanText(v.supplier, MAX_SUPPLIER), docNo: null, note: null, source: 'manual', consign: !!v.consign }, actor));
     } catch (e) {
       return { ok: false as const, error: e instanceof Error ? e.message.replace(/^Dòng: /, '') : 'Có lỗi, vui lòng thử lại' };
     }
@@ -207,8 +210,9 @@ export async function importStockAction(fd: FormData) {
   if (!info.success) return { ok: false as const, error: 'Thông tin phiếu nhập quá dài' };
   const meta = {
     supplier: cleanText(info.data.supplier, MAX_SUPPLIER), docNo: cleanText(info.data.docNo, MAX_DOC_NO), note: cleanText(info.data.note, MAX_RECEIPT_NOTE),
-    fileName: cleanText(f.name, 120), allowDuplicate: fd.get('allowDuplicate') === '1',
+    fileName: cleanText(f.name, 120), allowDuplicate: fd.get('allowDuplicate') === '1', consign: fd.get('consign') === '1',
   };
+  if (meta.consign && !meta.supplier) return { ok: false as const, error: 'Hàng ký gửi: nhập tên nhà vườn gửi cây' };
 
   const parsed = await parseStockImport(Buffer.from(await f.arrayBuffer()));
   if (!parsed.ok) return { ok: false as const, error: parsed.error };

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { type CartLine, type Totals, useCart } from '@/lib/cart';
-import { minOrderShort, plantFeeVaries, type LinePrice } from '@/lib/pricing';
+import { minOrderShort, plantFeeVaries, plantFreeFrom, type LinePrice } from '@/lib/pricing';
 import { REGION_LABEL } from '@/lib/shipping';
 import { useShipping } from '@/lib/shipping-client';
 import { money } from '@/lib/format';
@@ -107,7 +107,8 @@ export function OrderSummary({ totals: t, voucherHint = false, voucher, delivery
   // Đơn giao hàng cần đủ tiền hàng tối thiểu (Cài đặt giao hàng); nhận tại vườn không giới hạn.
   const short = minOrderShort(t.goods, minOrder, delivery);
   const vouchers = usePublicVouchers();
-  const plantLeft = t.plantSubtotal > 0 && t.plantShip > 0 ? rules.plant.freeFrom - t.plantSubtotal : 0;
+  const plantFree = plantFreeFrom(rules.plant, t.shipRegion);
+  const plantLeft = t.plantSubtotal > 0 && t.plantShip > 0 ? plantFree - t.plantSubtotal : 0;
   // Chưa biết nơi nhận mà các vùng khác phí: số hiện là tạm tính
   const estimate = delivery === 'ship' && t.plantSubtotal > 0 && !t.shipRegion && plantFeeVaries(rules.plant);
   // Phí giao luôn hiện đủ theo bảng phí; đủ mức miễn phí giao thì có thêm dòng "Giảm phí giao" trừ ra (chữ "Miễn phí" chỉ còn khi không có phí để tính, vd. nhận tại vườn).
@@ -129,9 +130,9 @@ export function OrderSummary({ totals: t, voucherHint = false, voucher, delivery
         {t.plantShipFree > 0 && <div><span>Giảm phí giao cây sống</span><b className="neg">-{money(t.plantShipFree)}</b></div>}
         {t.supplySubtotal > 0 && <div><span>Phí giao vật tư</span>{supplyGross ? <b>{money(supplyGross)}</b> : <b className="pos">Miễn phí</b>}</div>}
         {t.supplyShipFree > 0 && <div><span>Giảm phí giao vật tư</span><b className="neg">-{money(t.supplyShipFree)}</b></div>}
-        {t.shipVoucherDiscount > 0 && <div><span>Mã miễn phí giao</span><b className="neg">-{money(t.shipVoucherDiscount)}</b></div>}
-        {t.voucherDiscount > 0 && <div><span>Mã giảm giá</span><b className="neg">-{money(t.voucherDiscount)}</b></div>}
-        {t.partnerDiscount > 0 && <div><span>Chiết khấu đối tác</span><b className="neg">-{money(t.partnerDiscount)}</b></div>}
+        {t.shipVoucherDiscount > 0 && <div><span>Mã miễn phí giao{t.capped?.ship ? ' (tối đa)' : ''}</span><b className="neg">-{money(t.shipVoucherDiscount)}</b></div>}
+        {t.voucherDiscount > 0 && <div><span>Mã giảm giá{t.capped?.voucher ? ' (tối đa)' : ''}</span><b className="neg">-{money(t.voucherDiscount)}</b></div>}
+        {t.partnerDiscount > 0 && <div><span>Chiết khấu đối tác{t.capped?.partner ? ' (tối đa)' : ''}</span><b className="neg">-{money(t.partnerDiscount)}</b></div>}
         {saved > 0 && <div><span>Tiết kiệm được</span><b className="neg">{money(saved)}</b></div>}
       </div>
       {voucher}
@@ -150,7 +151,7 @@ export function OrderSummary({ totals: t, voucherHint = false, voucher, delivery
       {plantLeft > 0 && (
         <div className="vx-freeship">
           <span>Mua thêm <b>{money(plantLeft)}</b> để miễn phí giao cây sống{t.bulkyShip > 0 ? ' (chưa gồm phụ phí cây lớn)' : ''}</span>
-          <div className="bar"><i style={{ width: `${(t.plantSubtotal / rules.plant.freeFrom) * 100}%` }} /></div>
+          <div className="bar"><i style={{ width: `${(t.plantSubtotal / plantFree) * 100}%` }} /></div>
         </div>
       )}
       <div className="vx-total">

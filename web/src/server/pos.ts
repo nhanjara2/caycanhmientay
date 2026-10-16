@@ -9,7 +9,8 @@ import { allProducts, getProducts } from './catalog';
 import { db, schema } from './db';
 import { applyStock, listStores, type Tx } from './inventory';
 import { notifyEvent } from './notify';
-import { itemPrice, newOrderCode, pricedLine, snapshotItemCosts } from './orders';
+import { guardOrder, orderFloor } from './margin-guard';
+import { floorLines, itemPrice, newOrderCode, pricedLine, snapshotItemCosts } from './orders';
 import { getShippingConfig } from './shipping';
 import { checkVoucher } from './vouchers';
 
@@ -88,6 +89,7 @@ export async function createPosOrder(input: PosOrderInput, staff: SessionUser): 
   if (input.voucherCode && !phone) return { ok: false, error: 'Nhập số điện thoại khách để dùng mã giảm giá' };
 
   const totals = computeTotals(lines.map(pricedLine), 'pickup', 0, await getShippingConfig());
+  const floor = await orderFloor(floorLines(lines));
   const actor = staffName(staff);
   try {
     return await db.transaction(async (tx: Tx): Promise<PosResult> => {
@@ -96,7 +98,9 @@ export async function createPosOrder(input: PosOrderInput, staff: SessionUser): 
       if (input.voucherCode) {
         const v = await checkVoucher(tx, input.voucherCode, { subtotal: totals.voucherBase, totals, userId: owner?.id ?? null, phone }, { lock: true });
         if (!v.ok) throw new PosError(v.error);
-        voucherCode = v.code; voucherDiscount = v.discount;
+        // Giá sàn: mã chỉ giảm tới mức đơn còn đủ lãi tối thiểu (màn POS xem trước cùng số qua previewVouchers).
+        voucherDiscount = guardOrder(totals, floor, { partner: 0, voucher: v.discount, ship: 0 }).voucher;
+        voucherCode = voucherDiscount > 0 ? v.code : null;
       }
       const total = Math.max(0, totals.goods - voucherDiscount);
       const code = await newOrderCode(tx);

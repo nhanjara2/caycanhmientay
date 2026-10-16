@@ -81,7 +81,7 @@ export default async function AdminPurchasingPage() {
               <tbody>
                 {receipts.map((r) => (
                   <tr key={r.id}>
-                    <td><Link href={`/admin/nhap-hang/phieu/${r.code}`} className="app-rowlink" style={link}>{r.code}</Link><small>{r.source === 'excel' ? 'Excel' : 'Nhập tay'}</small></td>
+                    <td><Link href={`/admin/nhap-hang/phieu/${r.code}`} className="app-rowlink" style={link}>{r.code}</Link><small>{r.source === 'excel' ? 'Excel' : 'Nhập tay'}{r.consign ? ' · Ký gửi' : ''}</small></td>
                     <td data-label="Thời gian">{when(r.createdAt)}</td>
                     <td data-label="Nhà cung cấp">{r.supplier ?? '—'}</td>
                     <td data-label="Chứng từ">{r.docNo ?? '—'}</td>

@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import ExcelJS from 'exceljs';
 import { eq } from 'drizzle-orm';
 import { normalize } from '@/lib/catalog';
-import { expiryLevel, todayVN, tracksLots } from '@/lib/stock';
+import { expiryLevel, isGrade, todayVN, tracksLots } from '@/lib/stock';
 import { getCategories } from './categories';
 import { db, schema } from './db';
 import { listInventory, listStores, type InventoryTab } from './inventory';
@@ -35,14 +35,15 @@ const COLS = {
   store: 'Cửa hàng nhập',
   qty: 'Số lượng nhập',
   cost: 'Giá nhập (đ/đơn vị)',
+  grade: 'Hạng (1/2/3)',
   lot: 'Số lô',
   expiry: 'Hạn dùng',
   note: 'Ghi chú',
 } as const;
 type ColKey = keyof typeof COLS;
-const WIDTH: Record<ColKey, number> = { sku: 16, name: 40, label: 18, unit: 10, origin: 14, category: 16, stock: 13, lastCost: 16, lots: 10, store: 15, qty: 15, cost: 19, lot: 14, expiry: 14, note: 28 };
+const WIDTH: Record<ColKey, number> = { sku: 16, name: 40, label: 18, unit: 10, origin: 14, category: 16, stock: 13, lastCost: 16, lots: 10, store: 15, qty: 15, cost: 19, grade: 13, lot: 14, expiry: 14, note: 28 };
 /** Cột người dùng điền (tiêu đề xanh); còn lại chỉ để xem, khi đọc file không dùng đến. */
-const INPUT_COLS: ColKey[] = ['store', 'qty', 'cost', 'lot', 'expiry', 'note'];
+const INPUT_COLS: ColKey[] = ['store', 'qty', 'cost', 'grade', 'lot', 'expiry', 'note'];
 
 /** Tên cột đem so khớp: bỏ dấu, bỏ dấu *, bỏ phần ghi chú trong ngoặc. */
 const headKey = (s: string) => normalize(s).replace(/\(.*?\)|\*/g, '').replace(/\s+/g, ' ').trim();
@@ -95,7 +96,7 @@ export async function renderStockTemplate(rows: TemplateRow[], stores: Pick<Stor
     const row = ws.addRow({
       sku: skuKey(r.sku, r.idx), name: r.name, label: r.label, unit: r.unit, origin: r.origin, category: r.categoryName,
       stock: r.stock, lastCost: r.lastCost, lots: lots ? 'Có' : '',
-      store: defaultStore, qty: null, cost: null, lot: null, expiry: null, note: null,
+      store: defaultStore, qty: null, cost: null, grade: null, lot: null, expiry: null, note: null,
     });
     for (const k of ['sku', 'name', 'label', 'unit', 'origin', 'category', 'stock', 'lastCost', 'lots'] as const) {
       const c = row.getCell(k);
@@ -113,6 +114,10 @@ export async function renderStockTemplate(rows: TemplateRow[], stores: Pick<Stor
     row.getCell('cost').dataValidation = {
       type: 'whole', operator: 'between', formulae: [0, MAX_COST], allowBlank: true, showErrorMessage: true,
       errorTitle: 'Giá nhập', error: `Nhập số tiền nguyên (đồng) từ 0 đến ${MAX_COST.toLocaleString('vi-VN')}`,
+    };
+    row.getCell('grade').dataValidation = {
+      type: 'list', formulae: ['"1,2,3"'], allowBlank: true, showErrorMessage: true,
+      errorTitle: 'Hạng', error: 'Chọn 1, 2 hoặc 3 (Loại 1 / 2 / 3), hoặc để trống',
     };
     if (listFormula.length <= 255) {
       row.getCell('store').dataValidation = {
@@ -135,7 +140,9 @@ export async function renderStockTemplate(rows: TemplateRow[], stores: Pick<Stor
     ['Cột xám (chỉ để xem)', 'Mã SKU, Sản phẩm, Quy cách, Đơn vị, Xuất xứ, Danh mục, Tồn hiện tại, Giá nhập gần nhất, Theo lô. Không sửa: khi tải lên hệ thống không đọc các cột này (trừ Mã SKU). Muốn đổi Đơn vị / Xuất xứ thì sửa ở Sản phẩm.'],
     ['Mã SKU', 'Giữ nguyên, không sửa. Mỗi dòng là một quy cách của sản phẩm (mã dạng MT-90001-1).'],
     ['Số lượng nhập', 'Số nguyên dương, tính theo cột Đơn vị / Quy cách. Để trống (hoặc 0) = bỏ qua dòng đó. Không cần xóa các dòng không nhập.'],
-    ['Giá nhập (đ/đơn vị)', 'Không bắt buộc. Giá nhập của 1 đơn vị (đồng), gõ 125000 hoặc 125.000. Dùng để ghi sổ phiếu nhập (tổng tiền hàng), không đổi giá bán.'],
+    ['Giá nhập (đ/đơn vị)', 'Không bắt buộc. Giá vườn của 1 đơn vị (đồng), gõ 125000 hoặc 125.000. Ghi giá thì hệ thống tự cập nhật giá vườn / giá gốc của quy cách (lấy giá cao nhất trong các lô còn hàng) — giá sàn và bảng giá tính từ số này. Không tự đổi giá bán.'],
+    ['Hạng (1/2/3)', 'Không bắt buộc. Chất lượng cây của nhà vườn ở lô này: 1 = Loại 1, 2 = Loại 2, 3 = Loại 3. Cùng cây, khác hạng thì thành lô riêng.'],
+    ['Hàng ký gửi', 'Cây vẫn ở vườn nhà cung cấp, shop đăng bán và trả tiền theo số đã bán: tích ô "Hàng ký gửi" ở màn hình tải lên (bắt buộc nhập tên nhà vườn). Công nợ xem ở Đối soát nhà vườn.'],
     ['Cửa hàng nhập', `Mã cửa hàng nhận hàng. Để trống = ${defaultStore || 'cửa hàng mặc định'}. Các mã hợp lệ ở bảng bên dưới.`],
     ['Số lô, Hạn dùng', 'Bắt buộc với dòng có chữ "Có" ở cột Theo lô (thuốc BVTV, phân bón, hạt giống). Hạn dùng nhập dd/mm/yyyy hoặc mm/yyyy (mm/yyyy = ngày cuối tháng). Lô đã hết hạn không nhập kho.'],
     ['Ghi chú', 'Tùy chọn (số phiếu, ghi chú riêng của dòng…), tối đa 200 ký tự. Được ghi vào lịch sử kho. Nhà cung cấp và số chứng từ không điền ở đây mà điền ở màn hình tải lên.'],
@@ -175,6 +182,7 @@ export type ImportRow = {
   qty: number | null;
   /** Giá nhập 1 đơn vị (đồng); null = không ghi. */
   unitCost: number | null;
+  grade: string | null;
   lotCode: string | null;
   expiry: string | null;
   note: string | null;
@@ -292,6 +300,7 @@ export async function parseStockSheet(buf: Buffer, stores: StoreRef[], opts: Opt
     const lotCode = text(xr, 'lot').toUpperCase();
     const expiryRaw = get(xr, 'expiry');
     const note = text(xr, 'note');
+    const gradeRaw = text(xr, 'grade').replace(/^loại\s*/i, '');
     if (!sku && qtyRaw === null && costRaw === null && !lotCode && expiryRaw === null && !note) continue; // dòng trống
 
     const qtyEmpty = qtyRaw === null || qtyRaw === '' || qtyRaw === 0 || qtyRaw === '0';
@@ -330,6 +339,7 @@ export async function parseStockSheet(buf: Buffer, stores: StoreRef[], opts: Opt
       else if (expiryLevel(expiry, today) === 'soon') warnings.push('Hạn dùng còn dưới 60 ngày');
     }
     if (lotCode.length > 40) errors.push('Số lô tối đa 40 ký tự');
+    if (gradeRaw && !isGrade(gradeRaw)) errors.push('Hạng chỉ nhận 1, 2 hoặc 3');
     if (note.length > 200) errors.push('Ghi chú tối đa 200 ký tự');
     if (o && tracksLots(o)) {
       if (!lotCode) errors.push('Hàng có hạn dùng: cần Số lô');
@@ -346,7 +356,7 @@ export async function parseStockSheet(buf: Buffer, stores: StoreRef[], opts: Opt
 
     rows.push({
       row: r, sku, slug: o?.slug ?? null, idx: o?.idx ?? null, name: o?.name ?? null, label: o?.label ?? null,
-      storeId: store?.id ?? null, storeCode: store?.code ?? null, qty, unitCost: cost.value, lotCode: lotCode || null, expiry, note: note || null, errors, warnings,
+      storeId: store?.id ?? null, storeCode: store?.code ?? null, qty, unitCost: cost.value, grade: isGrade(gradeRaw) ? gradeRaw : null, lotCode: lotCode || null, expiry, note: note || null, errors, warnings,
     });
   }
   return { ok: true, rows, skipped };
@@ -356,7 +366,7 @@ export async function parseStockSheet(buf: Buffer, stores: StoreRef[], opts: Opt
 
 /** Dấu vân tay của bộ dòng sẽ nhập (không phụ thuộc thứ tự dòng, tên file hay việc file được lưu lại bằng Excel). */
 export function linesHash(rows: ImportRow[]) {
-  const keys = rows.map((r) => [r.slug, r.idx, r.storeId, r.qty, r.unitCost ?? '', r.lotCode ?? '', r.expiry ?? ''].join('|')).sort();
+  const keys = rows.map((r) => [r.slug, r.idx, r.storeId, r.qty, r.unitCost ?? '', r.lotCode ?? '', r.expiry ?? '', ...(r.grade ? [r.grade] : [])].join('|')).sort();
   return createHash('sha256').update(keys.join('\n')).digest('hex');
 }
 
@@ -369,12 +379,12 @@ export class DuplicateImportError extends Error {
   constructor(public code: string) { super(`Nội dung này đã được nhập ở phiếu ${code}`); }
 }
 
-export type ImportMeta = { supplier: string | null; docNo: string | null; note: string | null; fileName: string | null; allowDuplicate: boolean };
+export type ImportMeta = { supplier: string | null; docNo: string | null; note: string | null; fileName: string | null; allowDuplicate: boolean; consign?: boolean };
 
 /** Ghi toàn bộ dòng hợp lệ thành một phiếu nhập trong một transaction: lỗi giữa chừng thì không dòng nào được nhập. */
 export async function applyStockImport(rows: ImportRow[], actor: string, meta: ImportMeta) {
   const hash = linesHash(rows);
-  const receipt: ReceiptMeta = { supplier: meta.supplier, docNo: meta.docNo, note: meta.note, source: 'excel', linesHash: hash, fileName: meta.fileName };
+  const receipt: ReceiptMeta = { supplier: meta.supplier, docNo: meta.docNo, note: meta.note, source: 'excel', linesHash: hash, fileName: meta.fileName, consign: !!meta.consign };
   const done = await db.transaction(async (tx) => {
     if (!meta.allowDuplicate) {
       await lockHash(tx, hash);
@@ -382,7 +392,7 @@ export async function applyStockImport(rows: ImportRow[], actor: string, meta: I
       if (dup) throw new DuplicateImportError(dup.code);
     }
     return receiveGoods(tx, rows.map((r) => ({
-      slug: r.slug!, idx: r.idx!, storeId: r.storeId!, qty: r.qty!, unitCost: r.unitCost, lotCode: r.lotCode, expiry: r.expiry, note: r.note, ref: `Dòng ${r.row}`,
+      slug: r.slug!, idx: r.idx!, storeId: r.storeId!, qty: r.qty!, unitCost: r.unitCost, grade: r.grade, lotCode: r.lotCode, expiry: r.expiry, note: r.note, ref: `Dòng ${r.row}`,
     })), receipt, actor);
   });
   return { code: done.code, lines: done.lines, units: done.units };

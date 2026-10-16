@@ -46,6 +46,7 @@ export const ADMIN_NAV: { group: string; items: { href: string; label: string; i
     { href: '/admin/bao-cao', label: 'Báo cáo', icon: 'chart' },
     { href: '/admin/thu-chi', label: 'Thu chi', icon: 'wallet' },
     { href: '/admin/chi-phi', label: 'Chi phí', icon: 'wallet' },
+    { href: '/admin/doi-soat', label: 'Đối soát nhà vườn', icon: 'wallet' },
   ] },
   { group: 'BÁN HÀNG', items: [
     { href: '/admin/don-hang', label: 'Đơn hàng', icon: 'box' },

@@ -44,7 +44,9 @@ export function VoucherBox({ state, totals, shipFee }: {
   const gift: Ticket[] = user && offer?.status === 'available'
     ? [{ code: offer.code, label: 'Quà tài khoản mới', kind: 'discount', discountType: offer.discountType, discountValue: offer.discountValue, maxDiscount: offer.maxDiscount, minOrder: offer.minOrder, gift: offer }]
     : [];
-  const tickets: Ticket[] = [...gift, ...publics];
+  // Tài khoản đối tác đã có chiết khấu riêng: chỉ còn mã miễn phí giao (server cũng từ chối mã giảm giá).
+  const isPartner = (user?.partner?.discount ?? 0) > 0;
+  const tickets: Ticket[] = [...gift, ...publics].filter((v) => !isPartner || v.kind === 'ship');
   const { applied } = state;
   const chosen = [applied.ship, applied.discount].filter((v) => v !== null);
   const amountOf = (v: Ticket) => voucherAmount(v.scope, totals);

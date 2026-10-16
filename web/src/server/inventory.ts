@@ -1,11 +1,12 @@
 import 'server-only';
-import { and, asc, count, desc, eq, gt, ilike, inArray, lt, or, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gt, ilike, inArray, lt, or, sql, type AnyColumn } from 'drizzle-orm';
+import { costFromGarden } from '@/lib/pricing';
 import { addDays, EXPIRY_WARN_DAYS, todayVN } from '@/lib/stock';
 import { mainImageOf } from './catalog';
 import { db, schema, type DB } from './db';
 import type { STOCK_REASONS } from './db/schema';
 
-const { products, productOptions, stockMoves, stockLots: L, stores, purchaseReceipts } = schema;
+const { products, productOptions, stockMoves, stockLots: L, stores, purchaseReceipts, suppliers } = schema;
 
 export type Tx = Parameters<Parameters<DB['transaction']>[0]>[0];
 export type StockReason = (typeof STOCK_REASONS)[number];
@@ -31,7 +32,15 @@ export type StockOpts = {
   expiry?: string | null;
   /** Phiếu nhập tạo ra lần thay đổi này (ghi vào lịch sử kho). */
   receiptId?: number;
+  /** Nhập lô mới: nhà vườn, giá vườn / đơn vị, hạng chất lượng, hàng ký gửi. Chỉ cộng dồn vào lô có đúng các thông tin này. */
+  supplierId?: number | null;
+  unitCost?: number | null;
+  grade?: string | null;
+  consign?: boolean;
 };
+
+/** So khớp cột có thể null: null chỉ khớp null. */
+const same = (col: AnyColumn, v: string | number | null | undefined) => (v == null ? sql`${col} is null` : eq(col, v));
 
 /**
  * Thay đổi tồn một quy cách và ghi lịch sử. Mọi thay đổi tồn kho đều phải đi qua hàm này.
@@ -52,11 +61,12 @@ export async function applyStock(tx: Tx | DB, slug: string, idx: number, delta: 
       const storeId = opts.storeId ?? await defaultStoreId(tx);
       const lotCode = opts.lotCode?.trim() || null;
       const expiry = opts.expiry || null;
+      const attrs = { supplierId: opts.supplierId ?? null, unitCost: opts.unitCost ?? null, grade: opts.grade ?? null, consign: opts.consign ?? false };
       lot = (await tx.select().from(L).where(and(
         eq(L.storeId, storeId), eq(L.productSlug, slug), eq(L.optionIdx, idx),
-        lotCode ? eq(L.lotCode, lotCode) : sql`${L.lotCode} is null`,
-        expiry ? eq(L.expiry, expiry) : sql`${L.expiry} is null`,
-      )).limit(1))[0] ?? (await tx.insert(L).values({ storeId, productSlug: slug, optionIdx: idx, lotCode, expiry, qty: 0 }).returning())[0];
+        same(L.lotCode, lotCode), same(L.expiry, expiry),
+        same(L.supplierId, attrs.supplierId), same(L.unitCost, attrs.unitCost), same(L.grade, attrs.grade), eq(L.consign, attrs.consign),
+      )).limit(1))[0] ?? (await tx.insert(L).values({ storeId, productSlug: slug, optionIdx: idx, lotCode, expiry, qty: 0, ...attrs }).returning())[0];
     }
     parts.push({ lotId: lot.id, storeId: lot.storeId, delta });
   } else {
@@ -66,7 +76,8 @@ export async function applyStock(tx: Tx | DB, slug: string, idx: number, delta: 
       opts.storeId ? eq(L.storeId, opts.storeId) : undefined,
       opts.lotId ? eq(L.id, opts.lotId) : or(sql`${L.expiry} is null`, sql`${L.expiry} >= ${todayVN()}`),
     )).orderBy(
-      sql`case when ${L.storeId} = ${def} then 0 else 1 end`,
+      // Kho mặc định trước; hàng shop đã mua trước hàng ký gửi (ký gửi chỉ trả tiền nhà vườn khi bán được); rồi hạn dùng sớm nhất.
+      sql`case when ${L.storeId} = ${def} then 0 else 1 end`, sql`case when ${L.consign} then 1 else 0 end`,
       sql`case when ${L.expiry} is null then 1 else 0 end`, asc(L.expiry), asc(L.id),
     ).for('update');
     let need = -delta;
@@ -87,6 +98,18 @@ export async function applyStock(tx: Tx | DB, slug: string, idx: number, delta: 
   }
   await tx.update(productOptions).set({ stock: after }).where(where);
   return after;
+}
+
+/**
+ * Giá vườn của quy cách theo các lô còn hàng: lấy giá cao nhất (an toàn cho giá sàn), giá gốc = giá vườn + 10% tiền xe.
+ * Gọi sau khi nhập hàng có giá. Không còn lô nào có giá thì giữ nguyên số cũ.
+ */
+export async function syncGardenFromLots(tx: Tx, slug: string, idx: number) {
+  const [r] = await tx.select({ g: sql<number | null>`max(${L.unitCost})` }).from(L)
+    .where(and(eq(L.productSlug, slug), eq(L.optionIdx, idx), gt(L.qty, 0), sql`${L.unitCost} is not null`));
+  if (!r?.g) return;
+  await tx.update(productOptions).set({ garden: r.g, cost: costFromGarden(r.g) })
+    .where(and(eq(productOptions.productSlug, slug), eq(productOptions.idx, idx)));
 }
 
 /** Hủy đơn: trả đúng số lượng về đúng lô/cửa hàng đã xuất (theo lịch sử xuất của mã đơn). */
@@ -132,7 +155,9 @@ export async function transferStock(tx: Tx, slug: string, idx: number, from: num
   const taken = await tx.select().from(stockMoves).where(and(gt(stockMoves.id, before), eq(stockMoves.productSlug, slug), eq(stockMoves.optionIdx, idx), eq(stockMoves.reason, 'transfer'), lt(stockMoves.delta, 0), eq(stockMoves.note, text)));
   for (const m of taken) {
     const lot = m.lotId ? (await tx.select().from(L).where(eq(L.id, m.lotId)))[0] : undefined;
-    await applyStock(tx, slug, idx, -m.delta, 'transfer', actor, text, { storeId: to, lotCode: lot?.lotCode, expiry: lot?.expiry });
+    await applyStock(tx, slug, idx, -m.delta, 'transfer', actor, text, {
+      storeId: to, lotCode: lot?.lotCode, expiry: lot?.expiry, supplierId: lot?.supplierId, unitCost: lot?.unitCost, grade: lot?.grade, consign: lot?.consign,
+    });
   }
   return true;
 }
@@ -182,8 +207,9 @@ export async function listInventory({ tab = 'tat-ca', q }: { tab?: InventoryTab;
     .where(and(live, tabFilter(tab), term ? or(ilike(products.name, term), ilike(products.sku, term)) : undefined))
     .orderBy(asc(productOptions.stock), asc(products.name));
   if (!rows.length) return [];
-  const lots = await db.select().from(L).where(and(gt(L.qty, 0), inArray(L.productSlug, [...new Set(rows.map((r) => r.slug))])))
-    .orderBy(sql`case when ${L.expiry} is null then 1 else 0 end`, asc(L.expiry), asc(L.id));
+  const lots = (await db.select({ l: L, supplier: suppliers.name }).from(L).leftJoin(suppliers, eq(suppliers.id, L.supplierId))
+    .where(and(gt(L.qty, 0), inArray(L.productSlug, [...new Set(rows.map((r) => r.slug))])))
+    .orderBy(sql`case when ${L.expiry} is null then 1 else 0 end`, asc(L.expiry), asc(L.id))).map((r) => ({ ...r.l, supplier: r.supplier }));
   return rows.map((r) => {
     const mine = lots.filter((l) => l.productSlug === r.slug && l.optionIdx === r.idx);
     const byStore: Record<number, number> = {};

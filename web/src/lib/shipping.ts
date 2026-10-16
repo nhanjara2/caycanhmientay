@@ -11,8 +11,11 @@ export const SHIP_REGIONS = ['hcm', 'west', 'far'] as const;
 export type ShipRegion = (typeof SHIP_REGIONS)[number];
 export const REGION_LABEL: Record<ShipRegion, string> = { hcm: 'TP. Hồ Chí Minh', west: 'Miền Tây', far: 'Tỉnh xa' };
 
-/** Cây sống: phí giao theo vùng (`regionFee`), phụ phí mỗi cây lớn (`bulky`). `fee` = phí thấp nhất của 3 vùng — số tạm tính ở giỏ hàng khi chưa biết nơi nhận (tự suy ra, không lưu). */
-export type PlantRule = FeeRule & { regionFee: Record<ShipRegion, number>; bulky: number };
+/**
+ * Cây sống: phí giao theo vùng (`regionFee`), mức miễn phí giao theo vùng (`regionFree`), phụ phí mỗi cây lớn (`bulky`).
+ * `fee` / `freeFrom` = mức thấp nhất của 3 vùng — số tạm tính ở giỏ hàng khi chưa biết nơi nhận (tự suy ra, không lưu).
+ */
+export type PlantRule = FeeRule & { regionFee: Record<ShipRegion, number>; regionFree: Record<ShipRegion, number>; bulky: number };
 /** Tỉnh / thành (đúng tên trong `PROVINCES`) thuộc vùng TP.HCM và miền Tây; tỉnh nào không nằm trong hai danh sách này là tỉnh xa. */
 export type RegionProvinces = { hcm: string[]; west: string[] };
 
@@ -48,7 +51,7 @@ export const DEFAULT_REGION_PROVINCES: RegionProvinces = {
 };
 
 export const DEFAULT_SHIPPING: ShippingConfig = {
-  plant: { fee: 35000, freeFrom: 800000, regionFee: { hcm: 35000, west: 35000, far: 35000 }, bulky: 0 },
+  plant: { fee: 35000, freeFrom: 800000, regionFee: { hcm: 35000, west: 35000, far: 35000 }, regionFree: { hcm: 800000, west: 800000, far: 800000 }, bulky: 0 },
   supply: { fee: 20000, freeFrom: 300000 },
   regionProvinces: DEFAULT_REGION_PROVINCES,
   minOrder: DEFAULT_MIN_ORDER,
@@ -72,8 +75,10 @@ const fee = z.object({ fee: money('Phí giao'), freeFrom: money('Ngưỡng miễ
 // Cây sống: cấu hình cũ chỉ có `fee` (một mức cho mọi nơi) — vẫn đọc được, thiếu `regionFee` thì cả 3 vùng dùng mức đó.
 const plantFee = z.object({
   fee: money('Phí giao').optional(),
-  freeFrom: money('Ngưỡng miễn phí'),
+  freeFrom: money('Ngưỡng miễn phí').optional(),
   regionFee: z.object({ hcm: money('Phí giao TP. Hồ Chí Minh'), west: money('Phí giao miền Tây'), far: money('Phí giao tỉnh xa') }).optional(),
+  /** Cấu hình cũ (trước 16/10/2026) chỉ có một ngưỡng `freeFrom` cho cả 3 vùng. */
+  regionFree: z.object({ hcm: money('Miễn phí giao TP. Hồ Chí Minh'), west: money('Miễn phí giao miền Tây'), far: money('Miễn phí giao tỉnh xa') }).optional(),
   bulky: money('Phụ phí cây lớn').optional(),
 });
 const provinceNames = z.array(z.string().trim().max(40)).max(40);
@@ -116,7 +121,12 @@ function normProvinces(v: { hcm: string[]; west: string[] } | undefined): Region
 function normPlant(p: z.infer<typeof plantFee>): PlantRule {
   const flat = p.fee ?? DEFAULT_SHIPPING.plant.fee;
   const regionFee = p.regionFee ?? { hcm: flat, west: flat, far: flat };
-  return { freeFrom: p.freeFrom, regionFee, bulky: p.bulky ?? 0, fee: Math.min(regionFee.hcm, regionFee.west, regionFee.far) };
+  const free = p.freeFrom ?? DEFAULT_SHIPPING.plant.freeFrom;
+  const regionFree = p.regionFree ?? { hcm: free, west: free, far: free };
+  return {
+    regionFee, regionFree, bulky: p.bulky ?? 0,
+    fee: Math.min(regionFee.hcm, regionFee.west, regionFee.far), freeFrom: Math.min(regionFree.hcm, regionFree.west, regionFree.far),
+  };
 }
 
 /** Đọc cấu hình lưu trong database; thiếu / hỏng thì dùng mặc định (đặt hàng không bao giờ bị chặn vì cấu hình lỗi). */

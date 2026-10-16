@@ -685,8 +685,16 @@ export const stockLots = pgTable('stock_lots', {
   /** Hạn dùng dạng YYYY-MM-DD. */
   expiry: text('expiry'),
   qty: integer('qty').notNull().default(0),
+  /** Nhà vườn cung cấp lô này (từ phiếu nhập). */
+  supplierId: integer('supplier_id').references(() => suppliers.id, { onDelete: 'set null' }),
+  /** Giá vườn 1 đơn vị của lô (= giá nhập trên phiếu); giá vốn = giá vườn + 10% tiền xe. null = phiếu chưa ghi giá. */
+  unitCost: integer('unit_cost'),
+  /** Hạng chất lượng của nhà vườn cho lô này ('1' | '2' | '3' = Loại 1 / 2 / 3, lib/stock.ts). */
+  grade: text('grade'),
+  /** Hàng ký gửi: cây vẫn ở vườn nhà cung cấp, shop đăng bán và trả tiền nhà vườn theo số đã bán (đối soát ở /admin/doi-soat). */
+  consign: boolean('consign').notNull().default(false),
   createdAt: createdAt(),
-}, (t) => [index('stock_lots_product_idx').on(t.productSlug, t.optionIdx), index('stock_lots_store_idx').on(t.storeId)]);
+}, (t) => [index('stock_lots_product_idx').on(t.productSlug, t.optionIdx), index('stock_lots_store_idx').on(t.storeId), index('stock_lots_supplier_idx').on(t.supplierId)]);
 
 /** Mọi thay đổi tồn kho đều ghi một dòng: nhập hàng, kiểm kê, bán, hủy đơn, chuyển kho, bảo hành. */
 export const stockMoves = pgTable('stock_moves', {
@@ -732,6 +740,8 @@ export const purchaseReceipts = pgTable('purchase_receipts', {
   /** SHA-256 của nội dung các dòng đã nhập (không phải của file) — phát hiện nhập lại đúng bộ dòng đó, kể cả khi file được lưu lại bằng Excel. */
   linesHash: text('lines_hash'),
   fileName: text('file_name'),
+  /** Phiếu hàng ký gửi: chưa trả tiền lúc nhập (không tính vào "Tiền mua hàng") — trả theo số đã bán. */
+  consign: boolean('consign').notNull().default(false),
   actor: text('actor').notNull(),
   createdAt: createdAt(),
 }, (t) => [index('purchase_receipts_hash_idx').on(t.linesHash), index('purchase_receipts_created_idx').on(t.createdAt)]);
@@ -750,6 +760,8 @@ export const purchaseReceiptLines = pgTable('purchase_receipt_lines', {
   qty: integer('qty').notNull(),
   /** Giá nhập 1 đơn vị (đồng); null = chưa ghi. */
   unitCost: integer('unit_cost'),
+  /** Hạng chất lượng ('1' | '2' | '3'); null = không phân hạng. */
+  grade: text('grade'),
   lotCode: text('lot_code'),
   expiry: text('expiry'),
   note: text('note'),
@@ -818,6 +830,8 @@ export const expenses = pgTable('expenses', {
   note: text('note'),
   /** Khoản chi do chi phí định kỳ tự sinh. */
   recurringId: integer('recurring_id').references(() => recurringExpenses.id, { onDelete: 'set null' }),
+  /** Tiền trả nhà vườn cho cây ký gửi đã bán (ghi ở trang Đối soát nhà vườn) — trừ vào công nợ ký gửi. */
+  consign: boolean('consign').notNull().default(false),
   actor: text('actor').notNull(),
   createdAt: createdAt(),
 }, (t) => [

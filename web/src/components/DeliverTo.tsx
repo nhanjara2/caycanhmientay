@@ -7,7 +7,7 @@ import type { AddressDTO } from '@/lib/address-labels';
 import { useAuth } from '@/lib/auth';
 import { placeFromAddress, useDeliverTo } from '@/lib/deliver-to';
 import { money } from '@/lib/format';
-import { plantFeeVaries } from '@/lib/pricing';
+import { plantFreeFrom, plantFeeVaries } from '@/lib/pricing';
 import { regionOfAddress } from '@/lib/shipping';
 import { useShipping } from '@/lib/shipping-client';
 import { useModalFocus } from '@/lib/use-modal';
@@ -173,7 +173,7 @@ export function DeliverToNote({ ship, bulky = false }: { ship: 'plant' | 'supply
     // Cây sống: phí theo tỉnh / thành nhận hàng; chưa biết thì ghi "từ" mức thấp nhất khi các vùng khác phí
     const region = place ? regionOfAddress(place.detail || place.label, regionProvinces) : null;
     const amount = region ? rules.plant.regionFee[region] : rules.plant.fee;
-    feeText = `Phí giao ${!region && plantFeeVaries(rules.plant) ? 'từ ' : ''}${money(amount)}, miễn phí đơn từ ${money(rules.plant.freeFrom)}`;
+    feeText = `Phí giao ${!region && plantFeeVaries(rules.plant) ? 'từ ' : ''}${money(amount)}, miễn phí đơn từ ${money(plantFreeFrom(rules.plant, region))}`;
     if (bulky && rules.plant.bulky > 0) feeText += `. Cây lớn tính thêm ${money(rules.plant.bulky)} / cây`;
   } else {
     feeText = `Phí giao ${money(rules.supply.fee)}, miễn phí đơn từ ${money(rules.supply.freeFrom)}`;

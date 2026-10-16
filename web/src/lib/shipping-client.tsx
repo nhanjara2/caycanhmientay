@@ -13,7 +13,7 @@ export type PublicShipping = { rules: ShipRules; regionProvinces: RegionProvince
 const DEFAULTS: PublicShipping = { rules: SHIP_RULES, regionProvinces: DEFAULT_REGION_PROVINCES, plantZoneKm: PLANT_ZONE_KM, plantZoneEnabled: false, slotsEnabled: false, minOrder: DEFAULT_MIN_ORDER };
 
 const Ctx = createContext<PublicShipping>(DEFAULTS);
-const CACHE_KEY = 'ccmt-shipping-v7';
+const CACHE_KEY = 'ccmt-shipping-v8';
 const CACHE_MS = 3 * 60_000;
 
 export function ShippingProvider({ children }: { children: ReactNode }) {

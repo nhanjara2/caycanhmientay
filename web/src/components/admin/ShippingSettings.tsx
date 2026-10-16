@@ -9,7 +9,7 @@ import { Select } from '@/components/Select';
 
 type Form = {
   feeHcm: string; feeWest: string; feeFar: string; bulky: string; hcm: string[]; west: string[];
-  plantFree: string; supplyFee: string; supplyFree: string; minOrder: string; zoneKm: string; zoneOn: boolean; slotsOn: boolean; daysAhead: string;
+  freeHcm: string; freeWest: string; freeFar: string; supplyFee: string; supplyFree: string; minOrder: string; zoneKm: string; zoneOn: boolean; slotsOn: boolean; daysAhead: string;
   slots: { key: string; from: string; to: string }[];
   cap: Record<string, string[]>;
   closed: { date: string; note: string }[];
@@ -19,7 +19,7 @@ const digits = (s: string) => s.replace(/\D/g, '');
 const fmt = (n: number) => new Intl.NumberFormat('vi-VN').format(n);
 const toForm = (c: ShippingConfig): Form => ({
   feeHcm: String(c.plant.regionFee.hcm), feeWest: String(c.plant.regionFee.west), feeFar: String(c.plant.regionFee.far), bulky: String(c.plant.bulky),
-  hcm: [...c.regionProvinces.hcm], west: [...c.regionProvinces.west], plantFree: String(c.plant.freeFrom), supplyFee: String(c.supply.fee), supplyFree: String(c.supply.freeFrom), minOrder: String(c.minOrder),
+  hcm: [...c.regionProvinces.hcm], west: [...c.regionProvinces.west], freeHcm: String(c.plant.regionFree.hcm), freeWest: String(c.plant.regionFree.west), freeFar: String(c.plant.regionFree.far), supplyFee: String(c.supply.fee), supplyFree: String(c.supply.freeFrom), minOrder: String(c.minOrder),
   zoneKm: String(c.plantZoneKm), zoneOn: c.plantZoneEnabled, slotsOn: c.slotsEnabled, daysAhead: String(c.daysAhead), slots: c.slots.map((s) => ({ ...s })),
   cap: Object.fromEntries(c.slots.map((s) => [s.key, (c.cap[s.key] ?? Array(7).fill(0)).map(String)])),
   closed: c.closed.map((x) => ({ ...x })),
@@ -52,7 +52,7 @@ export function ShippingSettings({ initial }: { initial: ShippingConfig }) {
     e.preventDefault();
     setError('');
     const payload = {
-      plant: { freeFrom: Number(f.plantFree || 0), regionFee: { hcm: Number(f.feeHcm || 0), west: Number(f.feeWest || 0), far: Number(f.feeFar || 0) }, bulky: Number(f.bulky || 0) },
+      plant: { regionFree: { hcm: Number(f.freeHcm || 0), west: Number(f.freeWest || 0), far: Number(f.freeFar || 0) }, regionFee: { hcm: Number(f.feeHcm || 0), west: Number(f.feeWest || 0), far: Number(f.feeFar || 0) }, bulky: Number(f.bulky || 0) },
       regionProvinces: { hcm: f.hcm, west: f.west },
       supply: { fee: Number(f.supplyFee || 0), freeFrom: Number(f.supplyFree || 0) },
       minOrder: Number(f.minOrder || 0),
@@ -83,7 +83,7 @@ export function ShippingSettings({ initial }: { initial: ShippingConfig }) {
   });
   const count = (r: ShipRegion) => PROVINCES.filter((p) => regionOf(p.name) === r).length;
 
-  const money = (k: 'feeHcm' | 'feeWest' | 'feeFar' | 'bulky' | 'plantFree' | 'supplyFee' | 'supplyFree' | 'minOrder', label: string, id: string) => (
+  const money = (k: 'feeHcm' | 'feeWest' | 'feeFar' | 'bulky' | 'freeHcm' | 'freeWest' | 'freeFar' | 'supplyFee' | 'supplyFree' | 'minOrder', label: string, id: string) => (
     <div className="ad-f">
       <label htmlFor={id}>{label}</label>
       <input id={id} className="vx-input" inputMode="numeric" value={f[k]} onChange={(e) => edit((x) => ({ ...x, [k]: digits(e.target.value) }))} />
@@ -105,8 +105,12 @@ export function ShippingSettings({ initial }: { initial: ShippingConfig }) {
               {money('feeWest', `Phí giao — ${REGION_LABEL.west} (đ)`, 'sh-fee-west')}
               {money('feeFar', `Phí giao — ${REGION_LABEL.far} (đ)`, 'sh-fee-far')}
             </div>
+            <div className="ad-frow" style={{ marginTop: 8 }}>
+              {money('freeHcm', `Miễn phí giao từ — ${REGION_LABEL.hcm} (đ)`, 'sh-free-hcm')}
+              {money('freeWest', `Miễn phí giao từ — ${REGION_LABEL.west} (đ)`, 'sh-free-west')}
+              {money('freeFar', `Miễn phí giao từ — ${REGION_LABEL.far} (đ)`, 'sh-free-far')}
+            </div>
             <div className="ad-frow two" style={{ marginTop: 8 }}>
-              {money('plantFree', 'Miễn phí giao từ đơn cây (đ)', 'sh-pfree')}
               {money('bulky', 'Phụ phí mỗi cây lớn (đ)', 'sh-bulky')}
             </div>
             <span className="vx-help" style={{ display: 'block', marginTop: 6 }}>

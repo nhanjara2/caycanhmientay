@@ -5,7 +5,7 @@ import * as z from 'zod';
 import { optionOf, type Product, type Unit } from '@/lib/catalog';
 import { money } from '@/lib/format';
 import { ONLINE_PAYMENT_METHODS, ONLINE_PAYMENTS_READY } from '@/lib/order-labels';
-import { computeTotals, minOrderShort } from '@/lib/pricing';
+import { computeTotals, minOrderShort, PRICE_FORMULA } from '@/lib/pricing';
 import { accountPhone, normalizePhone, isPhone, partnerPct, type SessionUser } from './auth';
 import { getProducts, mainImageOf } from './catalog';
 import { buildSlotOptions, dayLabel, regionOfAddress, slotTime, vnDate, type ShipRegion, type ShippingConfig } from '@/lib/shipping';
@@ -17,6 +17,7 @@ import { db, schema } from './db';
 import { PAYMENT_METHODS, type OrderStatus } from './db/schema';
 import { getShippingConfig, usedSlots } from './shipping';
 import { checkVoucher } from './vouchers';
+import { guardOrder, orderFloor } from './margin-guard';
 
 const { orders, orderItems, orderEvents, productOptions } = schema;
 
@@ -96,8 +97,10 @@ export async function createOrder(input: PlaceOrderInput, user: SessionUser | nu
   const short = minOrderShort(totals.goods, cfg.minOrder, input.delivery);
   if (short) return { ok: false, error: `Đơn giao hàng cần tối thiểu ${money(cfg.minOrder)} tiền hàng — vui lòng mua thêm ${money(short)} hoặc chọn Nhận tại vườn.` };
 
+  // Giá sàn: tổng tiền thu tối thiểu để đơn còn đủ lãi sau mọi khoản giảm (lib/margin-guard.ts).
+  const floor = await orderFloor(floorLines(lines));
   try {
-    return await db.transaction((tx) => createOrderTx(tx, input, user, lines, totals, cfg));
+    return await db.transaction((tx) => createOrderTx(tx, input, user, lines, totals, cfg, floor));
   } catch (e) {
     if (e instanceof SlotUnavailable) return { ok: false, error: e.message };
     if (e instanceof OutOfStock) return { ok: false, error: `“${e.product}” vừa hết hàng. Vui lòng giảm số lượng hoặc chọn sản phẩm khác.` };
@@ -112,13 +115,26 @@ export const pricedLine = ({ p, u, it }: { p: Product; u: Unit; it: { qty: numbe
   slug: p.slug, category: p.category, subs: [p.sub, ...(p.extraSubs ?? [])],
 });
 
+/** Dòng hàng để tính giá sàn (server/margin-guard.ts). */
+export const floorLines = (lines: { p: Product; it: { option: number; qty: number } }[]) =>
+  lines.map(({ p, it }) => ({ slug: p.slug, option: it.option, qty: it.qty, ship: p.ship }));
+
 /** Giá ghi vào dòng đơn: giá lẻ + giá gạch ngang. Combo 2 cây không đổi đơn giá — tiền giảm ghi ở orders.combo_discount. */
 export const itemPrice = (u: Unit) => ({ price: u.price, oldPrice: u.oldPrice && u.oldPrice > u.price ? u.oldPrice : null });
 
-/** Chụp tiền vốn (giá gốc của quy cách lúc này) vào các dòng hàng của đơn vừa tạo — gọi sau khi chèn `order_items`; sổ Thu chi tính lãi theo số này. */
+/**
+ * Chụp tiền vốn vào các dòng hàng của đơn vừa tạo — gọi sau khi chèn `order_items` và trừ kho (applyStock ghi mã đơn vào lịch sử kho);
+ * sổ Thu chi tính lãi theo số này. Vốn = trung bình theo số lượng của các lô đã xuất (giá vườn của lô + 10% tiền xe);
+ * lô chưa ghi giá vườn thì dùng giá gốc của quy cách lúc này.
+ */
 export const snapshotItemCosts = (tx: Tx, orderId: number) => tx.execute(sql`
-  update order_items oi set cost = po.cost from product_options po
-  where oi.order_id = ${orderId} and po.product_slug = oi.product_slug and po.idx = oi.option_idx`);
+  update order_items oi set cost = coalesce((
+    select round(sum(-m.delta * coalesce(round(l.unit_cost * ${1 + PRICE_FORMULA.costPct / 100}::numeric), po.cost)) / nullif(sum(-m.delta) filter (where coalesce(l.unit_cost, po.cost) is not null), 0))::int
+    from stock_moves m left join stock_lots l on l.id = m.lot_id
+    where m.note = o.code and m.product_slug = oi.product_slug and m.option_idx = oi.option_idx and m.delta < 0 and m.reason in ('order', 'warranty')
+  ), po.cost)
+  from product_options po, orders o
+  where oi.order_id = ${orderId} and o.id = oi.order_id and po.product_slug = oi.product_slug and po.idx = oi.option_idx`);
 
 /** Ném ra trong transaction khi tồn không đủ, để hủy toàn bộ đơn. */
 class OutOfStock extends Error {
@@ -170,6 +186,7 @@ async function createOrderTx(
   lines: { p: Product; u: Unit; it: PlaceOrderInput['items'][number] }[],
   totals: ReturnType<typeof computeTotals>,
   cfg: ShippingConfig,
+  floor: number,
 ): Promise<PlaceOrderResult> {
   const slot = input.delivery === 'ship' && cfg.slotsEnabled ? await claimSlot(tx, cfg, input) : null;
   const code = await newOrderCode(tx);
@@ -178,11 +195,14 @@ async function createOrderTx(
   // Chốt lại mã giảm giá ngay trước khi tạo đơn (khóa dòng mã) để 2 đơn cùng lúc không vượt quá lượt cho phép.
   const picked = await pickVouchers(tx, [input.voucherCode, input.shipVoucherCode], totals, user, normalizePhone(input.phone), true);
   if (picked.errors.length) throw new InvalidVoucher(picked.errors[0].error);
-  const voucherCode = picked.discount?.code ?? null;
-  const voucherDiscount = picked.discount?.discount ?? 0;
-  const shipVoucherCode = picked.ship?.code ?? null;
-  const shipVoucherDiscount = picked.ship?.discount ?? 0;
-  const total = Math.max(0, totals.total - voucherDiscount - shipVoucherDiscount);
+  // Cắt chiết khấu đối tác / mã theo giá sàn — cùng cách tính với số khách thấy ở giỏ hàng (previewVouchers).
+  const g = guardOrder(totals, floor, { partner: totals.partnerDiscount, voucher: picked.discount?.discount ?? 0, ship: picked.ship?.discount ?? 0 });
+  // Mã bị cắt về 0 thì không ghi vào đơn (không tốn lượt dùng của khách).
+  const voucherCode = g.voucher > 0 ? picked.discount?.code ?? null : null;
+  const voucherDiscount = g.voucher;
+  const shipVoucherCode = g.ship > 0 ? picked.ship?.code ?? null : null;
+  const shipVoucherDiscount = g.ship;
+  const total = Math.max(0, totals.total + totals.partnerDiscount - g.partner - voucherDiscount - shipVoucherDiscount);
 
   const [order] = await tx.insert(orders).values({
     code, userId: user?.id ?? null, customerName: input.name, phone: normalizePhone(input.phone),
@@ -190,7 +210,7 @@ async function createOrderTx(
     slot: slot?.text ?? null, slotDate: slot?.date ?? null, slotKey: slot?.key ?? null, note: input.note || null, paymentMethod: input.payment,
     original: totals.original, subtotal: totals.subtotal, plantShip: totals.plantShip, supplyShip: totals.supplyShip,
     plantShipFree: totals.plantShipFree, supplyShipFree: totals.supplyShipFree,
-    voucherCode, voucherDiscount, shipVoucherCode, shipVoucherDiscount, partnerDiscount: totals.partnerDiscount, comboDiscount: totals.comboDiscount, total,
+    voucherCode, voucherDiscount, shipVoucherCode, shipVoucherDiscount, partnerDiscount: g.partner, comboDiscount: totals.comboDiscount, total,
   }).returning({ id: orders.id });
 
   for (const { p, u, it } of lines) {
@@ -208,8 +228,13 @@ async function createOrderTx(
   return { ok: true as const, code };
 }
 
-export type PickedVoucher = { code: string; discount: number };
+export type PickedVoucher = { code: string; discount: number; capped?: boolean };
 export type PickedVouchers = { discount: PickedVoucher | null; ship: PickedVoucher | null; errors: { code: string; error: string }[] };
+/** Xem trước ở giỏ / thanh toán: mã đã cắt theo giá sàn + chiết khấu đối tác đã cắt. */
+export type PreviewVouchers = PickedVouchers & { partner: { discount: number; capped: boolean } };
+
+/** Báo khi khoản giảm bị cắt hết vì đơn đã giảm tối đa. */
+const FLOOR_REACHED = 'Đơn này đã được giảm tối đa, mã không giảm thêm được';
 
 /**
  * Kiểm từng mã rồi xếp theo loại: mỗi đơn tối đa một mã giảm tiền hàng + một mã miễn phí giao
@@ -224,6 +249,8 @@ async function pickVouchers(
   for (const code of [...new Set(codes.map((c) => c?.trim().toUpperCase()).filter((c): c is string => !!c))]) {
     const r = await checkVoucher(executor, code, ctx, { lock });
     if (!r.ok) out.errors.push({ code, error: r.error });
+    // Đối tác đã có chiết khấu riêng trên tiền hàng: không cộng thêm mã giảm giá (mã miễn phí giao vẫn dùng được).
+    else if (r.kind === 'discount' && partnerPct(user) > 0) out.errors.push({ code, error: 'Tài khoản đối tác đã có chiết khấu riêng, không dùng thêm mã giảm giá' });
     else if (out[r.kind]) out.errors.push({ code, error: r.kind === 'ship' ? 'Mỗi đơn chỉ dùng một mã miễn phí giao' : 'Mỗi đơn chỉ dùng một mã giảm giá (dùng kèm được một mã miễn phí giao)' });
     else out[r.kind] = { code: r.code, discount: r.discount };
   }
@@ -231,13 +258,29 @@ async function pickVouchers(
 }
 
 /** Xem trước các mã khách chọn ở trang thanh toán (chưa chốt lượt dùng — chốt thật khi tạo đơn ở createOrderTx). */
-export async function previewVouchers(codes: string[], items: PlaceOrderInput['items'], user: SessionUser | null, phone: string, delivery: 'ship' | 'pickup', region: ShipRegion | null = null): Promise<PickedVouchers> {
+export async function previewVouchers(codes: string[], items: PlaceOrderInput['items'], user: SessionUser | null, phone: string, delivery: 'ship' | 'pickup', region: ShipRegion | null = null): Promise<PreviewVouchers> {
   const products = new Map((await getProducts([...new Set(items.map((i) => i.slug))])).map((p) => [p.slug, p]));
   const lines = items
     .map((it) => { const p = products.get(it.slug); const u = p && optionOf(p, it.option); return p && u ? { p, u, it } : null; })
     .filter((x): x is { p: Product; u: Unit; it: PlaceOrderInput['items'][number] } => x !== null);
-  const totals = computeTotals(lines.map(pricedLine), delivery, 0, await getShippingConfig(), 0, delivery === 'ship' ? region : null);
-  return pickVouchers(db, codes, totals, user, phone ? normalizePhone(phone) : '');
+  const totals = computeTotals(lines.map(pricedLine), delivery, 0, await getShippingConfig(), partnerPct(user), delivery === 'ship' ? region : null);
+  const [picked, floor] = await Promise.all([
+    pickVouchers(db, codes, totals, user, phone ? normalizePhone(phone) : ''),
+    orderFloor(floorLines(lines)),
+  ]);
+  const g = guardOrder(totals, floor, { partner: totals.partnerDiscount, voucher: picked.discount?.discount ?? 0, ship: picked.ship?.discount ?? 0 });
+  const errors = [...picked.errors];
+  const keep = (v: PickedVoucher | null, amount: number, capped: boolean): PickedVoucher | null => {
+    if (!v) return null;
+    if (amount <= 0) { errors.push({ code: v.code, error: FLOOR_REACHED }); return null; }
+    return { code: v.code, discount: amount, capped };
+  };
+  return {
+    discount: keep(picked.discount, g.voucher, g.capped.voucher),
+    ship: keep(picked.ship, g.ship, g.capped.ship),
+    errors,
+    partner: { discount: g.partner, capped: g.capped.partner },
+  };
 }
 
 // ---- Đọc đơn ---------------------------------------------------------------------------------

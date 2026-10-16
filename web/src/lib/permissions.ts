@@ -66,6 +66,7 @@ export const NAV_AREA: Record<string, Area> = {
   '/admin/nhap-hang': 'inventory',
   '/admin/thu-chi': 'expenses',
   '/admin/chi-phi': 'expenses',
+  '/admin/doi-soat': 'expenses',
   '/admin/trang-chu': 'content',
   '/admin/noi-dung': 'content',
   '/admin/benh-cay': 'content',

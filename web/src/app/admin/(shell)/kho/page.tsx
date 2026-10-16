@@ -112,7 +112,7 @@ export default async function AdminInventoryPage({ searchParams }: Props) {
                     <td className="num" data-wide data-m="foot">
                       <StockDialog slug={r.slug} idx={r.idx} name={r.name} label={r.label} stock={all.find((x) => x.slug === r.slug && x.idx === r.idx)?.stock ?? r.stock}
                         lotTracked={tracksLots(r)} stores={storeOpts}
-                        lots={(all.find((x) => x.slug === r.slug && x.idx === r.idx)?.lots ?? []).map(({ id, storeId, lotCode, expiry, qty }) => ({ id, storeId, lotCode, expiry, qty }))} />
+                        lots={(all.find((x) => x.slug === r.slug && x.idx === r.idx)?.lots ?? []).map(({ id, storeId, lotCode, expiry, qty, supplier, grade, unitCost, consign }) => ({ id, storeId, lotCode, expiry, qty, supplier, grade, unitCost, consign }))} />
                     </td>
                   </tr>
                 );
