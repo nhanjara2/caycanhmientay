@@ -39,6 +39,35 @@ export async function saveRedirectAction(input: unknown) {
   return r;
 }
 
+/** Tối đa bấy nhiêu dòng một lần ở ô "Thêm nhiều chuyển hướng". */
+const BULK_MAX = 300;
+
+/**
+ * Thêm nhiều chuyển hướng một lần (bảng đối chiếu link cũ → link mới khi đổi cấu trúc web, mục 16 checklist SEO).
+ * Mỗi dòng: đường dẫn cũ rồi đường dẫn mới, cách nhau bằng Tab (dán từ Excel), dấu cách, "→", "->" hoặc ",".
+ * Dòng lỗi không chặn các dòng khác; trả kết quả từng dòng.
+ */
+export async function saveRedirectsBulkAction(text: unknown) {
+  const user = await requireStaff('admin');
+  const t = z.string().max(BULK_MAX * 650).safeParse(text);
+  if (!t.success) return { ok: false as const, error: 'Dữ liệu không hợp lệ' };
+  const lines = t.data.split(/\r?\n/).map((l) => l.trim()).filter((l) => l && !l.startsWith('#'));
+  if (!lines.length) return { ok: false as const, error: 'Chưa có dòng nào' };
+  if (lines.length > BULK_MAX) return { ok: false as const, error: `Tối đa ${BULK_MAX} dòng một lần` };
+  const results: { line: string; ok: boolean; text: string }[] = [];
+  for (const line of lines) {
+    const [from, to, ...rest] = line.split(/\s*(?:\t|→|->|,)\s*|\s+/).filter(Boolean);
+    if (!from || !to || rest.length) {
+      results.push({ line, ok: false, text: 'Cần đúng 2 đường dẫn: cũ rồi mới' });
+      continue;
+    }
+    const r = await saveRedirect({ from, to, reason: 'manual', note: 'Thêm nhiều một lần' }, user);
+    results.push(r.ok ? { line, ok: true, text: [`${r.from} → ${r.to}`, ...r.warnings].join(' ') } : { line, ok: false, text: r.error });
+  }
+  revalidatePath('/admin/seo');
+  return { ok: true as const, results };
+}
+
 export async function deleteRedirectAction(from: unknown) {
   const user = await requireStaff('admin');
   const p = z.string().max(300).safeParse(from);

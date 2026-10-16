@@ -1,10 +1,10 @@
 import 'server-only';
 import { connection } from 'next/server';
-import { eq } from 'drizzle-orm';
+import { and, eq, lte } from 'drizzle-orm';
 import { plainText } from '@/lib/slug';
 import { hasProjectDetail, projectPath } from '@/lib/projects';
-import { postPath } from '@/lib/posts';
-import { seoKindOf } from '@/lib/seo-cms';
+import { blockText, parseInline, postPath } from '@/lib/posts';
+import { redirectable, seoKindOf, sitePath } from '@/lib/seo-cms';
 import { seoNameOf } from '@/lib/seo-name';
 import { allProducts } from './catalog';
 import { db, schema } from './db';
@@ -101,6 +101,8 @@ export async function seoIssues(): Promise<SeoIssue[]> {
     ]).then((x) => x.flat()),
     listSeoOverrides(), listRedirects(), listSeoAudit(500), editLinks(),
   ]);
+  const postBodies = await db.select({ slug: schema.posts.slug, category: schema.posts.category, excerpt: schema.posts.excerpt, body: schema.posts.body })
+    .from(schema.posts).where(and(eq(schema.posts.status, 'published'), lte(schema.posts.publishedAt, new Date())));
   const out: SeoIssue[] = [];
   const push = (path: string, text: string, level: SeoIssue['level'] = 'warn') => out.push({ path, kind: seoKindOf(path).kind, text, edit: editOf(path), level });
   const ov = new Map(overrides.map((o) => [o.path, o]));
@@ -157,6 +159,27 @@ export async function seoIssues(): Promise<SeoIssue[]> {
   for (const r of redirects) {
     if (!(await pathIsLive(r.toPath))) push(r.fromPath, `Chuyển hướng tới ${r.toPath} — trang này không mở được`, 'error');
   }
+  // Link trong bài viết đang hiện trỏ tới trang đã gỡ (404) hoặc đi qua chuyển hướng (mục 16 checklist SEO).
+  const linkFrom = new Map<string, string[]>();
+  for (const p of postBodies) {
+    const strings = [p.excerpt, ...p.body.flatMap(blockText)];
+    for (const x of strings.flatMap(parseInline)) {
+      const path = x.t === 'a' ? sitePath(x.href) : null;
+      if (!path || path === '/' || !redirectable(path)) continue;
+      linkFrom.set(path, [...(linkFrom.get(path) ?? []), postPath(p)]);
+    }
+  }
+  const rd = new Map(redirects.map((r) => [r.fromPath, r.toPath]));
+  for (const [target, from] of linkFrom) {
+    if (await pathIsLive(target)) continue;
+    const to = rd.get(target);
+    for (const path of new Set(from)) {
+      push(path, to
+        ? `Bài có link tới ${target} — trang này đã chuyển sang ${to}, nên sửa link trỏ thẳng trang mới`
+        : `Bài có link hỏng tới ${target} (trang không còn) — sửa / bỏ link hoặc thêm chuyển hướng cho ${target}`, to ? 'warn' : 'error');
+    }
+  }
+
   // Trang đã xóa (theo nhật ký) mà chưa có chuyển hướng.
   const moved = new Set(redirects.map((r) => r.fromPath));
   for (const a of audit) {

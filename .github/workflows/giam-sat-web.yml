@@ -1,7 +1,8 @@
 # Giám sát web thật (SEO mục 13): mỗi 6 giờ chạy `seo:security` với https://www.caycanhmientay.com.
 # Báo lỗi (GitHub gửi email cho người sửa lịch chạy gần nhất) khi: web không trả lời / trả 5xx, Googlebot bị chặn,
 # chứng chỉ TLS hỏng hoặc còn < 14 ngày, DNS lỗi, http không chuyển sang https, mất header bảo mật, robots.txt chặn cả web,
-# sitemap mất > 20% trang hoặc canonical đổi so với lần chạy trước, lộ dữ liệu riêng tư trong HTML.
+# sitemap mất > 20% trang hoặc canonical đổi so với lần chạy trước, lộ dữ liệu riêng tư trong HTML; URL quan trọng trong
+# web/seo/url-quan-trong.txt mất trang / chuyển hướng sai (seo:migration).
 # Chạy tay: tab Actions → "Giám sát web" → Run workflow. Không cần secret.
 name: Giám sát web
 
@@ -47,3 +48,7 @@ jobs:
         with:
           path: web/.seo-baseline.json
           key: seo-baseline-${{ github.run_id }}
+      # URL quan trọng (seo/url-quan-trong.txt): còn mở được / chuyển hướng 308 đúng một bước (mục 16 checklist SEO).
+      - name: Kiểm URL quan trọng
+        if: success() || failure()
+        run: npx --yes tsx@4.23.15 scripts/check-migration.mts https://www.caycanhmientay.com seo/url-quan-trong.txt

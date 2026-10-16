@@ -9,6 +9,7 @@ import { getPolicy } from '@/lib/policies';
 import { postPath, sectionOf, SECTIONS } from '@/lib/posts';
 import { projectPath } from '@/lib/projects';
 import { auditText, isShareImage, redirectable, seoTime, sitePath, type SeoChange } from '@/lib/seo-cms';
+import { SITE_ORIGIN } from '@/lib/site';
 import { slugify, SLUG_RE } from '@/lib/slug';
 import { staffName, type SessionUser } from './auth';
 import { db, schema } from './db';
@@ -271,23 +272,60 @@ export async function saveRedirect(
     await tx.insert(R).values({ fromPath: from, toPath: final, reason: input.reason ?? 'manual', note, createdBy: user ? staffName(user) : 'Hệ thống' })
       .onConflictDoUpdate({ target: R.fromPath, set: { toPath: final, note, reason: input.reason ?? 'manual' } });
     // Gom chuỗi: A → from rồi from → final  ⇒  A → final. Chỉ khi trang cũ đã mất nội dung — trang cũ còn hiện thì
-    // A → from vẫn đúng (khách tới được trang đang hiện).
-    if (input.fromGone || !(await pathIsLive(from))) await tx.update(R).set({ toPath: final }).where(and(eq(R.toPath, from), ne(R.fromPath, final)));
+    // A → from vẫn đúng (khách tới được trang đang hiện). Link trong bài viết trỏ trang cũ cũng đổi thẳng sang trang mới.
+    let relinked = 0;
+    if (input.fromGone || !(await pathIsLive(from))) {
+      await tx.update(R).set({ toPath: final }).where(and(eq(R.toPath, from), ne(R.fromPath, final)));
+      relinked = await relinkPosts(tx, from, final);
+    }
     await logSeo({
       path: from, action: old ? 'redirect-edit' : 'redirect-add', user,
       detail: [{ field: 'redirect', from: old?.toPath ?? null, to: final }],
     }, tx);
-    return { ok: true as const, final };
+    return { ok: true as const, final, relinked };
   };
   const r = q ? await run(q) : await db.transaction(run);
   if (!r.ok) return r;
 
   const warnings: string[] = [];
+  if (r.relinked) warnings.push(`Đã đổi link trong ${r.relinked} bài viết sang trang mới.`);
   if (!q) {
     if (await pathIsLive(from)) warnings.push('Trang cũ vẫn đang hiện cho khách — chuyển hướng chỉ có tác dụng khi trang đó bị ẩn / xóa.');
     if (!(await pathIsLive(r.final))) warnings.push('Trang mới hiện không mở được (không tồn tại hoặc đang ẩn) — khách sẽ gặp trang 404.');
   }
   return { ok: true, from, to: r.final, warnings };
+}
+
+/** Link "[chữ](/duong-dan-cu…)" trong bài, kể cả link đầy đủ có tên miền; giữ ?tham số / #mục phía sau. */
+const linkTo = (path: string) => {
+  const host = new URL(SITE_ORIGIN).hostname.replace(/^www\./, '').replace(/\./g, '\\.');
+  const esc = path.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`\\]\\((?:https?://(?:www\\.)?${host})?${esc}(?=[)?#])`, 'g');
+};
+
+const mapStrings = (v: unknown, fn: (s: string) => string): unknown =>
+  typeof v === 'string' ? fn(v) : Array.isArray(v) ? v.map((x) => mapStrings(x, fn))
+    : v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, mapStrings(x, fn)])) : v;
+
+/**
+ * Trang `from` đã chuyển sang `to`: sửa link trong mọi bài viết (cả bài nháp) trỏ thẳng trang mới — link nội bộ không đi
+ * qua chuyển hướng (mục 16 checklist SEO). Không đổi ngày sửa của bài (nội dung không đổi). Trả số bài đã sửa.
+ */
+export async function relinkPosts(q: Q, from: string, to: string) {
+  const P = schema.posts;
+  const rows = await q.select({ id: P.id, body: P.body, excerpt: P.excerpt }).from(P)
+    .where(sql`(${P.body}::text || ${P.excerpt}) like ${`%${from.replace(/[\\%_]/g, '\\$&')}%`}`);
+  const re = linkTo(from);
+  let n = 0;
+  for (const p of rows) {
+    const fix = (s: string) => s.replace(re, `](${to}`);
+    const body = mapStrings(p.body, fix) as typeof p.body;
+    const excerpt = fix(p.excerpt);
+    if (JSON.stringify(body) === JSON.stringify(p.body) && excerpt === p.excerpt) continue;
+    await q.update(P).set({ body, excerpt }).where(eq(P.id, p.id));
+    n++;
+  }
+  return n;
 }
 
 export async function deleteRedirect(fromInput: string, user: SessionUser) {

@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { deleteRedirectAction, saveRedirectAction } from '@/app/actions/seo';
+import { deleteRedirectAction, saveRedirectAction, saveRedirectsBulkAction } from '@/app/actions/seo';
 import { Icon } from '@/components/Icon';
 import { SeoPanel, type SeoValue } from './SeoPanel';
 
@@ -92,6 +92,8 @@ export function RedirectAdmin({ redirects, suggest }: { redirects: Redirect[]; s
         </div>
       </form>
 
+      <BulkRedirects />
+
       {suggest.length > 0 && (
         <div className="ad-card" style={{ marginBottom: 12 }}>
           <div className="ad-card__h">Trang đã gỡ / đang ẩn chưa có chuyển hướng</div>
@@ -132,5 +134,56 @@ export function RedirectAdmin({ redirects, suggest }: { redirects: Redirect[]; s
         </div>
       </div>
     </>
+  );
+}
+
+/** Dán cả bảng đối chiếu link cũ → link mới (vd. copy 2 cột từ Excel) khi đổi cấu trúc web / ngừng bán nhiều sản phẩm. */
+function BulkRedirects() {
+  const router = useRouter();
+  const [text, setText] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [results, setResults] = useState<{ line: string; ok: boolean; text: string }[]>([]);
+
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setError('');
+    setResults([]);
+    const r = await saveRedirectsBulkAction(text);
+    setBusy(false);
+    if (!r.ok) return setError(r.error);
+    setResults(r.results);
+    setText(r.results.filter((x) => !x.ok).map((x) => x.line).join('\n'));
+    router.refresh();
+  }
+
+  const done = results.filter((x) => x.ok).length;
+  return (
+    <details className="ad-card" style={{ marginBottom: 12 }}>
+      <summary className="ad-card__h" style={{ cursor: 'pointer' }}>Thêm nhiều chuyển hướng một lần</summary>
+      <form className="ad-card__b" onSubmit={save}>
+        <div className="ad-f">
+          <label htmlFor="rd-bulk">Mỗi dòng: đường dẫn cũ rồi đường dẫn mới</label>
+          <textarea id="rd-bulk" className="vx-input" rows={6} value={text} spellCheck={false} style={{ fontFamily: 'monospace', minHeight: 120 }}
+            placeholder={'/san-pham/ten-cu    /san-pham/ten-moi\n/tin-tuc/bai-cu → /tin-tuc/bai-moi'} onChange={(e) => setText(e.target.value)} />
+        </div>
+        <span className="hint">Copy 2 cột từ Excel dán vào được. Cách nhau bằng dấu cách, Tab, → hoặc dấu phẩy. Tối đa 300 dòng.</span>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', marginTop: 8 }}>
+          <button className="vx-btn vx-btn--primary" disabled={busy || !text.trim()}>{busy ? 'Đang lưu…' : 'Lưu tất cả'}</button>
+          {error && <span role="alert" style={{ color: 'var(--danger, #c62828)' }}>{error}</span>}
+          {results.length > 0 && <span role="status">Đã lưu {done}/{results.length} dòng{done < results.length ? ' — dòng lỗi còn lại trong ô để sửa' : ''}.</span>}
+        </div>
+        {results.length > 0 && (
+          <ul style={{ margin: '8px 0 0', paddingLeft: 18, wordBreak: 'break-all' }}>
+            {results.map((x, i) => (
+              <li key={i} style={{ color: x.ok ? undefined : 'var(--danger, #c62828)', marginBottom: 2 }}>
+                {x.ok ? x.text : <><b>{x.line}</b> — {x.text}</>}
+              </li>
+            ))}
+          </ul>
+        )}
+      </form>
+    </details>
   );
 }

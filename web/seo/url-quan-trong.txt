@@ -1,0 +1,27 @@
+# URL quan trọng của www.caycanhmientay.com — GitHub Actions "Giám sát web" mở lại mỗi 6 giờ (npm run seo:migration).
+# Mỗi URL phải mở thẳng (200) hoặc chuyển hướng vĩnh viễn MỘT bước tới trang còn sống; không về trang chủ, không 404.
+# Thêm vào đây URL đã in trên tờ rơi / danh thiếp, URL có web khác trỏ tới (backlink), URL hay chia sẻ Zalo / Facebook.
+# "!" ở đầu dòng = rất quan trọng (in nổi bật khi lỗi). Đổi đường dẫn thì ghi thêm đích mong đợi: /cu  /moi
+
+! https://www.caycanhmientay.com/
+! https://www.caycanhmientay.com/danh-muc
+https://www.caycanhmientay.com/doi-tac
+https://www.caycanhmientay.com/bao-gia-si
+https://www.caycanhmientay.com/tu-van-chon-cay
+https://www.caycanhmientay.com/he-thong-cua-hang
+https://www.caycanhmientay.com/khuyen-mai
+https://www.caycanhmientay.com/goc-cham-cay
+https://www.caycanhmientay.com/tin-tuc
+https://www.caycanhmientay.com/benh-cay
+https://www.caycanhmientay.com/video
+https://www.caycanhmientay.com/chinh-sach/gioi-thieu
+https://www.caycanhmientay.com/chinh-sach/giao-hang
+https://www.caycanhmientay.com/chinh-sach/bao-hanh-cay
+https://www.caycanhmientay.com/chinh-sach/doi-tra
+https://www.caycanhmientay.com/chinh-sach/thanh-toan
+https://www.caycanhmientay.com/chinh-sach/bao-mat
+https://www.caycanhmientay.com/chinh-sach/dieu-khoan
+
+# Đường dẫn cũ đã gỡ — phải chuyển 308 một bước tới trang thay thế
+https://www.caycanhmientay.com/dich-vu/dat-lich-khao-sat  /bao-gia-si
+https://www.caycanhmientay.com/doanh-nghiep  /doi-tac
