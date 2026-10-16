@@ -13,7 +13,7 @@
  * Event, Recipe, SoftwareApplication. Kiểm trên trang đã dựng bằng `npm run seo:schema -- <địa chỉ web>`.
  */
 import { isQuote, type Product } from './catalog';
-import { CARE_PHONE, FACEBOOK_URL, LEGAL, SALES_PHONE, SHOP_ADDRESS, SHOP_EMAIL, SUPPORT_PHONE, TIKTOK_URL, YOUTUBE_URL } from './contact';
+import { CARE_PHONE, FACEBOOK_URL, LEGAL, SALES_PHONE, SHOP_ADDRESS, SHOP_EMAIL, LINKEDIN_URL, SUPPORT_PHONE, TIKTOK_URL, YOUTUBE_URL } from './contact';
 import { DEFAULT_SHARE_IMAGE, SITE_NAME } from './seo';
 import { absoluteUrl, SITE_ORIGIN } from './site';
 import type { PublicStore } from './stores';
@@ -87,7 +87,7 @@ export function organizationLd(): Json {
     foundingDate: FOUNDED,
     address: { '@type': 'PostalAddress', streetAddress: SHOP_ADDRESS, addressCountry: 'VN' },
     contactPoint: [contact(SALES_PHONE, 'sales'), contact(CARE_PHONE, 'technical support'), contact(SUPPORT_PHONE, 'customer service')],
-    sameAs: [FACEBOOK_URL, YOUTUBE_URL, TIKTOK_URL],
+    sameAs: [FACEBOOK_URL, YOUTUBE_URL, TIKTOK_URL, LINKEDIN_URL],
   };
 }
 
