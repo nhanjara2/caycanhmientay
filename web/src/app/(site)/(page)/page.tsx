@@ -11,6 +11,7 @@ import { ProjectCard } from '@/components/ProjectParts';
 import { ShortVideos } from '@/components/ShortVideos';
 import type { Product } from '@/lib/catalog';
 import { bannerImageUrl, slotOf, type Banner } from '@/lib/home-banners';
+import { responsive } from '@/lib/images';
 import { PARTNER_IMAGE, PARTNER_IMAGE_POS, PARTNER_INFO, PARTNER_TYPES, WHOLESALE_QUOTE_URL, WHOLESALE_URL } from '@/lib/partners';
 import { categoryOf, SECTIONS, VIDEO_PAGE } from '@/lib/posts';
 import { WARRANTY_DAYS } from '@/lib/warranty-labels';
@@ -22,6 +23,8 @@ import { publishedPosts, publishedVideos } from '@/server/posts';
 import { publishedProjects } from '@/server/projects';
 import '@/styles/home.css';
 import { withShare } from '@/lib/seo';
+import { JsonLd } from '@/components/JsonLd';
+import { organizationLd, websiteLd } from '@/lib/jsonld';
 
 // Trang chủ (từ 09/10/2026): trang giới thiệu nhiều ảnh — banner sự kiện chủ shop tự tải ở /admin/trang-chu,
 // danh mục bằng ảnh, Flash sale, ảnh vườn, bệnh cây theo mùa, tin sự kiện, công trình, video. Trang chủ cũ (mỗi danh mục
@@ -176,6 +179,9 @@ export default async function HomePage() {
 
   return (
     <div className="hm">
+      {/* Schema toàn website: tổ chức (tên, logo, hotline, mạng xã hội) + website — các trang khác trỏ về bằng @id */}
+      <JsonLd data={organizationLd()} />
+      <JsonLd data={websiteLd()} />
       <h1 className="app-sr">Cây Cảnh Miền Tây — cung cấp sỉ cây cảnh, thuốc BVTV, phân bón, vật tư làm vườn</h1>
 
       <section className="hm-hero" aria-label="Sự kiện và ưu đãi">
@@ -215,7 +221,7 @@ export default async function HomePage() {
             {PARTNER_TYPES.map((t) => (
               <li key={t}>
                 <Link href={`${WHOLESALE_URL}#dang-ky`} className="hm-ptype app-plain">
-                  <img src={PARTNER_IMAGE[t]} alt="" loading="lazy" style={{ objectPosition: PARTNER_IMAGE_POS[t] }} />
+                  <img {...responsive(PARTNER_IMAGE[t], '(max-width: 47.9375em) 44vw, 400px', 640)} alt="" loading="lazy" style={{ objectPosition: PARTNER_IMAGE_POS[t] }} />
                   <span><Icon name={PARTNER_INFO[t].icon} /><b>{PARTNER_INFO[t].label}</b></span>
                 </Link>
               </li>

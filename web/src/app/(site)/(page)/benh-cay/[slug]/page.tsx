@@ -13,6 +13,8 @@ import { categoryOf, postPath } from '@/lib/posts';
 import { postsForDisease } from '@/server/posts';
 import { withShare } from '@/lib/seo';
 import { responsive } from '@/lib/images';
+import { JsonLd } from '@/components/JsonLd';
+import { diseaseLd } from '@/lib/jsonld';
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -45,11 +47,12 @@ export default async function DiseaseDetailPage({ params }: Props) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '16px 24px 32px', background: 'var(--surface)' }}>
+      <JsonLd data={diseaseLd({ ...d, images: d.symptoms.flatMap((s) => (s.image ? [diseaseImageUrl(s.image, d.slug)] : [])) })} />
       <div className="dd-hero">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <Breadcrumb items={[
+            { label: 'Góc chăm cây', href: '/goc-cham-cay' },
             { label: 'Bệnh cây trồng', href: '/benh-cay' },
-            { label: partName(d.parts[0]), href: `/benh-cay?bo_phan=${d.parts[0]}#danh-sach` },
             { label: shortName(d.name).replace(/^./, (c) => c.toUpperCase()) },
           ]} />
           <h1>{d.name}</h1>
@@ -84,7 +87,7 @@ export default async function DiseaseDetailPage({ params }: Props) {
         {d.symptoms.map((s, i) => (
           <div key={i}>
             <span className={s.image ? 'img img--photo' : 'img'}>
-              {s.image ? <img {...responsive(diseaseImageUrl(s.image, d.slug), '(max-width: 47.9375em) 100vw, 360px', 960)} alt={s.text} width={1000} height={750} loading="lazy" /> : <PartIcon part={s.part} plain />}
+              {s.image ? <img {...responsive(diseaseImageUrl(s.image, d.slug), '(max-width: 47.9375em) 100vw, 360px', 960)} alt={s.text} width={1000} height={750} loading={i === 0 ? undefined : 'lazy'} /> : <PartIcon part={s.part} plain />}
               <em>{partName(s.part)}</em>
             </span>
             {s.text}

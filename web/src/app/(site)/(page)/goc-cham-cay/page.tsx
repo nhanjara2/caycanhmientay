@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Breadcrumb } from '@/components/Blocks';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Icon } from '@/components/Icon';
@@ -7,19 +8,21 @@ import { CATEGORIES, CATEGORY_DESCRIPTION, categoryOf, durationLabel, isCategory
 import { publishedPosts, type PostCard } from '@/server/posts';
 import { withShare } from '@/lib/seo';
 import { responsive } from '@/lib/images';
+import { Pager } from '@/components/Pager';
+import { one, pageOf, redirectIfNotCanonical, type SearchParams } from '@/lib/url-params';
 
-type SP = { 'chuyen-muc'?: string; the?: string; loai?: string; trang?: string };
-type Props = { searchParams: Promise<SP> };
+type Props = { searchParams: Promise<SearchParams> };
 
 const PER_PAGE = 12;
 const BASE = SECTIONS.blog.path;
 const TONES = ['', 't3', 't2'];
 
-function filters(sp: SP) {
-  const cat = isCategory(sp['chuyen-muc']) && sectionOf(sp['chuyen-muc']) === 'blog' ? sp['chuyen-muc'] : undefined;
-  const tag = sp.the?.trim().slice(0, 30) || undefined;
-  const video = sp.loai === 'video';
-  const page = Math.max(1, Math.min(500, Number.parseInt(sp.trang ?? '1', 10) || 1));
+function filters(sp: SearchParams) {
+  const c = one(sp['chuyen-muc']);
+  const cat = isCategory(c) && sectionOf(c) === 'blog' ? c : undefined;
+  const tag = one(sp.the)?.replace(/\s+/g, ' ').trim().slice(0, 30).trim() || undefined;
+  const video = one(sp.loai) === 'video';
+  const page = pageOf(sp.trang);
   return { cat, tag, video, page };
 }
 
@@ -86,7 +89,8 @@ export default async function BlogPage({ searchParams }: Props) {
   const { cat, tag, video, page } = filters(sp);
   const all = (await publishedPosts()).filter((p) => sectionOf(p.category) === 'blog');
   const listing = cat || tag || video;
-  if (!listing && sp.trang !== undefined) redirect(BASE); // trang chính không phân trang
+  // Mỗi tổ hợp một URL: chuyên mục / loại lạ, thẻ rỗng, tham số thừa, ?trang=1 / abc, trang chính có ?trang → 308 về dạng chuẩn.
+  redirectIfNotCanonical(BASE, sp, [['chuyen-muc', cat], ['the', tag], ['loai', video ? 'video' : undefined], ['trang', listing && page > 1 ? page : undefined]]);
 
   const used = new Set(all.map((p) => p.category));
   const chips = CATEGORIES.filter((c) => c.section === 'blog' && (used.has(c.key) || c.key === cat));
@@ -106,9 +110,7 @@ export default async function BlogPage({ searchParams }: Props) {
 
   const top = (
     <section className="vx-blogtop">
-      <div className="vx-crumb">
-        <Link href="/">Trang chủ</Link>/{listing ? <><Link href={BASE}>Góc chăm cây</Link>/<span>{heading}</span></> : <span>Góc chăm cây</span>}
-      </div>
+      <Breadcrumb items={[{ label: 'Trang chủ', href: '/' }, ...(listing ? [{ label: 'Góc chăm cây', href: BASE }, { label: heading }] : [{ label: 'Góc chăm cây' }])]} />
       <h1>{heading}</h1>
       {(chips.length > 0 || videos.length > 0) && (
         <div className="vx-row app-chiprow">
@@ -153,9 +155,8 @@ export default async function BlogPage({ searchParams }: Props) {
     const rows = all.filter((p) => (!cat || p.category === cat) && (!tag || p.tags.includes(tag)) && (!video || p.kind === 'video'));
     const pages = Math.max(1, Math.ceil(rows.length / PER_PAGE));
     const q = { 'chuyen-muc': cat, the: tag, loai: video ? 'video' : undefined };
-    // Mỗi trang một đường dẫn: ?trang=1 / abc / quá số trang → về đúng trang.
-    const at = Math.min(page, pages);
-    if (sp.trang !== undefined && sp.trang !== (at > 1 ? String(at) : undefined)) redirect(href({ ...q, trang: at > 1 ? at : undefined }));
+    // Quá số trang → trang cuối (307: số trang đổi theo số bài).
+    if (page > pages) redirect(href({ ...q, trang: pages > 1 ? pages : undefined }));
     const shown = rows.slice((page - 1) * PER_PAGE, page * PER_PAGE);
     return (
       <>
@@ -170,13 +171,8 @@ export default async function BlogPage({ searchParams }: Props) {
               ) : (
                 <div className="app-plist">{shown.map((p, i) => <Feat key={p.id} p={p} tone={TONES[i % 3]} />)}</div>
               )}
-              {pages > 1 && (
-                <nav className="app-pager" aria-label="Trang">
-                  {page > 1 && <Link href={href({ ...q, trang: page - 1 > 1 ? page - 1 : undefined })} className="vx-btn vx-btn--outline vx-btn--sm">‹ Trang trước</Link>}
-                  <span>Trang {page}/{pages}</span>
-                  {page < pages && <Link href={href({ ...q, trang: page + 1 })} className="vx-btn vx-btn--outline vx-btn--sm">Trang sau ›</Link>}
-                </nav>
-              )}
+              {/* Thẻ chủ đề / Video là trang noindex → link phân trang nofollow */}
+              <Pager page={page} pages={pages} href={(n) => href({ ...q, trang: n > 1 ? n : undefined })} nofollow={!!tag || video} />
             </section>
           </div>
           {side}

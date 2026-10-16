@@ -223,8 +223,9 @@ async function main() {
     if (new URL(loc).pathname.startsWith('/san-pham/')) {
       const ld = [...g.html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)]
         .map((m) => { try { return JSON.parse(m[1]); } catch { return null; } }).find((x) => x?.['@type'] === 'Product');
+      // Sản phẩm chỉ "Liên hệ báo giá" chưa có đánh giá thì không có schema Product (lib/jsonld.ts) → bỏ qua
       const own: string[] = ld?.image ?? [];
-      if (own.length ? !own.includes(images[0]) : !/\/images\/og\//.test(images[0] ?? '')) err(`Ảnh chia sẻ không phải ảnh của sản phẩm này: ${images[0]} — ${loc}`);
+      if (ld && (own.length ? !own.includes(images[0]) : !/\/images\/og\//.test(images[0] ?? ''))) err(`Ảnh chia sẻ không phải ảnh của sản phẩm này: ${images[0]} — ${loc}`);
     }
 
     // Biểu tượng

@@ -1,5 +1,6 @@
 'use client';
 
+import { Breadcrumb } from './Blocks';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -70,7 +71,7 @@ export function PlantAdvisor({ plants, initialKind }: { plants: AdvisorPlant[]; 
 
   return (
     <div className="pa" ref={top}>
-      <div className="vx-crumb"><Link href="/">Trang chủ</Link>/<span>Tư vấn chọn cây</span></div>
+      <Breadcrumb items={[{ label: 'Trang chủ', href: '/' }, { label: 'Tư vấn chọn cây' }]} />
       <header className="pa-head">
         <h1>Tư vấn chọn cây</h1>
         <p>Trả lời vài câu hỏi về chỗ đặt cây, web gợi ý <b>loại cây, số lượng và chiều cao</b> cho từng vị trí. Miễn phí, không cần đăng nhập.</p>

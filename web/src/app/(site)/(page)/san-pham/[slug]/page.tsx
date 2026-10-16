@@ -7,12 +7,13 @@ import { GalleryCol, ProductGallery } from '@/components/ProductGallery';
 import { ProductGrid } from '@/components/ProductCard';
 import { ProductQnA } from '@/components/ProductQnA';
 import { ProductReviews } from '@/components/ProductReviews';
-import { categoryLabel, elementName, isQuote, type Product } from '@/lib/catalog';
+import { YouTubeLite } from '@/components/YouTubeLite';
+import { youtubeEmbed } from '@/lib/posts';
+import { categoryLabel, elementName, type Product } from '@/lib/catalog';
 import { YOUTUBE_URL } from '@/lib/contact';
 import { reviewStats } from '@/lib/reviews';
 import { seoNameOf } from '@/lib/seo-name';
 import { clipText } from '@/lib/format';
-import { absoluteUrl } from '@/lib/site';
 import { boughtTogether, getProduct } from '@/server/catalog';
 import { getCurrentUser } from '@/server/auth';
 import { getCategories } from '@/server/categories';
@@ -21,6 +22,8 @@ import { productQuestions } from '@/server/questions';
 import { productReviews } from '@/server/reviews';
 import { isWishlisted } from '@/server/wishlist';
 import { withShare } from '@/lib/seo';
+import { JsonLd } from '@/components/JsonLd';
+import { faqLd, productLd } from '@/lib/jsonld';
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -35,26 +38,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     // Ảnh chính đứng đầu — đổi ảnh chính ở admin là ảnh chia sẻ đổi theo (tên file ảnh mới).
     { images: p.images ?? [], alt: p.name },
   );
-}
-
-/** Schema Product (JSON-LD) để Google hiểu tên chi tiết, ảnh, giá, còn hàng; đánh giá chỉ ghi khi có đánh giá thật. */
-function productJsonLd(p: Product, rating: { avg: number; count: number }) {
-  const prices = p.options.filter((o) => !isQuote(o)).map((o) => o.price);
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    name: seoNameOf(p),
-    alternateName: p.name,
-    sku: p.sku,
-    description: p.lead,
-    image: p.images?.length ? p.images.map(absoluteUrl) : undefined,
-    brand: { '@type': 'Brand', name: 'Cây Cảnh Miền Tây' },
-    offers: prices.length ? {
-      '@type': 'AggregateOffer', priceCurrency: 'VND', lowPrice: Math.min(...prices), highPrice: Math.max(...prices), offerCount: prices.length,
-      availability: p.inStock === false ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
-    } : undefined,
-    aggregateRating: rating.count > 0 ? { '@type': 'AggregateRating', ratingValue: rating.avg.toFixed(1), reviewCount: rating.count } : undefined,
-  };
 }
 
 function FengShuiBlock({ f }: { f: NonNullable<Product['fengshui']> }) {
@@ -91,16 +74,7 @@ function Content({ p, faq }: { p: Product; faq: boolean }) {
         {p.youtubeId && (
           <>
             <h3 id="video">Video {isPlant ? 'thực tế tại vườn' : 'hướng dẫn'}</h3>
-            <div className="app-yt">
-              <iframe
-                src={`https://www.youtube-nocookie.com/embed/${p.youtubeId}?rel=0`}
-                title={`Video ${p.name}`}
-                loading="lazy"
-                allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; web-share"
-                referrerPolicy="strict-origin-when-cross-origin"
-                allowFullScreen
-              />
-            </div>
+            <YouTubeLite id={p.youtubeId} title={`Video ${p.name}`} src={youtubeEmbed(p.youtubeId)} />
             <p className="app-yt-more">
               Xem thêm video chăm cây trên <a href={YOUTUBE_URL} target="_blank" rel="noreferrer">kênh YouTube Cây Cảnh Miền Tây</a>
             </p>
@@ -159,7 +133,13 @@ export default async function ProductPage({ params }: Props) {
 
   return (
     <div className="vx-pdpage app-page">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd(p, rs)).replace(/</g, '\\u003c') }} />
+      {/* Schema Product: giá theo quy cách đang có giá, còn / hết hàng, đánh giá thật đang hiện (lib/jsonld.ts) */}
+      <JsonLd data={productLd(p, {
+        seoName: seoNameOf(p),
+        category: [label.cat, label.sub].filter(Boolean).join(' > '),
+        rating: rs,
+        reviews: reviews.filter((r) => !r.mine),
+      })} />
       <Breadcrumb
         items={[
           { label: 'Trang chủ', href: '/' },
@@ -201,17 +181,7 @@ export default async function ProductPage({ params }: Props) {
               </details>
             ))}
           </div>
-          {/* Schema FAQPage để Google hiện câu hỏi thường gặp trên kết quả tìm kiếm (thiết kế FAQ) */}
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{
-              __html: JSON.stringify({
-                '@context': 'https://schema.org',
-                '@type': 'FAQPage',
-                mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.question, acceptedAnswer: { '@type': 'Answer', text: f.answer } })),
-              }).replace(/</g, '\\u003c'),
-            }}
-          />
+          <JsonLd data={faqLd(faq)} />
         </section>
       )}
 

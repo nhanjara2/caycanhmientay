@@ -283,7 +283,7 @@
   .hm-car--top .hm-slide__title { font-size: 1.125rem; }
   .hm-car--top .hm-slide__cta { display: none; }
   .hm-car__dots { left: auto; right: 0; transform: none; }
-  .hm-car__dots button { width: 1.125rem; }
+  .hm-car__dots button { width: 1.5rem; } /* vùng bấm ≥ 24px (SEO mục 11 / WCAG 2.5.8); chấm vẫn nhỏ 6px */
   .hm-car__dots button::before { width: 6px; height: 6px; margin: -3px 0 0 -3px; }
   .hm-car__dots button[aria-current]::before { width: 16px; margin-left: -8px; }
   .hm-car__dots .hm-car__pause { width: 2.25rem; }

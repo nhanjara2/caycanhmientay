@@ -9,7 +9,7 @@ import {
 } from '@/app/actions/categories';
 import { Art, type IconName } from '@/components/Icon';
 import { CATEGORY_ICONS, ICON_LABELS, toSlug, type SpecField } from '@/lib/catalog';
-import { autoCategoryDescription, SEO_DESCRIPTION_MAX, SEO_TITLE_MAX } from '@/lib/category-seo';
+import { autoCategoryDescription, INTRO_MAX, SEO_DESCRIPTION_MAX, SEO_TITLE_MAX } from '@/lib/category-seo';
 import { Select } from '@/components/Select';
 
 const FAIL = { ok: false as const, error: 'Có lỗi, vui lòng thử lại' };
@@ -88,7 +88,7 @@ const cleanRows = (rows: Row[]) => rows.map((r) => ({ name: r.name.trim(), requi
 
 // ---- Chữ trên Google ------------------------------------------------------------------------
 
-type Seo = { seoTitle: string; seoDescription: string };
+type Seo = { seoTitle: string; seoDescription: string; intro: string };
 
 /** Tiêu đề + mô tả trên Google: để trống = web tự tạo (hiện mờ trong ô và trong khung xem trước). */
 function SeoFields({ id, path, name, productNames, value, onChange }: {
@@ -118,13 +118,19 @@ function SeoFields({ id, path, name, productNames, value, onChange }: {
         <b>{(value.seoTitle.trim() || autoTitle)} | Cây Cảnh Miền Tây</b>
         <span>{value.seoDescription.trim() || autoDesc}</span>
       </div>
+      <div className="ad-f">
+        <label htmlFor={`${id}-in`}>Giới thiệu cuối trang</label>
+        <textarea id={`${id}-in`} className="vx-input" style={{ minHeight: 120 }} value={value.intro} maxLength={INTRO_MAX}
+          onChange={(e) => onChange({ ...value, intro: e.target.value })} />
+        <span className="hint">{value.intro.length}/{INTRO_MAX} ký tự · Hiện dưới danh sách sản phẩm (trang 1, không lọc). Cách một dòng trống để xuống đoạn. Để trống thì không hiện.</span>
+      </div>
     </>
   );
 }
 
 // ---- Form danh mục --------------------------------------------------------------------------
 
-export type CategoryValues = { slug: string; name: string; icon: IconName; active: boolean; specs: SpecField[]; seoTitle?: string; seoDescription?: string };
+export type CategoryValues = { slug: string; name: string; icon: IconName; active: boolean; specs: SpecField[]; seoTitle?: string; seoDescription?: string; intro?: string };
 
 /** Thêm (initial = null) hoặc sửa danh mục: tên, đường dẫn, biểu tượng, hiện trên menu, bộ thông số chung. */
 export function CategoryForm({ initial, system, productCount, productNames, canEdit }: {
@@ -144,7 +150,7 @@ export function CategoryForm({ initial, system, productCount, productNames, canE
   const [icon, setIcon] = useState<IconName>(initial?.icon ?? 'leaf');
   const [active, setActive] = useState(initial?.active ?? true);
   const [rows, setRows] = useState<Row[]>(toRows(initial?.specs ?? []));
-  const [seo, setSeo] = useState<Seo>({ seoTitle: initial?.seoTitle ?? '', seoDescription: initial?.seoDescription ?? '' });
+  const [seo, setSeo] = useState<Seo>({ seoTitle: initial?.seoTitle ?? '', seoDescription: initial?.seoDescription ?? '', intro: initial?.intro ?? '' });
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, start] = useTransition();
   const shownSlug = creating ? (slugTouched ? slug : toSlug(name)) : initial.slug;
@@ -226,7 +232,7 @@ export function CategoryForm({ initial, system, productCount, productNames, canE
         </div>
 
         <div className="ad-card">
-          <div className="ad-card__h">Hiện trên Google</div>
+          <div className="ad-card__h">Hiện trên Google &amp; giới thiệu</div>
           <div className="ad-card__b">
             <SeoFields id="cf" path={`/danh-muc/${shownSlug || '…'}`} name={name.trim()} productNames={productNames} value={seo} onChange={(v) => { setSeo(v); dirty(); }} />
           </div>
@@ -253,7 +259,7 @@ export function CategoryForm({ initial, system, productCount, productNames, canE
 
 // ---- Nhóm con -------------------------------------------------------------------------------
 
-export type AdminSub = { slug: string; name: string; active: boolean; specs: SpecField[]; products: number; seoTitle?: string; seoDescription?: string; productNames: string[] };
+export type AdminSub = { slug: string; name: string; active: boolean; specs: SpecField[]; products: number; seoTitle?: string; seoDescription?: string; intro?: string; productNames: string[] };
 
 /** Thêm / sửa nhóm con ngay trong danh sách. */
 function SubForm({ category, sub, onDone }: { category: string; sub: AdminSub | null; onDone: () => void }) {
@@ -263,7 +269,7 @@ function SubForm({ category, sub, onDone }: { category: string; sub: AdminSub | 
   const [slugTouched, setSlugTouched] = useState(false);
   const [active, setActive] = useState(sub?.active ?? true);
   const [rows, setRows] = useState<Row[]>(toRows(sub?.specs ?? []));
-  const [seo, setSeo] = useState<Seo>({ seoTitle: sub?.seoTitle ?? '', seoDescription: sub?.seoDescription ?? '' });
+  const [seo, setSeo] = useState<Seo>({ seoTitle: sub?.seoTitle ?? '', seoDescription: sub?.seoDescription ?? '', intro: sub?.intro ?? '' });
   const [error, setError] = useState('');
   const [pending, start] = useTransition();
 

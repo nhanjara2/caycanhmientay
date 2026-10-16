@@ -13,6 +13,7 @@ const SLOTS = [
 ];
 const hh = (h: number) => `${String(h).padStart(2, '0')}:00`;
 const pad = (n: number) => String(n).padStart(2, '0');
+const VN_OFFSET_MS = 7 * 3600_000;
 
 /** Đồng hồ Flash sale: khung giờ đang chạy (-1 = ngoài giờ) và số giây còn lại tới hết khung / tới khung kế tiếp. */
 function useFlashClock() {
@@ -24,15 +25,17 @@ function useFlashClock() {
     return () => clearInterval(t);
   }, []);
 
-  const hour = now?.getHours() ?? 0;
+  // Khung giờ theo giờ Việt Nam (UTC+7, không đổi giờ mùa hè) — máy khách đặt múi giờ khác vẫn thấy đúng giờ của shop.
+  const vn = now ? new Date(now.getTime() + VN_OFFSET_MS) : null;
+  const hour = vn?.getUTCHours() ?? 0;
   const active = SLOTS.findIndex((s) => hour >= s.from && hour < s.to);
   const target = SLOTS[active] ?? SLOTS.find((s) => s.from > hour) ?? SLOTS[0];
   let left = 0;
-  if (now) {
-    const end = new Date(now);
-    end.setHours(active >= 0 ? target.to : target.from, 0, 0, 0);
-    if (end <= now) end.setDate(end.getDate() + 1);
-    left = Math.floor((end.getTime() - now.getTime()) / 1000);
+  if (vn) {
+    const end = new Date(vn);
+    end.setUTCHours(active >= 0 ? target.to : target.from, 0, 0, 0);
+    if (end <= vn) end.setUTCDate(end.getUTCDate() + 1);
+    left = Math.floor((end.getTime() - vn.getTime()) / 1000);
   }
   return { hour, active, left };
 }

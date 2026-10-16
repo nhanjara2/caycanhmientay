@@ -1,28 +1,42 @@
 import type { Metadata } from 'next';
+import { Breadcrumb } from '@/components/Blocks';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { CauseIcon, PartIcon, PlantMap } from '@/components/DiseaseArt';
 import { Icon } from '@/components/Icon';
-import { CAUSES, PARTS, PLANTS, causeOf, isCause, isPart, isPlant, diseaseScore, partName } from '@/lib/diseases';
+import { CAUSES, PARTS, PLANTS, causeOf, isCause, isPart, isPlant, diseaseScore, partName, type CauseKey, type PartKey, type PlantKey } from '@/lib/diseases';
 import { pageSuffix } from '@/lib/posts';
 import { allDiseases } from '@/server/diseases';
 import { withShare } from '@/lib/seo';
+import { Pager } from '@/components/Pager';
+import { one, pageOf, redirectIfNotCanonical, type SearchParams } from '@/lib/url-params';
 
 const PER_PAGE = 20;
 
 type Filters = { bo_phan?: string; nguyen_nhan?: string; cay?: string; q?: string; trang?: string };
-type Props = { searchParams: Promise<Filters> };
+type Props = { searchParams: Promise<SearchParams> };
+
+/** Bộ lọc hợp lệ đang chọn (giá trị lạ bị bỏ; ô tìm gộp khoảng trắng, tối đa 80 ký tự). */
+function filtersOf(sp: SearchParams): { bo_phan?: PartKey; nguyen_nhan?: CauseKey; cay?: PlantKey; q?: string } {
+  const part = one(sp.bo_phan), cause = one(sp.nguyen_nhan), plant = one(sp.cay);
+  return {
+    bo_phan: isPart(part) ? part : undefined,
+    nguyen_nhan: isCause(cause) ? cause : undefined,
+    cay: isPlant(plant) ? plant : undefined,
+    q: one(sp.q)?.replace(/\s+/g, ' ').trim().slice(0, 80).trim() || undefined,
+  };
+}
 
 /** SEO: trang danh sách (kể cả ?trang=n) là trang chuẩn; đang lọc / tìm thì noindex, canonical về /benh-cay. */
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
   const sp = await searchParams;
-  const filtered = !!(sp.bo_phan || sp.nguyen_nhan || sp.cay || sp.q?.trim());
-  const page = Number(sp.trang);
-  const nth = !filtered && Number.isInteger(page) ? pageSuffix(page) : '';
+  const filtered = Object.values(filtersOf(sp)).some(Boolean);
+  const page = filtered ? 1 : pageOf(sp.trang);
+  const nth = pageSuffix(page);
   return withShare({
     title: `Tìm hiểu bệnh cây trồng${nth}`,
     description: `Tra cứu bệnh cây theo bộ phận bị bệnh, nguyên nhân hoặc triệu chứng: nhận biết, cách xử lý và phòng bệnh.${nth ? pageSuffix(page, ' ') + '.' : ''}`,
-    alternates: { canonical: !filtered && Number.isInteger(page) && page > 1 ? `/benh-cay?trang=${page}` : '/benh-cay' },
+    alternates: { canonical: page > 1 ? `/benh-cay?trang=${page}` : '/benh-cay' },
     robots: filtered ? { index: false, follow: true } : undefined,
   });
 }
@@ -35,13 +49,21 @@ function hrefWith(cur: Filters, patch: Filters, hash = '#danh-sach') {
   return `/benh-cay${s ? `?${s}` : ''}${hash}`;
 }
 
+/** Link bộ lọc: tổ hợp từ 2 điều kiện trở lên (hoặc kèm từ khóa tìm) dẫn tới trang noindex → nofollow, để Google không bò
+ *  hết mọi tổ hợp bộ phận × nguyên nhân × loại cây; trang một bộ lọc vẫn cho lần theo (follow) tới các bài bệnh. */
+function filterLink(cur: Filters, patch: Filters) {
+  const next = { ...cur, ...patch };
+  const n = [next.bo_phan, next.nguyen_nhan, next.cay].filter(Boolean).length;
+  return { href: hrefWith(cur, patch), rel: n >= 2 || next.q ? 'nofollow' : undefined };
+}
+
 export default async function DiseaseLibraryPage({ searchParams }: Props) {
   const sp = await searchParams;
-  const part = isPart(sp.bo_phan) ? sp.bo_phan : undefined;
-  const cause = isCause(sp.nguyen_nhan) ? sp.nguyen_nhan : undefined;
-  const plant = isPlant(sp.cay) ? sp.cay : undefined;
-  const q = sp.q?.trim().slice(0, 80) || undefined;
-  const cur: Filters = { bo_phan: part, nguyen_nhan: cause, cay: plant, q };
+  const cur = filtersOf(sp);
+  const { bo_phan: part, nguyen_nhan: cause, cay: plant, q } = cur;
+  // Mỗi tổ hợp một URL: giá trị lạ, ô rỗng, thứ tự khác, tham số thừa, ?trang=1 / 0 / abc → chuyển hẳn (308) về dạng chuẩn.
+  const asked = pageOf(sp.trang);
+  redirectIfNotCanonical('/benh-cay', sp, [['bo_phan', part], ['nguyen_nhan', cause], ['cay', plant], ['q', q], ['trang', asked > 1 ? asked : undefined]]);
 
   const all = await allDiseases();
   const list = all
@@ -50,11 +72,9 @@ export default async function DiseaseLibraryPage({ searchParams }: Props) {
     .sort((a, b) => b.score - a.score) // sort ổn định: cùng điểm giữ thứ tự theo tên
     .map(({ d }) => d);
   const pages = Math.max(1, Math.ceil(list.length / PER_PAGE));
-  const page = Math.min(pages, Math.max(1, Number(sp.trang) || 1));
-  // Mỗi trang một đường dẫn: ?trang=1 / 0 / abc / quá số trang → về đúng trang (không thành trang trùng).
-  if (sp.trang !== undefined && sp.trang !== (page > 1 ? String(page) : undefined)) {
-    redirect(hrefWith(cur, { trang: page > 1 ? String(page) : undefined }, ''));
-  }
+  // Quá số trang → trang cuối (307: số trang đổi theo số bài).
+  if (asked > pages) redirect(hrefWith(cur, { trang: pages > 1 ? String(pages) : undefined }, ''));
+  const page = asked;
   const shown = list.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
   const title = [
@@ -65,9 +85,7 @@ export default async function DiseaseLibraryPage({ searchParams }: Props) {
 
   return (
     <div className="vx-dlib">
-      <nav className="vx-crumb" aria-label="Breadcrumb">
-        <Link href="/">Trang chủ</Link>/<Link href="/goc-cham-cay">Góc chăm cây</Link>/<span>Bệnh cây trồng</span>
-      </nav>
+      <Breadcrumb items={[{ label: 'Trang chủ', href: '/' }, { label: 'Góc chăm cây', href: '/goc-cham-cay' }, { label: 'Bệnh cây trồng' }]} />
       <h1>Tìm hiểu bệnh cây trồng</h1>
       <div className="vx-dlib__sub">
         Tra cứu theo bộ phận bị bệnh hoặc theo nguyên nhân. Cây mua tại vườn dưới 7 ngày có dấu hiệu lạ?{' '}
@@ -91,7 +109,7 @@ export default async function DiseaseLibraryPage({ searchParams }: Props) {
         </div>
         <div className="vx-parts">
           {PARTS.map((p) => (
-            <Link key={p.key} href={hrefWith(cur, { bo_phan: part === p.key ? undefined : p.key })} className="vx-part" aria-current={part === p.key ? 'true' : undefined} scroll={false}>
+            <Link key={p.key} {...filterLink(cur, { bo_phan: part === p.key ? undefined : p.key })} className="vx-part" aria-current={part === p.key ? 'true' : undefined} scroll={false}>
               <span><PartIcon part={p.key} /></span>
               <span style={{ all: 'unset' }}>{p.name}<small>{all.filter((d) => d.parts.includes(p.key)).length} bệnh</small></span>
             </Link>
@@ -101,9 +119,9 @@ export default async function DiseaseLibraryPage({ searchParams }: Props) {
           <div className="vx-dpanel__head">
             <b>{title} · {list.length} bệnh</b>
             <span className="vx-seg" style={{ flexWrap: 'wrap' }}>
-              <Link href={hrefWith(cur, { cay: undefined })} className="vx-chip" aria-current={!plant ? 'true' : undefined} scroll={false}>Mọi loại cây</Link>
+              <Link {...filterLink(cur, { cay: undefined })} className="vx-chip" aria-current={!plant ? 'true' : undefined} scroll={false}>Mọi loại cây</Link>
               {PLANTS.map((p) => (
-                <Link key={p.key} href={hrefWith(cur, { cay: p.key })} className="vx-chip" aria-current={plant === p.key ? 'true' : undefined} scroll={false}>{p.name}</Link>
+                <Link key={p.key} {...filterLink(cur, { cay: p.key })} className="vx-chip" aria-current={plant === p.key ? 'true' : undefined} scroll={false}>{p.name}</Link>
               ))}
             </span>
           </div>
@@ -121,13 +139,7 @@ export default async function DiseaseLibraryPage({ searchParams }: Props) {
               Chưa có bài bệnh phù hợp.
             </p>
           )}
-          {pages > 1 && (
-            <nav className="vx-pager" aria-label="Phân trang">
-              {Array.from({ length: pages }, (_, i) => i + 1).map((n) => (
-                <Link key={n} href={`${hrefWith(cur, { trang: n > 1 ? String(n) : undefined })}`} aria-current={n === page ? 'true' : undefined} scroll={false}>{n}</Link>
-              ))}
-            </nav>
-          )}
+          <Pager page={page} pages={pages} href={(n) => hrefWith(cur, { trang: n > 1 ? String(n) : undefined })} nofollow={Object.values(cur).some(Boolean)} />
         </div>
       </section>
 
@@ -137,7 +149,7 @@ export default async function DiseaseLibraryPage({ searchParams }: Props) {
       </h2>
       <div className="vx-dgrid">
         {CAUSES.map((c) => (
-          <Link key={c.key} href={hrefWith(cur, { nguyen_nhan: cause === c.key ? undefined : c.key })} className="vx-dtile" aria-current={cause === c.key ? 'true' : undefined}>
+          <Link key={c.key} {...filterLink(cur, { nguyen_nhan: cause === c.key ? undefined : c.key })} className="vx-dtile" aria-current={cause === c.key ? 'true' : undefined}>
             <span className={'warm' in c ? 'warm' : ''}><CauseIcon cause={c.key} /></span>
             <b>{c.name}</b>
             <small>{all.filter((d) => d.cause === c.key).length} bệnh</small>

@@ -307,6 +307,12 @@ button.vx-pay__opt:first-child { border-top: 0; }
 .vx-thumb { position: relative; }
 .app-yt { position: relative; max-width: 720px; aspect-ratio: 16 / 9; border-radius: var(--radius-md); overflow: hidden; background: #000; margin: var(--space-3) 0; }
 .app-yt iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+/* Video "nhẹ" (YouTubeLite): ảnh + nút phát, bấm mới gắn iframe — SEO mục 10 (tốc độ). */
+.app-yt__lite { position: absolute; inset: 0; display: block; cursor: pointer; }
+.app-yt__lite img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.app-yt__play { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); opacity: .9; transition: opacity .15s ease; }
+.app-yt__lite:hover .app-yt__play, .app-yt__lite:focus-visible .app-yt__play { opacity: 1; }
+.app-yt__lite:focus-visible { outline: 3px solid var(--primary); outline-offset: -3px; }
 .app-yt-more { margin-top: calc(-1 * var(--space-1)); font-size: 0.8125rem; color: var(--ink-muted); }
 .app-yt-more a { color: var(--primary); font-weight: 600; }
 
@@ -2409,6 +2415,15 @@ a.app-mm__card:hover .app-mm__name { color: var(--primary); }
 @media (max-width: 47.9375em) { .qf-sec h2 { flex-wrap: wrap; } }
 .vx-topics h2, .vx-experts h2 { margin: 0; font-size: 1rem; color: var(--primary); }
 .nw-box h2 { margin: 0; font-size: 0.9375rem; color: var(--primary); }
+
+/* Breadcrumb: mục cuối (trang đang xem, vd. tiêu đề bài dài) giữ một dòng, dài quá thì "…" — không đẩy breadcrumb cao 3–4 dòng trên điện thoại */
+.vx-crumb [aria-current="page"] { min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Giới thiệu cuối trang danh mục (admin viết ở /admin/danh-muc; trống thì không có khối) */
+.app-catintro { margin: 32px 0 8px; padding: 20px 24px; border: 1px solid var(--border); border-radius: 12px; color: var(--text-secondary, #44544a); font-size: 1rem; line-height: 1.65; }
+.app-catintro p { margin: 0; }
+.app-catintro p + p { margin-top: 12px; }
+@media (max-width: 47.9375em) { .app-catintro { padding: 16px; margin-top: 24px; } }
 
 /* >>> DỄ DÙNG ĐIỆN THOẠI */
 /* ===================== Dễ dùng trên điện thoại cho người lớn tuổi (06/10/2026) =====================

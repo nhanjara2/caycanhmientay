@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { StoreLocator } from '@/components/StoreLocator';
 import { listPublicStores } from '@/server/stores-public';
 import { withShare } from '@/lib/seo';
+import { JsonLd } from '@/components/JsonLd';
+import { storesLd } from '@/lib/jsonld';
 
 export const metadata: Metadata = withShare({
   title: 'Hệ thống cửa hàng',
@@ -11,5 +13,12 @@ export const metadata: Metadata = withShare({
 
 /** Danh sách cửa hàng đọc từ bảng stores (đang hoạt động + bật "Hiện trên web" ở /admin/cua-hang). */
 export default async function Page() {
-  return <StoreLocator stores={await listPublicStores()} />;
+  const stores = await listPublicStores();
+  return (
+    <>
+      {/* Mỗi cửa hàng / vườn của shop đang hiện → GardenStore (địa chỉ, tọa độ, giờ mở cửa, điện thoại từ /admin/cua-hang) */}
+      {storesLd(stores).map((ld) => <JsonLd key={String(ld['@id'])} data={ld} />)}
+      <StoreLocator stores={stores} />
+    </>
+  );
 }

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Breadcrumb } from './Blocks';
 import { formatPhone, SALES_PHONE, SUPPORT_PHONE } from '@/lib/contact';
 import { WARRANTY_DAYS } from '@/lib/warranty-labels';
 import { PolicyNav } from './PolicyNav';
@@ -23,9 +24,7 @@ export function AboutView() {
   return (
     <>
       <div style={{ padding: '12px 24px 0', background: 'var(--surface)' }}>
-        <div className="vx-crumb">
-          <Link href="/">Trang chủ</Link>/<Link href="/chinh-sach/gioi-thieu">Về Cây Cảnh Miền Tây</Link>/<span>Giới thiệu</span>
-        </div>
+        <Breadcrumb items={[{ label: 'Giới thiệu' }]} />
       </div>
       <div className="vx-policypage">
         <PolicyNav />

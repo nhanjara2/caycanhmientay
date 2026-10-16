@@ -1,8 +1,17 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SearchBox } from '@/components/Header';
 import { Icon } from '@/components/Icon';
 import { SiteChrome } from '@/components/SiteChrome';
 
+// Next tự thêm <meta name="robots" content="noindex"> cho mọi trang 404.
+export const metadata: Metadata = { title: 'Không tìm thấy trang' };
+
+/**
+ * Trang 404. Đường dẫn không khớp trang nào → HTML máy chủ có đủ nội dung. Trang gọi notFound() (sản phẩm, bài… không có):
+ * Next 16 trả mã 404 + noindex nhưng HTML máy chủ rỗng (<html id="__next_error__">), giao diện này hiện sau khi chạy JS —
+ * hành vi của Next (thử trên app tối giản cũng vậy), không phải lỗi của web. Xem seo:templates.
+ */
 export default function NotFound() {
   return (
     <SiteChrome>

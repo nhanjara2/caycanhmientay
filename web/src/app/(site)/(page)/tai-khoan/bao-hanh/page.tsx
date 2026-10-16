@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { AccountSidebar } from '@/components/AccountSidebar';
-import { EmptyState } from '@/components/Blocks';
+import { Breadcrumb, EmptyState } from '@/components/Blocks';
 import { Thumb } from '@/components/Icon';
 import { WarrantyForm } from '@/components/WarrantyForm';
 import { fmtDate } from '@/lib/order-labels';
@@ -21,9 +21,7 @@ export default async function WarrantyPage() {
 
   return (
     <div className="vx-acctpage">
-      <div className="vx-crumb">
-        <Link href="/">Trang chủ</Link>/<Link href="/tai-khoan">Tài khoản</Link>/<span>Bảo hành cây</span>
-      </div>
+      <Breadcrumb items={[{ label: 'Tài khoản', href: '/tai-khoan' }, { label: 'Bảo hành cây' }]} />
       <div className="vx-acctgrid">
         <AccountSidebar />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0 }}>

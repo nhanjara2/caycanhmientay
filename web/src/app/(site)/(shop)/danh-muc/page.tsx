@@ -8,6 +8,8 @@ import { WHOLESALE_QUOTE_URL, WHOLESALE_URL } from '@/lib/partners';
 import { flashProducts, productsIn } from '@/server/catalog';
 import { menuCategories } from '@/server/categories';
 import { withShare } from '@/lib/seo';
+import { JsonLd } from '@/components/JsonLd';
+import { collectionLd } from '@/lib/jsonld';
 
 // Lối tắt theo nhóm hàng đối tác hay lấy (09/10/2026 shop chuyển sang chỉ bán sỉ).
 const COLLECTIONS: { label: string; icon: IconName; q?: string; hot?: boolean; href?: string }[] = [
@@ -46,6 +48,8 @@ export default async function AllProductsPage() {
   const total = blocks.reduce((n, b) => n + b.products.length, 0);
   return (
     <>
+      {/* ItemList = đúng các thẻ đang hiện: 8 sản phẩm đầu của mỗi khối danh mục (CategoryBlock). */}
+      <JsonLd data={collectionLd({ path: '/danh-muc', name: 'Tất cả sản phẩm', description: String(metadata.description), products: blocks.flatMap((b) => b.products.slice(0, 8)) })} />
       <Breadcrumb items={[{ label: 'Trang chủ', href: '/' }, { label: 'Tất cả sản phẩm' }]} />
       <div className="pl-head">
         <h1>Tất cả sản phẩm <small>{total} sản phẩm</small></h1>

@@ -38,7 +38,7 @@ export default async function AdminCategoryPage({ params }: Props) {
       </div>
       <CategoryForm
         key={slug}
-        initial={cat ? { slug: cat.slug, name: cat.name, icon: cat.icon, active: cat.active, specs: cat.specs, seoTitle: cat.seoTitle, seoDescription: cat.seoDescription } : null}
+        initial={cat ? { slug: cat.slug, name: cat.name, icon: cat.icon, active: cat.active, specs: cat.specs, seoTitle: cat.seoTitle, seoDescription: cat.seoDescription, intro: cat.intro } : null}
         productNames={cat ? names[cat.slug] ?? [] : []}
         system={cat ? SYSTEM_CATEGORIES[cat.slug] ?? null : null}
         productCount={cat ? counts[cat.slug] ?? 0 : 0}

@@ -41,7 +41,7 @@ export function SlideBody({ s, eager }: { s: Slide; eager?: boolean }) {
       ) : (
         <>
           {/* Ảnh đã có sẵn chữ, không có ảnh riêng điện thoại: khung điện thoại cao hơn thì đặt vừa ảnh (không cắt chữ) trên nền chính ảnh đó làm mờ */}
-          {!s.showText && !s.imageMobile && <img className="hm-slide__fill" src={s.image} alt="" aria-hidden="true" loading="lazy" />}
+          {!s.showText && !s.imageMobile && <img className="hm-slide__fill" src={thumbUrl(s.image, 320)} alt="" aria-hidden="true" loading="lazy" />}
           <picture>
             {s.imageMobile && <source media="(max-width: 47.9375em)" srcSet={responsive(s.imageMobile, '100vw').srcSet ?? s.imageMobile} sizes="100vw" />}
             <img {...responsive(s.image, BANNER_SIZES, 1920)} alt={s.showText ? '' : s.title} loading={eager ? 'eager' : 'lazy'} fetchPriority={eager ? 'high' : undefined} />
@@ -219,9 +219,10 @@ export function HomeHero({ tops, slides, sides, backdrop }: {
               style={own.color ? { background: own.color } : undefined}
             >
               {seen.has(k) && own.image && (
+                // Nền làm mờ chỉ cần bản thu nhỏ (mờ thì không thấy chi tiết) — khỏi tải lại ảnh gốc 1800px làm nền.
                 <picture>
-                  {own.imageMobile && <source media="(max-width: 47.9375em)" srcSet={own.imageMobile} />}
-                  <img src={own.image} alt="" />
+                  {own.imageMobile && <source media="(max-width: 47.9375em)" srcSet={s.bg ? own.imageMobile : thumbUrl(own.imageMobile, 320)} />}
+                  <img src={s.bg ? own.image : thumbUrl(own.image, 640)} alt="" />
                 </picture>
               )}
             </div>

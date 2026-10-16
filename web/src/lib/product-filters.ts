@@ -165,23 +165,45 @@ export const selectedCount = (sel: Sel) => FILTER_KEYS.reduce((n, g) => n + (sel
 
 type Params = Record<string, string | string[] | undefined>;
 
-/** Đọc bộ lọc từ searchParams. Chỉ nhận giá trị hợp lệ; nhóm không thuộc danh mục thì bỏ. */
-export function parseSel(params: Params, allowed: FilterKey[]): Sel {
+/** Đọc bộ lọc từ searchParams. Chỉ nhận giá trị hợp lệ của danh mục đó; nhóm không thuộc danh mục thì bỏ. */
+export function parseSel(params: Params, allowed: FilterKey[], category = 'cay-canh'): Sel {
   const sel: Sel = {};
   for (const g of allowed) {
     const raw = params[g];
     const list = (Array.isArray(raw) ? raw : [raw]).flatMap((s) => (s ?? '').split(',')).map((s) => s.trim()).filter(Boolean);
-    const valid = g === 'nha-vuon' ? list.filter((k) => /^[a-z0-9-]{1,40}$/.test(k)) : list.filter((k) => staticOptions(g, 'cay-canh').some((o) => o.key === k));
+    const valid = g === 'nha-vuon' ? list.filter((k) => /^[a-z0-9-]{1,40}$/.test(k)) : list.filter((k) => staticOptions(g, category).some((o) => o.key === k));
     if (valid.length) sel[g] = [...new Set(valid)].slice(0, 12);
   }
   return sel;
 }
 
+/** Thứ tự cố định của giá trị trong một nhóm (theo danh sách lọc; nhà vườn theo chữ cái) — chọn trước hay sau cũng ra một URL. */
+function orderKeys(g: FilterKey, keys: string[]): string[] {
+  if (g === 'nha-vuon') return [...keys].sort();
+  const order = (g === 'khac' ? KHAC : staticOptions(g, 'cay-canh')).map((o) => o.key);
+  return [...keys].sort((a, b) => order.indexOf(a) - order.indexOf(b));
+}
+
+/** Bộ lọc dạng chuẩn: nhà vườn phải có trong danh mục (`origins`), mọi nhóm xếp giá trị theo `orderKeys`. */
+export function canonicalSel(sel: Sel, origins: FilterOption[]): Sel {
+  const out: Sel = {};
+  for (const g of FILTER_KEYS) {
+    const keys = (sel[g] ?? []).filter((k) => g !== 'nha-vuon' || origins.some((o) => o.key === k));
+    if (keys.length) out[g] = orderKeys(g, keys);
+  }
+  return out;
+}
+
+/** Tham số bộ lọc + sắp xếp theo thứ tự chuẩn: nhóm theo FILTER_KEYS, giá trị theo `orderKeys`, sap_xep cuối. */
+export const queryPairs = (sel: Sel, sort?: string): [string, string | undefined][] => [
+  ...FILTER_KEYS.filter((g) => sel[g]?.length).map((g): [string, string] => [g, orderKeys(g, sel[g]!).join(',')]),
+  ['sap_xep', sort],
+];
+
 /** Chuỗi query (không có dấu ?) cho bộ lọc + sắp xếp; rỗng nếu không có gì. */
 export function toQuery(sel: Sel, sort?: string): string {
   const q = new URLSearchParams();
-  for (const g of FILTER_KEYS) if (sel[g]?.length) q.set(g, sel[g]!.join(','));
-  if (sort) q.set('sap_xep', sort);
+  for (const [k, v] of queryPairs(sel, sort)) if (v) q.set(k, v);
   return q.toString().replace(/%2C/g, ',');
 }
 

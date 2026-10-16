@@ -9,6 +9,8 @@
  *   trong sitemap ảnh và khi phóng to.
  */
 
+import { STATIC_IMAGE_WIDTHS } from './static-images';
+
 /** Bề rộng bản thu nhỏ được phép — số lạ trả 404 (chống tạo vô số bản cache). */
 export const IMAGE_WIDTHS = [160, 320, 480, 640, 960, 1280, 1920] as const;
 
@@ -32,13 +34,28 @@ const RESIZABLE = /^\/api\/(product|post|disease|project|banner)-images\/[^?]+$/
 
 /**
  * Thuộc tính ảnh co giãn cho <img>: `srcSet` các bản thu nhỏ ≤ `max` px + `sizes` (bề rộng hiển thị, theo cú pháp HTML).
- * Ảnh không phải ảnh database (ảnh tĩnh /images, YouTube…) thì chỉ có `src`.
+ * Ảnh tĩnh /images có bản thu nhỏ sẵn (STATIC_IMAGE_WIDTHS) cũng có srcSet; ảnh khác (YouTube…) thì chỉ có `src`.
  */
 export function responsive(src: string, sizes: string, max = 1280): { src: string; srcSet?: string; sizes?: string } {
+  const fixed = STATIC_IMAGE_WIDTHS[src];
+  if (fixed) {
+    // Ảnh tĩnh có bản thu nhỏ sẵn (npm run images:static): số cuối là ảnh gốc — luôn có trong srcSet cho màn hình rất nét.
+    const full = fixed[fixed.length - 1];
+    const srcSet = [...fixed.slice(0, -1).filter((w) => w <= max).map((w) => `${staticVariant(src, w)} ${w}w`), `${src} ${full}w`].join(', ');
+    return { src, srcSet, sizes };
+  }
   if (!RESIZABLE.test(src)) return { src };
   const srcSet = IMAGE_WIDTHS.filter((w) => w <= max).map((w) => `${src}?w=${w} ${w}w`).join(', ');
   return { src, srcSet, sizes };
 }
 
 /** Một bản thu nhỏ cố định (ảnh nhỏ bề rộng biết trước, vd. ảnh 64px trong giỏ → w=160 cho màn hình nét). */
-export const thumbUrl = (src: string, w: (typeof IMAGE_WIDTHS)[number] = 320) => (RESIZABLE.test(src) ? `${src}?w=${w}` : src);
+export function thumbUrl(src: string, w: (typeof IMAGE_WIDTHS)[number] = 320): string {
+  if (RESIZABLE.test(src)) return `${src}?w=${w}`;
+  // Ảnh tĩnh: bản thu nhỏ sẵn nhỏ nhất mà vẫn ≥ w (không có thì ảnh gốc).
+  const fixed = STATIC_IMAGE_WIDTHS[src]?.slice(0, -1).find((x) => x >= w);
+  return fixed ? staticVariant(src, fixed) : src;
+}
+
+/** "/images/banner/x.webp" → "/images/banner/x-w640.webp" (tên do scripts/resize-static-images.mts đặt). */
+const staticVariant = (src: string, w: number) => src.replace(/\.[^./]+$/, `-w${w}.webp`);

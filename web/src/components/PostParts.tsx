@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Fragment, type ReactNode } from 'react';
 import type { Product } from '@/lib/catalog';
+import { YouTubeLite } from './YouTubeLite';
 import {
   categoryOf, durationLabel, parseInline, postImageUrl, postPath, tableOfContents, tiktokPlayer, youtubeEmbed, type PostBlock,
 } from '@/lib/posts';
@@ -9,6 +10,8 @@ import { ArticleProducts } from './PostClient';
 import { responsive } from '@/lib/images';
 
 export const postDate = (d: Date) => d.toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', day: '2-digit', month: '2-digit', year: 'numeric' });
+/** Ngày đăng / sửa trong thẻ <time> (máy đọc giờ chuẩn ISO, người đọc dd/mm/yyyy giờ Việt Nam). */
+export const PostTime = ({ d }: { d: Date }) => <time dateTime={d.toISOString()}>{postDate(d)}</time>;
 
 type CardLike = { slug: string; category: string; kind: string; title: string; thumb: string | null; readMinutes: number; videoSeconds: number | null; publishedAt: Date };
 
@@ -28,7 +31,7 @@ export function PostMeta({ p, cat = true }: { p: CardLike; cat?: boolean }) {
   return (
     <span className="vx-meta">
       {cat && <><span className="cat">{categoryOf(p.category)?.name}</span>·</>}
-      <span>{postDate(p.publishedAt)}</span>·
+      <PostTime d={p.publishedAt} />·
       <span>{p.kind === 'video' ? (durationLabel(p.videoSeconds) || 'Video') : `${p.readMinutes} phút đọc`}</span>
     </span>
   );
@@ -61,13 +64,9 @@ export function TikTok({ id, title }: { id: string; title: string }) {
   );
 }
 
-export function YouTube({ id, title, vertical }: { id: string; title: string; vertical?: boolean }) {
-  return (
-    <div className={vertical ? 'app-yt app-yt--v' : 'app-yt'}>
-      <iframe src={youtubeEmbed(id)} title={title} loading="lazy" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen
-        allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; web-share" />
-    </div>
-  );
+/** Video YouTube: ảnh + nút phát, bấm mới tải trình phát (YouTubeLite). `eager`: video nằm đầu trang. */
+export function YouTube({ id, title, vertical, eager }: { id: string; title: string; vertical?: boolean; eager?: boolean }) {
+  return <YouTubeLite id={id} title={title} src={youtubeEmbed(id)} vertical={vertical} eager={eager} />;
 }
 
 const NOTE_ICON = <Icon name="alert" />;

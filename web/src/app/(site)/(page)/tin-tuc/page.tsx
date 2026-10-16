@@ -1,6 +1,9 @@
 import type { Metadata } from 'next';
+import { Breadcrumb } from '@/components/Blocks';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { one, pageOf, redirectIfNotCanonical, type SearchParams } from '@/lib/url-params';
+import { Pager } from '@/components/Pager';
 import { Art, Icon } from '@/components/Icon';
 import { EmptyPosts, iconOf, PostLinks, postDate } from '@/components/PostParts';
 import { FACEBOOK_URL, SALES_PHONE } from '@/lib/contact';
@@ -9,19 +12,22 @@ import { publishedPosts, type PostCard } from '@/server/posts';
 import { withShare } from '@/lib/seo';
 import { responsive } from '@/lib/images';
 
-type SP = { 'chuyen-muc'?: string; trang?: string };
-type Props = { searchParams: Promise<SP> };
+type Props = { searchParams: Promise<SearchParams> };
 
 const PER_PAGE = 10;
 const BASE = SECTIONS.news.path;
 const NEWS = CATEGORIES.filter((c) => c.section === 'news');
 const TONES = ['deep', '', 'promo'];
 
-function filters(sp: SP) {
-  const cat = isCategory(sp['chuyen-muc']) && sectionOf(sp['chuyen-muc']) === 'news' ? sp['chuyen-muc'] : undefined;
-  const page = Math.max(1, Math.min(500, Number.parseInt(sp.trang ?? '1', 10) || 1));
-  return { cat, page };
+function filters(sp: SearchParams) {
+  const c = one(sp['chuyen-muc']);
+  const cat = isCategory(c) && sectionOf(c) === 'news' ? c : undefined;
+  return { cat, page: pageOf(sp.trang) };
 }
+
+/** Trang 1 có khối bài lớn (1 bài, hoặc 6 bài khi có trên 3 bài); trang 2 trở đi chỉ là danh sách các bài CÒN LẠI —
+ *  số bài khối lớn không phụ thuộc trang đang xem, nên không bài nào bị lặp hay bỏ sót giữa các trang. */
+const heroCount = (n: number) => Math.min(n, n > 3 ? 6 : 1);
 
 function link(q: { cat?: string; page?: number }) {
   const u = new URLSearchParams();
@@ -59,21 +65,22 @@ export default async function NewsPage({ searchParams }: Props) {
   const all = (await publishedPosts()).filter((p) => sectionOf(p.category) === 'news');
   const rows = all.filter((p) => !cat || p.category === cat);
   const ordered = [...rows.filter((p) => p.featured), ...rows.filter((p) => !p.featured)];
+  // Mỗi tổ hợp một URL: chuyên mục lạ, tham số thừa, ?trang=1 / abc → 308 về dạng chuẩn.
+  redirectIfNotCanonical(BASE, sp, [['chuyen-muc', cat], ['trang', page > 1 ? page : undefined]]);
   // Trang đầu: 1 bài lớn + 5 bài bên cạnh, còn lại xuống danh sách.
-  const hero = page === 1 ? ordered.slice(0, ordered.length > 3 ? 6 : 1) : [];
-  const rest = ordered.slice(hero.length);
+  const heroN = heroCount(ordered.length);
+  const hero = page === 1 ? ordered.slice(0, heroN) : [];
+  const rest = ordered.slice(heroN);
   const pages = Math.max(1, Math.ceil(rest.length / PER_PAGE));
-  // Mỗi trang một đường dẫn: ?trang=1 / abc / quá số trang → về đúng trang.
-  if (sp.trang !== undefined && (page > pages || sp.trang !== (page > 1 ? String(page) : undefined))) redirect(link({ cat, page: Math.min(page, pages) }));
+  // Quá số trang → trang cuối (307: số trang đổi theo số bài).
+  if (page > pages) redirect(link({ cat, page: pages }));
   const list = rest.slice((page - 1) * PER_PAGE, page * PER_PAGE);
   const popular = [...all].filter((p) => p.views > 0).sort((a, b) => b.views - a.views).slice(0, 5);
 
   return (
     <div className="nw-page">
       <div className="nw-top">
-        <div className="vx-crumb">
-          <Link href="/">Trang chủ</Link>/{cat ? <><Link href={BASE}>Truyền thông</Link>/<span>{categoryOf(cat)?.name}</span></> : <span>Truyền thông</span>}
-        </div>
+        <Breadcrumb items={[{ label: 'Trang chủ', href: '/' }, ...(cat ? [{ label: 'Truyền thông', href: BASE }, { label: categoryOf(cat)?.name ?? '' }] : [{ label: 'Truyền thông' }])]} />
         <h1>Truyền thông</h1>
         {all.length > 0 && <div className="nw-subs">
           {NEWS.map((c) => (
@@ -122,13 +129,7 @@ export default async function NewsPage({ searchParams }: Props) {
               </span>
             </Link>
           ))}
-          {pages > 1 && (
-            <nav className="app-pager" aria-label="Trang">
-              {page > 1 && <Link href={link({ cat, page: page - 1 })} className="vx-btn vx-btn--outline vx-btn--sm">‹ Bài mới hơn</Link>}
-              <span>Trang {page}/{pages}</span>
-              {page < pages && <Link href={link({ cat, page: page + 1 })} className="vx-btn vx-btn--outline nw-more">Xem thêm bài viết</Link>}
-            </nav>
-          )}
+          <Pager page={page} pages={pages} href={(n) => link({ cat, page: n })} />
         </div>
         <aside className="nw-aside">
           <PostLinks title="Xem nhiều" posts={popular} extra={(p) => `${(p as PostCard).views.toLocaleString('vi-VN')} lượt xem`} />

@@ -12,9 +12,10 @@ export type ShipGroup = 'plant' | 'supply';
 export type SpecField = { name: string; required?: boolean };
 
 /** Danh mục + nhóm con nằm trong database (bảng categories, subcategories) — đọc qua src/server/categories.ts. */
-/** `seoTitle` / `seoDescription`: chữ hiện trên Google do admin viết (không có = tự tạo, lib/category-seo.ts). */
-export type SubCategory = { slug: string; name: string; active: boolean; specs: SpecField[]; seoTitle?: string; seoDescription?: string };
-export type Category = { slug: string; name: string; icon: IconName; active: boolean; specs: SpecField[]; seoTitle?: string; seoDescription?: string; subs: SubCategory[] };
+/** `seoTitle` / `seoDescription`: chữ hiện trên Google do admin viết (không có = tự tạo, lib/category-seo.ts).
+ *  `intro`: đoạn giới thiệu admin viết, hiện cuối trang danh mục (không có = không hiện). */
+export type SubCategory = { slug: string; name: string; active: boolean; specs: SpecField[]; seoTitle?: string; seoDescription?: string; intro?: string };
+export type Category = { slug: string; name: string; icon: IconName; active: boolean; specs: SpecField[]; seoTitle?: string; seoDescription?: string; intro?: string; subs: SubCategory[] };
 
 /** Ngũ hành — mệnh hợp với cây. */
 export const ELEMENTS = [

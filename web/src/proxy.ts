@@ -21,10 +21,20 @@ export function proxy(request: NextRequest) {
 
   // SEO: mỗi trang chỉ một đường dẫn — "/San-Pham/Kim%20Tiền" chuyển hẳn (308) về "/san-pham/kim-tien" (giữ ?tham số).
   // Dấu "/" cuối và "//" do Next / Vercel tự chuyển trước khi tới đây.
+  // Tham số lặp lại (?q=a&q=b, ?trang=2&trang=3) → giữ giá trị đầu, cùng một bước chuyển hướng: trang đọc tham số như
+  // một chuỗi (lặp thì Next đưa mảng → lỗi 500) và tổ hợp lặp không sinh thêm URL trùng (mục 6 checklist SEO).
   const clean = canonicalPath(pathname);
-  if (clean && clean !== pathname) {
+  const params = request.nextUrl.searchParams;
+  const names = [...params.keys()];
+  const repeated = new Set(names).size !== names.length;
+  if ((clean && clean !== pathname) || repeated) {
     const url = request.nextUrl.clone();
-    url.pathname = clean;
+    if (clean) url.pathname = clean;
+    if (repeated) {
+      const first = new URLSearchParams();
+      for (const [k, v] of params) if (!first.has(k)) first.append(k, v);
+      url.search = first.toString();
+    }
     return NextResponse.redirect(url, 308);
   }
 

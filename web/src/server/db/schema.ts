@@ -91,6 +91,8 @@ export const categories = pgTable('categories', {
   /** Tiêu đề / mô tả trên Google do admin tự viết; null = web tự tạo (lib/category-seo.ts). */
   seoTitle: text('seo_title'),
   seoDescription: text('seo_description'),
+  /** Đoạn giới thiệu hiện cuối trang danh mục (trang 1, không lọc); null = không hiện. Đoạn cách nhau một dòng trống. */
+  intro: text('intro'),
   createdAt: createdAt(),
 });
 
@@ -104,6 +106,7 @@ export const subcategories = pgTable('subcategories', {
   specs: jsonb('specs').$type<SpecField[]>().notNull().default(sql`'[]'::jsonb`),
   seoTitle: text('seo_title'),
   seoDescription: text('seo_description'),
+  intro: text('intro'),
   createdAt: createdAt(),
 }, (t) => [primaryKey({ columns: [t.categorySlug, t.slug] })]);
 

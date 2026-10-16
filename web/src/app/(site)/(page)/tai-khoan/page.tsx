@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { Breadcrumb } from '@/components/Blocks';
 import { AccountSidebar } from '@/components/AccountSidebar';
 import { ProfileForm } from '@/components/ProfileForm';
 import { accountPhone, getCurrentUser, publicUser } from '@/server/auth';
@@ -13,9 +13,7 @@ export default async function ProfilePage() {
 
   return (
     <div className="vx-acctpage">
-      <div className="vx-crumb">
-        <Link href="/">Trang chủ</Link>/<Link href="/tai-khoan">Tài khoản</Link>/<span>Thông tin cá nhân</span>
-      </div>
+      <Breadcrumb items={[{ label: 'Tài khoản' }]} />
       <div className="vx-acctgrid">
         <AccountSidebar />
         <ProfileForm initial={{ name: user.name ?? '', email: user.email ?? '', phone: accountPhone(user) ?? '', phoneVerified: Boolean(user.phone), hasGoogle: Boolean(user.googleSub), initials: publicUser(user).initials, avatarUrl: publicUser(user).avatarUrl }} />

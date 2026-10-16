@@ -6,6 +6,11 @@
 
 export const SEO_TITLE_MAX = 70;
 export const SEO_DESCRIPTION_MAX = 170;
+/** Đoạn giới thiệu cuối trang danh mục (chữ trơn, đoạn cách nhau một dòng trống). */
+export const INTRO_MAX = 3000;
+
+/** Tách đoạn giới thiệu thành các đoạn văn. */
+export const introParagraphs = (intro?: string) => (intro ?? '').split(/\n\s*\n/).map((p) => p.replace(/\s+/g, ' ').trim()).filter(Boolean);
 
 /** Chữ cái đầu viết thường để đặt giữa câu. */
 const lower = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);

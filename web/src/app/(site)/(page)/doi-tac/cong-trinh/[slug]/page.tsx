@@ -60,7 +60,7 @@ export default async function ProjectPage(props: Props) {
   return (
     <div className="dn-page">
       <div className="dn-crumb">
-        <Breadcrumb items={[{ label: 'Trang chủ', href: '/' }, { label: 'Đối tác sỉ', href: WHOLESALE_URL }, { label: 'Công trình', href: `${WHOLESALE_URL}#cong-trinh` }, { label: p.title }]} />
+        <Breadcrumb items={[{ label: 'Trang chủ', href: '/' }, { label: 'Đối tác sỉ', href: WHOLESALE_URL }, { label: p.title }]} />
       </div>
       {!p.published && (
         <div className="dn-wrap"><div className="vx-callout"><Icon name="alert" /><div><b>Bản xem trước</b> — dự án đang ẩn, khách chưa thấy trang này.</div></div></div>

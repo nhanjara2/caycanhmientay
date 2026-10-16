@@ -33,7 +33,7 @@ function ago(ms: number) {
   if (m < 60) return `${m} phút trước`;
   if (m < 24 * 60) return `${Math.floor(m / 60)} giờ trước`;
   if (m < 48 * 60) return 'Hôm qua';
-  return new Date(ms).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+  return new Date(ms).toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', day: '2-digit', month: '2-digit' });
 }
 
 /** Chuông thông báo trên Header (NotificationCenter): số chưa đọc, danh sách theo tab, bấm để mở và đánh dấu đã đọc. */

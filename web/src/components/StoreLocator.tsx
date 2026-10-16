@@ -1,5 +1,6 @@
 'use client';
 
+import { Breadcrumb } from './Blocks';
 import Link from 'next/link';
 import { useEffect, useMemo, useState, type KeyboardEvent } from 'react';
 import { normalize } from '@/lib/catalog';
@@ -93,9 +94,7 @@ export function StoreLocator({ stores }: { stores: PublicStore[] }) {
 
   return (
     <div className="vx-storepage">
-      <div className="vx-crumb">
-        <Link href="/">Trang chủ</Link>/<span>Hệ thống cửa hàng</span>
-      </div>
+      <Breadcrumb items={[{ label: 'Trang chủ', href: '/' }, { label: 'Hệ thống cửa hàng' }]} />
       <h1>Hệ thống cửa hàng &amp; vườn ươm</h1>
       <span className="sub">Chọn một cửa hàng để xem địa chỉ, giờ mở cửa và chỉ đường</span>
 

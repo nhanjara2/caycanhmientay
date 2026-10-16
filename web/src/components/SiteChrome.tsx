@@ -11,6 +11,7 @@ import { NavProgress } from './NavProgress';
 import { ContactFab, Toaster } from './Overlays';
 import { PhonePrompt } from './PhoneModal';
 import { ScrollReveal } from './ScrollReveal';
+import { WebVitals } from './WebVitals';
 
 export async function SiteChrome({ children }: { children: ReactNode }) {
   const categories = await menuCategories();
@@ -29,6 +30,7 @@ export async function SiteChrome({ children }: { children: ReactNode }) {
       <CookieConsent />
       <ScrollReveal />
       <ImageFallback />
+      <WebVitals />
     </div>
   );
 }

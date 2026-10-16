@@ -1,5 +1,6 @@
 'use client';
 
+import { Breadcrumb } from './Blocks';
 import Link from 'next/link';
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { createServiceRequestAction } from '@/app/actions/service-requests';
@@ -146,7 +147,7 @@ export function WholesaleQuoteForm({ defaults, fromAdvisor = false }: { defaults
 
   return (
     <form className="qf-card" onSubmit={(e) => { e.preventDefault(); submit(); }} noValidate>
-      <div className="vx-crumb"><Link href={WHOLESALE_URL}>Đối tác sỉ</Link>/<span>Yêu cầu báo giá sỉ</span></div>
+      <Breadcrumb items={[{ label: 'Trang chủ', href: '/' }, { label: 'Đối tác sỉ', href: WHOLESALE_URL }, { label: 'Yêu cầu báo giá sỉ' }]} />
       <h1>Yêu cầu báo giá sỉ</h1>
 
       <div className="qf-sec">

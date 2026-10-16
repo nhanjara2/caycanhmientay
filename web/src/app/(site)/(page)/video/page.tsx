@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { one, redirectIfNotCanonical, type SearchParams } from '@/lib/url-params';
 import Link from 'next/link';
 import { Breadcrumb } from '@/components/Blocks';
 import { EmptyPosts } from '@/components/PostParts';
@@ -8,13 +9,13 @@ import { CATEGORIES, isCategory, SECTIONS, VIDEO_PAGE } from '@/lib/posts';
 import { publishedVideos } from '@/server/posts';
 import { withShare } from '@/lib/seo';
 
-type SP = { 'chuyen-muc'?: string; v?: string };
-type Props = { searchParams: Promise<SP> };
+type Props = { searchParams: Promise<SearchParams> };
 
 const DESCRIPTION = 'Video ngắn từ vườn Cây Cảnh Miền Tây: cây thật tại vườn, mẹo chăm cây, bắt bệnh, dùng thuốc và phân bón đúng cách.';
 
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
-  const { v, 'chuyen-muc': c } = await searchParams;
+  const sp = await searchParams;
+  const v = one(sp.v), c = one(sp['chuyen-muc']);
   const all = await publishedVideos();
   // Link chia sẻ /video?v=… : xem trước trên Zalo / Facebook hiện đúng tên + ảnh của video đó.
   const shared = v ? all.find((x) => x.slug === v) : undefined;
@@ -33,7 +34,11 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 export default async function VideoPage({ searchParams }: Props) {
   const sp = await searchParams;
   const all = await publishedVideos();
-  const cat = isCategory(sp['chuyen-muc']) ? sp['chuyen-muc'] : undefined;
+  const c = one(sp['chuyen-muc']);
+  const cat = isCategory(c) && all.some((x) => x.category === c) ? c : undefined;
+  const open = all.find((x) => x.slug === one(sp.v))?.slug;
+  // Chủ đề lạ / chưa có video, ?v= video không còn, tham số thừa → 308 về dạng chuẩn (mỗi nội dung một URL).
+  redirectIfNotCanonical(VIDEO_PAGE, sp, [['chuyen-muc', cat], ['v', open]]);
   const shown = cat ? all.filter((x) => x.category === cat) : all;
   const used = new Set(all.map((x) => x.category));
   const chips = CATEGORIES.filter((c) => used.has(c.key));
@@ -56,7 +61,7 @@ export default async function VideoPage({ searchParams }: Props) {
       </header>
 
       {shown.length > 0 ? (
-        <ShortVideos videos={shown} layout="grid" openSlug={sp.v} />
+        <ShortVideos videos={shown} layout="grid" openSlug={open} />
       ) : (
         <EmptyPosts text="Video đang được cập nhật" hint={<>Trong lúc chờ, mời xem <Link href={SECTIONS.blog.path}>Góc chăm cây</Link> hoặc <Link href="/benh-cay">thư viện bệnh cây</Link>.</>} />
       )}

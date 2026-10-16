@@ -140,7 +140,8 @@ function checkPage(loc: string, html: string) {
       if (/^[a-f0-9]{32}\.(jpg|png|webp)$/.test(db[2]) && db[1] !== 'banner') warn(`Tên file ảnh chưa gắn slug (/api/${db[1]}-images/<mã>) — ${short(url.pathname)}`, loc);
     }
     if (srcset) {
-      if (!attr(el, 'sizes')) err('<img> có srcset mà thiếu sizes (trình duyệt coi như rộng 100% màn hình)', loc);
+      // srcset theo bề rộng (… 640w) bắt buộc có sizes; theo mật độ (… 2x, như logo) thì không cần
+      if (/\d+w(\s*,|\s*$)/.test(srcset) && !attr(el, 'sizes')) err('<img> có srcset theo bề rộng mà thiếu sizes (trình duyệt coi như rộng 100% màn hình)', loc);
       for (const part of srcset.split(',')) {
         const u = part.trim().split(/\s+/)[0];
         if (u) queue(new URL(decode(u), loc).href, loc, /[?&]w=\d+/.test(u));
@@ -149,7 +150,7 @@ function checkPage(loc: string, html: string) {
     const isMain = up.some((u) => u.tagName === 'main');
     if (isMain && !inDialog && firstInMain) {
       firstInMain = false;
-      if (attr(el, 'loading') === 'lazy') warn('Ảnh đầu tiên trong <main> bị lazy-load (thường là ảnh LCP — nên tải ngay)', loc);
+      if (attr(el, 'loading') === 'lazy') warn(`Ảnh đầu tiên trong <main> bị lazy-load (thường là ảnh LCP — nên tải ngay) — ${where}`, loc);
     }
   }
 }

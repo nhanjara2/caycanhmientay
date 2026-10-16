@@ -1,18 +1,20 @@
 import type { Metadata } from 'next';
+import { Breadcrumb } from './Blocks';
 import Link from 'next/link';
 import { notFound, permanentRedirect } from 'next/navigation';
 import { after } from 'next/server';
 import { CATEGORIES, categoryOf, plainText, postPath, postState, SECTIONS, sectionOf, tableOfContents, tiktokPlayer, type PostSection } from '@/lib/posts';
 import { clipText } from '@/lib/format';
-import { SITE_ORIGIN } from '@/lib/site';
 import { getCurrentUser } from '@/server/auth';
 import { getProducts } from '@/server/catalog';
 import { allDiseases } from '@/server/diseases';
 import { addPostView, getPost, publishedPosts, type PostFull } from '@/server/posts';
 import { PostHelpful, ShareButton } from './PostClient';
-import { PostBody, PostLinks, postDate, TikTok, YouTube } from './PostParts';
+import { PostBody, PostLinks, PostTime, TikTok, YouTube } from './PostParts';
 import { withShare } from '@/lib/seo';
 import { responsive } from '@/lib/images';
+import { postLd } from '@/lib/jsonld';
+import { JsonLd } from './JsonLd';
 
 export type PostPageProps = { params: Promise<{ slug: string }>; searchParams: Promise<{ 'xem-truoc'?: string }> };
 
@@ -68,21 +70,13 @@ export async function PostDetail({ section, ...props }: PostPageProps & { sectio
   const author = p.authorName || 'Cây Cảnh Miền Tây';
   const edited = p.updatedAt.getTime() - p.publishedAt.getTime() > 86_400_000;
 
-  const base = SITE_ORIGIN;
-  const ld = p.kind === 'video' && (p.youtubeId || p.tiktokId)
-    ? {
-      '@context': 'https://schema.org', '@type': 'VideoObject', name: p.title, description: describe(p) || p.title,
-      thumbnailUrl: p.thumb ? (p.thumb.startsWith('/') ? base + p.thumb : p.thumb) : undefined,
-      uploadDate: p.publishedAt.toISOString(), embedUrl: p.tiktokId ? tiktokPlayer(p.tiktokId) : `https://www.youtube.com/embed/${p.youtubeId}`,
-      duration: p.videoSeconds ? `PT${p.videoSeconds}S` : undefined,
-    }
-    : {
-      '@context': 'https://schema.org', '@type': 'BlogPosting', headline: p.title, description: describe(p) || undefined,
-      image: p.thumb ? [p.thumb.startsWith('/') ? base + p.thumb : p.thumb] : undefined,
-      datePublished: p.publishedAt.toISOString(), dateModified: p.updatedAt.toISOString(),
-      author: { '@type': p.authorName ? 'Person' : 'Organization', name: author },
-      publisher: { '@type': 'Organization', name: 'Cây Cảnh Miền Tây' },
-    };
+  // Bài nháp xem trước không có schema (trang noindex, chưa phải nội dung công khai).
+  const ld = state === 'published' ? postLd({
+    kind: p.kind, section, title: p.title, description: describe(p), path: postPath(p), thumb: p.thumb,
+    publishedAt: p.publishedAt, updatedAt: p.updatedAt, authorName: p.authorName, categoryName: cat?.name, tags: p.tags,
+    embedUrl: p.tiktokId ? tiktokPlayer(p.tiktokId) : p.youtubeId ? `https://www.youtube.com/embed/${p.youtubeId}` : undefined,
+    videoSeconds: p.videoSeconds,
+  }) : null;
 
   return (
     <div className="ar-page">
@@ -109,9 +103,12 @@ export async function PostDetail({ section, ...props }: PostPageProps & { sectio
             <Link href={`/admin/noi-dung/${p.id}`}>Quay lại sửa</Link>
           </div>
         )}
-        <div className="vx-crumb">
-          <Link href={sec.path}>{sec.name}</Link>/{cat ? <Link href={`${sec.path}?chuyen-muc=${cat.key}`}>{cat.name}</Link> : null}
-        </div>
+        <Breadcrumb items={[
+          { label: 'Trang chủ', href: '/' },
+          { label: sec.name, href: sec.path },
+          ...(cat ? [{ label: cat.name, href: `${sec.path}?chuyen-muc=${cat.key}` }] : []),
+          { label: p.title },
+        ]} />
         <h1>{p.title}</h1>
         {p.excerpt && <p className="ar-lead">{plainText(p.excerpt)}</p>}
         <div className="ar-by">
@@ -120,7 +117,7 @@ export async function PostDetail({ section, ...props }: PostPageProps & { sectio
             <b>{author}</b>
             {p.reviewerName && <>{' · Kiểm duyệt: '}<b>{p.reviewerName}</b>{p.reviewerTitle && `, ${p.reviewerTitle}`}</>}
             <small>
-              {postDate(p.publishedAt)}{edited && ` · Cập nhật ${postDate(p.updatedAt)}`}
+              <PostTime d={p.publishedAt} />{edited && <>{' · Cập nhật '}<PostTime d={p.updatedAt} /></>}
               {p.kind === 'article' && ` · ${p.readMinutes} phút đọc`}
               {p.reviewerName && <> · <span className="vx-badge vx-badge--success">Đã kiểm duyệt</span></>}
             </small>
@@ -130,7 +127,7 @@ export async function PostDetail({ section, ...props }: PostPageProps & { sectio
 
         {p.kind === 'video' && p.tiktokId ? <TikTok id={p.tiktokId} title={p.title} />
           : p.kind === 'video' && p.youtubeId
-          ? <YouTube id={p.youtubeId} title={p.title} vertical={p.videoVertical} />
+          ? <YouTube id={p.youtubeId} title={p.title} vertical={p.videoVertical} eager />
           : p.coverFile && <div className="ar-cover app-ar-cover"><img {...responsive(p.thumb!, '(max-width: 47.9375em) 100vw, 800px')} alt={p.title} fetchPriority="high" /></div>}
 
         {toc.length > 1 && (
@@ -173,7 +170,7 @@ export async function PostDetail({ section, ...props }: PostPageProps & { sectio
         )}
         <PostLinks title={section === 'blog' ? 'Bài liên quan' : 'Tin khác'} posts={related} />
       </aside>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld).replace(/</g, '\\u003c') }} />
+      <JsonLd data={ld} />
     </div>
   );
 }
