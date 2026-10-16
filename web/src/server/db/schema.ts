@@ -1115,3 +1115,58 @@ export const seoAudit = pgTable('seo_audit', {
   userId: integer('user_id').references(() => users.id, { onDelete: 'set null' }),
   createdAt: createdAt(),
 }, (t) => [index('seo_audit_created_idx').on(t.createdAt), index('seo_audit_path_idx').on(t.path)]);
+
+// ---- Giám sát SEO (mục 19 checklist SEO, lib/monitor.ts + server/monitor*.ts) ---------------
+
+/**
+ * Lượt máy tìm kiếm / mạng xã hội tải trang, gom theo ngày (giờ VN) × máy × nhóm trang. `verified` = Googlebot / Bingbot
+ * thật (tra ngược DNS địa chỉ IP); máy chỉ xưng tên trong User-Agent thì false. Nhóm trang có đuôi "?" = URL có tham số.
+ */
+export const crawlHits = pgTable('crawl_hits', {
+  day: text('day').notNull(),
+  bot: text('bot').notNull(),
+  verified: boolean('verified').notNull().default(false),
+  section: text('section').notNull(),
+  hits: integer('hits').notNull().default(0),
+}, (t) => [primaryKey({ columns: [t.day, t.bot, t.verified, t.section] })]);
+
+/** Đường dẫn trang khách trả 404 (trang không tồn tại), gom theo đường dẫn — để thêm chuyển hướng / sửa link hỏng. */
+export const notFoundHits = pgTable('not_found_hits', {
+  path: text('path').primaryKey(),
+  hits: integer('hits').notNull().default(0),
+  /** Lượt của máy tìm kiếm (Googlebot, Bingbot…) — kể cả máy chưa xác minh. */
+  botHits: integer('bot_hits').notNull().default(0),
+  /** Trang dẫn tới gần nhất (link hỏng nằm ở đâu); rỗng = gõ tay / không gửi. */
+  referrer: text('referrer').notNull().default(''),
+  /** Có trang của web khác dẫn tới (backlink hỏng). */
+  external: boolean('external').notNull().default(false),
+  firstSeen: ts('first_seen').notNull().defaultNow(),
+  lastSeen: ts('last_seen').notNull().defaultNow(),
+}, (t) => [index('not_found_hits_last_idx').on(t.lastSeen)]);
+
+/** Lỗi máy chủ (dựng trang, API, server action) và lỗi trình duyệt (script, hydration), gom theo loại × trang × nội dung. */
+export const errorEvents = pgTable('error_events', {
+  id: serial('id').primaryKey(),
+  /** ssr | api | action | proxy | client | hydration */
+  kind: text('kind').notNull(),
+  path: text('path').notNull(),
+  message: text('message').notNull(),
+  digest: text('digest'),
+  hits: integer('hits').notNull().default(1),
+  firstSeen: ts('first_seen').notNull().defaultNow(),
+  lastSeen: ts('last_seen').notNull().defaultNow(),
+}, (t) => [uniqueIndex('error_events_key').on(t.kind, t.path, t.message), index('error_events_last_idx').on(t.lastSeen)]);
+
+/**
+ * Chỉ số Core Web Vitals đo trên máy khách thật (RUM), gom theo ngày × nhóm trang × loại máy × chỉ số × mức (good |
+ * needs-improvement | poor). Không lưu IP, cookie hay mã khách.
+ */
+export const webVitals = pgTable('web_vitals', {
+  day: text('day').notNull(),
+  section: text('section').notNull(),
+  device: text('device').notNull(),
+  metric: text('metric').notNull(),
+  rating: text('rating').notNull(),
+  hits: integer('hits').notNull().default(0),
+  total: doublePrecision('total').notNull().default(0),
+}, (t) => [primaryKey({ columns: [t.day, t.section, t.device, t.metric, t.rating] })]);
