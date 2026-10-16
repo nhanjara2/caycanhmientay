@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Breadcrumb } from './Blocks';
 import Link from 'next/link';
 import { permanentRedirect } from 'next/navigation';
+import { headers } from 'next/headers';
 import { after } from 'next/server';
 import { CATEGORIES, categoryOf, plainText, postPath, postState, SECTIONS, sectionOf, tableOfContents, tiktokPlayer, type PostSection } from '@/lib/posts';
 import { clipText } from '@/lib/format';
@@ -49,6 +50,9 @@ export async function postMetadata(props: PostPageProps): Promise<Metadata> {
   }));
 }
 
+/** Máy tìm kiếm, công cụ kiểm tra (`seo:*`), máy đọc link chia sẻ — không tính lượt xem ("Xem nhiều" theo người đọc thật). */
+const NOT_READER = /bot|crawl|spider|slurp|lighthouse|headless|preview|facebookexternalhit|zalo|curl|wget|python|undici|axios|^node/i;
+
 /** "Nguyễn Thu Hà" → "TH" (chữ đầu của 2 từ cuối). */
 const initials = (name: string) => name.trim().split(/\s+/).slice(-2).map((w) => w[0]?.toUpperCase() ?? '').join('');
 
@@ -57,7 +61,8 @@ export async function PostDetail({ section, ...props }: PostPageProps & { sectio
   if (!p) return movedOrNotFound(`${SECTIONS[section].path}/${slug}`);
   if (sectionOf(p.category) !== section) permanentRedirect(postPath(p));
   const state = postState(p);
-  if (state === 'published' && !preview) after(() => addPostView(p.id).catch(() => {}));
+  const ua = (await headers()).get('user-agent') ?? '';
+  if (state === 'published' && !preview && ua && !NOT_READER.test(ua)) after(() => addPostView(p.id).catch(() => {}));
 
   const slugs = [...new Set(p.body.flatMap((b) => (b.type === 'products' ? b.slugs : [])))];
   const [found, all, diseases] = await Promise.all([getProducts(slugs), publishedPosts(), p.diseases.length ? allDiseases() : []]);

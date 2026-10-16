@@ -31,6 +31,7 @@
     "seo:security": "tsx scripts/check-security.mts",
     "seo:ecommerce": "tsx scripts/check-ecommerce.mts",
     "seo:migration": "tsx scripts/check-migration.mts",
+    "seo:data": "tsx scripts/check-data.mts",
     "test:jsonld": "tsx scripts/test-jsonld.mts",
     "db:setup": "tsx --env-file-if-exists=.env.local scripts/db-setup.mts"
   },
