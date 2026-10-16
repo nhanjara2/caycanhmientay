@@ -8,7 +8,7 @@ import { ProductQnA } from '@/components/ProductQnA';
 import { ProductReviews } from '@/components/ProductReviews';
 import { YouTubeLite } from '@/components/YouTubeLite';
 import { youtubeEmbed } from '@/lib/posts';
-import { categoryLabel, elementName, type Product } from '@/lib/catalog';
+import { categoryLabel, elementName, variantPosition, VARIANT_PARAM, type Product } from '@/lib/catalog';
 import { YOUTUBE_URL } from '@/lib/contact';
 import { reviewStats } from '@/lib/reviews';
 import { seoNameOf } from '@/lib/seo-name';
@@ -25,8 +25,9 @@ import { withShare } from '@/lib/seo';
 import { movedOrNotFound, redirectIfMoved, withSeo } from '@/server/seo-cms';
 import { JsonLd } from '@/components/JsonLd';
 import { faqLd, productLd } from '@/lib/jsonld';
+import { one, type SearchParams } from '@/lib/url-params';
 
-type Props = { params: Promise<{ slug: string }> };
+type Props = { params: Promise<{ slug: string }>; searchParams: Promise<SearchParams> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
@@ -114,7 +115,7 @@ function Content({ p, faq }: { p: Product; faq: boolean }) {
 }
 
 /** ProductDetailLayout: breadcrumb → ProductGallery + BuyBox → ProductContent → Thường mua kèm → FAQ. */
-export default async function ProductPage({ params }: Props) {
+export default async function ProductPage({ params, searchParams }: Props) {
   const { slug } = await params;
   const p = await getProduct(slug);
   // Sản phẩm đã xóa / ẩn: có chuyển hướng (admin SEO) thì 308 sang trang mới, không thì 404.
@@ -135,6 +136,9 @@ export default async function ProductPage({ params }: Props) {
     return sub ? [{ slug: sub.slug, name: sub.name }] : [];
   });
 
+  // ?quy-cach=<idx> (link trong file Google Merchant Center): mở sẵn đúng quy cách đó — khung giá + schema cùng giá dòng đã gửi Google.
+  const selected = variantPosition(p.options, one((await searchParams)[VARIANT_PARAM]));
+
   return (
     <div className="vx-pdpage app-page">
       {/* Schema Product: giá quy cách chọn sẵn, còn / hết hàng, phí giao + đổi trả, đánh giá thật đang hiện (lib/jsonld.ts) */}
@@ -144,6 +148,7 @@ export default async function ProductPage({ params }: Props) {
         rating: rs,
         reviews: reviews.filter((r) => !r.mine),
         shipping,
+        selected,
       })} />
       <Breadcrumb
         items={[
@@ -165,7 +170,7 @@ export default async function ProductPage({ params }: Props) {
             <div><Icon name="chat" /><span><b>Kỹ sư tư vấn</b></span></div>
           </div>
         </GalleryCol>
-        <BuyBox product={{ ...p, rating: rs.avg, reviews: rs.count }} category={{ ...label, extra }} wishlisted={wishlisted} />
+        <BuyBox product={{ ...p, rating: rs.avg, reviews: rs.count }} category={{ ...label, extra }} wishlisted={wishlisted} initialOpt={selected} />
       </section>
 
       <Content p={p} faq={faq.length > 0} />

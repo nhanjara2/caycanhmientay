@@ -25,12 +25,14 @@ import { Select } from './Select';
 
 /** Khối mua bên phải trang chi tiết (bố cục kiểu Shopee): tên → meta → khung giá → các hàng có nhãn
  *  (giá theo số lượng, mã giảm giá, vận chuyển, quy cách, số lượng) → Thêm vào giỏ / Mua ngay → khuyến mãi → mô tả ngắn → SpecTable. */
-export function BuyBox({ product: p, category, wishlisted = false }: {
+export function BuyBox({ product: p, category, wishlisted = false, initialOpt }: {
   product: Product;
   /** Tên danh mục / nhóm con (đọc từ database ở trang). */
   /** `extra` = nhóm con phụ (sản phẩm hiện ở nhiều nhóm). */
   category: { cat: string; sub?: string; extra?: { slug: string; name: string }[] };
   wishlisted?: boolean;
+  /** Vị trí quy cách chọn sẵn (trang đọc từ ?quy-cach=); không có → quy cách rẻ nhất. */
+  initialOpt?: number;
 }) {
   const { add } = useCart();
   const { rules } = useShipping();
@@ -43,7 +45,7 @@ export function BuyBox({ product: p, category, wishlisted = false }: {
   const router = useRouter();
   // Quy cách hiện theo giá thấp → cao; chọn sẵn quy cách rẻ nhất (khớp giá "Từ …" ở thẻ sản phẩm)
   const order = optionOrder(p.options);
-  const [opt, setOpt] = useState(() => cheapestOption(p.options));
+  const [opt, setOpt] = useState(() => initialOpt ?? cheapestOption(p.options));
   const [qty, setQty] = useState(1);
   const u = p.options[opt];
   const quote = isQuote(u);

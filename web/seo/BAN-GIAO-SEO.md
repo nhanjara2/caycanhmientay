@@ -34,6 +34,8 @@ Chi tiết kỹ thuật của từng phần nằm trong `CLAUDE.md` ở thư m�
 | `/admin/*`, `/nhan-vien/*` | Quản trị | **Không** | Cần đăng nhập |
 | `/sitemap.xml`, `/sitemaps/<loại>.xml`, `/robots.txt`, `/manifest.webmanifest` | Máy đọc | — | |
 | `/api/<loại>-images/<slug>-<mã>.jpg` | Ảnh công khai | Có | `?w=` bản thu nhỏ WebP |
+| `/google-merchant.xml` | Dữ liệu sản phẩm Google Merchant Center | — | noindex, không trong sitemap |
+| `/san-pham/<slug>?quy-cach=<số>` | Sản phẩm mở sẵn một quy cách | — | Chỉ dùng trong file Merchant Center; canonical về URL sạch |
 
 Thêm trang khách công khai mới: có `alternates.canonical`, `description` riêng, bọc `withSeo(withShare(...))`, dùng `<Breadcrumb>`, thêm vào `STATIC_PAGES` (hoặc một nhóm) trong `web/src/server/sitemap.ts`.
 
@@ -99,6 +101,18 @@ Sinh từ `web/src/app/robots.ts`: cho phép tất cả; chặn `/admin`, `/nhan
 | Mọi trang có breadcrumb | BreadcrumbList |
 
 Không dùng: HowTo, QAPage, ProductGroup, SearchAction, hreflang. Một chỗ dựng: `web/src/lib/jsonld.ts` + `<JsonLd>`.
+
+## 8b. Khung sản phẩm có ảnh + giá trên Google (Google Merchant Center)
+
+Card sản phẩm (ảnh, giá, tên shop) trên Google Tìm kiếm / tab Mua sắm lấy chủ yếu từ **Google Merchant Center** (miễn phí). Web đã có file dữ liệu `https://www.caycanhmientay.com/google-merchant.xml` (mỗi quy cách một dòng, cập nhật theo giá / tồn trên web).
+
+1. Vào https://merchants.google.com, đăng nhập bằng Gmail đang quản lý Search Console → tạo tài khoản (quốc gia Việt Nam, tên shop Cây Cảnh Miền Tây, web `https://www.caycanhmientay.com`). Xác minh web: chọn cách qua Search Console.
+2. **Sản phẩm → Nguồn dữ liệu → Thêm nguồn** → "Thêm sản phẩm từ tệp" → nhập link file trên, lịch tải **hằng ngày**, ngôn ngữ tiếng Việt, quốc gia Việt Nam.
+3. **Cài đặt → Vận chuyển**: thêm dịch vụ cho Việt Nam, đặt **giá trị đơn tối thiểu 150.000đ**, thời gian xử lý + giao ước tính (vd. 1–2 ngày xử lý, 2–5 ngày giao). Phí giao lấy theo file.
+4. **Cài đặt → Chính sách đổi trả**: cây sống không nhận trả (lỗi xử lý bằng bảo hành 7 ngày); vật tư đổi trả 7 ngày; link `/chinh-sach/doi-tra`.
+5. Bật **Hiển thị miễn phí trên Google** (free listings). Sau 3–7 ngày xem **Sản phẩm → Chẩn đoán** để sửa sản phẩm bị từ chối.
+
+Lưu ý: ảnh chính nên là ảnh sạch, không chữ / watermark (ảnh hiện có lưới chữ "caycanhmientay" có thể bị từ chối); giá trên web phải khớp file (web tự đảm bảo); Google không hứa sẽ hiện card cho mọi từ khóa.
 
 ## 9. Component SEO dùng chung
 
@@ -166,6 +180,8 @@ Không dùng: HowTo, QAPage, ProductGroup, SearchAction, hreflang. Một chỗ d
 - `/flash-sale`, `/cay-tet` vẫn là giao diện mẫu dữ liệu giả, noindex nhưng có link từ trang chủ.
 - `/danh-muc` và `/danh-muc/cay-canh` gần trùng nội dung khi chỉ có một danh mục có hàng.
 - Trang lọc vừa noindex vừa canonical về trang gốc (Google khuyên một trong hai).
+- Chưa tạo tài khoản Google Merchant Center (mục 8b) — card sản phẩm có ảnh + giá trên Google cần bước này.
+- Ảnh sản phẩm có lưới chữ ký phủ kín — rủi ro bị Merchant Center từ chối ảnh.
 - Nhiều sản phẩm chưa có ảnh thật → ảnh chia sẻ mặc định, không có ảnh trong sitemap.
 - Chưa có: ảnh đại diện riêng cho danh mục, alt riêng ảnh bài viết, transcript video, AVIF, ảnh cửa hàng cho GardenStore, ngày đăng bài bệnh cây, schema trang công trình, đổi slug sản phẩm / bệnh cây, mã 410.
 - Chưa tích hợp Search Console API; chưa có theo dõi uptime 5 phút (nên dùng UptimeRobot / Better Stack).

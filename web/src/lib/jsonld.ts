@@ -12,7 +12,7 @@
  * Không làm (chưa có nội dung đúng loại): HowTo (Google đã bỏ), QAPage (trang sản phẩm không phải trang một câu hỏi),
  * Event, Recipe, SoftwareApplication. Kiểm trên trang đã dựng bằng `npm run seo:schema -- <địa chỉ web>`.
  */
-import { brandOf, cheapestOption, pricedOptions, type Product, type ShipGroup, type Unit } from './catalog';
+import { brandOf, cheapestOption, isQuote, pricedOptions, variantPath, type Product, type ShipGroup, type Unit } from './catalog';
 import { CARE_PHONE, FACEBOOK_URL, LEGAL, SALES_PHONE, SHOP_ADDRESS, SHOP_EMAIL, LINKEDIN_URL, SUPPORT_PHONE, TIKTOK_URL, YOUTUBE_URL } from './contact';
 import { computeTotals } from './pricing';
 import { DEFAULT_SHARE_IMAGE, SITE_NAME } from './seo';
@@ -163,13 +163,20 @@ export type LdReview = { name: string; stars: number; content: string; createdAt
  * khách trả). Bật giới hạn bán kính giao cây sống → không khai (Google không có cách ghi "trong X km quanh cửa hàng").
  * Không khai thời gian giao: shop không hẹn số ngày cố định (Chính sách giao hàng).
  */
-export function shippingDetailsLd(ship: ShipGroup, u: Pick<Unit, 'price' | 'bulky'>, s: ShippingConfig): Json | undefined {
+export function shippingFeeFor(ship: ShipGroup, u: Pick<Unit, 'price' | 'bulky'>, s: ShippingConfig): number | undefined {
   if (ship === 'plant' && s.plantZoneEnabled) return undefined;
   const region = SHIP_REGIONS.reduce((a, r) => (s.plant.regionFee[r] > s.plant.regionFee[a] ? r : a));
   const t = computeTotals([{ price: u.price, qty: 1, ship, bulky: u.bulky }], 'ship', 0, s, 0, region);
+  return t.plantShip + t.supplyShip;
+}
+
+/** OfferShippingDetails theo `shippingFeeFor` (cũng dùng cho g:shipping của file Google Merchant Center). */
+export function shippingDetailsLd(ship: ShipGroup, u: Pick<Unit, 'price' | 'bulky'>, s: ShippingConfig): Json | undefined {
+  const fee = shippingFeeFor(ship, u, s);
+  if (fee == null) return undefined;
   return {
     '@type': 'OfferShippingDetails',
-    shippingRate: { '@type': 'MonetaryAmount', value: t.plantShip + t.supplyShip, currency: 'VND' },
+    shippingRate: { '@type': 'MonetaryAmount', value: fee, currency: 'VND' },
     shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'VN' },
   };
 }
@@ -196,29 +203,32 @@ export function returnPolicyLd(ship: ShipGroup): Json {
 /**
  * Product: tên chi tiết, ảnh, mã, giá, đánh giá thật. `offers` là MỘT Offer theo quy cách trang chọn sẵn khi mở (rẻ nhất còn
  * hàng, hết cả thì rẻ nhất có giá — `cheapestOption`), không dùng AggregateOffer vì Google chỉ nhận Offer cho danh sách người
- * bán (khung sản phẩm có ảnh + giá); quy cách "Liên hệ báo giá" không tính. Web cố ý chỉ có MỘT URL cho mỗi sản phẩm
- * (không ?quy-cach=) nên không khai ProductGroup / biến thể (Google đòi mỗi biến thể một URL).
+ * bán (khung sản phẩm có ảnh + giá); quy cách "Liên hệ báo giá" không tính. Web chỉ có MỘT URL chuẩn cho mỗi sản phẩm nên
+ * không khai ProductGroup. Link `?quy-cach=<idx>` (chỉ từ file Google Merchant Center) → `selected` = quy cách đó: Offer
+ * mang giá + url của quy cách đó để Google đối chiếu đúng giá trang (canonical / @id vẫn là URL sạch).
  * Còn ≥ 1 quy cách có giá còn hàng → InStock; hết cả → OutOfStock; ngừng bán thì trang 404 nên không có schema.
  * Có `shipping` (Cài đặt giao hàng) → Offer kèm phí giao + chính sách đổi trả.
  * Sản phẩm chỉ có "Liên hệ báo giá" và chưa có đánh giá → null (Google bắt Product phải có offers / review / rating).
  */
 export function productLd(
   p: Pick<Product, 'slug' | 'sku' | 'name' | 'lead' | 'images' | 'options' | 'specs' | 'unit' | 'ship'>,
-  o: { seoName: string; category?: string; rating: { avg: number; count: number }; reviews?: LdReview[]; shipping?: ShippingConfig },
+  o: { seoName: string; category?: string; rating: { avg: number; count: number }; reviews?: LdReview[]; shipping?: ShippingConfig; selected?: number },
 ): Json | null {
   const url = absoluteUrl(`/san-pham/${p.slug}`);
   // Giá + tình trạng khớp đúng trang (mục 15 checklist): giá = quy cách chọn sẵn = giá ở khung giá khi mở trang.
   const priced = pricedOptions(p.options);
-  const unit = priced.length ? p.options[cheapestOption(p.options)] : undefined;
+  const pick = o.selected != null && p.options[o.selected] && !isQuote(p.options[o.selected]) ? o.selected : cheapestOption(p.options);
+  const unit = priced.length ? p.options[pick] : undefined;
   const shown = (o.reviews ?? []).filter((r) => r.content.trim()).slice(0, 5);
   if (!unit && o.rating.count === 0) return null;
   const offers = unit && {
     '@type': 'Offer',
     price: unit.price,
     priceCurrency: 'VND',
-    availability: priced.some((u) => !u.soldOut) ? IN_STOCK : OUT_OF_STOCK,
+    // Quy cách chọn sẵn là quy cách rẻ nhất CÒN hàng → hết hàng ở đây nghĩa là hết mọi quy cách (hoặc quy cách ?quy-cach= đang hết).
+    availability: unit.soldOut ? OUT_OF_STOCK : IN_STOCK,
     itemCondition: SO('NewCondition'),
-    url,
+    url: absoluteUrl(variantPath(p, unit)),
     seller: { '@id': ORG_ID },
     shippingDetails: o.shipping && shippingDetailsLd(p.ship, unit, o.shipping),
     hasMerchantReturnPolicy: o.shipping && returnPolicyLd(p.ship),

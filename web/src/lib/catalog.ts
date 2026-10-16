@@ -52,6 +52,26 @@ export type Unit = {
 /** Quy cách theo số thứ tự database (`Unit.idx`); undefined khi quy cách đã bị xóa. */
 export const optionOf = (p: { options: Unit[] }, idx: number) => p.options.find((o) => o.idx === idx);
 
+/**
+ * Tham số chọn sẵn quy cách khi mở trang sản phẩm: /san-pham/<slug>?quy-cach=<idx>. Chỉ dùng cho link trong file dữ liệu
+ * Google Merchant Center (mỗi quy cách một dòng, trang mở ra phải hiện đúng giá dòng đó). Canonical vẫn là URL sạch,
+ * web không tự tạo link này (một URL mỗi sản phẩm).
+ */
+export const VARIANT_PARAM = 'quy-cach';
+
+/** Vị trí trong mảng của quy cách theo tham số `?quy-cach=` (chỉ quy cách có giá); không hợp lệ → quy cách chọn sẵn. */
+export function variantPosition(options: Unit[], param: string | undefined) {
+  const idx = param && /^\d{1,4}$/.test(param) ? Number(param) : -1;
+  const i = options.findIndex((o) => o.idx === idx && !isQuote(o));
+  return i >= 0 ? i : cheapestOption(options);
+}
+
+/** Link tới đúng quy cách: quy cách chọn sẵn → URL sạch, quy cách khác → ?quy-cach=<idx>. */
+export function variantPath(p: { slug: string; options: Unit[] }, u: Unit) {
+  const base = `/san-pham/${p.slug}`;
+  return p.options[cheapestOption(p.options)]?.idx === u.idx ? base : `${base}?${VARIANT_PARAM}=${u.idx}`;
+}
+
 /** Giá 0 = chưa có giá: hiện "Liên hệ báo giá", khách gọi / Zalo hỏi giá, không cho vào giỏ hay đặt online. */
 export const isQuote = (u: Pick<Unit, 'price'>) => u.price <= 0;
 export const QUOTE_TEXT = 'Liên hệ báo giá';
