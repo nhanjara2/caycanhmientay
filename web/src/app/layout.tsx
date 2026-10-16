@@ -30,6 +30,8 @@ export const metadata: Metadata = {
   // og:url + ảnh riêng do trang công khai gắn bằng withShare() (lib/seo.ts).
   openGraph: BASE_OPEN_GRAPH,
   twitter: { card: 'summary_large_image' },
+  // Google Search Console: xác minh quyền sở hữu (thêm cả file public/google304493db97cae2f3.html) — đừng xóa, mất là mất quyền.
+  verification: { google: 'Xv7jKX5Z5eBRsYGX-YQT6WMmSEMk_13pualk3_Lp6fA' },
   // Biểu tượng: app/favicon.ico + app/icon.svg (trình duyệt), app/apple-icon.png (iPhone), app/manifest.ts (Android).
 };
 
