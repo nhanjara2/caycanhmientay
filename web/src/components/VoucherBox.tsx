@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { welcomeOfferAction } from '@/app/actions/vouchers';
 import { useAuth } from '@/lib/auth';
@@ -11,6 +11,7 @@ import { voucherAmount } from '@/lib/voucher-scope';
 import { voucherDiscount, voucherValueText, type PublicVoucher, type VoucherKind, type WelcomeOffer } from '@/lib/voucher-labels';
 import type { VoucherState } from '@/lib/voucher-pick';
 import { usePublicVouchers } from '@/lib/vouchers-client';
+import { useModalFocus } from '@/lib/use-modal';
 import { Icon } from './Icon';
 
 type Ticket = PublicVoucher & { gift?: WelcomeOffer };
@@ -85,13 +86,13 @@ function VoucherDialog({ tickets, state, amountOf, shipFee, onClose }: {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
+  const box = useRef<HTMLDivElement>(null);
+  useModalFocus(box, onClose);
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', onKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = prev; };
-  }, [onClose]);
+    return () => { document.body.style.overflow = prev; };
+  }, []);
 
   // Mã đang áp dụng mà không có trong danh sách (khách gõ tay mã riêng): vẫn hiện để bỏ chọn được
   const extra: Ticket[] = (['ship', 'discount'] as const).flatMap((kind) => {
@@ -118,7 +119,7 @@ function VoucherDialog({ tickets, state, amountOf, shipFee, onClose }: {
 
   // Gắn vào <body>: khối tổng tiền dính (sticky) tạo lớp xếp chồng riêng, để trong đó thì đầu trang đè lên hộp
   return createPortal(
-    <div className="app-modal app-vmodal" role="dialog" aria-modal="true" aria-label="Ưu đãi dành cho bạn" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div ref={box} tabIndex={-1} className="app-modal app-vmodal" role="dialog" aria-modal="true" aria-label="Ưu đãi dành cho bạn" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="vx-modal">
         <div className="vx-modal__head">
           Ưu đãi dành cho bạn

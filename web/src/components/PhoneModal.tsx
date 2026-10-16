@@ -1,9 +1,10 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { setContactPhoneAction } from '@/app/actions/auth';
 import { isPhone, useAuth, type User } from '@/lib/auth';
+import { useModalFocus } from '@/lib/use-modal';
 import { Icon } from './Icon';
 
 /** Hộp khai SĐT cho tài khoản Google: bắt buộc trước khi đặt hàng, KHÔNG gửi mã xác thực. */
@@ -19,11 +20,8 @@ export function PhoneModal({ initial = '', note, onClose, onSaved }: {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  const box = useRef<HTMLDivElement>(null);
+  useModalFocus(box, onClose);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -38,7 +36,7 @@ export function PhoneModal({ initial = '', note, onClose, onSaved }: {
   };
 
   return (
-    <div className="app-modal app-modal--top" role="dialog" aria-modal="true" aria-label="Cập nhật số điện thoại" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div ref={box} tabIndex={-1} className="app-modal app-modal--top" role="dialog" aria-modal="true" aria-label="Cập nhật số điện thoại" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="au-box">
         <div className="au-head">
           <button type="button" className="x" aria-label="Đóng" onClick={onClose}><Icon name="close" /></button>

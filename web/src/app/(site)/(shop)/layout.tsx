@@ -8,7 +8,7 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
   return (
     <div className="app-shop">
       <SidebarMenu categories={categories} counts={counts} />
-      <main className="app-main">{children}</main>
+      <main id="noi-dung" tabIndex={-1} className="app-main">{children}</main>
     </div>
   );
 }

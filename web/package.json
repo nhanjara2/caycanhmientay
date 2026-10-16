@@ -26,6 +26,7 @@
     "seo:locale": "tsx scripts/check-locale.mts",
     "seo:perf": "tsx scripts/check-perf.mts",
     "seo:mobile": "tsx scripts/check-mobile.mts",
+    "seo:a11y": "tsx scripts/check-a11y.mts",
     "seo:templates": "tsx scripts/check-templates.mts",
     "seo:security": "tsx scripts/check-security.mts",
     "test:jsonld": "tsx scripts/test-jsonld.mts",

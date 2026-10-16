@@ -15,8 +15,8 @@ export const metadata: Metadata = { title: 'Không tìm thấy trang' };
 export default function NotFound() {
   return (
     <SiteChrome>
-    <div className="nf">
-      <div className="nf-art">
+    <main id="noi-dung" tabIndex={-1} className="nf">
+      <div className="nf-art" aria-hidden="true">
         4
         <span style={{ position: 'relative', display: 'inline-grid', transform: 'none', left: 'auto', top: 'auto', verticalAlign: 'middle', margin: '0 8px' }}>
           <Icon name="leaf" />
@@ -30,7 +30,7 @@ export default function NotFound() {
         <Link href="/" className="vx-btn vx-btn--primary">Về trang chủ</Link>
         <Link href="/tim-kiem?q=bán chạy" className="vx-btn vx-btn--outline">Xem cây bán chạy</Link>
       </div>
-    </div>
+    </main>
     </SiteChrome>
   );
 }

@@ -5,6 +5,7 @@ import type { Map as LeafletMap } from 'leaflet';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { MAP_ATTRIBUTION, MAP_TILES, reverseGeocode, searchPlace } from '@/lib/geo';
 import { useShipping } from '@/lib/shipping-client';
+import { useModalFocus } from '@/lib/use-modal';
 import { plantZone, type StorePoint } from '@/lib/stock';
 import { Icon } from './Icon';
 
@@ -22,6 +23,8 @@ export function MapPicker({ initial, stores = [], onPick, onClose }: {
   onClose: () => void;
 }) {
   const box = useRef<HTMLDivElement>(null);
+  const dlg = useRef<HTMLDivElement>(null);
+  useModalFocus(dlg, onClose);
   const map = useRef<LeafletMap | null>(null);
   const [center, setCenter] = useState(initial ?? HCM);
   const [place, setPlace] = useState<{ street: string; area: string } | null>(null);
@@ -58,14 +61,11 @@ export function MapPicker({ initial, stores = [], onPick, onClose }: {
       map.current = m;
       if (initial) reverse(initial.lat, initial.lng);
     });
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
-    window.addEventListener('keydown', onKey);
     return () => {
       alive = false;
       clearTimeout(timer);
       ctrl?.abort();
-      window.removeEventListener('keydown', onKey);
-      map.current?.remove();
+        map.current?.remove();
       map.current = null;
     };
     // Chỉ khởi tạo bản đồ một lần khi mở.
@@ -95,7 +95,7 @@ export function MapPicker({ initial, stores = [], onPick, onClose }: {
   const zone = plantZoneEnabled ? plantZone(center, stores, plantZoneKm) : null;
 
   return (
-    <div className="app-modal app-modal--top" role="dialog" aria-modal="true" aria-label="Chọn vị trí nhận hàng" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div ref={dlg} tabIndex={-1} className="app-modal app-modal--top" role="dialog" aria-modal="true" aria-label="Chọn vị trí nhận hàng" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="vx-modal" style={{ maxWidth: 640 }}>
         <div className="vx-modal__head">
           Chọn vị trí nhận hàng

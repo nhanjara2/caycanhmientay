@@ -361,7 +361,13 @@ function MoreInfo({ children }: { children: ReactNode }) {
   };
   return (
     <div className="app-more" ref={box} data-long={long || undefined} data-open={open || undefined}>
-      <div className="app-more__body" id="thong-tin-sp" onFocusCapture={() => long && setOpen(true)}>
+      <div className="app-more__body" id="thong-tin-sp" onFocusCapture={(e) => {
+        if (!long || open) return;
+        // Tab vào link nằm trong phần đang thu gọn: mở ra rồi cuộn lại tới đúng chỗ đang focus (khối giãn ra làm nó trôi khỏi màn hình)
+        setOpen(true);
+        const t = e.target as HTMLElement;
+        requestAnimationFrame(() => t.scrollIntoView({ block: 'nearest' }));
+      }}>
         <div ref={inner}>{children}</div>
       </div>
       {long && (

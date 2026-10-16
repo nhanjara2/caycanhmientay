@@ -198,7 +198,7 @@ export function CategoryNav({ categories }: { categories: Category[] }) {
               type="button"
               className="app-catnav__tog"
               aria-expanded={open === c.slug}
-              aria-controls="app-mm"
+              aria-controls={open === c.slug ? 'app-mm' : undefined}
               aria-label={`Xem nhóm hàng và sản phẩm bán chạy: ${c.name}`}
               onClick={() => {
                 warm();

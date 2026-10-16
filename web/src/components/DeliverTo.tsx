@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { listAddressesAction } from '@/app/actions/addresses';
 import type { AddressDTO } from '@/lib/address-labels';
 import { useAuth } from '@/lib/auth';
@@ -10,6 +10,7 @@ import { money } from '@/lib/format';
 import { plantFeeVaries } from '@/lib/pricing';
 import { regionOfAddress } from '@/lib/shipping';
 import { useShipping } from '@/lib/shipping-client';
+import { useModalFocus } from '@/lib/use-modal';
 import { plantZone, type StorePoint } from '@/lib/stock';
 import { addrComplete, composeArea, composeFull } from '@/lib/vn-provinces';
 import { AddressFields, EMPTY_ADDR, type AddrValue } from './AddressFields';
@@ -77,12 +78,8 @@ export function DeliverToDialog() {
     listAddressesAction().then(setList).catch(() => setList([]));
   }, [open, loggedIn]);
 
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && closePicker();
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [open, closePicker]);
+  const box = useRef<HTMLDivElement>(null);
+  useModalFocus(box, closePicker, open);
 
   if (!open) return null;
 
@@ -93,7 +90,7 @@ export function DeliverToDialog() {
   };
 
   return (
-    <div className="app-modal" role="dialog" aria-modal="true" aria-label="Chọn nơi nhận hàng" onClick={(e) => e.target === e.currentTarget && closePicker()}>
+    <div ref={box} tabIndex={-1} className="app-modal" role="dialog" aria-modal="true" aria-label="Chọn nơi nhận hàng" onClick={(e) => e.target === e.currentTarget && closePicker()}>
       <div className="vx-modal" style={{ maxWidth: 520, textAlign: 'left' }}>
         <div className="vx-modal__head" style={{ fontSize: '1.25rem' }}>
           Giao hàng đến đâu?

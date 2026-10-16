@@ -48,7 +48,7 @@ export function ProductCard({ product: p, showFlash = false, level = 3, eager = 
       {/* Lớp link phủ cả thẻ (chạm vào giá / thông số cũng mở trang); ảnh + tên vẫn là link riêng cho bàn phím, trình đọc màn hình */}
       <Link href={href} className="app-pcard__cover" tabIndex={-1} aria-hidden="true"><span className="app-sr">{fullName}</span></Link>
       <div className="app-pcard__mediawrap">
-        <Link href={href} className="vx-pcard__media" aria-label={fullName}>
+        <Link href={href} className="vx-pcard__media" aria-label={fullName} tabIndex={-1}>
           {p.images?.[0] ? <img {...responsive(p.images[0], CARD_SIZES, 640)} alt={imageAlt(p, 0)} width={600} height={600} loading={eager ? 'eager' : 'lazy'} /> : <Art name={p.icon} />}
         </Link>
         {/* Dải góc dưới trái: ô "Hàng mới" (nếu có) + sticker ưu đãi (ảnh thật, siêu sale, free ship…) cùng một kiểu ô */}

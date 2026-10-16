@@ -9,6 +9,7 @@ import { compressImage } from '@/lib/compress-image';
 import {
   initials, MAX_REVIEW_PHOTOS, REVIEW_MAX_CHARS, REVIEW_MIN_CHARS, reviewStats, STAR_LABEL, starsText, timeAgo, type ReviewView,
 } from '@/lib/reviews';
+import { useModalFocus } from '@/lib/use-modal';
 import { HelpfulButton } from './HelpfulButton';
 import { Icon } from './Icon';
 
@@ -48,12 +49,6 @@ export function ProductReviews({ slug, items, isPlant }: { slug: string; items: 
   useEffect(() => {
     if (editing) formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, [editing]);
-  useEffect(() => {
-    if (!zoom) return;
-    const esc = (e: KeyboardEvent) => e.key === 'Escape' && setZoom(null);
-    document.addEventListener('keydown', esc);
-    return () => document.removeEventListener('keydown', esc);
-  }, [zoom]);
 
   const chips: { key: Filter; label: string }[] = [
     { key: 'all', label: 'Tất cả' },
@@ -138,13 +133,19 @@ export function ProductReviews({ slug, items, isPlant }: { slug: string; items: 
         </button>
       )}
 
-      {zoom && (
-        <div className="rvw-zoom" role="dialog" aria-label="Ảnh đánh giá" onClick={() => setZoom(null)}>
-          <img src={zoom} alt="" />
-          <button type="button" aria-label="Đóng"><Icon name="close" /></button>
-        </div>
-      )}
+      {zoom && <ZoomPhoto src={zoom} onClose={() => setZoom(null)} />}
     </section>
+  );
+}
+
+function ZoomPhoto({ src, onClose }: { src: string; onClose: () => void }) {
+  const box = useRef<HTMLDivElement>(null);
+  useModalFocus(box, onClose);
+  return (
+    <div ref={box} tabIndex={-1} className="rvw-zoom" role="dialog" aria-modal="true" aria-label="Ảnh đánh giá" onClick={onClose}>
+      <img src={src} alt="" />
+      <button type="button" aria-label="Đóng"><Icon name="close" /></button>
+    </div>
   );
 }
 

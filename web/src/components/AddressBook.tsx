@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useTransition, type FormEvent } from 'react';
+import { useEffect, useRef, useState, useTransition, type FormEvent } from 'react';
 import { deleteAddressAction, saveAddressAction } from '@/app/actions/addresses';
 import { CONDITION_LABEL, KIND_LABEL, type AddressDTO, type AddressKind, type DeliveryCondition } from '@/lib/address-labels';
 import { isPhone } from '@/lib/auth';
@@ -9,6 +9,7 @@ import { addrComplete, composeArea } from '@/lib/vn-provinces';
 import { useAuth } from '@/lib/auth';
 import { useShipping } from '@/lib/shipping-client';
 import { plantZone, type StorePoint } from '@/lib/stock';
+import { useModalFocus } from '@/lib/use-modal';
 import { EmptyState } from './Blocks';
 import { Icon } from './Icon';
 import { AddressFields, addrFrom, type AddrValue } from './AddressFields';
@@ -90,12 +91,8 @@ export function AddressModal({ value, stores, onClose, onSaved, onDeleted }: {
   const [pending, start] = useTransition();
   const set = <K extends keyof typeof v>(k: K, val: (typeof v)[K]) => setV((x) => ({ ...x, [k]: val }));
 
-  useEffect(() => {
-    if (mapOpen) return; // Esc lúc này đóng bản đồ trước
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose, mapOpen]);
+  const box = useRef<HTMLDivElement>(null);
+  useModalFocus(box, onClose); // bản đồ mở chồng lên thì Esc / Tab thuộc về bản đồ
 
   const done = () => { onClose(); router.refresh(); };
 
@@ -125,7 +122,7 @@ export function AddressModal({ value, stores, onClose, onSaved, onDeleted }: {
   const toggle = (c: DeliveryCondition) => set('conditions', v.conditions.includes(c) ? v.conditions.filter((x) => x !== c) : [...v.conditions, c]);
 
   return (
-    <div className="app-modal" role="dialog" aria-modal="true" aria-label={id ? 'Chỉnh sửa địa chỉ' : 'Thêm địa chỉ'} onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div ref={box} tabIndex={-1} className="app-modal" role="dialog" aria-modal="true" aria-label={id ? 'Chỉnh sửa địa chỉ' : 'Thêm địa chỉ'} onClick={(e) => e.target === e.currentTarget && onClose()}>
       <form className="vx-modal" style={{ maxWidth: 560 }} onSubmit={submit} noValidate>
         <div className="vx-modal__head" style={{ fontSize: '1.25rem' }}>
           {id ? 'Chỉnh sửa địa chỉ' : 'Thêm địa chỉ mới'}

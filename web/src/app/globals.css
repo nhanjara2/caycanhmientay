@@ -110,6 +110,39 @@ button.vx-pay__opt:first-child { border-top: 0; }
 .au-head .x { cursor: pointer; }
 .au-sbtn { position: relative; cursor: pointer; }
 .au-otp { cursor: text; position: relative; }
+/* >>> TRỢ NĂNG (mục 12 checklist SEO, `npm run seo:a11y`) — web khách
+   Viền focus chung cho mọi thứ bấm được khi dùng bàn phím (:where = độ ưu tiên 0, chỗ nào đã tự vẽ focus thì giữ kiểu riêng). */
+:where(.app-site) :where(a[href], button, [role=button], [role=tab], [role=option], [role=switch], [role=checkbox], [role=radio], summary, [tabindex]:not([tabindex="-1"])):focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+:where(.app-site) :where(input, textarea, select):focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+/* Ô tìm kiếm đầu trang: ô nhập tự bỏ viền (design system) → viền vẽ trên khung bọc */
+.app-site .vx-search:focus-within { box-shadow: 0 0 0 3px var(--sun); }
+.app-site .vx-sfind__search:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+/* <main> nhận focus khi bấm link bỏ qua — không cần viền */
+#noi-dung:focus { outline: none; }
+/* Link "Bỏ qua, tới nội dung chính": ẩn tới khi Tab tới */
+.app-skip { position: fixed; top: 8px; left: 8px; z-index: 1000; padding: 10px 16px; border-radius: var(--radius-md); background: var(--primary); color: #fff; font-weight: 700; text-decoration: none; transform: translateY(-200%); }
+.app-skip:focus { transform: none; outline: 3px solid var(--sun); outline-offset: 2px; }
+/* Thanh cố định đầu / đáy màn hình không che phần tử đang focus khi trình duyệt cuộn tới */
+html:has(.app-site) { scroll-padding-top: calc(var(--header-h, 0px) + 12px); scroll-padding-bottom: 6rem; } /* đáy: 2 nút Zalo / Gọi nổi góc phải */
+html:has(body[data-buybar] .app-site) { scroll-padding-bottom: 9rem; } /* thanh mua dính đáy trang sản phẩm */
+@media (max-width: 47.9375em) { html:has(.app-site) { scroll-padding-top: calc(6rem + 12px); scroll-padding-bottom: calc(4.5rem + 12px); } html:has(body[data-buybar] .app-site) { scroll-padding-bottom: 10rem; } } /* = --header-h / --bar-h của điện thoại (hai biến đặt trên .app-site, <html> không đọc được) */
+/* Thẻ sản phẩm: ảnh và tên cùng dẫn một trang — chỉ tên là điểm Tab (ảnh tabIndex -1); focus tên thì viền cả thẻ */
+.app-site .vx-pcard:has(.vx-pcard__name a:focus-visible) { outline: 2px solid var(--primary); outline-offset: 2px; }
+/* Chữ xanh trên nền xanh nhạt (mục đang chọn): --primary chỉ 4,4:1 → --primary-hover (≥ 4,5:1) */
+.app-site :is(.vx-chip[aria-pressed="true"], a.vx-chip[aria-current="true"], .vx-acc__list a[aria-current="true"], .vx-tslot[aria-pressed="true"], .vx-toc a[aria-current="true"], .vx-acct__nav a[aria-current="true"], .vx-pnav a[aria-current="true"], .pl-sub[aria-current="true"], .vx-otabs a em, .app-ftag),
+.app-site .dn-table td.n, .app-site .vx-topics h2 { color: var(--primary-hover); }
+/* Link nằm giữa câu chữ: gạch chân để không chỉ phân biệt bằng màu (WCAG 1.4.1) */
+.app-site main :is(p, li, td, dd) > a:not([class]) { text-decoration: underline; text-underline-offset: 2px; }
+/* Hộp cột phải bài viết / Truyền thông: tiêu đề h2 (trước là h3 → nhảy bậc khi bài không có h2), giữ cỡ chữ cũ */
+.nw-box h2 { margin: 0; font-size: 0.9375rem; line-height: 1.4; color: var(--primary); }
+/* Tiêu đề Flash sale là h2 (lưới thẻ bên dưới dùng h3) — bỏ lề mặc định của h2 */
+h2.vx-flash__title { margin: 0; }
+/* Link chữ đứng riêng ("Gửi yêu cầu bảo hành"…) cao ≥ 24px vùng bấm (WCAG 2.5.8); đệm dọc của link trong câu không đẩy dòng */
+.app-site .vx-link { padding-block: 0.1875rem; }
+/* Máy bật giảm chuyển động: cuộn tới mục / tới ô đang focus nhảy thẳng, không trượt */
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+/* <<< TRỢ NĂNG */
+
 .app-sr { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
 /* Header: nút Đăng nhập / tên người dùng + menu tài khoản */
@@ -137,8 +170,9 @@ button.vx-pay__opt:first-child { border-top: 0; }
   .vx-keywords, .vx-loc { display: none; }
   .app-shop { grid-template-columns: minmax(0, 1fr); }
   /* Bóng chỉ hiện khi bảng đang mở — để sẵn thì bóng lọt vào mép trái màn hình lúc bảng đã trượt ra ngoài */
-  .app-side { position: fixed; top: 0; left: 0; bottom: 0; height: 100vh; z-index: 70; transform: translateX(-100%); transition: transform .2s, box-shadow .2s; }
-  body[data-sidebar-open] .app-side { transform: none; box-shadow: var(--shadow-pop); }
+  /* Đóng: visibility hidden (trễ tới khi trượt xong) để Tab / trình đọc màn hình không vào menu đang khuất */
+  .app-side { position: fixed; top: 0; left: 0; bottom: 0; height: 100vh; z-index: 70; transform: translateX(-100%); visibility: hidden; transition: transform .2s, box-shadow .2s, visibility 0s .2s; }
+  body[data-sidebar-open] .app-side { transform: none; visibility: visible; box-shadow: var(--shadow-pop); transition: transform .2s, box-shadow .2s; }
   body[data-sidebar-open] .app-scrim { display: block; position: fixed; inset: 0; background: rgba(28, 42, 34, .4); z-index: 65; }
   .app-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .vx-checkout { grid-template-columns: minmax(0, 1fr); }

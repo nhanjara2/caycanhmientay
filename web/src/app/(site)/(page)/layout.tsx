@@ -11,7 +11,7 @@ export default async function PageLayout({ children }: { children: React.ReactNo
       <div className="app-drawer-only">
         <SidebarMenu categories={categories} counts={counts} />
       </div>
-      <main className="app-page-main">{children}</main>
+      <main id="noi-dung" tabIndex={-1} className="app-page-main">{children}</main>
     </>
   );
 }

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { deliveryStoresAction, listAddressesAction } from '@/app/actions/addresses';
 import { AddressFields, EMPTY_ADDR, type AddrValue } from '@/components/AddressFields';
 import { AddressModal, useNewAddress } from '@/components/AddressBook';
@@ -16,6 +16,7 @@ import { fullAddress, type AddressDTO } from '@/lib/address-labels';
 import { PICKUP_PLACE } from '@/lib/contact';
 import { ONLINE_PAYMENT_METHODS, ONLINE_PAYMENTS_READY, PAY_LABEL, PAY_LOGO } from '@/lib/order-labels';
 import { useAuth } from '@/lib/auth';
+import { errId, focusFirstError, invalidProps } from '@/lib/form-a11y';
 import { useCart } from '@/lib/cart';
 import { useDeliverTo } from '@/lib/deliver-to';
 import { computeTotals, minOrderShort, withVouchers } from '@/lib/pricing';
@@ -158,7 +159,8 @@ export default function CheckoutPage() {
     e.preventDefault();
     setTouched(true);
     setServerError('');
-    if (!valid || busy) return;
+    if (busy) return;
+    if (!valid) { focusFirstError(formRef.current); return; }
     // Tài khoản Google chưa có SĐT: bắt buộc khai (không cần mã xác thực) rồi mới đặt.
     if (user && !user.phone) { setAskPhone(true); return; }
     void placeOrder();
@@ -190,11 +192,15 @@ export default function CheckoutPage() {
     router.push(`/dat-hang-thanh-cong?ma=${r.code}`);
   };
 
-  const err = (k: keyof typeof errors) => touched && errors[k] ? <span className="vx-err">{errors[k]}</span> : null;
+  const formRef = useRef<HTMLFormElement>(null);
+  // Lỗi của ô có id (họ tên, SĐT) gắn vào ô qua aria-describedby; lỗi chung (địa chỉ, khung giờ, xác nhận an toàn) đọc lên ngay.
+  const err = (k: keyof typeof errors, field?: string) => touched && errors[k]
+    ? <span className="vx-err" id={field ? errId(field) : undefined} role={field ? undefined : 'alert'}>{errors[k]}</span>
+    : null;
 
   return (
     <>
-      <form className="vx-checkout app-page" onSubmit={submit} noValidate>
+      <form ref={formRef} className="vx-checkout app-page" onSubmit={submit} noValidate>
         <div className="vx-checkout__main">
           <Steps step={2} />
           <div className="vx-card">
@@ -210,13 +216,13 @@ export default function CheckoutPage() {
             <div className="vx-fields app-buyer">
               <div className="vx-field">
                 <label htmlFor="co-name" className="app-lbl">Họ và tên</label>
-                <input id="co-name" className={`vx-input${touched && errors.name ? ' vx-input--error' : ''}`} placeholder="Ví dụ: Nguyễn Văn An" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" />
-                {err('name')}
+                <input id="co-name" {...invalidProps('co-name', touched && errors.name)} className={`vx-input${touched && errors.name ? ' vx-input--error' : ''}`} placeholder="Ví dụ: Nguyễn Văn An" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" />
+                {err('name', 'co-name')}
               </div>
               <div className="vx-field">
                 <label htmlFor="co-phone" className="app-lbl">Số điện thoại</label>
-                <input id="co-phone" className={`vx-input${touched && errors.phone ? ' vx-input--error' : ''}`} placeholder="Ví dụ: 0912 345 678" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" />
-                {err('phone')}
+                <input id="co-phone" {...invalidProps('co-phone', touched && errors.phone)} className={`vx-input${touched && errors.phone ? ' vx-input--error' : ''}`} placeholder="Ví dụ: 0912 345 678" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" />
+                {err('phone', 'co-phone')}
               </div>
             </div>
 
@@ -280,7 +286,7 @@ export default function CheckoutPage() {
             ) : (
               <div className="vx-note"><Icon name="pin" /><div><b>Nhận tại {PICKUP_PLACE}</b></div></div>
             )}
-            <textarea className="vx-input" placeholder="Ghi chú cho shop (không bắt buộc). Ví dụ: Gọi trước 15 phút, cây để ở sảnh." value={note} onChange={(e) => setNote(e.target.value)} />
+            <textarea className="vx-input" aria-label="Ghi chú cho shop" placeholder="Ghi chú cho shop (không bắt buộc). Ví dụ: Gọi trước 15 phút, cây để ở sảnh." value={note} onChange={(e) => setNote(e.target.value)} />
           </div>
 
           <CartList editable={false} />
@@ -332,7 +338,7 @@ export default function CheckoutPage() {
           <button type="submit" className="vx-btn vx-btn--primary vx-btn--lg vx-btn--block" disabled={busy || short > 0}>{busy ? 'Đang đặt hàng…' : short > 0 ? 'Chưa đủ đơn tối thiểu để giao' : 'Đặt hàng'}</button>
           {short > 0 && <Link href="/gio-hang" className="vx-btn vx-btn--outline vx-btn--block">Quay lại giỏ hàng để mua thêm</Link>}
           <p className="vx-terms">
-            Bằng việc đặt hàng, bạn đồng ý với <a>Điều khoản dịch vụ</a> và <a>Chính sách đổi trả cây</a> của Cây Cảnh Miền Tây
+            Bằng việc đặt hàng, bạn đồng ý với <Link href="/chinh-sach/dieu-khoan">Điều khoản dịch vụ</Link> và <Link href="/chinh-sach/doi-tra">Chính sách đổi trả cây</Link> của Cây Cảnh Miền Tây
           </p>
         </OrderSummary>
       </form>

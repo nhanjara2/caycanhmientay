@@ -70,7 +70,7 @@ export function FlashSale({ products }: { products: Product[] }) {
   return (
     <section className="vx-flash" id="flash-sale">
       <div className="vx-flash__bar">
-        <span className="vx-flash__title"><Icon name="bolt" />Flash sale giờ vàng</span>
+        <h2 className="vx-flash__title"><Icon name="bolt" />Flash sale giờ vàng</h2>
         <span style={{ fontSize: '0.8125rem' }}>{active >= 0 ? 'Kết thúc sau' : 'Bắt đầu sau'}</span>
         <Countdown left={left} />
         <Link href="/flash-sale" style={{ marginLeft: 'auto', fontWeight: 600 }} aria-label="Xem tất cả Flash sale">Xem tất cả</Link>

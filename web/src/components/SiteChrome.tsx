@@ -19,6 +19,8 @@ export async function SiteChrome({ children }: { children: ReactNode }) {
   // .app-site: gốc cho các chỉnh "dễ dùng trên điện thoại" (globals.css, khối cuối) — chỉ áp cho trang khách, không đụng admin / POS / app nhân viên.
   return (
     <div className="app-site">
+      {/* Điểm Tab đầu tiên: người dùng bàn phím / trình đọc màn hình nhảy qua đầu trang + menu (mục 12 checklist SEO) */}
+      <a href="#noi-dung" className="app-skip">Bỏ qua, tới nội dung chính</a>
       <NavProgress />
       <Header nav={<CategoryNav categories={categories} />} />
       {children}

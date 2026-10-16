@@ -151,7 +151,7 @@ export function ShortVideos({ videos, layout, openSlug }: { videos: ShortVideo[]
         ))}
       </div>
 
-      <dialog ref={dlg} className="shv-dlg" aria-labelledby={titleId} onClick={onDialogClick} onKeyDown={onKey}
+      <dialog ref={dlg} className="shv-dlg" aria-labelledby={v ? titleId : undefined} aria-label={v ? undefined : 'Xem video'} onClick={onDialogClick} onKeyDown={onKey}
         onPointerDown={onDown} onPointerUp={onUp} onPointerCancel={() => { touch.current = null; }}>
         <div className="shv-top">
           <span className="shv-count">{cur !== null && n > 1 ? `${cur + 1} / ${n}` : ''}</span>

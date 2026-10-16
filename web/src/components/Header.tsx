@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { useCart } from '@/lib/cart';
+import { toggleSidebar, useSidebarOpen } from '@/lib/sidebar';
 import { AccountMenu } from './AccountMenu';
 import { DeliverToButton } from './DeliverTo';
 import { NotificationBell } from './NotificationBell';
@@ -138,6 +139,7 @@ function SearchForm({ initial, placeholder, below }: SearchBoxProps & { initial:
 export function Header({ nav }: { nav?: ReactNode }) {
   const { totals, ready } = useCart();
   const count = ready ? totals.count : 0;
+  const menuOpen = useSidebarOpen();
 
   return (
     <header className="vx-header app-header">
@@ -146,7 +148,9 @@ export function Header({ nav }: { nav?: ReactNode }) {
           type="button"
           className="app-menubtn"
           aria-label="Mở danh mục"
-          onClick={() => document.body.toggleAttribute('data-sidebar-open')}
+          aria-expanded={menuOpen}
+          aria-controls={menuOpen ? 'app-side' : undefined}
+          onClick={toggleSidebar}
         >
           <Icon name="menu" />
           <span className="app-menubtn__t">Danh mục</span>

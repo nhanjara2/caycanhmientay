@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, useTransition } from 'react';
 import { createServiceRequestAction } from '@/app/actions/service-requests';
 import { isPhone } from '@/lib/auth';
 import { compressImage } from '@/lib/compress-image';
+import { errId, focusFirstError, invalidProps } from '@/lib/form-a11y';
 import { money } from '@/lib/format';
 import { PARTNER_INFO, PARTNER_TYPES, WHOLESALE_URL, type PartnerType } from '@/lib/partners';
 import { ADVISOR_URL, KINDS, PLAN_STORE_KEY, type SavedPlan } from '@/lib/plant-advisor';
@@ -100,13 +101,18 @@ export function WholesaleQuoteForm({ defaults, fromAdvisor = false }: { defaults
     phone: !isPhone(v.phone) && 'Số điện thoại chưa đúng',
     address: v.address.trim().length < 3 && 'Nhập nơi giao hàng (tỉnh / thành hoặc địa chỉ công trình)',
   };
-  const err = (k: keyof typeof errors) => (touched && errors[k] ? <span className="vx-err">{errors[k]}</span> : null);
+  // Câu báo lỗi mang id <ô>-err để ô nhập trỏ tới (aria-describedby) — trình đọc màn hình đọc lỗi khi vào ô
+  const FIELD: Record<keyof typeof errors, string> = { type: 'qf-type', items: 'qf-items', name: 'qf-name', phone: 'qf-phone', address: 'qf-addr' };
+  const err = (k: keyof typeof errors) => (touched && errors[k] ? <span className="vx-err" id={errId(FIELD[k])}>{errors[k]}</span> : null);
+  const bad = (k: keyof typeof errors) => invalidProps(FIELD[k], touched && errors[k]);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const submit = () => {
     setTouched(true);
     setError('');
     if (Object.values(errors).some(Boolean)) {
       setError('Vui lòng kiểm tra lại các ô được đánh dấu');
+      focusFirstError(formRef.current);
       return;
     }
     const fd = new FormData();
@@ -146,13 +152,13 @@ export function WholesaleQuoteForm({ defaults, fromAdvisor = false }: { defaults
   }
 
   return (
-    <form className="qf-card" onSubmit={(e) => { e.preventDefault(); submit(); }} noValidate>
+    <form ref={formRef} className="qf-card" onSubmit={(e) => { e.preventDefault(); submit(); }} noValidate>
       <Breadcrumb items={[{ label: 'Trang chủ', href: '/' }, { label: 'Đối tác sỉ', href: WHOLESALE_URL }, { label: 'Yêu cầu báo giá sỉ' }]} />
       <h1>Yêu cầu báo giá sỉ</h1>
 
       <div className="qf-sec">
         <h2><b>1</b>Bạn là đối tác nào?</h2>
-        <div className="qf-opts app-qf-opts3" role="radiogroup" aria-label="Loại đối tác">
+        <div className="qf-opts app-qf-opts3" role="radiogroup" aria-label="Loại đối tác" {...bad('type')} tabIndex={touched && errors.type ? -1 : undefined}>
           {PARTNER_TYPES.map((t) => (
             <button key={t} type="button" role="radio" className="qf-opt" aria-checked={v.type === t} onClick={() => set('type', t)}>
               <Icon name={PARTNER_INFO[t].icon} />
@@ -185,7 +191,7 @@ export function WholesaleQuoteForm({ defaults, fromAdvisor = false }: { defaults
         )}
         <div className="ad-f">
           <label htmlFor="qf-items">Danh sách cây / vật tư{plan || photos.length ? ' (thêm nếu cần)' : ''}</label>
-          <textarea id="qf-items" className={`vx-input app-qf-items${touched && errors.items ? ' vx-input--error' : ''}`} maxLength={4000} value={v.items}
+          <textarea id="qf-items" {...bad('items')} className={`vx-input app-qf-items${touched && errors.items ? ' vx-input--error' : ''}`} maxLength={4000} value={v.items}
             onChange={(e) => set('items', e.target.value)}
             placeholder={'Mỗi dòng một loại: tên cây, quy cách (chiều cao, đường kính gốc, cỡ bầu), số lượng\nVí dụ:\nCau vua, cao 3–3,5m, bầu 60cm — 40 cây\nLá màu, bầu 15cm — 2.000 bầu'} />
           {err('items')}
@@ -208,8 +214,8 @@ export function WholesaleQuoteForm({ defaults, fromAdvisor = false }: { defaults
           </div>
         </div>
         <div className="ad-f">
-          <label>Khi nào cần hàng?</label>
-          <div className="vx-row">
+          <label id="qf-needby">Khi nào cần hàng?</label>
+          <div className="vx-row" role="group" aria-labelledby="qf-needby">
             {NEED_BY.map((b) => (
               <button key={b} type="button" className="vx-chip" aria-pressed={v.needBy === b} onClick={() => set('needBy', v.needBy === b ? '' : b)}>{b}</button>
             ))}
@@ -224,15 +230,15 @@ export function WholesaleQuoteForm({ defaults, fromAdvisor = false }: { defaults
             <div className="vx-fl"><label htmlFor="qf-company">Tên đơn vị / cửa hàng (không bắt buộc)</label><input id="qf-company" value={v.company} onChange={(e) => set('company', e.target.value)} autoComplete="organization" maxLength={120} /></div>
           </div>
           <div className="vx-field">
-            <div className="vx-fl"><label htmlFor="qf-name">Người liên hệ</label><input id="qf-name" value={v.name} onChange={(e) => set('name', e.target.value)} autoComplete="name" maxLength={80} /></div>
+            <div className="vx-fl"><label htmlFor="qf-name">Người liên hệ</label><input id="qf-name" {...bad('name')} value={v.name} onChange={(e) => set('name', e.target.value)} autoComplete="name" maxLength={80} /></div>
             {err('name')}
           </div>
           <div className="vx-field">
-            <div className="vx-fl"><label htmlFor="qf-phone">Số điện thoại / Zalo</label><input id="qf-phone" value={v.phone} onChange={(e) => set('phone', e.target.value)} inputMode="tel" autoComplete="tel" maxLength={15} /></div>
+            <div className="vx-fl"><label htmlFor="qf-phone">Số điện thoại / Zalo</label><input id="qf-phone" {...bad('phone')} value={v.phone} onChange={(e) => set('phone', e.target.value)} inputMode="tel" autoComplete="tel" maxLength={15} /></div>
             {err('phone')}
           </div>
           <div className="vx-field">
-            <div className="vx-fl"><label htmlFor="qf-addr">Nơi giao hàng</label><input id="qf-addr" value={v.address} onChange={(e) => set('address', e.target.value)} autoComplete="street-address" maxLength={200} placeholder="Tỉnh / thành, hoặc địa chỉ công trình" /></div>
+            <div className="vx-fl"><label htmlFor="qf-addr">Nơi giao hàng</label><input id="qf-addr" {...bad('address')} value={v.address} onChange={(e) => set('address', e.target.value)} autoComplete="street-address" maxLength={200} placeholder="Tỉnh / thành, hoặc địa chỉ công trình" /></div>
             {err('address')}
           </div>
         </div>

@@ -2,8 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Category } from '@/lib/catalog';
+import { closeSidebar, useSidebarOpen } from '@/lib/sidebar';
+import { useModalFocus } from '@/lib/use-modal';
 import { DeliverToButton } from './DeliverTo';
 import { Icon } from './Icon';
 
@@ -16,14 +18,20 @@ export function SidebarMenu({ categories, counts }: { categories: Category[]; co
 
   useEffect(() => {
     if (current) setOpen(current);
-    document.body.removeAttribute('data-sidebar-open');
+    closeSidebar();
   }, [pathname, current]);
+
+  // < 1024px bảng là hộp trượt: mở thì focus vào trong, Tab không lọt ra trang phía sau, Esc đóng, đóng xong về nút ☰.
+  // (≥ 1024px bảng luôn hiện cạnh nội dung — thuộc tính mở không có tác dụng.)
+  const drawer = useSidebarOpen();
+  const aside = useRef<HTMLElement>(null);
+  useModalFocus(aside, closeSidebar, drawer);
 
   return (
     <>
-      <div className="app-scrim" onClick={() => document.body.removeAttribute('data-sidebar-open')} />
-      <aside className="vx-side app-side" aria-label="Danh mục sản phẩm">
-        <button type="button" className="app-side__close" onClick={() => document.body.removeAttribute('data-sidebar-open')}>
+      <div className="app-scrim" onClick={closeSidebar} />
+      <aside ref={aside} id="app-side" tabIndex={-1} className="vx-side app-side" aria-label="Danh mục sản phẩm">
+        <button type="button" className="app-side__close" onClick={closeSidebar}>
           <Icon name="close" size={22} />Đóng danh mục
         </button>
         <DeliverToButton variant="side" />

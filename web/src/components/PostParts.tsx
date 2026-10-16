@@ -125,7 +125,7 @@ export function PostLinks({ title, posts, extra }: { title: string; posts: { slu
   if (!posts.length) return null;
   return (
     <div className="nw-box">
-      <h3>{title}</h3>
+      <h2>{title}</h2>
       {posts.map((p) => (
         <Link key={p.slug} href={postPath(p)}>{p.title}<small>{extra ? extra(p) : categoryOf(p.category)?.name}</small></Link>
       ))}

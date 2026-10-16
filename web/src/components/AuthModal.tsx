@@ -1,23 +1,21 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect } from 'react';
+import { useRef } from 'react';
 import { useAuth } from '@/lib/auth';
 import { money } from '@/lib/format';
+import { useModalFocus } from '@/lib/use-modal';
 import { welcomeText } from '@/lib/voucher-labels';
 import { Icon } from './Icon';
 
 /** Hộp Đăng nhập / Đăng ký gộp: chỉ đăng nhập bằng Google (đã bỏ SĐT + OTP — shop không đăng ký dịch vụ gửi mã). */
 export function AuthModal() {
   const { modalOpen, closeLogin } = useAuth();
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && closeLogin();
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [closeLogin]);
+  const box = useRef<HTMLDivElement>(null);
+  useModalFocus(box, closeLogin, modalOpen);
   if (!modalOpen) return null;
   return (
-    <div className="app-modal" role="dialog" aria-modal="true" aria-label="Đăng nhập" onClick={(e) => e.target === e.currentTarget && closeLogin()}>
+    <div ref={box} tabIndex={-1} className="app-modal" role="dialog" aria-modal="true" aria-label="Đăng nhập" onClick={(e) => e.target === e.currentTarget && closeLogin()}>
       <LoginBox onClose={closeLogin} />
     </div>
   );
