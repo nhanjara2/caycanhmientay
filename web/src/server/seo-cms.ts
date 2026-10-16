@@ -11,6 +11,7 @@ import { projectPath } from '@/lib/projects';
 import { auditText, isShareImage, redirectable, seoTime, sitePath, type SeoChange } from '@/lib/seo-cms';
 import { SITE_ORIGIN } from '@/lib/site';
 import { slugify, SLUG_RE } from '@/lib/slug';
+import { applySeoOverride, canonicalOf, resolveRedirect } from '@/lib/seo-rules';
 import { staffName, type SessionUser } from './auth';
 import { db, schema } from './db';
 
@@ -34,16 +35,11 @@ export type SeoOverride = typeof O.$inferSelect;
 
 export const getSeoOverride = cache(async (path: string) => (await db.select().from(O).where(eq(O.path, path)))[0] ?? null);
 
-const canonicalOf = (meta: Metadata) => {
-  const c = meta.alternates?.canonical;
-  const url = typeof c === 'string' ? c : c instanceof URL ? c.toString() : c?.url?.toString();
-  return url ? sitePath(url, true) : null;
-};
-
 /**
  * Áp SEO đặt tay lên metadata của trang (sau `withShare`). Khóa = canonical của trang:
  * tiêu đề / mô tả / canonical / ảnh chỉ áp cho trang gốc (không ?tham số — trang 2, 3… giữ "· Trang n");
  * noindex áp cả biến thể. Trang tự noindex theo luật (trang trống, trang lọc…) không bao giờ bị bật index lại.
+ * Luật áp ở `applySeoOverride` (lib/seo-rules.ts, có kiểm thử `npm run test:seo`).
  */
 export async function withSeo(meta: Metadata): Promise<Metadata> {
   const c = canonicalOf(meta);
@@ -52,17 +48,7 @@ export async function withSeo(meta: Metadata): Promise<Metadata> {
   // Đọc lỗi (database tạm hỏng, lúc build trang tĩnh) thì giữ metadata web tự tạo — SEO đặt tay không được làm sập trang.
   // Trang tĩnh (chính sách, giới thiệu…) được dựng lại khi lưu SEO nhờ revalidatePath trong saveSeoAction.
   const o = await getSeoOverride(path).catch(() => null);
-  if (!o) return meta;
-  const base = !query;
-  const out: Metadata = { ...meta };
-  if (base && o.title) out.title = { absolute: o.title };
-  if (base && o.description) out.description = o.description;
-  if (o.noindex) out.robots = { index: false, follow: true };
-  if (base && o.canonical) out.alternates = { ...meta.alternates, canonical: o.canonical };
-  if (base && meta.openGraph && (o.canonical || o.image)) {
-    out.openGraph = { ...meta.openGraph, ...(o.canonical ? { url: o.canonical } : {}), ...(o.image ? { images: [{ url: o.image }] } : {}) };
-  }
-  return out;
+  return applySeoOverride(meta, o, !query);
 }
 
 /** Đường dẫn rời sitemap vì đặt tay noindex hoặc canonical trỏ trang khác. */
@@ -77,15 +63,7 @@ const directRedirect = async (path: string) => (await db.select({ to: R.toPath }
  * Đích chuyển hướng của một đường dẫn đã mất nội dung. Đích cũng đã gỡ và có chuyển hướng riêng (A → B lúc B còn hiện,
  * sau đó B bị gỡ → C) thì đi tiếp tới đích cuối ngay trên máy chủ — khách chỉ qua một bước 308.
  */
-const findRedirect = cache(async (path: string) => {
-  let to = await directRedirect(path);
-  for (let hop = 0; to && hop < 3; hop++) {
-    const next = await directRedirect(to);
-    if (!next || next === path || (await pathIsLive(to))) break;
-    to = next;
-  }
-  return to;
-});
+const findRedirect = cache((path: string) => resolveRedirect(path, directRedirect, pathIsLive));
 
 /** Dùng trong generateMetadata khi không còn nội dung: có chuyển hướng thì chuyển luôn (308). */
 export async function redirectIfMoved(path: string) {

@@ -8,9 +8,12 @@ import { postImageUrl, postPath, SECTIONS, sectionOf, tiktokPlayer, VIDEO_PAGE, 
 import { hasProjectDetail, projectImageUrl, projectPath } from '@/lib/projects';
 import { absoluteUrl } from '@/lib/site';
 import { canonicalPath } from '@/lib/slug';
+import { SITEMAP_KIND_NAMES, SITEMAP_MAX_URLS, type SitemapEntry, type SitemapKind } from '@/lib/sitemap-xml';
 import { db, schema } from './db';
 import { publishedPosts } from './posts';
 import { sitemapExcluded } from './seo-cms';
+
+export { indexXml, parseSitemapName, SITEMAP_MAX_URLS, urlsetXml, type SitemapEntry, type SitemapKind, type SitemapVideo } from '@/lib/sitemap-xml';
 
 /**
  * Sitemap XML (mục 1.5 checklist SEO): /sitemap.xml là file CHỈ MỤC, trỏ tới từng sitemap con theo loại nội dung
@@ -24,14 +27,6 @@ import { sitemapExcluded } from './seo-cms';
  * lastmod chỉ ghi khi có ngày sửa thật (products.updated_at, diseases / posts / projects.updated_at, ngày cập nhật của
  * trang chính sách); trang không có ngày thật (trang chủ, trang giới thiệu dịch vụ…) thì bỏ trống — không ghi ngày deploy.
  */
-
-/** Video trên trang (thẻ <video:video> — Google bắt buộc ảnh thu nhỏ, tiêu đề, mô tả, link trình phát). */
-export type SitemapVideo = { thumbnail: string; title: string; description: string; player: string; seconds?: number | null; published: Date };
-
-export type SitemapEntry = { loc: string; lastmod?: Date; images?: string[]; videos?: SitemapVideo[] };
-
-/** Google cho tối đa 50.000 URL / 50MB mỗi file; mỗi sản phẩm kèm tới 10 ảnh nên chia nhỏ hơn nhiều cho chắc. */
-export const SITEMAP_MAX_URLS = 10_000;
 
 const STATIC_PAGES = ['/', '/danh-muc', '/doi-tac', '/bao-gia-si', '/tu-van-chon-cay', '/he-thong-cua-hang', '/khuyen-mai'];
 
@@ -136,16 +131,7 @@ async function projects(): Promise<SitemapEntry[]> {
 }
 
 /** Các loại sitemap con: tên file /sitemaps/<key>.xml (trang thứ 2 trở đi: <key>-2.xml…). */
-export const SITEMAP_KINDS = { 'trang': pages, 'san-pham': products, 'benh-cay': diseases, 'bai-viet': posts, 'cong-trinh': projects } as const;
-export type SitemapKind = keyof typeof SITEMAP_KINDS;
-
-/** "san-pham-2.xml" → { kind: 'san-pham', page: 2 }; tên lạ → null (404). */
-export function parseSitemapName(name: string): { kind: SitemapKind; page: number } | null {
-  const m = /^([a-z-]+?)(?:-(\d+))?\.xml$/.exec(name);
-  if (!m || !(m[1] in SITEMAP_KINDS)) return null;
-  const page = m[2] ? Number(m[2]) : 1;
-  return page >= 2 || !m[2] ? { kind: m[1] as SitemapKind, page } : null;
-}
+export const SITEMAP_KINDS: Record<SitemapKind, () => Promise<SitemapEntry[]>> = { 'trang': pages, 'san-pham': products, 'benh-cay': diseases, 'bai-viet': posts, 'cong-trinh': projects };
 
 const fileName = (kind: SitemapKind, page: number) => `${kind}${page > 1 ? `-${page}` : ''}.xml`;
 
@@ -173,7 +159,7 @@ export async function sitemapIndex() {
   await connection();
   const out: { loc: string; lastmod?: Date }[] = [];
   const excluded = await sitemapExcluded();
-  for (const kind of Object.keys(SITEMAP_KINDS) as SitemapKind[]) {
+  for (const kind of SITEMAP_KIND_NAMES) {
     const all = await load(kind, excluded);
     for (let page = 1; (page - 1) * SITEMAP_MAX_URLS < all.length; page++) {
       const part = all.slice((page - 1) * SITEMAP_MAX_URLS, page * SITEMAP_MAX_URLS);
@@ -181,42 +167,6 @@ export async function sitemapIndex() {
     }
   }
   return out;
-}
-
-// ---- XML ----------------------------------------------------------------------------------
-
-const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
-const iso = (d: Date) => d.toISOString().replace(/\.\d{3}Z$/, 'Z');
-
-export function urlsetXml(entries: SitemapEntry[]) {
-  const body = entries.map((e) => [
-    '<url>',
-    `<loc>${esc(e.loc)}</loc>`,
-    e.lastmod ? `<lastmod>${iso(e.lastmod)}</lastmod>` : '',
-    ...(e.images ?? []).slice(0, 1000).map((i) => `<image:image><image:loc>${esc(i)}</image:loc></image:image>`),
-    ...(e.videos ?? []).map(videoXml),
-    '</url>',
-  ].join('')).join('\n');
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">\n${body}\n</urlset>\n`;
-}
-
-/** Một <video:video>: tiêu đề ≤ 100 ký tự, mô tả ≤ 2048, thời lượng 1–28800 giây (giới hạn của Google). */
-function videoXml(v: SitemapVideo) {
-  return [
-    '<video:video>',
-    `<video:thumbnail_loc>${esc(v.thumbnail)}</video:thumbnail_loc>`,
-    `<video:title>${esc(v.title.slice(0, 100))}</video:title>`,
-    `<video:description>${esc(v.description.slice(0, 2048))}</video:description>`,
-    `<video:player_loc>${esc(v.player)}</video:player_loc>`,
-    v.seconds && v.seconds >= 1 && v.seconds <= 28_800 ? `<video:duration>${Math.round(v.seconds)}</video:duration>` : '',
-    `<video:publication_date>${iso(v.published)}</video:publication_date>`,
-    '</video:video>',
-  ].join('');
-}
-
-export function indexXml(items: { loc: string; lastmod?: Date }[]) {
-  const body = items.map((i) => `<sitemap><loc>${esc(i.loc)}</loc>${i.lastmod ? `<lastmod>${iso(i.lastmod)}</lastmod>` : ''}</sitemap>`).join('\n');
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${body}\n</sitemapindex>\n`;
 }
 
 /** Trả XML: CDN giữ 10 phút (sửa nội dung là sitemap đổi trong ≤ 10 phút); bản thân file sitemap không cần lên Google. */

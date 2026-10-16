@@ -22,6 +22,7 @@ import { withShare } from '@/lib/seo';
 import { movedOrNotFound, redirectIfMoved, withSeo } from '@/server/seo-cms';
 import { JsonLd } from '@/components/JsonLd';
 import { collectionLd } from '@/lib/jsonld';
+import { listingRobots } from '@/lib/seo-rules';
 
 type Props = {
   params: Promise<{ slug: string[] }>;
@@ -72,7 +73,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     title: seo.title + pageSuffix(page),
     description: seo.description + (page > 1 ? pageSuffix(page, ' ') + '.' : ''),
     alternates: { canonical: page > 1 ? `${base}?trang=${page}` : base },
-    robots: varied || empty ? { index: false, follow: true } : undefined,
+    robots: listingRobots(varied, empty),
   }, {
     // Ảnh chia sẻ = ảnh chính của sản phẩm đầu tiên có ảnh trong danh mục (đúng thứ tự trang đang hiện).
     images: [list.find((p) => p.images?.length)?.images?.[0]], alt: seo.title,

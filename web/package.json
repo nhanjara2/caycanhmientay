@@ -34,7 +34,10 @@
     "seo:components": "tsx scripts/check-components.mts",
     "seo:monitor": "tsx scripts/check-monitor.mts",
     "seo:data": "tsx scripts/check-data.mts",
+    "seo:gate": "tsx scripts/seo-gate.mts",
+    "seo:all": "tsx scripts/seo-all.mts",
     "test:jsonld": "tsx scripts/test-jsonld.mts",
+    "test:seo": "tsx scripts/test-seo.mts",
     "db:setup": "tsx --env-file-if-exists=.env.local scripts/db-setup.mts"
   },
   "dependencies": {

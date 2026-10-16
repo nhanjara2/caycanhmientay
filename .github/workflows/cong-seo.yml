@@ -1,0 +1,78 @@
+# Kiểm thử SEO tự động trong quy trình phát triển (mục 20 checklist SEO).
+#
+# 1. "Kiểm thử đơn vị SEO" — mỗi lần push / pull request đụng web/: chạy test:seo + test:jsonld (hàm tạo title, description,
+#    slug, canonical, robots, hreflang, sitemap, JSON-LD, chuyển hướng, trạng thái nội dung). Không cần database.
+# 2. "Cổng SEO" — mỗi khi Vercel deploy xong (Vercel gửi sự kiện deployment_status về GitHub): chạy seo:gate với đúng địa
+#    chỉ vừa deploy (bản xem trước hoặc production). Lỗi CHẶN (robots chặn cả web, sitemap hỏng, trang 5xx, cả loại trang
+#    noindex, canonical trỏ staging, metadata hỏng toàn web, mất nội dung chính, vòng lặp chuyển hướng) → bước đỏ + GitHub gửi
+#    email. Lỗi nghiêm trọng / cảnh báo chỉ ghi vào trang tóm tắt của lần chạy.
+#    Muốn Vercel CHỜ cổng này rồi mới đưa bản mới lên production: Vercel → Project → Settings → Deployment Checks → thêm
+#    check "Cổng SEO" (GitHub). Bản xem trước bật Deployment Protection thì thêm secret VERCEL_AUTOMATION_BYPASS_SECRET.
+name: Cổng SEO
+
+on:
+  push:
+    branches: [main]
+    paths: ['web/**', '.github/workflows/cong-seo.yml']
+  pull_request:
+    paths: ['web/**', '.github/workflows/cong-seo.yml']
+  deployment_status:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'Địa chỉ web cần kiểm (vd. https://www.caycanhmientay.com)'
+        required: true
+        default: 'https://www.caycanhmientay.com'
+
+permissions:
+  contents: read
+
+jobs:
+  unit:
+    name: Kiểm thử đơn vị SEO
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      # Hàm thuần (không database) nhưng src/lib dùng zod / next nên cần cài thư viện.
+      - run: npm ci --ignore-scripts
+      - name: test:seo
+        run: npm run test:seo
+      - name: test:jsonld
+        run: npm run test:jsonld
+
+  gate:
+    name: Cổng SEO
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'deployment_status' && github.event.deployment_status.state == 'success')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: web
+    env:
+      TARGET: ${{ github.event.deployment_status.environment_url || inputs.url }}
+      VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.deployment.sha || github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Cổng SEO (lỗi chặn deploy)
+        run: npx --yes tsx@4.23.15 scripts/seo-gate.mts "$TARGET"
+      # Production: URL quan trọng (tờ rơi, backlink, đường dẫn cũ) vẫn mở được / chuyển 308 đúng một bước.
+      - name: URL quan trọng
+        if: (success() || failure()) && (github.event.deployment_status.environment == 'Production' || github.event_name == 'workflow_dispatch')
+        run: npx --yes tsx@4.23.15 scripts/check-migration.mts "$TARGET" seo/url-quan-trong.txt

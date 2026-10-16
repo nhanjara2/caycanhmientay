@@ -11,6 +11,7 @@ import { withShare } from '@/lib/seo';
 import { withSeo } from '@/server/seo-cms';
 import { Pager } from '@/components/Pager';
 import { one, pageOf, redirectIfNotCanonical, type SearchParams } from '@/lib/url-params';
+import { listingRobots } from '@/lib/seo-rules';
 
 const PER_PAGE = 20;
 
@@ -38,7 +39,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
     title: `Tìm hiểu bệnh cây trồng${nth}`,
     description: `Tra cứu bệnh cây theo bộ phận bị bệnh, nguyên nhân hoặc triệu chứng: nhận biết, cách xử lý và phòng bệnh.${nth ? pageSuffix(page, ' ') + '.' : ''}`,
     alternates: { canonical: page > 1 ? `/benh-cay?trang=${page}` : '/benh-cay' },
-    robots: filtered ? { index: false, follow: true } : undefined,
+    robots: listingRobots(filtered),
   }));
 }
 

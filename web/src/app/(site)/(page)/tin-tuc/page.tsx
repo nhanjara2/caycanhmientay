@@ -12,6 +12,7 @@ import { publishedPosts, type PostCard } from '@/server/posts';
 import { withShare } from '@/lib/seo';
 import { withSeo } from '@/server/seo-cms';
 import { responsive } from '@/lib/images';
+import { listingRobots } from '@/lib/seo-rules';
 
 type Props = { searchParams: Promise<SearchParams> };
 
@@ -45,7 +46,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
     title: `${cat ? `${categoryOf(cat)?.name} · Truyền thông` : 'Truyền thông'}${pageSuffix(page)}`,
     description: `${cat ? CATEGORY_DESCRIPTION[cat] : 'Tin tức, hoạt động cộng đồng, báo chí và tuyển dụng của Cây Cảnh Miền Tây – nhà vườn cây cảnh tại Làng hoa Sa Đéc.'}${pageSuffix(page, ' ')}`,
     alternates: { canonical: link({ cat, page }) },
-    robots: empty ? { index: false, follow: true } : undefined,
+    robots: listingRobots(empty),
   }));
 }
 

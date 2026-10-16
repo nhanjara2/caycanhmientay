@@ -14,6 +14,7 @@ import { getCurrentUser } from '@/server/auth';
 import { getProject, publishedProjects } from '@/server/projects';
 import { withShare } from '@/lib/seo';
 import { movedOrNotFound, redirectIfMoved, withSeo } from '@/server/seo-cms';
+import { contentRobots, contentState } from '@/lib/seo-rules';
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ 'xem-truoc'?: string }> };
 
@@ -38,7 +39,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     description,
     alternates: { canonical: projectPath(p.slug) },
     // Ẩn (xem trước) → noindex; dự án chỉ có tên (chưa ảnh / mô tả…) là trang mỏng, trang Đối tác không link tới → noindex tới khi có nội dung.
-    robots: !p.published ? { index: false } : hasProjectDetail(p) ? undefined : { index: false, follow: true },
+    robots: contentRobots(contentState({ visible: p.published, hasDetail: hasProjectDetail(p) })),
   }, { images: p.images.map((i) => projectImageUrl(i.file, p.slug)), alt: p.title }));
 }
 

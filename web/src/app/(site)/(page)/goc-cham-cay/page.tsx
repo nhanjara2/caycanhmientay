@@ -11,6 +11,7 @@ import { withSeo } from '@/server/seo-cms';
 import { responsive } from '@/lib/images';
 import { Pager } from '@/components/Pager';
 import { one, pageOf, redirectIfNotCanonical, type SearchParams } from '@/lib/url-params';
+import { listingRobots } from '@/lib/seo-rules';
 
 type Props = { searchParams: Promise<SearchParams> };
 
@@ -39,7 +40,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
     title: `${name ? `${name} · Góc chăm cây` : 'Góc chăm cây'}${nth}`,
     description: `${cat ? CATEGORY_DESCRIPTION[cat] : 'Kinh nghiệm chăm cây, bắt bệnh, dùng thuốc và phân bón đúng cách từ nhà vườn Cây Cảnh Miền Tây.'}${pageSuffix(cat ? page : 1, ' ')}`,
     alternates: { canonical: thin ? BASE : href({ 'chuyen-muc': cat, trang: cat && page > 1 ? page : undefined }) },
-    robots: thin || empty ? { index: false, follow: true } : undefined,
+    robots: listingRobots(thin, empty),
   }));
 }
 

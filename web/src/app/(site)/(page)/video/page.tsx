@@ -9,6 +9,7 @@ import { CATEGORIES, isCategory, SECTIONS, VIDEO_PAGE } from '@/lib/posts';
 import { publishedVideos } from '@/server/posts';
 import { withShare } from '@/lib/seo';
 import { withSeo } from '@/server/seo-cms';
+import { listingRobots } from '@/lib/seo-rules';
 
 type Props = { searchParams: Promise<SearchParams> };
 
@@ -28,7 +29,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   }
   // Chưa có video nào (trong chủ đề đang xem) → trang trống, noindex tới khi có video (tránh soft 404).
   const empty = !all.some((x) => !isCategory(c) || x.category === c);
-  return withSeo(withShare({ title: 'Video ngắn', description: DESCRIPTION, alternates: { canonical: VIDEO_PAGE }, robots: empty ? { index: false, follow: true } : undefined }));
+  return withSeo(withShare({ title: 'Video ngắn', description: DESCRIPTION, alternates: { canonical: VIDEO_PAGE }, robots: listingRobots(empty) }));
 }
 
 /** Video ngắn: mọi video đã đăng ở /admin/noi-dung (thêm nhanh bằng link YouTube Shorts), bấm là xem ngay. */
