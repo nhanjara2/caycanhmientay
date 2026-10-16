@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { menuCategories } from '@/server/categories';
+import { Analytics } from './Analytics';
 import { AuthModal } from './AuthModal';
 import { CategoryNav } from './CategoryNav';
 import { CookieConsent } from './CookieConsent';
@@ -31,6 +32,7 @@ export async function SiteChrome({ children }: { children: ReactNode }) {
       <ScrollReveal />
       <ImageFallback />
       <WebVitals />
+      <Analytics />
     </div>
   );
 }

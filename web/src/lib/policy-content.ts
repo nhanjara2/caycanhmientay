@@ -449,7 +449,7 @@ const BAO_MAT: Section[] = [
     'Chúng tôi **không bán** dữ liệu cá nhân của bạn. Dữ liệu chỉ được chia sẻ trong các trường hợp sau:',
     { ul: [
       '**Đơn vị vận chuyển, người giao hàng:** tên, số điện thoại, địa chỉ nhận và nội dung đơn để giao hàng.',
-      '**Nhà cung cấp dịch vụ kỹ thuật** giúp vận hành website: lưu trữ máy chủ và cơ sở dữ liệu, gửi tin nhắn Zalo / email, đăng nhập bằng Google, bản đồ và tìm địa chỉ. Họ chỉ nhận dữ liệu cần thiết cho dịch vụ và phải bảo mật.',
+      '**Nhà cung cấp dịch vụ kỹ thuật** giúp vận hành website: lưu trữ máy chủ và cơ sở dữ liệu, gửi tin nhắn Zalo / email, đăng nhập bằng Google, bản đồ và tìm địa chỉ, đo lượt truy cập (Google Analytics — chỉ khi bạn cho phép nhóm Phân tích). Họ chỉ nhận dữ liệu cần thiết cho dịch vụ và phải bảo mật.',
       '**Cơ quan nhà nước có thẩm quyền** khi có yêu cầu theo quy định của pháp luật.',
     ] },
     { note: 'Một số nhà cung cấp dịch vụ kỹ thuật đặt máy chủ ngoài lãnh thổ Việt Nam, nên dữ liệu của bạn có thể được lưu và xử lý ở nước ngoài.' },
@@ -460,7 +460,7 @@ const BAO_MAT: Section[] = [
     { table: { head: ['Nhóm', 'Dùng để', 'Có thể tắt'], rows: [
       ['Cần thiết', 'Đăng nhập, giỏ hàng, thanh toán, bảo mật', 'Không (luôn bật)'],
       ['Cá nhân hóa', 'Gợi ý cây theo sở thích và lịch sử xem', 'Có'],
-      ['Phân tích', 'Đo lượt truy cập để cải thiện website', 'Có'],
+      ['Phân tích', 'Đo lượt truy cập để cải thiện website (Google Analytics)', 'Có'],
       ['Quảng cáo', 'Hiện quảng cáo phù hợp trên mạng xã hội', 'Có'],
     ] } },
     'Mã phân tích và quảng cáo chỉ được dùng khi bạn đã cho phép. Muốn chọn lại, bạn xóa dữ liệu trang web trong trình duyệt để hộp lựa chọn hiện lại. Website cũng lưu nơi giao hàng bạn chọn ("Giao đến") ngay trên trình duyệt của bạn.',

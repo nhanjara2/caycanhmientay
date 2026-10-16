@@ -6,6 +6,13 @@ import { Icon } from './Icon';
 
 type Consent = { personal: boolean; analytics: boolean; ads: boolean; at: string };
 const KEY = 'ccmt-consent';
+/** Phát trên window mỗi lần khách lưu lựa chọn — mã phân tích (Analytics.tsx) nghe để tải ngay. */
+export const CONSENT_EVENT = 'ccmt:consent';
+
+/** Khách đã cho phép nhóm này chưa (chưa chọn gì = chưa). */
+export function hasConsent(kind: 'personal' | 'analytics' | 'ads') {
+  try { return (JSON.parse(localStorage.getItem(KEY) ?? 'null') as Consent | null)?.[kind] === true; } catch { return false; }
+}
 
 /** Xin đồng ý cookie lần đầu vào web. Chưa đồng ý thì không tải mã phân tích/quảng cáo. */
 export function CookieConsent() {
@@ -19,6 +26,7 @@ export function CookieConsent() {
 
   const save = (c: Omit<Consent, 'at'>) => {
     try { localStorage.setItem(KEY, JSON.stringify({ ...c, at: new Date().toISOString() })); } catch {}
+    window.dispatchEvent(new Event(CONSENT_EVENT));
     setShow(false);
   };
 
