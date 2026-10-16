@@ -1,0 +1,49 @@
+# Giám sát web thật (SEO mục 13): mỗi 6 giờ chạy `seo:security` với https://www.caycanhmientay.com.
+# Báo lỗi (GitHub gửi email cho người sửa lịch chạy gần nhất) khi: web không trả lời / trả 5xx, Googlebot bị chặn,
+# chứng chỉ TLS hỏng hoặc còn < 14 ngày, DNS lỗi, http không chuyển sang https, mất header bảo mật, robots.txt chặn cả web,
+# sitemap mất > 20% trang hoặc canonical đổi so với lần chạy trước, lộ dữ liệu riêng tư trong HTML.
+# Chạy tay: tab Actions → "Giám sát web" → Run workflow. Không cần secret.
+name: Giám sát web
+
+on:
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: giam-sat-web
+  cancel-in-progress: false
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # Mốc lần chạy trước (robots.txt, danh sách trang sitemap, canonical) — so để bắt thay đổi bất thường.
+      - name: Lấy mốc lần trước
+        uses: actions/cache/restore@v4
+        with:
+          path: web/.seo-baseline.json
+          key: seo-baseline-${{ github.run_id }}
+          restore-keys: seo-baseline-
+      # Script chỉ dùng thư viện có sẵn của Node nên không cần npm ci.
+      - name: Kiểm tra bảo mật / HTTPS / ổn định
+        env:
+          SECURITY_BASELINE: .seo-baseline.json
+        run: npx --yes tsx@4.23.15 scripts/check-security.mts https://www.caycanhmientay.com
+      - name: Lưu mốc mới
+        if: success()
+        uses: actions/cache/save@v4
+        with:
+          path: web/.seo-baseline.json
+          key: seo-baseline-${{ github.run_id }}

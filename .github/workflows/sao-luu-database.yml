@@ -1,0 +1,52 @@
+# Sao lưu database Supabase mỗi đêm (SEO mục 13 — "có backup và quy trình khôi phục").
+# Cần secret BACKUP_DATABASE_URL (Settings → Secrets and variables → Actions): chuỗi kết nối Supabase dạng
+# "Session pooler" cổng 5432 (Supabase → Connect → Session pooler), KHÔNG dùng cổng 6543 (transaction pooler).
+# Chưa có secret thì chỉ cảnh báo, không báo lỗi. Bản sao lưu là artifact của lần chạy, giữ 14 ngày, chỉ người có quyền
+# vào repo (riêng tư) tải được. Khôi phục: tải file .dump → `pg_restore --clean --if-exists --no-owner --no-privileges -d "<chuỗi kết nối>" ccmt-<ngày>.dump`
+# (thử khôi phục vào database tạm trước, rồi mới đè database thật).
+name: Sao lưu database
+
+on:
+  schedule:
+    - cron: '30 19 * * *' # 2:30 sáng giờ Việt Nam
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DB: ${{ secrets.BACKUP_DATABASE_URL }}
+    steps:
+      - name: Kiểm tra secret
+        id: check
+        run: |
+          if [ -z "$DB" ]; then
+            echo "::warning::Chưa có secret BACKUP_DATABASE_URL — chưa sao lưu database."
+            echo "skip=1" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Cài pg_dump 17
+        if: steps.check.outputs.skip != '1'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y -qq postgresql-client-17
+      - name: Sao lưu
+        if: steps.check.outputs.skip != '1'
+        run: |
+          FILE="ccmt-$(TZ=Asia/Ho_Chi_Minh date +%Y-%m-%d).dump"
+          /usr/lib/postgresql/17/bin/pg_dump "$DB" --format=custom --schema=public --no-owner --no-privileges --file="$FILE"
+          /usr/lib/postgresql/17/bin/pg_restore --list "$FILE" > /dev/null
+          ls -lh "$FILE"
+          echo "FILE=$FILE" >> "$GITHUB_ENV"
+      - uses: actions/upload-artifact@v4
+        if: steps.check.outputs.skip != '1'
+        with:
+          name: ${{ env.FILE }}
+          path: ${{ env.FILE }}
+          retention-days: 14
+          compression-level: 0

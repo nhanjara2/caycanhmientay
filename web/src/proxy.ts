@@ -40,8 +40,10 @@ export function proxy(request: NextRequest) {
 
   // Bản trên *.vercel.app trùng nội dung tên miền chính → noindex (canonical trong trang vẫn trỏ về tên miền chính).
   // Chỉ xét đuôi .vercel.app: lỡ đọc sai host thì tên miền chính cũng không bao giờ bị noindex.
+  // Link xem trước của admin (?xem-truoc=1 — bài / dự án chưa đăng) cũng noindex ngay ở header, kể cả khi lỡ bị chia sẻ
+  // ra ngoài (SEO mục 13); trang chưa đăng còn tự có meta noindex.
   const host = (request.headers.get('x-forwarded-host') ?? request.headers.get('host') ?? '').toLowerCase();
-  if (host.endsWith('.vercel.app')) {
+  if (host.endsWith('.vercel.app') || params.has('xem-truoc')) {
     const res = NextResponse.next();
     res.headers.set('X-Robots-Tag', 'noindex, nofollow');
     return res;

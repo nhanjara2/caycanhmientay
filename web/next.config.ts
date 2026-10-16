@@ -26,7 +26,24 @@ const nextConfig: NextConfig = {
   // (/_next/static đã có mã băm trong tên → Next tự đặt cache 1 năm "immutable"; ảnh /api/*-images tự đặt cache riêng.)
   async headers() {
     const cache = [{ key: 'Cache-Control', value: 'public, max-age=86400, s-maxage=2592000, stale-while-revalidate=604800' }];
-    return ['/images/:path*', '/icons/:path*', '/videos/:path*'].map((source) => ({ source, headers: cache }));
+    return [
+      ...['/images/:path*', '/icons/:path*', '/videos/:path*'].map((source) => ({ source, headers: cache })),
+      // Bảo mật (SEO mục 13, 16/10/2026) — mọi đường dẫn. HSTS do Vercel tự gắn cho tên miền riêng (max-age 2 năm, không
+      // includeSubDomains / preload — chưa rõ các tên miền con khác của shop nên không ép). CSP chỉ gồm phần không làm
+      // vỡ gì: tự nâng http:// lên https:// (chống mixed content), cấm web khác nhúng trang (chống clickjacking), cấm
+      // <base> / plugin lạ; chưa giới hạn nguồn script vì GA, YouTube, TikTok, bản đồ cần nạp từ nhiều tên miền.
+      // Permissions-Policy: chỉ chính web được hỏi vị trí (chọn địa chỉ trên bản đồ); camera, micro, thanh toán tắt hẳn.
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), payment=(), usb=(), geolocation=(self), browsing-topics=()' },
+          { key: 'Content-Security-Policy', value: "upgrade-insecure-requests; frame-ancestors 'self'; base-uri 'self'; object-src 'none'" },
+        ],
+      },
+    ];
   },
   experimental: {
     // Yêu cầu bảo hành gửi tối đa 3 ảnh (đã nén ở trình duyệt, mỗi ảnh ≤ 2MB).
