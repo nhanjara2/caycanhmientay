@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
 import { Breadcrumb } from '@/components/Blocks';
 import { Icon } from '@/components/Icon';
 import { ShareButton } from '@/components/PostClient';
@@ -14,6 +13,7 @@ import { hasProjectDetail, paragraphs, projectImageUrl, projectPath, projectType
 import { getCurrentUser } from '@/server/auth';
 import { getProject, publishedProjects } from '@/server/projects';
 import { withShare } from '@/lib/seo';
+import { movedOrNotFound, redirectIfMoved, withSeo } from '@/server/seo-cms';
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ 'xem-truoc'?: string }> };
 
@@ -22,29 +22,29 @@ async function load({ params, searchParams }: Props) {
   const [{ slug }, sp] = await Promise.all([params, searchParams]);
   const me = sp['xem-truoc'] === '1' ? await getCurrentUser() : null;
   const preview = me?.role === 'staff' || me?.role === 'admin';
-  return { p: await getProject(slug, preview), preview };
+  return { p: await getProject(slug, preview), preview, path: projectPath(slug) };
 }
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
-  const { p } = await load(props);
-  if (!p) return { title: 'Không tìm thấy dự án' };
+  const { p, path } = await load(props);
+  if (!p) return redirectIfMoved(path).then(() => ({ title: 'Không tìm thấy dự án' }));
   // Chưa viết tóm tắt thì ghép từ loại công trình, địa điểm, năm, cây đã cung cấp.
   const description = clipText(p.summary || [
     `${p.title}: ${projectTypeOf(p.type).name.toLowerCase()} do Cây Cảnh Miền Tây cung cấp cây`,
     p.location && `tại ${p.location}`, p.year && `năm ${p.year}`, p.plants.length && `gồm ${p.plants.slice(0, 5).join(', ')}`,
   ].filter(Boolean).join(', ') + '.', 170);
-  return withShare({
+  return withSeo(withShare({
     title: `${p.title} — Dự án cây xanh`,
     description,
     alternates: { canonical: projectPath(p.slug) },
     // Ẩn (xem trước) → noindex; dự án chỉ có tên (chưa ảnh / mô tả…) là trang mỏng, trang Đối tác không link tới → noindex tới khi có nội dung.
     robots: !p.published ? { index: false } : hasProjectDetail(p) ? undefined : { index: false, follow: true },
-  }, { images: p.images.map((i) => projectImageUrl(i.file, p.slug)), alt: p.title });
+  }, { images: p.images.map((i) => projectImageUrl(i.file, p.slug)), alt: p.title }));
 }
 
 export default async function ProjectPage(props: Props) {
-  const { p } = await load(props);
-  if (!p) notFound();
+  const { p, path } = await load(props);
+  if (!p) return movedOrNotFound(path);
   const all = await publishedProjects();
   // Dự án khác: cùng loại công trình trước.
   const others = all.filter((x) => x.id !== p.id && x.images.length).sort((a, b) => Number(b.type === p.type) - Number(a.type === p.type)).slice(0, 3);

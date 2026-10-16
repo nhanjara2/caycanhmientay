@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
 import { Breadcrumb, SectionHeader } from '@/components/Blocks';
 import { PartIcon } from '@/components/DiseaseArt';
 import { Icon } from '@/components/Icon';
@@ -12,6 +11,7 @@ import { allDiseases, getDisease } from '@/server/diseases';
 import { categoryOf, postPath } from '@/lib/posts';
 import { postsForDisease } from '@/server/posts';
 import { withShare } from '@/lib/seo';
+import { movedOrNotFound, redirectIfMoved, withSeo } from '@/server/seo-cms';
 import { responsive } from '@/lib/images';
 import { JsonLd } from '@/components/JsonLd';
 import { diseaseLd } from '@/lib/jsonld';
@@ -19,21 +19,23 @@ import { diseaseLd } from '@/lib/jsonld';
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const d = await getDisease((await params).slug);
-  if (!d) return { title: 'Không tìm thấy bài bệnh' };
-  return withShare(
+  const { slug } = await params;
+  const d = await getDisease(slug);
+  if (!d) return redirectIfMoved(`/benh-cay/${slug}`).then(() => ({ title: 'Không tìm thấy bài bệnh' }));
+  return withSeo(withShare(
     { title: d.name, description: clipText(d.summary || `${d.name}: dấu hiệu nhận biết, nguyên nhân, cách xử lý và phòng bệnh.`, 170), alternates: { canonical: `/benh-cay/${d.slug}` } },
     // Ảnh chia sẻ = ảnh triệu chứng (theo thứ tự trong bài); bài chưa có ảnh dùng ảnh mặc định.
     { images: d.symptoms.map((s) => (s.image ? diseaseImageUrl(s.image, d.slug) : null)), alt: d.name },
-  );
+  ));
 }
 
 /** Tên ngắn cho câu hỏi: "Thối rễ (úng rễ do nấm)" → "thối rễ". */
 const shortName = (name: string) => name.replace(/\s*\(.*\)\s*$/, '').toLowerCase();
 
 export default async function DiseaseDetailPage({ params }: Props) {
-  const d = await getDisease((await params).slug);
-  if (!d) notFound();
+  const { slug } = await params;
+  const d = await getDisease(slug);
+  if (!d) return movedOrNotFound(`/benh-cay/${slug}`);
   const all = await allDiseases();
   const live = new Set(all.map((x) => x.slug));
   const cause = causeOf(d.cause);

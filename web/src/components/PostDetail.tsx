@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Breadcrumb } from './Blocks';
 import Link from 'next/link';
-import { notFound, permanentRedirect } from 'next/navigation';
+import { permanentRedirect } from 'next/navigation';
 import { after } from 'next/server';
 import { CATEGORIES, categoryOf, plainText, postPath, postState, SECTIONS, sectionOf, tableOfContents, tiktokPlayer, type PostSection } from '@/lib/posts';
 import { clipText } from '@/lib/format';
@@ -12,6 +12,7 @@ import { addPostView, getPost, publishedPosts, type PostFull } from '@/server/po
 import { PostHelpful, ShareButton } from './PostClient';
 import { PostBody, PostLinks, PostTime, TikTok, YouTube } from './PostParts';
 import { withShare } from '@/lib/seo';
+import { movedOrNotFound, withSeo } from '@/server/seo-cms';
 import { responsive } from '@/lib/images';
 import { postLd } from '@/lib/jsonld';
 import { JsonLd } from './JsonLd';
@@ -23,7 +24,7 @@ async function load({ params, searchParams }: PostPageProps) {
   const [{ slug }, sp] = await Promise.all([params, searchParams]);
   const me = sp['xem-truoc'] === '1' ? await getCurrentUser() : null;
   const preview = me?.role === 'staff' || me?.role === 'admin';
-  return { post: await getPost(slug, preview), preview };
+  return { post: await getPost(slug, preview), preview, slug };
 }
 
 /** Mô tả Google: mô tả SEO admin viết → đoạn dẫn → đoạn văn đầu bài → tiêu đề (không bao giờ rơi về mô tả chung của web). */
@@ -32,8 +33,9 @@ const describe = (p: PostFull) => clipText(
 
 export async function postMetadata(props: PostPageProps): Promise<Metadata> {
   const { post: p, preview } = await load(props);
+  // Bài đã đổi đường dẫn / gỡ: trang (PostDetail) tự chuyển hướng theo bảng redirects hoặc báo 404.
   if (!p) return { title: 'Không tìm thấy bài viết' };
-  return withShare({
+  return withSeo(withShare({
     // Tiêu đề dài thì bỏ đuôi "| Cây Cảnh Miền Tây" cho Google khỏi cắt mất phần cuối tiêu đề.
     title: p.title.length > 45 ? { absolute: p.title } : p.title,
     description: describe(p) || undefined,
@@ -44,15 +46,15 @@ export async function postMetadata(props: PostPageProps): Promise<Metadata> {
     images: [p.thumb], alt: p.title,
     type: p.kind === 'video' ? 'video.other' : 'article',
     article: { publishedTime: p.publishedAt, modifiedTime: p.updatedAt, author: p.authorName, section: categoryOf(p.category)?.name, tags: p.tags },
-  });
+  }));
 }
 
 /** "Nguyễn Thu Hà" → "TH" (chữ đầu của 2 từ cuối). */
 const initials = (name: string) => name.trim().split(/\s+/).slice(-2).map((w) => w[0]?.toUpperCase() ?? '').join('');
 
 export async function PostDetail({ section, ...props }: PostPageProps & { section: PostSection }) {
-  const { post: p, preview } = await load(props);
-  if (!p) notFound();
+  const { post: p, preview, slug } = await load(props);
+  if (!p) return movedOrNotFound(`${SECTIONS[section].path}/${slug}`);
   if (sectionOf(p.category) !== section) permanentRedirect(postPath(p));
   const state = postState(p);
   if (state === 'published' && !preview) after(() => addPostView(p.id).catch(() => {}));
@@ -156,7 +158,7 @@ export async function PostDetail({ section, ...props }: PostPageProps & { sectio
           </div>
         ) : (
           <div className="nw-box">
-            <h3>Về {sec.name}</h3>
+            <h2>Về {sec.name}</h2>
             {CATEGORIES.filter((c) => c.section === 'news').map((c) => (
               <Link key={c.key} href={`${sec.path}?chuyen-muc=${c.key}`}>{c.name}</Link>
             ))}
@@ -164,7 +166,7 @@ export async function PostDetail({ section, ...props }: PostPageProps & { sectio
         )}
         {linked.length > 0 && (
           <div className="nw-box">
-            <h3>Bệnh nhắc tới trong bài</h3>
+            <h2>Bệnh nhắc tới trong bài</h2>
             {linked.map((d) => <Link key={d.slug} href={`/benh-cay/${d.slug}`}>{d.name}<small>Thư viện bệnh cây</small></Link>)}
           </div>
         )}

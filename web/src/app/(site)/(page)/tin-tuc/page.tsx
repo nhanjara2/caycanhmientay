@@ -10,6 +10,7 @@ import { FACEBOOK_URL, SALES_PHONE } from '@/lib/contact';
 import { CATEGORIES, CATEGORY_DESCRIPTION, categoryOf, isCategory, pageSuffix, plainText, postPath, SECTIONS, sectionOf } from '@/lib/posts';
 import { publishedPosts, type PostCard } from '@/server/posts';
 import { withShare } from '@/lib/seo';
+import { withSeo } from '@/server/seo-cms';
 import { responsive } from '@/lib/images';
 
 type Props = { searchParams: Promise<SearchParams> };
@@ -40,12 +41,12 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   const { cat, page } = filters(await searchParams);
   // Chưa có bài nào (trong chuyên mục đang xem) → trang trống, noindex tới khi có bài (tránh soft 404).
   const empty = !(await publishedPosts()).some((p) => sectionOf(p.category) === 'news' && (!cat || p.category === cat));
-  return withShare({
+  return withSeo(withShare({
     title: `${cat ? `${categoryOf(cat)?.name} · Truyền thông` : 'Truyền thông'}${pageSuffix(page)}`,
     description: `${cat ? CATEGORY_DESCRIPTION[cat] : 'Tin tức, hoạt động cộng đồng, báo chí và tuyển dụng của Cây Cảnh Miền Tây – nhà vườn cây cảnh tại Làng hoa Sa Đéc.'}${pageSuffix(page, ' ')}`,
     alternates: { canonical: link({ cat, page }) },
     robots: empty ? { index: false, follow: true } : undefined,
-  });
+  }));
 }
 
 function Img({ p, tone }: { p: PostCard; tone?: string }) {

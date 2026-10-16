@@ -12,6 +12,7 @@ import { addPostImage, attachAutoCover, deletePost, INTENTS, PostInputSchema, po
 import { downloadTiktokThumb, resolveTiktokShortLink } from '@/server/tiktok';
 import { saveImage } from '@/server/uploads';
 import { youtubeInfo } from '@/server/youtube';
+import { logSeo } from '@/server/seo-cms';
 
 // Bài viết & video: nhân viên soạn nháp / gửi duyệt; chỉ quản trị viên đăng, gỡ, xóa và sửa bài đã đăng.
 
@@ -45,11 +46,14 @@ export async function uploadPostImageAction(fd: FormData) {
 }
 
 export async function deletePostAction(id: unknown) {
-  await requireAccess('content', 'full');
+  const user = await requireAccess('content', 'full');
   const p = z.number().int().positive().safeParse(id);
   if (!p.success) return { ok: false as const };
   const r = await deletePost(p.data);
-  if (r) refresh(r);
+  if (r) {
+    await logSeo({ path: postPath(r), action: 'delete', user });
+    refresh(r);
+  }
   return { ok: !!r, section: r ? sectionOf(r.category) : undefined };
 }
 

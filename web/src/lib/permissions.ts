@@ -75,6 +75,7 @@ export const NAV_AREA: Record<string, Area> = {
   '/admin/cua-hang': 'settings',
   '/admin/cai-dat-giao-hang': 'settings',
   '/admin/phan-quyen': 'settings',
+  '/admin/seo': 'settings',
 };
 
 type Who = { role: 'customer' | 'staff' | 'admin'; staffRole?: StaffRole | null };

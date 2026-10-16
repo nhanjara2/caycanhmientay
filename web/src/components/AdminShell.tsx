@@ -33,6 +33,7 @@ const I = {
   map: <><path d="M12 21s7-6 7-12a7 7 0 0 0-14 0c0 6 7 12 7 12z" /><circle cx="12" cy="9" r="2.5" /></>,
   building: <><rect x="5" y="3" width="14" height="18" rx="1" /><path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2M10 21v-3h4v3" /></>,
   bug: <><rect x="8" y="7" width="8" height="12" rx="4" /><path d="M12 7V4M8 11H4M16 11h4M8 16H5M16 16h3M9 4l1 2M15 4l-1 2" /></>,
+  seo: <><circle cx="10.5" cy="10.5" r="6.5" /><path d="m15.5 15.5 5 5M7.5 10.5h6M10.5 7.5v6" /></>,
   gear: <><circle cx="12" cy="12" r="3" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2" /></>,
   logout: <><path d="M9 4H5v16h4" /><path d="m14 8 4 4-4 4M18 12H9" /></>,
 };
@@ -74,6 +75,7 @@ export const ADMIN_NAV: { group: string; items: { href: string; label: string; i
   { group: 'HỆ THỐNG', items: [
     { href: '/admin/cua-hang', label: 'Cửa hàng', icon: 'inbound' },
     { href: '/admin/cai-dat-giao-hang', label: 'Cài đặt giao hàng', icon: 'map' },
+    { href: '/admin/seo', label: 'SEO & chuyển hướng', icon: 'seo' },
     { href: '/admin/phan-quyen', label: 'Phân quyền', icon: 'gear' },
   ] },
 ];

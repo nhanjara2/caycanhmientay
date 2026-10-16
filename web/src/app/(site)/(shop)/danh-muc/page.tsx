@@ -8,6 +8,7 @@ import { WHOLESALE_QUOTE_URL, WHOLESALE_URL } from '@/lib/partners';
 import { flashProducts, productsIn } from '@/server/catalog';
 import { menuCategories } from '@/server/categories';
 import { withShare } from '@/lib/seo';
+import { withSeo } from '@/server/seo-cms';
 import { JsonLd } from '@/components/JsonLd';
 import { collectionLd } from '@/lib/jsonld';
 
@@ -33,11 +34,13 @@ const QUICK: { label: string; icon: IconName; href: string }[] = [
   { label: 'Tìm vườn ươm', icon: 'pin', href: '/he-thong-cua-hang' },
 ];
 
-export const metadata: Metadata = withShare({
+const DESCRIPTION = 'Tất cả sản phẩm của Cây Cảnh Miền Tây: cây để bàn, văn phòng, trong nhà, sân vườn, công trình cùng chậu, phân bón, vật tư. Giá tại vườn, giao toàn quốc.';
+
+export const generateMetadata = (): Promise<Metadata> => withSeo(withShare({
   title: 'Tất cả sản phẩm',
-  description: 'Tất cả sản phẩm của Cây Cảnh Miền Tây: cây để bàn, văn phòng, trong nhà, sân vườn, công trình cùng chậu, phân bón, vật tư. Giá tại vườn, giao toàn quốc.',
+  description: DESCRIPTION,
   alternates: { canonical: '/danh-muc' },
-});
+}));
 
 /** Trang danh mục tổng (trước 09/10/2026 là trang chủ): lối tắt nhóm hàng, Flash sale, mỗi danh mục một khối sản phẩm. */
 export default async function AllProductsPage() {
@@ -49,7 +52,7 @@ export default async function AllProductsPage() {
   return (
     <>
       {/* ItemList = đúng các thẻ đang hiện: 8 sản phẩm đầu của mỗi khối danh mục (CategoryBlock). */}
-      <JsonLd data={collectionLd({ path: '/danh-muc', name: 'Tất cả sản phẩm', description: String(metadata.description), products: blocks.flatMap((b) => b.products.slice(0, 8)) })} />
+      <JsonLd data={collectionLd({ path: '/danh-muc', name: 'Tất cả sản phẩm', description: DESCRIPTION, products: blocks.flatMap((b) => b.products.slice(0, 8)) })} />
       <Breadcrumb items={[{ label: 'Trang chủ', href: '/' }, { label: 'Tất cả sản phẩm' }]} />
       <div className="pl-head">
         <h1>Tất cả sản phẩm <small>{total} sản phẩm</small></h1>

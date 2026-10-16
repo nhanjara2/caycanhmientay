@@ -1,8 +1,9 @@
 /**
  * Quy ước đường dẫn (slug) DUY NHẤT của web — dùng chung khi tạo slug (sản phẩm, bài viết, bệnh cây, dự án, danh mục)
  * và khi chuẩn hóa đường dẫn khách gõ (src/proxy.ts). File này không import gì để proxy nạp nhẹ.
- * Slug: chữ thường không dấu, số, nối bằng "-" ("Cây Đuôi Công Tím" → "cay-duoi-cong-tim"). Slug đã lên web không đổi nữa
- * (sản phẩm, bệnh cây, dự án, danh mục cố định từ lúc tạo; bài viết chỉ sửa được khi chưa đăng) nên không cần chuyển hướng URL cũ.
+ * Slug: chữ thường không dấu, số, nối bằng "-" ("Cây Đuôi Công Tím" → "cay-duoi-cong-tim"). Sản phẩm, bệnh cây, danh mục
+ * cố định từ lúc tạo; bài viết đã đăng và công trình đổi được ở khung SEO trong admin — tự thêm chuyển hướng 308 từ đường dẫn
+ * cũ (server/seo-cms.ts, bảng `redirects`).
  */
 
 /** Bỏ dấu tiếng Việt + chữ thường: "Trị Nấm" → "tri nam". */

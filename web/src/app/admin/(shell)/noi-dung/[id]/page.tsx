@@ -1,8 +1,11 @@
 import type { Metadata } from 'next';
+import type { ReactNode } from 'react';
 import { notFound } from 'next/navigation';
 import { PostEditor, type EditorPost } from '@/components/admin/PostEditor';
 import { hasAccess } from '@/lib/permissions';
-import { isCategory } from '@/lib/posts';
+import { isCategory, postImageUrl, postPath, postState, SECTIONS, sectionOf } from '@/lib/posts';
+import { SeoPanel } from '@/components/admin/SeoPanel';
+import { seoPanelState } from '@/server/seo-cms';
 import { requireAccess } from '@/server/auth';
 import { listDiseasesAdmin } from '@/server/diseases';
 import { getPostAdmin, peopleSuggestions } from '@/server/posts';
@@ -22,6 +25,7 @@ export default async function AdminPostPage({ params, searchParams }: Props) {
 
   let initial: EditorPost;
   let stats: { views: number; helpfulYes: number; helpfulNo: number } | undefined;
+  let seo: ReactNode = null;
   if (id === 'moi') {
     initial = {
       slug: '', status: 'draft', publishedAt: null, kind: sp.loai === 'video' ? 'video' : 'article',
@@ -41,21 +45,39 @@ export default async function AdminPostPage({ params, searchParams }: Props) {
       seoDescription: p.seoDescription, featured: p.featured,
     };
     stats = { views: p.views, helpfulYes: p.helpfulYes, helpfulNo: p.helpfulNo };
+    const path = postPath(p);
+    const st = await seoPanelState(path);
+    const published = postState(p) === 'published';
+    const files = [p.coverFile, ...p.body.flatMap((b) => (b.type === 'image' ? [b.file] : []))].filter((f): f is string => !!f);
+    seo = (
+      <SeoPanel
+        path={path} initial={st.initial} history={st.history} live={st.live} fields={['title', 'image']}
+        canEdit={hasAccess(me, 'content', 'full')} isAdmin={me.role === 'admin'}
+        note="Mô tả Google = ô Mô tả SEO ở khung “SEO & đường dẫn” phía trên. Tiêu đề Google để trống = tiêu đề bài."
+        auto={{ title: p.title.length > 45 ? p.title : `${p.title} | Cây Cảnh Miền Tây` }}
+        images={[...new Set(files)].map((f, i) => ({ url: postImageUrl(f, p.slug), label: f === p.coverFile && i === 0 ? 'Ảnh bìa' : `Ảnh trong bài ${i}` }))}
+        // Bài chưa đăng đổi đường dẫn ngay trong khung "SEO & đường dẫn"; bài đã đăng đổi ở đây (tự chuyển hướng link cũ).
+        slug={p.status === 'published' ? { kind: 'post', id: p.id, value: p.slug, prefix: SECTIONS[sectionOf(p.category)].path, wasPublic: published } : undefined}
+      />
+    );
   }
 
   const [products, diseases, people] = await Promise.all([listProductsAdmin(), listDiseasesAdmin(), peopleSuggestions()]);
   return (
-    <PostEditor
-      key={`${id}-${initial.kind}`}
-      initial={initial}
-      role={hasAccess(me, 'content', 'full') ? 'admin' : 'staff'}
-      stats={stats}
-      people={people}
-      products={products.map((p) => ({
-        slug: p.slug, name: p.name, sku: p.sku, price: p.minPrice ?? null, image: p.image,
-        icon: p.icon, active: p.active, pesticide: p.pesticide,
-      }))}
-      diseases={diseases.filter((d) => d.active).map((d) => ({ slug: d.slug, name: d.name }))}
-    />
+    <>
+      <PostEditor
+        key={`${id}-${initial.kind}`}
+        initial={initial}
+        role={hasAccess(me, 'content', 'full') ? 'admin' : 'staff'}
+        stats={stats}
+        people={people}
+        products={products.map((p) => ({
+          slug: p.slug, name: p.name, sku: p.sku, price: p.minPrice ?? null, image: p.image,
+          icon: p.icon, active: p.active, pesticide: p.pesticide,
+        }))}
+        diseases={diseases.filter((d) => d.active).map((d) => ({ slug: d.slug, name: d.name }))}
+      />
+      {seo && <div className="ad-body">{seo}</div>}
+    </>
   );
 }

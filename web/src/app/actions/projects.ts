@@ -6,6 +6,7 @@ import { projectPath } from '@/lib/projects';
 import { requireAccess } from '@/server/auth';
 import { addProjectImage, deleteProject, ProjectInputSchema, saveProject, setProjectPublished } from '@/server/projects';
 import { saveImage } from '@/server/uploads';
+import { logSeo } from '@/server/seo-cms';
 
 // Công trình đã cung cấp cây (trang Đối tác sỉ /doi-tac): ai có quyền Bài viết toàn quyền (Quản lý, Kỹ sư) được sửa.
 
@@ -34,11 +35,12 @@ export async function setProjectPublishedAction(id: unknown, published: unknown)
 }
 
 export async function deleteProjectAction(id: unknown) {
-  await requireAccess('content', 'full');
+  const user = await requireAccess('content', 'full');
   const p = z.number().int().positive().safeParse(id);
   if (!p.success) return { ok: false as const, error: 'Dữ liệu không hợp lệ' };
   const slug = await deleteProject(p.data);
   if (!slug) return { ok: false as const, error: 'Không tìm thấy dự án' };
+  await logSeo({ path: projectPath(slug), action: 'delete', user });
   refresh(slug);
   return { ok: true as const };
 }

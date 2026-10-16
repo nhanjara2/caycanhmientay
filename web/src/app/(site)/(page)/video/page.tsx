@@ -8,6 +8,7 @@ import { TIKTOK_NAME, TIKTOK_URL, YOUTUBE_URL } from '@/lib/contact';
 import { CATEGORIES, isCategory, SECTIONS, VIDEO_PAGE } from '@/lib/posts';
 import { publishedVideos } from '@/server/posts';
 import { withShare } from '@/lib/seo';
+import { withSeo } from '@/server/seo-cms';
 
 type Props = { searchParams: Promise<SearchParams> };
 
@@ -20,14 +21,14 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   // Link chia sẻ /video?v=… : xem trước trên Zalo / Facebook hiện đúng tên + ảnh của video đó.
   const shared = v ? all.find((x) => x.slug === v) : undefined;
   if (shared) {
-    return withShare(
+    return withSeo(withShare(
       { title: shared.title, description: DESCRIPTION, alternates: { canonical: shared.href } },
       { type: 'video.other', images: [shared.thumb], alt: shared.title },
-    );
+    ));
   }
   // Chưa có video nào (trong chủ đề đang xem) → trang trống, noindex tới khi có video (tránh soft 404).
   const empty = !all.some((x) => !isCategory(c) || x.category === c);
-  return withShare({ title: 'Video ngắn', description: DESCRIPTION, alternates: { canonical: VIDEO_PAGE }, robots: empty ? { index: false, follow: true } : undefined });
+  return withSeo(withShare({ title: 'Video ngắn', description: DESCRIPTION, alternates: { canonical: VIDEO_PAGE }, robots: empty ? { index: false, follow: true } : undefined }));
 }
 
 /** Video ngắn: mọi video đã đăng ở /admin/noi-dung (thêm nhanh bằng link YouTube Shorts), bấm là xem ngay. */

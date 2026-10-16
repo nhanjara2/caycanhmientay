@@ -5,6 +5,8 @@ import { CategoryForm, SubcategoryManager } from '@/components/admin/CategoryAdm
 import { SYSTEM_CATEGORIES } from '@/lib/catalog';
 import { requireAccess } from '@/server/auth';
 import { categoryProductCounts, categoryProductNames, getCategory } from '@/server/categories';
+import { SeoPanel } from '@/components/admin/SeoPanel';
+import { seoPanelState } from '@/server/seo-cms';
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -23,6 +25,7 @@ export default async function AdminCategoryPage({ params }: Props) {
   const cat = creating ? undefined : await getCategory(slug);
   if (!creating && !cat) notFound();
   const [counts, names]: [Record<string, number>, Record<string, string[]>] = cat ? await Promise.all([categoryProductCounts(), categoryProductNames()]) : [{}, {}];
+  const seo = cat ? await seoPanelState(`/danh-muc/${cat.slug}`) : null;
 
   return (
     <div className="ad-body app-catpage">
@@ -53,6 +56,13 @@ export default async function AdminCategoryPage({ params }: Props) {
         />
       ) : (
         <span className="hint">Tạo danh mục xong sẽ thêm được nhóm con.</span>
+      )}
+      {cat && seo && (
+        <SeoPanel
+          path={`/danh-muc/${cat.slug}`} initial={seo.initial} history={seo.history} live={seo.live} fields={[]}
+          canEdit={canEdit} isAdmin={me.role === 'admin'}
+          note="Tiêu đề / mô tả Google của danh mục sửa ở khung “Hiện trên Google” phía trên. SEO riêng của nhóm con: trang SEO & chuyển hướng."
+        />
       )}
     </div>
   );

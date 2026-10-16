@@ -1,10 +1,14 @@
 import type { Metadata } from 'next';
+import type { ReactNode } from 'react';
 import { notFound } from 'next/navigation';
 import { ProductForm, type ProductFormValue } from '@/components/admin/ProductForm';
 import type { IconName } from '@/components/Icon';
 import { requireAccess } from '@/server/auth';
 import { getCategories } from '@/server/categories';
 import { getProductAdmin } from '@/server/products-admin';
+import { SeoPanel } from '@/components/admin/SeoPanel';
+import { clipText } from '@/lib/format';
+import { seoPanelState } from '@/server/seo-cms';
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -27,6 +31,7 @@ export default async function AdminProductPage({ params }: Props) {
   const me = await requireAccess('products');
   const { slug } = await params;
   let initial = EMPTY;
+  let seo: ReactNode = null;
   if (slug !== 'moi') {
     const p = await getProductAdmin(slug);
     if (!p) notFound();
@@ -42,6 +47,22 @@ export default async function AdminProductPage({ params }: Props) {
       } : NO_ATTRS,
       options: p.options.map((o) => ({ idx: o.idx, label: o.label, price: o.price, oldPrice: o.oldPrice, garden: o.garden, cost: o.cost, combo2: o.combo2, bulky: o.bulky, stock: o.stock })),
     };
+    const path = `/san-pham/${p.slug}`;
+    const st = await seoPanelState(path);
+    seo = (
+      <SeoPanel
+        path={path} initial={st.initial} history={st.history} live={st.live} fields={['description', 'image']}
+        canEdit={me.role === 'admin'} isAdmin={me.role === 'admin'}
+        note="Tiêu đề Google = ô Tên chi tiết (SEO) ở trên. Đường dẫn sản phẩm cố định (đơn hàng, kho, bảo hành tham chiếu theo đường dẫn)."
+        auto={{ description: clipText(p.lead, 170) }}
+        images={p.images.map((im, i) => ({ url: im.url, label: i ? `Ảnh phụ ${i}` : 'Ảnh chính' }))}
+      />
+    );
   }
-  return <ProductForm key={slug} initial={initial} categories={await getCategories()} canEdit={me.role === 'admin'} />;
+  return (
+    <>
+      <ProductForm key={slug} initial={initial} categories={await getCategories()} canEdit={me.role === 'admin'} />
+      {seo && <div className="ad-body">{seo}</div>}
+    </>
+  );
 }

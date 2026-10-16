@@ -16,12 +16,13 @@ import { allProducts } from '@/server/catalog';
 import { publishedPosts } from '@/server/posts';
 import { listActiveVouchers, scopeTexts } from '@/server/vouchers';
 import { withShare } from '@/lib/seo';
+import { withSeo } from '@/server/seo-cms';
 
-export const metadata: Metadata = withShare({
+export const generateMetadata = (): Promise<Metadata> => withSeo(withShare({
   title: 'Tin khuyến mãi',
   description: 'Mã giảm giá đang áp dụng, sản phẩm đang giảm giá và tin ưu đãi, sự kiện của Cây Cảnh Miền Tây.',
   alternates: { canonical: '/khuyen-mai' },
-});
+}));
 
 const SALE_SHOWN = 12;
 const NEWS_SHOWN = 6;

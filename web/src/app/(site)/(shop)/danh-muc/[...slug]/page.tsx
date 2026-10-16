@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { notFound, redirect } from 'next/navigation';
+import { redirect } from 'next/navigation';
 import { cache } from 'react';
 import { AdvisorBanner } from '@/components/AdvisorBanner';
 import { Breadcrumb, EmptyState } from '@/components/Blocks';
@@ -19,6 +19,7 @@ import { productsIn } from '@/server/catalog';
 import { getCategory } from '@/server/categories';
 import { SORTS, sortProducts } from '@/lib/sort';
 import { withShare } from '@/lib/seo';
+import { movedOrNotFound, redirectIfMoved, withSeo } from '@/server/seo-cms';
 import { JsonLd } from '@/components/JsonLd';
 import { collectionLd } from '@/lib/jsonld';
 
@@ -56,8 +57,9 @@ async function resolve(slug: string[]) {
  * "· Trang n") — không gộp về trang 1 vì mỗi trang có sản phẩm khác nhau.
  */
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
-  const r = await resolve((await params).slug);
-  if (!r) return { title: 'Không tìm thấy' };
+  const slug = (await params).slug;
+  const r = await resolve(slug);
+  if (!r) return redirectIfMoved(`/danh-muc/${slug.join('/')}`).then(() => ({ title: 'Không tìm thấy' }));
   const sp = await searchParams;
   const varied = !!sortOf(sp) || selectedCount(parseSel(sp, groupsFor(r.cat.slug), r.cat.slug)) > 0;
   const list = await listOf(r.cat.slug, r.sub?.slug);
@@ -66,7 +68,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const base = r.sub ? `/danh-muc/${r.cat.slug}/${r.sub.slug}` : `/danh-muc/${r.cat.slug}`;
   // Tiêu đề / mô tả: admin viết ở /admin/danh-muc, không có thì tự tạo từ tên + sản phẩm đang bán.
   const seo = categorySeo(r.sub ?? r.cat, list.map((p) => p.name));
-  return withShare({
+  return withSeo(withShare({
     title: seo.title + pageSuffix(page),
     description: seo.description + (page > 1 ? pageSuffix(page, ' ') + '.' : ''),
     alternates: { canonical: page > 1 ? `${base}?trang=${page}` : base },
@@ -74,13 +76,14 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   }, {
     // Ảnh chia sẻ = ảnh chính của sản phẩm đầu tiên có ảnh trong danh mục (đúng thứ tự trang đang hiện).
     images: [list.find((p) => p.images?.length)?.images?.[0]], alt: seo.title,
-  });
+  }));
 }
 
 /** ProductListingLayout: tiêu đề + danh mục con + bộ lọc đa chọn + sắp xếp + lưới 4 cột. Bộ lọc nằm trên đường dẫn (?vi-tri=…&mau=…). */
 export default async function CategoryPage({ params, searchParams }: Props) {
-  const r = await resolve((await params).slug);
-  if (!r) notFound();
+  const slug = (await params).slug;
+  const r = await resolve(slug);
+  if (!r) return movedOrNotFound(`/danh-muc/${slug.join('/')}`);
   const { cat, sub } = r;
   const sp = await searchParams;
   const groups = groupsFor(cat.slug);

@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import { Breadcrumb, SectionHeader } from '@/components/Blocks';
 import { BuyBox } from '@/components/BuyBox';
 import { Icon } from '@/components/Icon';
@@ -22,22 +21,24 @@ import { productQuestions } from '@/server/questions';
 import { productReviews } from '@/server/reviews';
 import { isWishlisted } from '@/server/wishlist';
 import { withShare } from '@/lib/seo';
+import { movedOrNotFound, redirectIfMoved, withSeo } from '@/server/seo-cms';
 import { JsonLd } from '@/components/JsonLd';
 import { faqLd, productLd } from '@/lib/jsonld';
 
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const p = await getProduct((await params).slug);
-  if (!p) return { title: 'Không tìm thấy' };
+  const { slug } = await params;
+  const p = await getProduct(slug);
+  if (!p) return redirectIfMoved(`/san-pham/${slug}`).then(() => ({ title: 'Không tìm thấy' }));
   // tên chi tiết đã đủ dài, không nối thêm "| Cây Cảnh Miền Tây" (Google cắt phần đuôi)
   const title = seoNameOf(p);
   const description = clipText(p.lead, 170);
-  return withShare(
+  return withSeo(withShare(
     { title: { absolute: title }, description, alternates: { canonical: `/san-pham/${p.slug}` } },
     // Ảnh chính đứng đầu — đổi ảnh chính ở admin là ảnh chia sẻ đổi theo (tên file ảnh mới).
     { images: p.images ?? [], alt: p.name },
-  );
+  ));
 }
 
 function FengShuiBlock({ f }: { f: NonNullable<Product['fengshui']> }) {
@@ -113,8 +114,10 @@ function Content({ p, faq }: { p: Product; faq: boolean }) {
 
 /** ProductDetailLayout: breadcrumb → ProductGallery + BuyBox → ProductContent → Thường mua kèm → FAQ. */
 export default async function ProductPage({ params }: Props) {
-  const p = await getProduct((await params).slug);
-  if (!p) notFound();
+  const { slug } = await params;
+  const p = await getProduct(slug);
+  // Sản phẩm đã xóa / ẩn: có chuyển hướng (admin SEO) thì 308 sang trang mới, không thì 404.
+  if (!p) return movedOrNotFound(`/san-pham/${slug}`);
   const [together, user] = await Promise.all([boughtTogether(p), getCurrentUser()]);
   const [wishlisted, reviews, questions, faq] = await Promise.all([
     user ? isWishlisted(user.id, p.slug) : false,

@@ -7,12 +7,13 @@ import { listAddresses } from '@/server/addresses';
 import { accountPhone, getCurrentUser } from '@/server/auth';
 import { getPartnerProfile } from '@/server/partners';
 import { withShare } from '@/lib/seo';
+import { withSeo } from '@/server/seo-cms';
 
-export const metadata: Metadata = withShare({
+export const generateMetadata = (): Promise<Metadata> => withSeo(withShare({
   title: 'Yêu cầu báo giá sỉ',
   description: 'Gửi danh sách cây cảnh, vật tư cần mua số lượng lớn — Cây Cảnh Miền Tây báo giá sỉ cho đối tác dịch vụ cảnh quan, công trình và buôn bán.',
   alternates: { canonical: '/bao-gia-si' },
-});
+}));
 
 type Props = { searchParams: Promise<{ loai?: string; 'phuong-an'?: string }> };
 

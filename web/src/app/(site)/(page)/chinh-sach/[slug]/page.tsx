@@ -9,6 +9,7 @@ import { seedDiseases } from '@/lib/seed-diseases';
 import { DEFAULT_SHIPPING } from '@/lib/shipping';
 import { getShippingConfig } from '@/server/shipping';
 import { withShare } from '@/lib/seo';
+import { withSeo } from '@/server/seo-cms';
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -18,7 +19,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const p = getPolicy((await params).slug);
-  return p ? withShare({ title: p.title, description: p.description, alternates: { canonical: `/chinh-sach/${p.slug}` } }) : { title: 'Không tìm thấy' };
+  return p ? withSeo(withShare({ title: p.title, description: p.description, alternates: { canonical: `/chinh-sach/${p.slug}` } })) : { title: 'Không tìm thấy' };
 }
 
 /** Trang "Nguồn ảnh minh họa": thêm mục ghi công ảnh triệu chứng bệnh cây (lib/seed-disease-images.ts). */

@@ -492,7 +492,7 @@ export function PostEditor({ initial, role, products, diseases, people, stats }:
               <div className="ad-f">
                 <label htmlFor="pe-slug">Đường dẫn</label>
                 {v.status === 'published' ? (
-                  <span className="hint" style={{ wordBreak: 'break-all' }}>{path}<br />Bài đang hiện nên không đổi đường dẫn (link đã chia sẻ sẽ chết).</span>
+                  <span className="hint" style={{ wordBreak: 'break-all' }}>{path}<br />Bài đã đăng: đổi đường dẫn ở khung “Google & chia sẻ” cuối trang (link cũ tự chuyển sang link mới).</span>
                 ) : (
                   <>
                     <input id="pe-slug" className="vx-input" value={v.slug} maxLength={90} placeholder="tu-tao-theo-tieu-de"

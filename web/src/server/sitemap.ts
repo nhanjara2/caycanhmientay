@@ -10,6 +10,7 @@ import { absoluteUrl } from '@/lib/site';
 import { canonicalPath } from '@/lib/slug';
 import { db, schema } from './db';
 import { publishedPosts } from './posts';
+import { sitemapExcluded } from './seo-cms';
 
 /**
  * Sitemap XML (mục 1.5 checklist SEO): /sitemap.xml là file CHỈ MỤC, trỏ tới từng sitemap con theo loại nội dung
@@ -148,9 +149,22 @@ export function parseSitemapName(name: string): { kind: SitemapKind; page: numbe
 
 const fileName = (kind: SitemapKind, page: number) => `${kind}${page > 1 ? `-${page}` : ''}.xml`;
 
+/**
+ * Trang của một loại, bỏ trang admin đặt tay "Ẩn khỏi Google" hoặc canonical trỏ trang khác (SEO mục 14 —
+ * `seo_overrides`): sitemap chỉ chứa trang được index + tự trỏ canonical chính nó.
+ */
+async function load(kind: SitemapKind, excluded: Set<string>) {
+  const all = await SITEMAP_KINDS[kind]();
+  if (!excluded.size) return all;
+  return all.filter((e) => {
+    const u = new URL(e.loc);
+    return u.search || !excluded.has(u.pathname);
+  });
+}
+
 export async function sitemapEntries(kind: SitemapKind, page: number) {
   await connection();
-  const all = await SITEMAP_KINDS[kind]();
+  const all = await load(kind, await sitemapExcluded());
   return page === 1 || (page - 1) * SITEMAP_MAX_URLS < all.length ? all.slice((page - 1) * SITEMAP_MAX_URLS, page * SITEMAP_MAX_URLS) : null;
 }
 
@@ -158,8 +172,9 @@ export async function sitemapEntries(kind: SitemapKind, page: number) {
 export async function sitemapIndex() {
   await connection();
   const out: { loc: string; lastmod?: Date }[] = [];
-  for (const [kind, load] of Object.entries(SITEMAP_KINDS) as [SitemapKind, () => Promise<SitemapEntry[]>][]) {
-    const all = await load();
+  const excluded = await sitemapExcluded();
+  for (const kind of Object.keys(SITEMAP_KINDS) as SitemapKind[]) {
+    const all = await load(kind, excluded);
     for (let page = 1; (page - 1) * SITEMAP_MAX_URLS < all.length; page++) {
       const part = all.slice((page - 1) * SITEMAP_MAX_URLS, page * SITEMAP_MAX_URLS);
       out.push({ loc: absoluteUrl(`/sitemaps/${fileName(kind, page)}`), lastmod: latest(part.map((e) => e.lastmod)) });

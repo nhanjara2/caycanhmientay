@@ -11,6 +11,7 @@ import { addProductImage, deleteProduct, deleteProductImage, listProductImages, 
 import { applyStockImport, DuplicateImportError, findDuplicateImport, MAX_IMPORT_BYTES, parseStockImport } from '@/server/stock-import';
 import { saveImage } from '@/server/uploads';
 import { db, schema } from '@/server/db';
+import { logSeo } from '@/server/seo-cms';
 
 // Mọi action trong file này: kiểm tra quyền nhân viên trước, rồi mới kiểm tra đầu vào.
 
@@ -41,11 +42,15 @@ export async function setProductActiveAction(slug: unknown, active: unknown) {
 }
 
 export async function deleteProductAction(slug: unknown) {
-  await requireStaff('admin');
+  const staff = await requireStaff('admin');
   const p = z.string().min(1).max(120).safeParse(slug);
   if (!p.success) return { ok: false as const, error: 'Yêu cầu không hợp lệ' };
   const r = await deleteProduct(p.data);
-  if (r.ok) refreshCatalog();
+  if (r.ok) {
+    // Nhật ký SEO: trang /admin/seo nhắc thêm chuyển hướng cho đường dẫn đã xóa.
+    await logSeo({ path: `/san-pham/${p.data}`, action: 'delete', user: staff });
+    refreshCatalog();
+  }
   return r;
 }
 

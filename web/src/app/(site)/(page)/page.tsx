@@ -23,6 +23,7 @@ import { publishedPosts, publishedVideos } from '@/server/posts';
 import { publishedProjects } from '@/server/projects';
 import '@/styles/home.css';
 import { withShare } from '@/lib/seo';
+import { withSeo } from '@/server/seo-cms';
 import { JsonLd } from '@/components/JsonLd';
 import { organizationLd, websiteLd } from '@/lib/jsonld';
 
@@ -61,10 +62,10 @@ function seasonNow() {
     : { key: 'khô', name: 'Mùa khô' };
 }
 
-export const metadata: Metadata = withShare({
+export const generateMetadata = (): Promise<Metadata> => withSeo(withShare({
   description: 'Cây Cảnh Miền Tây – nhà vườn tại Làng hoa Sa Đéc từ 2007: cây cảnh, cây văn phòng, cây công trình giá tại vườn, giá sỉ cho đối tác, giao toàn quốc.',
   alternates: { canonical: '/' },
-});
+}));
 
 export default async function HomePage() {
   const [banners, products, flash, categories, counts, posts, allVideos, projects, diseases] = await Promise.all([

@@ -9,6 +9,7 @@ import type { ProjectImage, ProjectMetric, ProjectQuote, ProjectRole } from '../
 import type { SavedPlan } from '../../lib/plant-advisor';
 import { STAFF_ROLES } from '../../lib/permissions';
 import { PARTNER_STATUSES, PARTNER_TYPES } from '../../lib/partners';
+import type { SeoChange } from '../../lib/seo-cms';
 import { SERVICE_STAGES, SERVICE_TYPES, SOURCES } from '../../lib/service-labels';
 import type { VoucherScope } from '../../lib/voucher-scope';
 import { boolean, customType, doublePrecision, index, integer, jsonb, pgTable, primaryKey, serial, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
@@ -1068,3 +1069,49 @@ export const homeBannerImages = pgTable('home_banner_images', {
   data: bytea('data').notNull(),
   createdAt: createdAt(),
 });
+
+// ---- SEO quản trị (mục 14 checklist SEO, lib/seo-cms.ts + server/seo-cms.ts) ---------------
+
+/**
+ * SEO đặt tay cho một trang (khóa = đường dẫn không tham số, vd. "/san-pham/kim-tien"). Ô trống = web tự tạo như cũ.
+ * Áp ở `withSeo()` khi dựng metadata; noindex / canonical khác chính nó thì trang tự rời sitemap.
+ */
+export const seoOverrides = pgTable('seo_overrides', {
+  path: text('path').primaryKey(),
+  title: text('title'),
+  description: text('description'),
+  /** Đường dẫn chuẩn khác chính trang (trong web). null = tự trỏ chính nó. */
+  canonical: text('canonical'),
+  noindex: boolean('noindex').notNull().default(false),
+  /** Ảnh chia sẻ (og:image) — đường dẫn ảnh công khai trên web. */
+  image: text('image'),
+  updatedBy: text('updated_by'),
+  updatedAt: ts('updated_at').notNull().defaultNow(),
+});
+
+/**
+ * Chuyển hướng 308 cho trang đã đổi đường dẫn / đã gỡ. Chỉ dùng khi đường dẫn cũ KHÔNG còn nội dung (trang nội dung tra
+ * bảng này thay cho 404) nên không bao giờ che trang đang hiện. Luôn trỏ thẳng đích cuối (không chuỗi, không vòng).
+ */
+export const redirects = pgTable('redirects', {
+  fromPath: text('from_path').primaryKey(),
+  toPath: text('to_path').notNull(),
+  /** manual = admin tự thêm, slug = tự tạo khi đổi đường dẫn. */
+  reason: text('reason', { enum: ['manual', 'slug'] }).notNull().default('manual'),
+  note: text('note').notNull().default(''),
+  hits: integer('hits').notNull().default(0),
+  lastHitAt: ts('last_hit_at'),
+  createdBy: text('created_by'),
+  createdAt: createdAt(),
+}, (t) => [index('redirects_to_idx').on(t.toPath)]);
+
+/** Nhật ký thay đổi SEO quan trọng (sửa SEO trang, chuyển hướng, đổi đường dẫn, xóa trang). */
+export const seoAudit = pgTable('seo_audit', {
+  id: serial('id').primaryKey(),
+  path: text('path').notNull(),
+  action: text('action').notNull(),
+  detail: jsonb('detail').$type<SeoChange[]>().notNull().default(sql`'[]'::jsonb`),
+  actor: text('actor').notNull().default(''),
+  userId: integer('user_id').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: createdAt(),
+}, (t) => [index('seo_audit_created_idx').on(t.createdAt), index('seo_audit_path_idx').on(t.path)]);
