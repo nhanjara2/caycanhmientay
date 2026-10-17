@@ -698,6 +698,9 @@ a.vx-chip[aria-current="true"] { background: var(--primary-soft); border-color: 
   .app-admin .ad-task { font-size: 0.9375rem; padding: 10px 0; }
   .app-admin .ad-task a { font-size: 0.875rem; padding: 6px 0; }
   .app-admin .ad-task .n { font-size: 0.8125rem; }
+  /* Việc cần xử lý: số – chữ – "Xử lý" luôn một hàng, chữ dài tự xuống dòng ở giữa (trước bị bóp: số lẻ một dòng, "Xử lý" rớt xuống) */
+  .app-admin .ad-task { flex-wrap: nowrap; }
+  .app-admin .ad-task .n, .app-admin .ad-task a { flex: none; }
   .app-admin .ad-legend, .app-admin .ad-legend2 { font-size: 0.8125rem; flex-wrap: wrap; }
   .app-admin .ad-chart div { font-size: 0.75rem; }
   .app-admin .ad-bars div { font-size: 0.875rem; }
@@ -2922,5 +2925,18 @@ body[data-buybar] .app-site .app-fab { bottom: 6.25rem; }
   /* Lịch giao Tết (/cay-tet): 7 ô một hàng bóp ngày thành "22 /0 1" → 4 ô một hàng, chữ không gãy */
   .app-site .cp-cal { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .app-site .cp-cal > div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}
+/* Dòng sản phẩm trong đơn: "Xem cách chăm sóc" + "Viết đánh giá" cách nhau bằng khoảng trống (trước là " · " chữ trơn → dấu chấm
+   lẻ loi cuối dòng khi xuống dòng) */
+.app-olinks { display: flex; flex-wrap: wrap; column-gap: 1rem; row-gap: 0.25rem; margin-top: 0.25rem; }
+/* Ô biểu tượng phương thức thanh toán: chỉ khung trắng khi có logo ảnh; biểu tượng (đặt cọc, tiền mặt) đứng trơn */
+.vx-pay__mark.app-pay-logo:not(:has(img)) { width: auto; padding: 0; background: none; border: 0; color: var(--primary); }
+@media (max-width: 47.9375em) {
+  /* Trang Tài khoản: thẻ hồ sơ phía trên đã có ảnh đại diện → ảnh trong form Thông tin cá nhân thu nhỏ */
+  .app-site .vx-profile__av .vx-avatar { width: 4rem; height: 4rem; font-size: 1.375rem; }
+  .app-site .vx-profile__body { padding-top: var(--space-4); }
+  /* Sổ địa chỉ: tên một dòng riêng, SĐT + nhãn Mặc định + Sửa dòng dưới (tên dài làm SĐT rớt dòng, vạch "|" lơ lửng) */
+  .app-site .vx-addr__top b { flex-basis: 100%; }
+  .app-site .vx-addr__top .sep { display: none; }
 }
 /* <<< RÀ GIAO DIỆN ĐIỆN THOẠI */

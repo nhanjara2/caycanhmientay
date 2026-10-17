@@ -15,7 +15,7 @@ import { usePublicVouchers } from '@/lib/vouchers-client';
 import { WishlistHeart } from './WishlistHeart';
 
 /** Bề rộng ước tính của "giá + đ" tính bằng em (chữ số ~0,66em, dấu chấm ~0,29em, "đ" nhỏ ~0,5em, đo trên Be Vietnam Pro) — CSS (`--w`) dùng để co cỡ giá cho vừa thẻ hẹp. */
-const priceEm = (s: string) => { const d = s.replace(/\D/g, '').length; return d * 0.66 + (s.length - d) * 0.29 + 0.5; };
+const priceEm = (s: string) => { const d = s.replace(/\D/g, '').length; return d * 0.68 + (s.length - d) * 0.32 + 0.6; };
 
 /** Thẻ sản phẩm ở danh sách: không chọn quy cách, không nút thêm vào giỏ (chọn + mua ở trang sản phẩm, kiểu Shopee).
  *  Giá = quy cách rẻ nhất có giá ("Từ …" khi các quy cách khác giá nhau); bấm chỗ nào trên thẻ cũng mở trang sản phẩm. */

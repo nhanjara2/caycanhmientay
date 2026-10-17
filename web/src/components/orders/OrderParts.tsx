@@ -148,10 +148,12 @@ export function OrderDetail({ o }: { o: OrderFull }) {
           <div className="vx-order__body">
             {o.items.map((i) => (
               <OrderLine key={i.id} i={i}>
-                <Link href={`/san-pham/${i.productSlug}`}>{i.ship === 'plant' ? 'Xem cách chăm sóc' : 'Xem cách dùng'} <Icon name="chevron" size={14} /></Link>
-                {o.status === 'delivered' && (
-                  <> · <Link href={`/san-pham/${i.productSlug}#viet-danh-gia`}><Icon name="star" size={14} /> Viết đánh giá</Link></>
-                )}
+                <span className="app-olinks">
+                  <Link href={`/san-pham/${i.productSlug}`}>{i.ship === 'plant' ? 'Xem cách chăm sóc' : 'Xem cách dùng'} <Icon name="chevron" size={14} /></Link>
+                  {o.status === 'delivered' && (
+                    <Link href={`/san-pham/${i.productSlug}#viet-danh-gia`}><Icon name="star" size={14} /> Viết đánh giá</Link>
+                  )}
+                </span>
               </OrderLine>
             ))}
           </div>

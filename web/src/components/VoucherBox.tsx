@@ -130,7 +130,7 @@ function VoucherDialog({ tickets, state, amountOf, shipFee, onClose }: {
         <div className="vx-modal__body">
           <div className={typed ? 'vx-code ready' : 'vx-code'}>
             <input
-              placeholder="Có mã riêng? Nhập tại đây" aria-label="Nhập mã giảm giá" maxLength={30} value={code}
+              placeholder="Nhập mã" aria-label="Nhập mã giảm giá" maxLength={30} value={code}
               onChange={(e) => { setCode(e.target.value.toUpperCase()); setError(''); }}
               onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); applyTyped(); } }}
             />
