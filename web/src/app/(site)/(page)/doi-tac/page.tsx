@@ -8,7 +8,7 @@ import { withSeo } from '@/server/seo-cms';
 
 export const generateMetadata = (): Promise<Metadata> => withSeo(withShare({
   title: 'Đối tác sỉ — cây cảnh & vật tư giá sỉ',
-  description: 'Cung cấp sỉ cây cảnh, cây công trình, phân bón, thuốc BVTV cho đơn vị cảnh quan, nhà thầu, cửa hàng, đại lý. Gần 200 nhà vườn miền Nam, giao toàn quốc.',
+  description: 'Cung cấp sỉ cây cảnh, cây công trình, phân bón, chậu, vật tư cho đơn vị cảnh quan, nhà thầu, cửa hàng, đại lý. Gần 200 nhà vườn miền Nam, giao toàn quốc.',
   alternates: { canonical: '/doi-tac' },
 }));
 

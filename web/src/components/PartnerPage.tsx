@@ -35,15 +35,15 @@ const NAV: [string, string][] = [
 
 /** Mỗi nhóm đối tác: shop cung cấp gì cho họ. */
 const OFFER: Record<PartnerType, string[]> = {
-  landscape: ['Cây cảnh, cây bụi, lá màu, hoa theo từng công việc', 'Đất, giá thể, phân bón, thuốc BVTV, chậu, vật tư', 'Lấy lẻ theo từng công trình nhỏ, không cần tồn kho'],
+  landscape: ['Cây cảnh, cây bụi, lá màu, hoa theo từng công việc', 'Đất, giá thể, phân bón, chậu, vật tư', 'Lấy lẻ theo từng công trình nhỏ, không cần tồn kho'],
   project: ['Cây bóng mát, cau, cây bụi, thảm cỏ theo bảng khối lượng', 'Đồng đều chủng loại, chiều cao, đường kính gốc, cỡ bầu', 'Chia đợt giao theo tiến độ công trình'],
-  trade: ['Cây cảnh, cây để bàn, cây văn phòng đủ cỡ để bán lại', 'Vật tư, phân bón, thuốc BVTV, chậu đi kèm', 'Lấy hàng định kỳ, giao toàn quốc'],
+  trade: ['Cây cảnh, cây để bàn, cây văn phòng đủ cỡ để bán lại', 'Vật tư, phân bón, chậu đi kèm', 'Lấy hàng định kỳ, giao toàn quốc'],
 };
 
 const CAPABILITIES: { icon: IconName; b: string; text: string; link?: [string, string] }[] = [
   { icon: 'trees', b: 'Nguồn cây lớn, ổn định', text: 'Mạng lưới gần 200 nhà vườn ở miền Nam và Trung Nam Bộ giúp gom đủ số lượng lớn và chọn cây đồng đều quy cách.' },
   { icon: 'sprout', b: 'Xem cây tại Làng hoa Sa Đéc', text: 'Đối tác có thể đến vườn ươm xem và chọn cây trước khi chốt đơn số lượng lớn; ở xa thì shop gửi ảnh cây thật qua Zalo.', link: ['/he-thong-cua-hang', 'Xem bản đồ vườn ươm'] },
-  { icon: 'box', b: 'Đủ cây và vật tư một nơi', text: 'Cây cảnh, đất, giá thể, phân bón, thuốc BVTV, chậu — gom một đơn, một lần giao.' },
+  { icon: 'box', b: 'Đủ cây và vật tư một nơi', text: 'Cây cảnh, đất, giá thể, phân bón, chậu — gom một đơn, một lần giao.' },
   { icon: 'receipt', b: 'Báo giá rõ từng dòng', text: 'Cây, quy cách, số lượng, vật tư, vận chuyển tách dòng riêng để đối tác dễ đối chiếu và báo lại cho khách của mình.' },
   { icon: 'user', b: 'Một đầu mối phụ trách', text: 'Một nhân viên kinh doanh nhận yêu cầu và theo dõi đơn của bạn từ báo giá đến khi giao xong.' },
   { icon: 'shield', b: 'Giao toàn quốc, có bảo hành', text: `Cây đóng gói chống dập khi vận chuyển; cây sống bảo hành ${WARRANTY_DAYS} ngày, điều kiện riêng của đơn lớn ghi trong báo giá.`, link: ['/chinh-sach/bao-hanh-cay', 'Chính sách bảo hành'] },
@@ -87,7 +87,7 @@ export function PartnerPage({ projects, profile }: { projects: Project[]; profil
           <span className="vx-badge vx-badge--sun">Chuyên cung cấp sỉ</span>
           <h1>Cây cảnh &amp; vật tư giá sỉ cho đối tác</h1>
           <p>
-            Cây Cảnh Miền Tây cung cấp sỉ cây cảnh, cây công trình, phân bón, thuốc BVTV và vật tư cho đơn vị dịch vụ cảnh quan,
+            Cây Cảnh Miền Tây cung cấp sỉ cây cảnh, cây công trình, phân bón và vật tư cho đơn vị dịch vụ cảnh quan,
             nhà thầu công trình và cửa hàng, đại lý buôn bán — nguồn cây từ gần 200 nhà vườn miền Nam.
           </p>
           <div className="acts">

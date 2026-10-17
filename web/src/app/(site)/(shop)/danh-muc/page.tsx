@@ -29,7 +29,7 @@ const QUICK: { label: string; icon: IconName; href: string }[] = [
   { label: 'Đăng ký đối tác', icon: 'user', href: `${WHOLESALE_URL}#dang-ky` },
   { label: 'Gửi báo giá sỉ', icon: 'receipt', href: WHOLESALE_QUOTE_URL },
   { label: 'Bắt bệnh cho cây', icon: 'bug', href: '/benh-cay' },
-  { label: 'Tra cứu thuốc BVTV', icon: 'flask', href: '/danh-muc/thuoc-bvtv' },
+  { label: 'Góc chăm cây', icon: 'leaf', href: '/goc-cham-cay' },
   { label: 'Đơn của tôi', icon: 'receipt', href: '/tai-khoan/don-hang' },
   { label: 'Tìm vườn ươm', icon: 'pin', href: '/he-thong-cua-hang' },
 ];

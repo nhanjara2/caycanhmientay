@@ -13,7 +13,7 @@ const ABOUT: [string, string][] = [
   ['Điều khoản sử dụng', '/chinh-sach/dieu-khoan'], ['Nguồn ảnh minh họa', '/chinh-sach/nguon-anh'],
 ];
 const LEARN: [string, string][] = [
-  ['Góc chăm cây', '/goc-cham-cay'], ['Video ngắn', '/video'], ['Bắt bệnh cho cây', '/benh-cay'], ['Tra cứu thuốc BVTV', '/danh-muc/thuoc-bvtv'],
+  ['Góc chăm cây', '/goc-cham-cay'], ['Video ngắn', '/video'], ['Bắt bệnh cho cây', '/benh-cay'],
   ['Hướng dẫn dùng thuốc an toàn', '/chinh-sach/thuoc-bvtv-an-toan'], ['Đối tác sỉ', '/doi-tac'], ['Yêu cầu báo giá sỉ', '/bao-gia-si'],
   ['Tư vấn chọn cây', '/tu-van-chon-cay'], ['Tin khuyến mãi', '/khuyen-mai'], ['Truyền thông', '/tin-tuc'],
 ];

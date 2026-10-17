@@ -171,7 +171,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
           ))}
         </div>
       </div>
-      {cat.slug === 'thuoc-bvtv' && <PesticideLookup slug={cat.slug} />}
+      {cat.slug === 'thuoc-bvtv' && cat.active && <PesticideLookup slug={cat.slug} />}
       {cat.slug === 'cay-canh' && <AdvisorBanner sub={sub?.slug} />}
       {items.length ? (
         <>

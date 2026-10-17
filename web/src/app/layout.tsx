@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_ORIGIN),
   title: { default: 'Cây Cảnh Miền Tây — Cung cấp sỉ cây cảnh & vật tư', template: '%s | Cây Cảnh Miền Tây' },
   // Mô tả dự phòng — trang nào cũng nên tự đặt description riêng (npm run seo:metadata báo trang dùng chung).
-  description: 'Cung cấp sỉ và lẻ cây cảnh, cây công trình, thuốc BVTV, phân bón, chậu và vật tư từ gần 200 nhà vườn miền Nam. Giá tại vườn, giao toàn quốc.',
+  description: 'Cung cấp sỉ và lẻ cây cảnh, cây công trình, phân bón, chậu và vật tư từ gần 200 nhà vườn miền Nam. Giá tại vườn, giao toàn quốc.',
   applicationName: SITE_NAME,
   // Khung chia sẻ chung: og:title / og:description / twitter:* Next tự lấy từ title + description của từng trang;
   // og:url + ảnh riêng do trang công khai gắn bằng withShare() (lib/seo.ts).

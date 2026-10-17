@@ -84,7 +84,7 @@ export function SeasonDiseases({ season, diseases }: { season: string; diseases:
       <div className="hm-season__intro">
         <span className="hm-season__tag"><Icon name="rain" />{season}</span>
         <Link href="/benh-cay" className="vx-btn hm-btn-light">Bắt bệnh cho cây</Link>
-        <Link href="/danh-muc/thuoc-bvtv" className="hm-season__link">Thuốc BVTV giá sỉ<Icon name="chevron" size={16} /></Link>
+        <Link href="/goc-cham-cay?chuyen-muc=thuoc-phan-bon" className="hm-season__link">Chọn thuốc &amp; phân bón<Icon name="chevron" size={16} /></Link>
       </div>
       <div className="hm-season__cards">
         {diseases.map((d) => {

@@ -75,7 +75,7 @@ const QUY_CHE: Section[] = [
   { h: 'Nguyên tắc chung', blocks: [
     'Quy chế này áp dụng cho website **caycanhmientay.com** (sau đây gọi là "website") do **Cây Cảnh Miền Tây** (sau đây gọi là "shop") vận hành, người chịu trách nhiệm là ông Lê Hoài Nhân. Thông tin đăng ký kinh doanh xem tại [Giấy phép kinh doanh](/chinh-sach/giay-phep-kinh-doanh).',
     { ul: [
-      'Website là nơi shop **bán sỉ** cây cảnh, thuốc bảo vệ thực vật (BVTV), phân bón, vật tư làm vườn cho đối tác (đơn vị dịch vụ cảnh quan, công trình, cửa hàng / đại lý) và nhận yêu cầu báo giá sỉ. Hàng hóa trên website do shop bán; website không phải sàn cho người bán khác.',
+      'Website là nơi shop **bán sỉ** cây cảnh, phân bón, vật tư làm vườn cho đối tác (đơn vị dịch vụ cảnh quan, công trình, cửa hàng / đại lý) và nhận yêu cầu báo giá sỉ. Hàng hóa trên website do shop bán; website không phải sàn cho người bán khác.',
       'Các điểm cung cấp của đối tác trong trang [Hệ thống cửa hàng & vườn](/he-thong-cua-hang) chỉ để bạn tham khảo địa chỉ, không bán qua website này.',
       'Shop hoạt động theo pháp luật Việt Nam về thương mại điện tử, bảo vệ quyền lợi người tiêu dùng, bảo vệ thực vật và bảo vệ dữ liệu cá nhân.',
     ] },
@@ -596,7 +596,7 @@ const BVTV_AN_TOAN: Section[] = [
       '**Xác định đúng vấn đề.** Lá vàng, héo, rụng lá thường do tưới sai, thiếu sáng hoặc đất úng, không phải lúc nào cũng là sâu bệnh — phun thuốc trong trường hợp này không giúp ích mà còn hại cây. Xem thư viện [Bắt bệnh cho cây](/benh-cay) hoặc gửi ảnh cho kỹ sư của shop trước khi mua.',
       '**Làm các việc nhẹ trước:** cắt bỏ lá và cành bệnh, tách cây bệnh ra xa các cây khác, cho cây thoáng gió và thoát nước tốt. Chỉ dùng thuốc khi sâu bệnh còn lan rộng hoặc các cách trên chưa đủ.',
       '**Chỉ mua thuốc có nguồn gốc rõ ràng** thuộc danh mục thuốc BVTV được phép sử dụng tại Việt Nam: bao bì còn nguyên, có nhãn tiếng Việt, ghi số đăng ký, tên hoạt chất và hạn sử dụng. Không mua thuốc không nhãn, thuốc đã bị chia chai, thuốc hết hạn, và không dùng thuốc nằm ngoài danh mục.',
-      '**Tại Cây Cảnh Miền Tây,** mỗi sản phẩm thuốc ghi sẵn Số đăng ký, Hoạt chất, Liều pha và Thời gian cách ly ngay trên trang sản phẩm; khi trong giỏ hàng có thuốc, bạn được nhắc xác nhận đã đọc hướng dẫn an toàn trước khi đặt hàng. Xem [Tra cứu thuốc BVTV](/danh-muc/thuoc-bvtv).',
+      '**Chưa biết chọn thuốc nào?** Xem các bài [Thuốc & Phân bón](/goc-cham-cay?chuyen-muc=thuoc-phan-bon) ở Góc chăm cây hoặc gửi ảnh cây cho kỹ sư của shop qua Zalo.',
     ] },
   ] },
   { h: 'Nguyên tắc "4 đúng"', blocks: [

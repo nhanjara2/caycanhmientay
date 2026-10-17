@@ -45,7 +45,7 @@ export function AboutView() {
             <p>
               Cây Cảnh Miền Tây thành lập năm 2007 với gần 5 năm kinh nghiệm trong ngành trồng trọt. Từ năm 2019, chúng tôi
               chuyển sang mô hình cây cảnh công trình và hợp tác với gần 200 nhà vườn ở miền Nam, Trung Nam Bộ để đưa cây cảnh
-              đến tay người tiêu dùng. Bên cạnh cây cảnh, chúng tôi có thuốc bảo vệ thực vật, phân bón và vật tư làm vườn, kèm
+              đến tay người tiêu dùng. Bên cạnh cây cảnh, chúng tôi có phân bón và vật tư làm vườn, kèm
               kỹ sư nông nghiệp tư vấn miễn phí và chính sách bảo hành cây sống.
             </p>
           </div>
@@ -59,7 +59,7 @@ export function AboutView() {
           <ul>
             <li><b>Cây cảnh công trình:</b> cây cho sân vườn, khuôn viên và các công trình.</li>
             <li><b>Cây cảnh văn phòng, cây cảnh giống:</b> mô hình mới triển khai từ năm 2025.</li>
-            <li><b>Thuốc BVTV, phân bón, vật tư:</b> thuốc có số đăng ký, kèm chậu, đất – giá thể và dụng cụ làm vườn.</li>
+            <li><b>Phân bón, vật tư:</b> phân bón có nguồn gốc rõ ràng, chậu, đất – giá thể và dụng cụ làm vườn.</li>
             <li><b>Cung cấp sỉ cho đối tác:</b> đơn vị dịch vụ cảnh quan, nhà thầu công trình, cửa hàng và đại lý; <Link href="/doi-tac">xem trang Đối tác sỉ</Link>.</li>
             <li><b>Tư vấn chăm cây:</b> kỹ sư giải đáp miễn phí; xem thêm <Link href="/goc-cham-cay">Góc chăm cây</Link> và <Link href="/benh-cay">Bắt bệnh cho cây</Link>.</li>
           </ul>
@@ -77,7 +77,7 @@ export function AboutView() {
           <h2>III. Cam kết</h2>
           <ul>
             <li><b>Cây thật như ảnh:</b> ảnh chụp tại vườn, gửi ảnh cây trước khi giao.</li>
-            <li><b>Vật tư chính hãng:</b> thuốc BVTV có số đăng ký, phân bón có nguồn gốc rõ ràng.</li>
+            <li><b>Vật tư chính hãng:</b> phân bón, chậu, giá thể có nguồn gốc rõ ràng.</li>
             <li><b>Tư vấn trọn đời:</b> hỏi kỹ sư miễn phí qua Zalo cho mọi cây đã mua.</li>
             <li><b>Giao cây toàn quốc:</b> cây sống đóng khung chống dập; xem <Link href="/chinh-sach/giao-hang">Chính sách giao hàng</Link>.</li>
             <li><b>Nội dung có kỹ sư kiểm duyệt:</b> bài chăm cây, bắt bệnh và trả lời hỏi đáp; xem <Link href="/chinh-sach/noi-dung">Chính sách nội dung</Link>.</li>

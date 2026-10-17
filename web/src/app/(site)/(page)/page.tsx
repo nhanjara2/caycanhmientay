@@ -183,7 +183,7 @@ export default async function HomePage() {
       {/* Schema toàn website: tổ chức (tên, logo, hotline, mạng xã hội) + website — các trang khác trỏ về bằng @id */}
       <JsonLd data={organizationLd()} />
       <JsonLd data={websiteLd()} />
-      <h1 className="app-sr">Cây Cảnh Miền Tây — cung cấp sỉ cây cảnh, thuốc BVTV, phân bón, vật tư làm vườn</h1>
+      <h1 className="app-sr">Cây Cảnh Miền Tây — cung cấp sỉ cây cảnh, phân bón, vật tư làm vườn</h1>
 
       <section className="hm-hero" aria-label="Sự kiện và ưu đãi">
         <HomeHero

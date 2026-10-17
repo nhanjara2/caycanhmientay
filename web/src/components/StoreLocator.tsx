@@ -17,8 +17,8 @@ const fmtKm = (km: number) => `${km < 10 ? km.toFixed(1).replace('.', ',') : Mat
 
 const PERKS: { icon: React.ReactNode; title: string; text: string }[] = [
   { icon: <><path d="M5 19c0-8 5-14 15-14 0 10-6 15-14 15" /><path d="M5 19 13 11" /></>, title: 'Xem cây tận nơi', text: 'Chọn đúng cây mình thích, kỹ sư hướng dẫn chọn cây hợp vị trí đặt.' },
-  { icon: <><rect x="8" y="7" width="8" height="12" rx="4" /><path d="M12 7V4M8 11H4M16 11h4M8 16H5M16 16h3M9 4l1 2M15 4l-1 2" /></>, title: 'Mang lá bệnh đến khám', text: 'Mang mẫu lá, ảnh cây để kỹ sư bắt bệnh và kê thuốc phù hợp miễn phí.' },
-  { icon: <><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z" /><path d="m9 12 2 2 4-4" /></>, title: 'Vật tư chính hãng', text: 'Thuốc BVTV có số đăng ký, phân bón có nguồn gốc rõ ràng.' },
+  { icon: <><rect x="8" y="7" width="8" height="12" rx="4" /><path d="M12 7V4M8 11H4M16 11h4M8 16H5M16 16h3M9 4l1 2M15 4l-1 2" /></>, title: 'Mang lá bệnh đến khám', text: 'Mang mẫu lá, ảnh cây để kỹ sư bắt bệnh và hướng dẫn cách chữa miễn phí.' },
+  { icon: <><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z" /><path d="m9 12 2 2 4-4" /></>, title: 'Vật tư chính hãng', text: 'Phân bón, chậu, giá thể có nguồn gốc rõ ràng.' },
   { icon: <><path d="M6 12h12l-1.5 8h-9z" /><path d="M12 12V7" /><path d="M12 9c-2-3-5-3-6-2 1 2 4 3 6 2z" /><path d="M12 8c1.5-3 4.5-3.5 6-2.5-1 2-4 3.5-6 2.5z" /></>, title: 'Thay chậu, sang chậu tại chỗ', text: 'Mua chậu và đất, nhân viên thay chậu giúp trong 15 phút.' },
   { icon: <><path d="M3 6h11v10H3zM14 10h4l3 3v3h-7" /><circle cx="7" cy="18" r="1.8" /><circle cx="17" cy="18" r="1.8" /></>, title: 'Giao cây tận nơi', text: 'Cây lớn giao bằng xe tải nhỏ, có người khiêng và đặt đúng vị trí.' },
   { icon: <><path d="M3 7 12 3l9 4v10l-9 4-9-4z" /><path d="M3 7l9 4 9-4M12 11v10" /></>, title: 'Đổi trả, bảo hành tại cửa hàng', text: 'Mang cây hoặc hóa đơn đến bất kỳ cửa hàng nào để được hỗ trợ.' },
