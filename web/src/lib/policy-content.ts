@@ -358,7 +358,6 @@ const THANH_TOAN: Section[] = [
       'Đối tác đã đăng ký và được shop duyệt ở [trang Đối tác sỉ](/doi-tac) có thể được chiết khấu riêng theo % tiền hàng; chiết khấu tự trừ khi đăng nhập và đặt hàng.',
       'Mã giảm giá nhập ở bước thanh toán, xem được số tiền giảm ngay. Mỗi mã có điều kiện riêng (đơn tối thiểu, số lượt, thời hạn, lượt dùng cho mỗi khách).',
       'Sản phẩm Flash sale có số lượng và thời gian giới hạn.',
-      'Điểm thưởng: xem [Thể lệ tích điểm](/chinh-sach/tich-diem).',
     ] },
   ] },
   { h: 'Hoàn tiền', blocks: [
@@ -541,7 +540,6 @@ const DIEU_KHOAN: Section[] = [
       'Mã giảm giá và quà tặng dùng theo điều kiện đi kèm (đơn tối thiểu, số lượt, thời hạn, lượt dùng cho mỗi tài khoản hoặc số điện thoại nhận hàng) và không quy đổi thành tiền mặt.',
       'Sản phẩm Flash sale có số lượng và thời gian giới hạn.',
       'Đơn có thuốc BVTV cần xác nhận đã đọc hướng dẫn an toàn trước khi đặt.',
-      'Điểm thưởng theo [Thể lệ tích điểm](/chinh-sach/tich-diem).',
     ] },
     'Chi tiết: [Chính sách thanh toán](/chinh-sach/thanh-toan), [giao hàng](/chinh-sach/giao-hang), [bảo hành cây](/chinh-sach/bao-hanh-cay), [đổi trả](/chinh-sach/doi-tra).',
   ] },
@@ -671,12 +669,6 @@ const BVTV_AN_TOAN: Section[] = [
     contact('care'),
   ] },
 ];
-const HUONG_DAN_MUA: Section[] = [
-  { h: 'Các bước', blocks: ['Chọn sản phẩm → Giỏ hàng → Thanh toán: chọn hình thức nhận, địa chỉ, phương thức thanh toán → Đặt hàng.'] },
-];
-const TICH_DIEM: Section[] = [
-  { h: 'Tích điểm', blocks: ['Mỗi 10.000đ thanh toán được 1 điểm, cộng sau khi nhận hàng.'] },
-];
 
 const BODIES: Record<string, Body> = {
   'giay-phep-kinh-doanh': GIAY_PHEP,
@@ -690,8 +682,6 @@ const BODIES: Record<string, Body> = {
   'bao-mat': BAO_MAT,
   'noi-dung': NOI_DUNG,
   'thuoc-bvtv-an-toan': BVTV_AN_TOAN,
-  'huong-dan-mua-hang': HUONG_DAN_MUA,
-  'tich-diem': TICH_DIEM,
   'dieu-khoan': DIEU_KHOAN,
   'nguon-anh': NGUON_ANH,
 };
