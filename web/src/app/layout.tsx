@@ -30,9 +30,13 @@ export const metadata: Metadata = {
   // og:url + ảnh riêng do trang công khai gắn bằng withShare() (lib/seo.ts).
   openGraph: BASE_OPEN_GRAPH,
   twitter: { card: 'summary_large_image' },
+  // Cho Google hiện ảnh lớn (Google Discover, ảnh trong kết quả tìm kiếm) — thiếu thì Discover chỉ hiện ảnh nhỏ.
+  // Trang tự đặt robots (noindex…) thay hẳn dòng này — không sao, trang đó không lên Google.
+  robots: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 },
   // Google Search Console: xác minh quyền sở hữu (thêm cả file public/google304493db97cae2f3.html) — đừng xóa, mất là mất quyền.
-  verification: { google: 'Xv7jKX5Z5eBRsYGX-YQT6WMmSEMk_13pualk3_Lp6fA' },
-  // Biểu tượng: app/favicon.ico + app/icon.svg (trình duyệt), app/apple-icon.png (iPhone), app/manifest.ts (Android).
+  // Bing Webmaster Tools: thẻ msvalidate.01 + file public/BingSiteAuth.xml — cũng đừng xóa.
+  verification: { google: 'Xv7jKX5Z5eBRsYGX-YQT6WMmSEMk_13pualk3_Lp6fA', other: { 'msvalidate.01': '0C7A14E9D91C8BC7A848656E12CADD97' } },
+  // Biểu tượng: app/favicon.ico + app/icon.png (trình duyệt — vẽ từ public/images/brand/logo-mark.png), app/apple-icon.png (iPhone), app/manifest.ts (Android).
 };
 
 // Website chỉ có giao diện sáng (BRANDBOOK) — tokens.css khai báo color-scheme: light.

@@ -5,7 +5,7 @@ import { and, desc, eq, inArray, isNull, lt, lte, ne, notInArray, or, sql, type 
 import * as z from 'zod';
 import { slugify } from '@/lib/slug';
 import {
-  blockingChecks, CATEGORY_KEYS, categoryOf, MAX_BLOCK_PRODUCTS, NOTE_TITLE, postChecks, postImageUrl, postPath, PRODUCTS_TITLE,
+  blockingChecks, CATEGORY_KEYS, categoryOf, EXTERNAL_IMAGE_MAX, isExternalImage, MAX_BLOCK_PRODUCTS, NOTE_TITLE, postChecks, postImageUrl, postPath, PRODUCTS_TITLE,
   readMinutes, TITLE_MAX, youtubeThumb, type PostBlock, type PostStatus, type ShortVideo,
 } from '@/lib/posts';
 import { hasAccess } from '@/lib/permissions';
@@ -134,7 +134,7 @@ const BlockSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('h3'), text: line(150) }),
   z.object({ type: z.literal('p'), text: text(5000) }),
   z.object({ type: z.literal('list'), items: z.array(line(500)).max(30), ordered: z.boolean() }),
-  z.object({ type: z.literal('image'), file: z.string().max(60), caption: line(200) }),
+  z.object({ type: z.literal('image'), file: z.string().trim().max(EXTERNAL_IMAGE_MAX), caption: line(200) }),
   z.object({ type: z.literal('video'), youtubeId: z.string().max(20), caption: line(200) }),
   z.object({ type: z.literal('table'), rows: z.array(z.array(line(300)).max(8)).max(30) }),
   z.object({ type: z.literal('note'), title: line(60), text: text(1000) }),
@@ -148,7 +148,7 @@ export const PostInputSchema = z.object({
   title: z.string().trim().min(3, 'Nhập tiêu đề (ít nhất 3 ký tự)').max(TITLE_MAX, `Tiêu đề tối đa ${TITLE_MAX} ký tự`),
   excerpt: text(400),
   body: z.array(BlockSchema).max(300, 'Bài quá dài (tối đa 300 khối)'),
-  coverFile: z.string().max(60).nullable(),
+  coverFile: z.string().trim().max(EXTERNAL_IMAGE_MAX).nullable(),
   youtubeId: z.string().regex(/^[\w-]{11}$/, 'Link YouTube chưa đúng').nullable(),
   tiktokId: z.string().regex(/^\d{8,25}$/, 'Link TikTok chưa đúng').nullable(),
   videoVertical: z.boolean(),
@@ -184,7 +184,7 @@ function cleanBody(body: PostBlock[], files: ReadonlySet<string>): PostBlock[] {
         break;
       }
       case 'image':
-        if (files.has(b.file)) out.push(b);
+        if (files.has(b.file) || isExternalImage(b.file)) out.push(b);
         break;
       case 'video':
         if (/^[\w-]{11}$/.test(b.youtubeId)) out.push(b);
@@ -229,7 +229,7 @@ export async function savePost(v: PostInput, intent: Intent, user: SessionUser):
 
     const files = new Set(cur ? (await tx.select({ file: PI.file }).from(PI).where(eq(PI.postId, cur.id))).map((r) => r.file) : []);
     const body = cleanBody(v.body, files);
-    const coverFile = v.coverFile && files.has(v.coverFile) ? v.coverFile : null;
+    const coverFile = v.coverFile && (files.has(v.coverFile) || isExternalImage(v.coverFile)) ? v.coverFile : null;
     // Một video chỉ một nguồn: có TikTok thì bỏ YouTube.
     const tiktokId = v.kind === 'video' ? v.tiktokId : null;
     const youtubeId = v.kind === 'video' && !tiktokId ? v.youtubeId : null;

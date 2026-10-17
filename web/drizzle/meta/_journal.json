@@ -477,6 +477,13 @@
       "when": 1792201392163,
       "tag": "0067_gia_vuon_dot_2",
       "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1792213036028,
+      "tag": "0068_cam_nang_chon_cay",
+      "breakpoints": true
     }
   ]
 }

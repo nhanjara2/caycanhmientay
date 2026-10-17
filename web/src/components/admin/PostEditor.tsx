@@ -10,7 +10,7 @@ import { ARTICLE_ASPECTS, COVER_ASPECTS, useImageCrop } from './ImageCropper';
 import { money } from '@/lib/format';
 import {
   blockingChecks, BLOCK_NAMES, CATEGORIES, durationLabel, isShortsUrl, isTiktokShortLink, MAX_BLOCK_PRODUCTS, NOTE_TITLE, parseTiktokId,
-  postChecks, postImageUrl, postPath, postState, PRODUCTS_TITLE, safeHref, SECTIONS, sectionOf, SEO_MAX, STATE_LABELS, tiktokOembed,
+  isExternalImage, postChecks, postImageUrl, postPath, postState, PRODUCTS_TITLE, safeHref, SECTIONS, sectionOf, SEO_MAX, STATE_LABELS, tiktokOembed,
   tiktokPlayer, youtubeThumb,
   type BlockType, type PostBlock, type PostKind, type PostStatus,
 } from '@/lib/posts';
@@ -243,6 +243,18 @@ export function PostEditor({ initial, role, products, diseases, people, stats }:
     f.set(el.value.slice(0, s) + before + sel + after + el.value.slice(e));
     requestAnimationFrame(() => { el.focus(); el.setSelectionRange(s + before.length, s + before.length + sel.length); });
   };
+  /** Link ảnh ngoài (https://…): hiện thẳng từ máy chủ ảnh kia, không tải về database. */
+  const askImageUrl = (): string | null => {
+    const url = prompt('Dán link ảnh trực tiếp (https://…, đuôi .jpg / .png / .webp) — ảnh không cần ghi nguồn (CC0, public domain)');
+    if (url === null || !url.trim()) return null;
+    if (!isExternalImage(url.trim())) { setError('Link ảnh phải bắt đầu bằng https:// và không có dấu cách'); return null; }
+    setError('');
+    return url.trim();
+  };
+  const addImageUrl = (at?: number) => {
+    const url = askImageUrl();
+    if (url) insert([{ type: 'image', file: url, caption: '' }], at);
+  };
   const addLink = () => {
     const url = prompt('Dán đường dẫn — trang trong web (vd /san-pham/…, /benh-cay/…) hoặc link đầy đủ https://…');
     if (url === null) return;
@@ -288,6 +300,7 @@ export function PostEditor({ initial, role, products, diseases, people, stats }:
               {tool('Link', addLink, 'Chèn đường dẫn vào chữ đang chọn')}
               {tool('• Danh sách', () => insert([BLANK.list()]), 'Danh sách')}
               {tool('Ảnh', () => { replaceAt.current = null; imageInput.current?.click(); }, 'Chèn ảnh (chọn được nhiều ảnh)')}
+              {tool('Link ảnh', () => addImageUrl(), 'Chèn ảnh bằng link trực tiếp (không tải về máy chủ)')}
               {tool('Video', () => insert([BLANK.video()]), 'Chèn video YouTube')}
               {tool('Bảng', () => insert([BLANK.table()]), 'Bảng')}
               {tool('Lưu ý', () => insert([BLANK.note()]), 'Hộp lưu ý (bắt buộc khi bài nhắc tới thuốc BVTV)')}
@@ -371,7 +384,8 @@ export function PostEditor({ initial, role, products, diseases, people, stats }:
                   </div>
                   <BlockEditor b={it.b} set={(b) => setBlock(it.k, b)} remember={remember} autoFocus={focusKey === it.k}
                     products={products} bySlug={bySlug}
-                    onReplaceImage={() => { replaceAt.current = i; imageInput.current?.click(); }} />
+                    onReplaceImage={() => { replaceAt.current = i; imageInput.current?.click(); }}
+                    onImageUrl={() => { const url = askImageUrl(); if (url && it.b.type === 'image') setBlock(it.k, { ...it.b, file: url }); }} />
                 </div>
               ))}
               {!items.length && (
@@ -441,6 +455,7 @@ export function PostEditor({ initial, role, products, diseases, people, stats }:
                 <button type="button" className="vx-btn vx-btn--outline vx-btn--sm" disabled={!!busy} onClick={() => coverInput.current?.click()}>
                   {v.coverFile ? 'Đổi ảnh' : 'Tải ảnh bìa'}
                 </button>
+                <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" disabled={!!busy} onClick={() => { const url = askImageUrl(); if (url) set('coverFile', url); }}>Dán link ảnh</button>
                 {v.coverFile && <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" onClick={() => set('coverFile', null)}>Bỏ ảnh bìa</button>}
               </span>
             </Card>
@@ -581,9 +596,9 @@ function DeleteButton({ id, title, disabled }: { id: number; title: string; disa
 }
 
 /** Ô nhập của từng loại khối. */
-function BlockEditor({ b, set, remember, autoFocus, products, bySlug, onReplaceImage }: {
+function BlockEditor({ b, set, remember, autoFocus, products, bySlug, onReplaceImage, onImageUrl }: {
   b: PostBlock; set: (b: PostBlock) => void; remember: (f: Field) => void; autoFocus: boolean;
-  products: ProductPick[]; bySlug: Map<string, ProductPick>; onReplaceImage: () => void;
+  products: ProductPick[]; bySlug: Map<string, ProductPick>; onReplaceImage: () => void; onImageUrl: () => void;
 }) {
   switch (b.type) {
     case 'h2': case 'h3':
@@ -618,6 +633,7 @@ function BlockEditor({ b, set, remember, autoFocus, products, bySlug, onReplaceI
             <input className="vx-input pe-mini" value={b.caption} maxLength={200} placeholder="Chú thích ảnh (không bắt buộc)" aria-label="Chú thích ảnh"
               onChange={(e) => set({ ...b, caption: e.target.value })} />
             <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" onClick={onReplaceImage}>Đổi ảnh</button>
+            <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" onClick={onImageUrl}>Dán link</button>
           </span>
         </>
       );

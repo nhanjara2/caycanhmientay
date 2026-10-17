@@ -24,6 +24,7 @@ type Category = {
 };
 
 export const CATEGORIES = [
+  { key: 'cam-nang', name: 'Cẩm nang chọn cây', section: 'blog', icon: 'plant', shop: true },
   { key: 'cham-soc', name: 'Chăm sóc cây', section: 'blog', icon: 'leaf', shop: true },
   { key: 'bat-benh', name: 'Bắt bệnh cây', section: 'blog', icon: 'bug', expert: true, shop: true },
   { key: 'thuoc-phan-bon', name: 'Thuốc & Phân bón', section: 'blog', icon: 'flask', expert: true, shop: true },
@@ -43,6 +44,7 @@ export type CategoryKey = (typeof CATEGORIES)[number]['key'];
 
 /** Mô tả Google của trang từng chuyên mục (/goc-cham-cay?chuyen-muc=…, /tin-tuc?chuyen-muc=…) — mỗi chuyên mục một câu riêng. */
 export const CATEGORY_DESCRIPTION: Record<CategoryKey, string> = {
+  'cam-nang': 'Cẩm nang chọn cây cảnh: cây để bàn, cây văn phòng, cây ban công, cây công trình, cây hợp mệnh, cây an toàn cho trẻ nhỏ, thú cưng và cách chọn cây khỏe.',
   'cham-soc': 'Hướng dẫn chăm sóc cây cảnh: tưới nước, ánh sáng, đất trồng, bón phân, thay chậu cho cây trong nhà, văn phòng, ban công và sân vườn.',
   'bat-benh': 'Nhận biết và xử lý bệnh cây: thối rễ, vàng lá, nấm, sâu rệp… dấu hiệu sớm, nguyên nhân và cách cứu cây.',
   'thuoc-phan-bon': 'Cách chọn và dùng thuốc bảo vệ thực vật, phân bón đúng liều, đúng lúc, an toàn cho người, thú cưng và cây trồng.',
@@ -231,7 +233,13 @@ export function durationLabel(sec: number | null | undefined) {
 
 // ---- Ảnh -------------------------------------------------------------------------------------
 
-export const postImageUrl = (file: string, slug?: string) => imageUrl('post-images', file, slug);
+/**
+ * Ảnh bài viết có hai loại: ảnh tải lên (tên file trong bảng post_images) hoặc **link ảnh ngoài** (https://…, vd. ảnh
+ * Wikimedia Commons / StockSnap không cần ghi nguồn) — link ngoài hiện thẳng từ máy chủ ảnh kia, không tải về database.
+ */
+export const EXTERNAL_IMAGE_MAX = 1000;
+export const isExternalImage = (f: string) => f.length <= EXTERNAL_IMAGE_MAX && /^https:\/\/[^\s"'<>()\\]+$/i.test(f);
+export const postImageUrl = (file: string, slug?: string) => (isExternalImage(file) ? file : imageUrl('post-images', file, slug));
 
 // ---- Trạng thái ------------------------------------------------------------------------------
 

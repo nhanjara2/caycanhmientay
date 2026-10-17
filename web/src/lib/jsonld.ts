@@ -353,7 +353,8 @@ export function postLd(p: LdPost): Json {
     image: image ? [image] : undefined,
     datePublished: date(p.publishedAt),
     dateModified: date(modified),
-    author: p.authorName ? { '@type': 'Person', name: p.authorName } : orgRef(),
+    // Tác giả gõ đúng tên shop thì là tổ chức, không phải một người.
+    author: p.authorName && p.authorName.trim() !== SITE_NAME ? { '@type': 'Person', name: p.authorName } : orgRef(),
     publisher: orgRef(),
     articleSection: p.categoryName,
     keywords: p.tags.length ? p.tags.join(', ') : undefined,
