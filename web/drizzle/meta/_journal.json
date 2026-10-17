@@ -470,6 +470,13 @@
       "when": 1792147192505,
       "tag": "0066_gia_san_ky_gui",
       "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1792201392163,
+      "tag": "0067_gia_vuon_dot_2",
+      "breakpoints": true
     }
   ]
 }
