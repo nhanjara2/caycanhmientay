@@ -484,6 +484,13 @@
       "when": 1792213036028,
       "tag": "0068_cam_nang_chon_cay",
       "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1792217039470,
+      "tag": "0069_50_bai_viet_dang_bai",
+      "breakpoints": true
     }
   ]
 }
