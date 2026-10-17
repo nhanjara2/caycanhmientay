@@ -114,6 +114,9 @@ export default function CheckoutPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loggedIn]);
 
+  // Mọi hook phải gọi TRƯỚC các lệnh return sớm bên dưới (giỏ chưa tải / giỏ trống) — đặt sau thì lúc giỏ tải xong số hook đổi, React báo lỗi và trang sập
+  const formRef = useRef<HTMLFormElement>(null);
+
   if (!ready) return <div className="vx-checkout app-page" style={{ minHeight: 400 }} />;
   if (!lines.length) {
     return (
@@ -192,7 +195,6 @@ export default function CheckoutPage() {
     router.push(`/dat-hang-thanh-cong?ma=${r.code}`);
   };
 
-  const formRef = useRef<HTMLFormElement>(null);
   // Lỗi của ô có id (họ tên, SĐT) gắn vào ô qua aria-describedby; lỗi chung (địa chỉ, khung giờ, xác nhận an toàn) đọc lên ngay.
   const err = (k: keyof typeof errors, field?: string) => touched && errors[k]
     ? <span className="vx-err" id={field ? errId(field) : undefined} role={field ? undefined : 'alert'}>{errors[k]}</span>
