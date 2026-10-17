@@ -191,6 +191,18 @@ export function BuyBox({ product: p, category, wishlisted = false, initialOpt }:
             </div>
           </div>
         </div>
+        {u.parts && u.parts.length > 0 && (
+          <div className="app-prow">
+            <span className="app-prow__k">Bộ gồm</span>
+            <div className="app-prow__v">
+              <ul className="app-bitems">
+                {u.parts.map((x, i) => (
+                  <li key={i}><b>{x.qty} ×</b> {x.href ? <Link href={x.href}>{x.name}</Link> : x.name} <span>· {x.label}</span></li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
         {buyable && (
           <div className="app-prow">
             <span className="app-prow__k">Số lượng</span>

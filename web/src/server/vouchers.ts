@@ -3,7 +3,7 @@ import { and, desc, eq, inArray, ne, or, sql } from 'drizzle-orm';
 import * as z from 'zod';
 import { money } from '@/lib/format';
 import { fmtDate } from '@/lib/order-labels';
-import { discountOf, voucherStatus, WELCOME_CODE, WELCOME_DAYS, welcomeText, type VoucherKind, type WelcomeOffer, type WelcomeProgram } from '@/lib/voucher-labels';
+import { discountOf, usedPct, voucherStatus, WELCOME_CODE, WELCOME_DAYS, welcomeText, type VoucherKind, type WelcomeOffer, type WelcomeProgram } from '@/lib/voucher-labels';
 import type { Totals } from '@/lib/pricing';
 import { isScoped, voucherAmount, type VoucherScope } from '@/lib/voucher-scope';
 import { getCategories } from './categories';
@@ -141,7 +141,8 @@ export async function listActiveVouchers() {
   }).from(vouchers)
     .where(and(eq(vouchers.active, true), sql`(${vouchers.endsAt} is null or ${vouchers.endsAt} >= ${now})`, sql`(${vouchers.startsAt} is null or ${vouchers.startsAt} <= ${now})`))
     .orderBy(desc(vouchers.id));
-  return rows.filter((r) => r.v.usageLimit == null || r.used < r.v.usageLimit).map((r) => r.v);
+  return rows.filter((r) => r.v.usageLimit == null || r.used < r.v.usageLimit)
+    .map((r) => ({ ...r.v, usedPct: usedPct(r.used, r.v.usageLimit) }));
 }
 
 export type VoucherCheck = { ok: true; code: string; kind: VoucherKind; discount: number } | { ok: false; error: string };

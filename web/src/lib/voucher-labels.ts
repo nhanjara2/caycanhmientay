@@ -34,7 +34,33 @@ export type PublicVoucher = {
   code: string; label: string; kind: VoucherKind; discountType: DiscountType; discountValue: number; maxDiscount: number | null; minOrder: number;
   /** Phạm vi áp dụng (null = mọi sản phẩm) + tên phạm vi để hiện cho khách ("Cây sân vườn, Cây kim tiền"). */
   scope?: VoucherScope | null; scopeText?: string | null;
+  /** Hạn dùng (ISO) và % tổng lượt đã dùng (null = mã không giới hạn tổng lượt) — để báo "sắp hết" trên thẻ mã. */
+  endsAt?: string | null; usedPct?: number | null;
 };
+
+// ---- Báo "sắp hết lượt / sắp hết hạn" trên thẻ mã ---------------------------------------------
+// Chỉ dùng số thật: % lượt đã dùng của mã có giới hạn tổng lượt, hạn dùng admin đặt. Mã không giới hạn / không hạn thì không báo gì.
+
+/** Hiện "Đã dùng n%" khi đã dùng từ mức này; từ VOUCHER_USED_HOT thì tô đỏ. */
+export const VOUCHER_USED_SHOW = 50;
+export const VOUCHER_USED_HOT = 80;
+/** Báo "Còn n ngày" khi mã hết hạn trong số ngày này. */
+export const VOUCHER_EXPIRY_SOON_DAYS = 3;
+const DAY = 24 * 60 * 60 * 1000;
+
+/** % tổng lượt đã dùng (làm tròn xuống); null = không giới hạn tổng lượt. */
+export const usedPct = (used: number, limit: number | null) => (limit ? Math.min(100, Math.floor((used * 100) / limit)) : null);
+
+export function voucherUrgency(v: { usedPct?: number | null; endsAt?: string | Date | null }, now = Date.now()) {
+  const used = v.usedPct != null && v.usedPct >= VOUCHER_USED_SHOW ? v.usedPct : null;
+  const ms = v.endsAt ? new Date(v.endsAt).getTime() - now : Infinity;
+  const days = ms > 0 && ms <= VOUCHER_EXPIRY_SOON_DAYS * DAY ? Math.floor(ms / DAY) : null;
+  return {
+    used,
+    hot: used != null && used >= VOUCHER_USED_HOT,
+    expiry: days == null ? null : days < 1 ? 'Sắp hết hạn' : `Còn ${days} ngày`,
+  };
+}
 
 /** Số tiền giảm của một mã: mã giảm tiền hàng tính trên `amount`; mã miễn phí giao giảm tối đa bằng phí giao `shipFee`. Dùng chung client (ước tính) và server (chốt). */
 export function discountOf(v: Pick<PublicVoucher, 'kind' | 'discountType' | 'discountValue' | 'maxDiscount'>, amount: number, shipFee: number) {

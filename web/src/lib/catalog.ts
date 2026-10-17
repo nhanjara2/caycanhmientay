@@ -1,6 +1,7 @@
 // Kiểu dữ liệu và hàm thuần dùng chung cho server và client.
 // Sản phẩm, danh mục nằm trong database — truy vấn qua src/server/catalog.ts, src/server/categories.ts (chỉ chạy trên server).
 import type { IconName } from '@/components/Icon';
+import type { BundleItem } from './bundle';
 import type { ProductAttrs } from './product-filters';
 import { plainText, slugify, SLUG_RE } from './slug';
 import { imageUrl } from './images';
@@ -47,6 +48,8 @@ export type Unit = {
   /** Tồn kho = 0 (tính trên server; không gửi số tồn xuống trình duyệt): trang sản phẩm ghi "Hết hàng", không cho vào giỏ,
    *  schema Offer ghi OutOfStock. Trang sản phẩm vẫn mở (200, được index) — hết hàng không phải ngừng bán. */
   soldOut?: boolean;
+  /** Sản phẩm bộ: các món trong bộ (lib/bundle.ts). Không có = quy cách thường. */
+  parts?: BundleItem[];
 };
 
 /** Quy cách theo số thứ tự database (`Unit.idx`); undefined khi quy cách đã bị xóa. */
@@ -149,6 +152,8 @@ export type Product = {
   isNew?: boolean;
   /** Sản phẩm đã có ảnh (mọi ảnh đều do shop tự chụp / tải lên) → sticker "Ảnh thật 100%". */
   realImg?: boolean;
+  /** Có quy cách là bộ (cây + chậu + giá thể…): giá bộ đã giảm nên không áp mã giảm giá (`noVoucher` bật theo). */
+  bundle?: boolean;
 };
 
 /** Biểu tượng chọn được cho sản phẩm (hiện thay ảnh khi chưa có ảnh). Tên cũ đã lưu trong database phải giữ trong danh sách. */

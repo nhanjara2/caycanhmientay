@@ -43,10 +43,10 @@ const MEANINGS: { name: string; re: RegExp }[] = [
 const specOf = (specs: [string, string][], name: string) => specs.find(([k]) => normalize(k) === normalize(name))?.[1] ?? '';
 const hasAccent = (s: string) => /[^\x00-\x7f]/.test(s);
 
-/** "Kim tiền" → "Cây kim tiền"; tên đã có "Cây" / "Cỏ" ở đầu thì giữ. */
+/** "Kim tiền" → "Cây kim tiền"; tên đã có "Cây" / "Cỏ" / "Bộ" (sản phẩm bộ) ở đầu thì giữ. */
 function plantName(name: string) {
   const n = name.trim();
-  if (/^(cây|cỏ)\s/i.test(n)) return n[0].toUpperCase() + n.slice(1);
+  if (/^(cây|cỏ|bộ|combo)\s/i.test(n)) return n[0].toUpperCase() + n.slice(1);
   return `Cây ${n[0].toLowerCase()}${n.slice(1)}`;
 }
 

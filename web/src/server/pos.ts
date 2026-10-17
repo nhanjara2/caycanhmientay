@@ -1,5 +1,5 @@
 import 'server-only';
-import { and, asc, eq, gt, or, sql } from 'drizzle-orm';
+import { and, asc, eq, gt, isNotNull, or, sql } from 'drizzle-orm';
 import * as z from 'zod';
 import { optionOf, type Unit } from '@/lib/catalog';
 import { computeTotals } from '@/lib/pricing';
@@ -7,14 +7,15 @@ import { todayVN } from '@/lib/stock';
 import { isPhone, normalizePhone, staffName, type SessionUser } from './auth';
 import { allProducts, getProducts } from './catalog';
 import { db, schema } from './db';
-import { applyStock, listStores, type Tx } from './inventory';
+import { listStores, takeStock, type Tx } from './inventory';
+import { bundleAvailable, partStock } from './bundles';
 import { notifyEvent } from './notify';
 import { guardOrder, orderFloor } from './margin-guard';
 import { floorLines, itemPrice, newOrderCode, pricedLine, snapshotItemCosts } from './orders';
 import { getShippingConfig } from './shipping';
 import { checkVoucher } from './vouchers';
 
-const { orders, orderItems, orderEvents, stockLots, users } = schema;
+const { orders, orderItems, orderEvents, productOptions, stockLots, users } = schema;
 
 export type PosItem = {
   slug: string; idx: number; sku: string; name: string; label: string | null; price: number; oldPrice: number | null;
@@ -33,6 +34,13 @@ export async function posCatalog(storeId: number): Promise<PosItem[]> {
       .groupBy(stockLots.productSlug, stockLots.optionIdx),
   ]);
   const stock = new Map(lots.map((l) => [`${l.slug}|${l.idx}`, l.n]));
+  // Bộ: số bộ ghép được từ tồn từng món tại cửa hàng này
+  const bundleRows = products.some((p) => p.bundle) ? await db.select({ slug: productOptions.productSlug, idx: productOptions.idx, parts: productOptions.parts })
+    .from(productOptions).where(and(isNotNull(productOptions.parts), eq(productOptions.deleted, false))) : [];
+  if (bundleRows.length) {
+    const ps = await partStock([...new Set(bundleRows.flatMap((r) => r.parts!.map((x) => x.slug)))], storeId);
+    for (const r of bundleRows) stock.set(`${r.slug}|${r.idx}`, bundleAvailable(r.parts!, ps));
+  }
   // quy cách chưa có giá (Liên hệ báo giá) không bán ở quầy
   return products.flatMap((p) => p.options.flatMap((o): PosItem[] => o.price <= 0 ? [] : [{
     slug: p.slug, idx: o.idx, sku: `${p.sku}-${o.idx + 1}`, name: p.name, label: p.options.length > 1 ? o.label : null, price: o.price, oldPrice: o.oldPrice ?? null, combo2: o.combo2 ?? null,
@@ -116,7 +124,8 @@ export async function createPosOrder(input: PosOrderInput, staff: SessionUser): 
           orderId: order.id, productSlug: p.slug, optionIdx: it.option, name: p.name, label: u.label, unit: p.unit,
           icon: p.icon, ship: p.ship, ...itemPrice(u), qty: it.qty,
         });
-        if (await applyStock(tx, p.slug, it.option, -it.qty, 'order', actor, code, { storeId: store.id }) === null) {
+        if (!await takeStock(tx, p.slug, it.option, it.qty, 'order', actor, code, { storeId: store.id })) {
+          if (u.parts) throw new PosError(`Bộ “${p.name} · ${u.label}” không đủ món tại ${store.name}`);
           const [{ n }] = await tx.select({ n: sql<number>`coalesce(sum(${stockLots.qty}), 0)`.mapWith(Number) }).from(stockLots)
             .where(and(eq(stockLots.storeId, store.id), eq(stockLots.productSlug, p.slug), eq(stockLots.optionIdx, it.option)));
           throw new PosError(`“${p.name}${u.label ? ` · ${u.label}` : ''}” chỉ còn ${n} tại ${store.name}`);

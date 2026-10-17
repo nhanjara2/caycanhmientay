@@ -12,6 +12,8 @@ import { mainImageOf } from './catalog';
 import { getCategories } from './categories';
 import { db, schema } from './db';
 import { applyStock, deleteLot } from './inventory';
+import { bundlePricing, BundlePartsSchema, bundlesUsing, partInfo, partsError, refreshBundles } from './bundles';
+import type { BundlePart } from '@/lib/bundle';
 import type { SavedImage } from './uploads';
 
 const { products, productOptions, productImages, orders, orderItems, stockLots, stockMoves } = schema;
@@ -100,10 +102,13 @@ export const ProductInputSchema = z.object({
     /** Cây lớn / cồng kềnh: tính thêm phụ phí giao mỗi cây (Cài đặt giao hàng). */
     bulky: z.boolean().default(false),
     stock: z.number().int().min(0).max(100_000).optional(), // chỉ dùng khi tạo quy cách mới
+    /** Sản phẩm bộ: các món trong bộ (lib/bundle.ts). Có thì giá do máy chủ tự tính từ các món, không có tồn riêng. */
+    parts: BundlePartsSchema.nullable().default(null),
   })).min(1, 'Cần ít nhất 1 quy cách').max(10),
 }).superRefine((v, ctx) => {
   v.options.forEach((o, i) => {
     const at = (k: string, message: string) => ctx.addIssue({ code: 'custom', path: ['options', i, k], message: `Quy cách “${o.label}”: ${message}` });
+    if (o.parts) return; // giá bộ tự tính ở saveProduct
     if (o.price === 0) {
       if (o.oldPrice !== null || o.combo2 !== null) at('price', 'chưa có giá lẻ (Liên hệ báo giá) thì bỏ trống giá combo và giá gạch ngang');
       return;
@@ -232,18 +237,38 @@ const stable = (v: unknown): string =>
       : JSON.stringify(v ?? null);
 
 type Shown = Pick<typeof products.$inferSelect, 'name' | 'seoName' | 'category' | 'sub' | 'extraSubs' | 'icon' | 'origin' | 'ship' | 'pesticide' | 'noVoucher' | 'unit' | 'spec' | 'lead' | 'specs' | 'youtubeId' | 'keywords' | 'fengshui' | 'attrs'>;
-type ShownOption = { label: string; price: number; oldPrice?: number | null; combo2?: number | null; bulky?: boolean | null };
+type ShownOption = { label: string; price: number; oldPrice?: number | null; combo2?: number | null; bulky?: boolean | null; parts?: BundlePart[] | null };
 
 /** Phần nội dung khách thấy trên trang sản phẩm (không gồm Đang bán / Ẩn, tồn kho, giá vườn / giá gốc). */
 function shownContent(p: { [K in keyof Shown]?: Shown[K] | null }, options: ShownOption[]) {
   const { name, seoName, category, sub, extraSubs, icon, origin, ship, pesticide, noVoucher, unit, spec, lead, specs, youtubeId, keywords, fengshui, attrs } = p;
-  const opts = options.map((o) => stable([o.label, o.price, o.oldPrice ?? null, o.combo2 ?? null, !!o.bulky])).sort();
+  const opts = options.map((o) => stable([o.label, o.price, o.oldPrice ?? null, o.combo2 ?? null, !!o.bulky, o.parts ?? null])).sort();
   return stable([name, seoName, category, sub, extraSubs, icon, origin, ship, !!pesticide, !!noVoucher, unit, spec, lead, specs, youtubeId, keywords, fengshui, attrs, opts]);
+}
+
+/**
+ * Quy cách là bộ: kiểm tra từng món rồi thay giá form gửi bằng giá tính từ các món (lib/bundle.ts) — bộ không có tồn riêng.
+ * Trả về lỗi, hoặc danh sách quy cách đã tính giá.
+ */
+async function prepareBundles(input: ProductInput): Promise<{ error: string } | { options: ProductInput['options'] }> {
+  if (!input.options.some((o) => o.parts)) return { options: input.options };
+  const info = await partInfo([...new Set(input.options.flatMap((o) => o.parts?.map((p) => p.slug) ?? []))]);
+  const options: ProductInput['options'] = [];
+  for (const o of input.options) {
+    if (!o.parts) { options.push(o); continue; }
+    const bad = partsError(o.parts, info, input.slug, o.label);
+    if (bad) return { error: bad };
+    options.push({ ...o, ...bundlePricing(o.parts, info), stock: o.idx === undefined ? 0 : undefined });
+  }
+  return { options };
 }
 
 export async function saveProduct(input: ProductInput, actor: string): Promise<SaveResult> {
   const bad = await checkCategory(input);
   if (bad) return { ok: false, error: bad };
+  const prepared = await prepareBundles(input);
+  if ('error' in prepared) return { ok: false, error: prepared.error };
+  input = { ...input, options: prepared.options };
   // Nhóm phụ: chỉ giữ nhóm con có thật của cùng danh mục, khác nhóm chính
   const subsOfCat = findCategory(await getCategories(), input.category)?.subs.map((s) => s.slug) ?? [];
   const extraSubs = [...new Set(input.extraSubs)].filter((s) => s !== input.sub && subsOfCat.includes(s));
@@ -282,6 +307,19 @@ export async function saveProduct(input: ProductInput, actor: string): Promise<S
           return { ok: false, error: `Quy cách “${r.label}” đang có trong đơn chưa giao xong (${codes.slice(0, 3).join(', ')}${codes.length > 3 ? '…' : ''}). Giao xong hoặc hủy đơn rồi mới xóa được.` };
         }
       }
+      // Quy cách đang là món trong bộ khác: không xóa được, không biến thành bộ được (bộ không lồng bộ).
+      const used = await bundlesUsing(slug, undefined, tx);
+      const usedIdx = (idx: number) => used.find((b) => b.parts!.some((p) => p.slug === slug && p.idx === idx));
+      for (const r of removed) {
+        const b = usedIdx(r.idx);
+        if (b) return { ok: false, error: `Quy cách “${r.label}” đang nằm trong bộ “${b.name} · ${b.label}”. Bỏ món này khỏi bộ trước rồi mới xóa được.` };
+      }
+      for (const o of input.options) {
+        const b = o.parts && o.idx !== undefined ? usedIdx(o.idx) : undefined;
+        if (b) return { ok: false, error: `Quy cách “${o.label}” đang là món trong bộ “${b.name} · ${b.label}” nên không đổi thành bộ được.` };
+        const had = o.parts && o.idx !== undefined ? existing.options.find((x) => x.idx === o.idx) : undefined;
+        if (had && !had.parts && had.stock > 0) return { ok: false, error: `Quy cách “${o.label}” còn ${had.stock} trong kho nên không đổi thành bộ được — thêm một quy cách mới làm bộ.` };
+      }
       await tx.update(products).set({
         ...values,
         flashTotal: input.flash ? (existing.flashTotal ?? 50) : null,
@@ -293,7 +331,7 @@ export async function saveProduct(input: ProductInput, actor: string): Promise<S
       let next = Math.max(-1, ...rows.map((r) => r.idx)) + 1;
       const idxs: number[] = [];
       for (const o of input.options) {
-        const price = { label: o.label, price: o.price, oldPrice: o.oldPrice, garden: o.garden, cost: o.cost, combo2: o.combo2, bulky: o.bulky };
+        const price = { label: o.label, price: o.price, oldPrice: o.oldPrice, garden: o.garden, cost: o.cost, combo2: o.combo2, bulky: o.bulky, parts: o.parts };
         if (o.idx !== undefined) {
           await tx.update(productOptions).set(price).where(and(eq(productOptions.productSlug, slug), eq(productOptions.idx, o.idx)));
           idxs.push(o.idx);
@@ -311,6 +349,8 @@ export async function saveProduct(input: ProductInput, actor: string): Promise<S
         for (const lot of lots) await deleteLot(tx, lot.id, actor, 'Xóa quy cách');
         await tx.update(productOptions).set({ deleted: true, stock: 0 }).where(and(eq(productOptions.productSlug, slug), eq(productOptions.idx, r.idx)));
       }
+      // Giá lẻ / giá vốn của sản phẩm này đổi → các bộ có món này tính lại giá
+      await refreshBundles(tx, [slug]);
       return { ok: true, slug, idxs };
     });
   }
@@ -326,7 +366,7 @@ export async function saveProduct(input: ProductInput, actor: string): Promise<S
   await db.transaction(async (tx) => {
     await tx.insert(products).values({ slug, sku, ...values, flashTotal: input.flash ? 50 : null, flashSold: input.flash ? 0 : null });
     for (const [idx, o] of input.options.entries()) {
-      await tx.insert(productOptions).values({ productSlug: slug, idx, label: o.label, price: o.price, oldPrice: o.oldPrice, garden: o.garden, cost: o.cost, combo2: o.combo2, bulky: o.bulky, stock: 0 });
+      await tx.insert(productOptions).values({ productSlug: slug, idx, label: o.label, price: o.price, oldPrice: o.oldPrice, garden: o.garden, cost: o.cost, combo2: o.combo2, bulky: o.bulky, stock: 0, parts: o.parts });
       if (o.stock) await applyStock(tx, slug, idx, o.stock, 'import', actor, 'Tồn đầu kỳ');
     }
   });
@@ -350,6 +390,8 @@ export async function deleteProduct(slug: string): Promise<DeleteResult> {
     if (!p) return { ok: false as const, error: 'Không tìm thấy sản phẩm' };
     const [{ n }] = await tx.select({ n: count() }).from(orderItems).where(eq(orderItems.productSlug, slug));
     if (n > 0) return { ok: false as const, error: `Sản phẩm đã có trong ${n} dòng đơn hàng nên không thể xóa. Hãy chuyển sang “Ẩn” để ngừng bán.` };
+    const [b] = await bundlesUsing(slug, undefined, tx);
+    if (b) return { ok: false as const, error: `Sản phẩm đang là món trong bộ “${b.name} · ${b.label}”. Bỏ món này khỏi bộ trước rồi mới xóa được.` };
     await tx.delete(stockMoves).where(eq(stockMoves.productSlug, slug));
     await tx.delete(stockLots).where(eq(stockLots.productSlug, slug));
     await tx.delete(products).where(eq(products.slug, slug));

@@ -1,7 +1,8 @@
 import 'server-only';
-import { and, asc, count, desc, eq, gt, ilike, inArray, lt, or, sql, type AnyColumn } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gt, ilike, inArray, isNull, lt, or, sql, type AnyColumn } from 'drizzle-orm';
 import { costFromGarden } from '@/lib/pricing';
 import { addDays, EXPIRY_WARN_DAYS, todayVN } from '@/lib/stock';
+import { refreshBundles } from './bundles';
 import { mainImageOf } from './catalog';
 import { db, schema, type DB } from './db';
 import type { STOCK_REASONS } from './db/schema';
@@ -101,6 +102,20 @@ export async function applyStock(tx: Tx | DB, slug: string, idx: number, delta: 
 }
 
 /**
+ * Xuất bán `qty` đơn vị một quy cách (đơn web, bán tại quầy, đơn bảo hành). Quy cách là bộ (lib/bundle.ts) thì trừ kho từng món
+ * (`qty` × số lượng mỗi món) — lịch sử kho ghi theo món, cùng ghi chú mã đơn nên hủy đơn (`restoreOrderStock`) trả đúng từng món.
+ * Trả về false khi không đủ hàng (gọi trong transaction: ném lỗi để hủy cả đơn).
+ */
+export async function takeStock(tx: Tx, slug: string, idx: number, qty: number, reason: StockReason, actor: string, note: string, opts: StockOpts = {}): Promise<boolean> {
+  const [o] = await tx.select({ parts: productOptions.parts }).from(productOptions).where(and(eq(productOptions.productSlug, slug), eq(productOptions.idx, idx)));
+  if (!o?.parts) return await applyStock(tx, slug, idx, -qty, reason, actor, note, opts) !== null;
+  for (const p of o.parts) {
+    if (await applyStock(tx, p.slug, p.idx, -qty * p.qty, reason, actor, note, opts) === null) return false;
+  }
+  return true;
+}
+
+/**
  * Giá vườn của quy cách theo các lô còn hàng: lấy giá cao nhất (an toàn cho giá sàn), giá gốc = giá vườn + 10% tiền xe.
  * Gọi sau khi nhập hàng có giá. Không còn lô nào có giá thì giữ nguyên số cũ.
  */
@@ -110,6 +125,7 @@ export async function syncGardenFromLots(tx: Tx, slug: string, idx: number) {
   if (!r?.g) return;
   await tx.update(productOptions).set({ garden: r.g, cost: costFromGarden(r.g) })
     .where(and(eq(productOptions.productSlug, slug), eq(productOptions.idx, idx)));
+  await refreshBundles(tx, [slug]);
 }
 
 /** Hủy đơn: trả đúng số lượng về đúng lô/cửa hàng đã xuất (theo lịch sử xuất của mã đơn). */
@@ -176,7 +192,8 @@ export const INVENTORY_TABS = {
 export type InventoryTab = keyof typeof INVENTORY_TABS;
 
 /** Quy cách đã xóa (product_options.deleted) không hiện ở Kho, Nhập hàng. */
-const live = eq(productOptions.deleted, false);
+// Bộ (lib/bundle.ts) không có tồn riêng — không hiện ở Kho; tồn nằm ở từng món.
+const live = and(eq(productOptions.deleted, false), isNull(productOptions.parts));
 
 const expiringKeys = () => sql`(${productOptions.productSlug}, ${productOptions.idx}) in (
   select ${L.productSlug}, ${L.optionIdx} from ${L} where ${L.qty} > 0 and ${L.expiry} is not null and ${L.expiry} <= ${addDays(todayVN(), EXPIRY_WARN_DAYS)})`;

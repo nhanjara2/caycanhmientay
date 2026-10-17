@@ -1,5 +1,5 @@
 import 'server-only';
-import { and, asc, count, countDistinct, eq, gte, lt, ne, sql } from 'drizzle-orm';
+import { and, asc, count, countDistinct, eq, gte, isNull, lt, ne, sql } from 'drizzle-orm';
 import { mainImageOf } from './catalog';
 import { db, schema } from './db';
 
@@ -43,7 +43,7 @@ export async function dashboardStats() {
 
   const lowStock = await db.select({ name: products.name, label: productOptions.label, unit: products.unit, icon: products.icon, image: mainImageOf(products.slug), stock: productOptions.stock, pesticide: products.pesticide })
     .from(productOptions).innerJoin(products, eq(products.slug, productOptions.productSlug))
-    .where(and(lt(productOptions.stock, 10), eq(productOptions.deleted, false))).orderBy(asc(productOptions.stock)).limit(6);
+    .where(and(lt(productOptions.stock, 10), eq(productOptions.deleted, false), isNull(productOptions.parts))).orderBy(asc(productOptions.stock)).limit(6);
 
   return { today, yesterday, pending, preparingPlants, days, byCategory, lowStock };
 }

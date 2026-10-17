@@ -6,12 +6,13 @@ import { CopyVoucherCode } from '@/components/CopyVoucherCode';
 import { Icon } from '@/components/Icon';
 import { PostMeta, PostThumb } from '@/components/PostParts';
 import { ProductGrid } from '@/components/ProductCard';
+import { VoucherUrgency } from '@/components/VoucherUrgency';
 import { FACEBOOK_URL, SALES_PHONE, ZALO_URL } from '@/lib/contact';
 import { discountPct, type Product } from '@/lib/catalog';
 import { money } from '@/lib/format';
 import { fmtDate } from '@/lib/order-labels';
 import { categoryOf, postPath, SECTIONS } from '@/lib/posts';
-import { voucherValueText, WELCOME_CODE, WELCOME_DAYS } from '@/lib/voucher-labels';
+import { voucherUrgency, voucherValueText, WELCOME_CODE, WELCOME_DAYS } from '@/lib/voucher-labels';
 import { allProducts } from '@/server/catalog';
 import { publishedPosts } from '@/server/posts';
 import { listActiveVouchers, scopeTexts } from '@/server/vouchers';
@@ -82,8 +83,9 @@ export default async function PromotionsPage() {
                     )}
                     <span>
                       Mã: <b className="pm-code">{v.code}</b>
-                      {v.endsAt && <span className="exp"> · Hết hạn {fmtDate(v.endsAt)}</span>}
+                      {v.endsAt && <span className="exp"> · {voucherUrgency(v).expiry ?? `Hết hạn ${fmtDate(v.endsAt)}`}</span>}
                     </span>
+                    <VoucherUrgency v={v} expiry={false} />
                   </span>
                   <CopyVoucherCode code={v.code} text />
                 </span>

@@ -6,7 +6,7 @@ import { useState, useTransition, type FormEvent } from 'react';
 import { saveVoucherAction } from '@/app/actions/vouchers';
 import type { ScopeOptions } from '@/server/vouchers';
 import type { VoucherScope } from '@/lib/voucher-scope';
-import { WELCOME_CODE, WELCOME_DAYS, type DiscountType, type VoucherKind } from '@/lib/voucher-labels';
+import { VOUCHER_USED_HOT, VOUCHER_USED_SHOW, WELCOME_CODE, WELCOME_DAYS, type DiscountType, type VoucherKind } from '@/lib/voucher-labels';
 
 export type VoucherFormValue = {
   id?: number;
@@ -122,6 +122,7 @@ export function VoucherForm({ initial, options }: { initial: VoucherFormValue; o
               <div className="ad-f">
                 <label htmlFor="vc-max">Giảm tối đa (đ, để trống = không giới hạn)</label>
                 <input id="vc-max" className="vx-input" inputMode="numeric" value={v.maxDiscount} onChange={(e) => set('maxDiscount', digits(e.target.value))} placeholder="50.000" />
+                {!v.maxDiscount && <span className="vx-help app-warn-text">Nên đặt mức giảm tối đa: khách thấy "giảm {v.discountValue || 'n'}%" nhưng shop chỉ mất tối đa số tiền này. Không đặt thì đơn lớn giảm rất nhiều (chỉ còn giá sàn chặn).</span>}
               </div>
             )}
           </div>
@@ -133,6 +134,7 @@ export function VoucherForm({ initial, options }: { initial: VoucherFormValue; o
             <div className="ad-f">
               <label htmlFor="vc-limit">Tổng số lượt (để trống = không giới hạn)</label>
               <input id="vc-limit" className="vx-input" inputMode="numeric" value={v.usageLimit} onChange={(e) => set('usageLimit', digits(e.target.value))} placeholder="100" />
+              <span className="vx-help">Có giới hạn thì thẻ mã hiện "Đã dùng n%" khi đã dùng từ {VOUCHER_USED_SHOW}% (đỏ từ {VOUCHER_USED_HOT}%).</span>
             </div>
             <div className="ad-f">
               <label htmlFor="vc-per">Số lượt tối đa mỗi khách</label>

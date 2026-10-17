@@ -6,6 +6,7 @@ import type { IconName } from '@/components/Icon';
 import { requireAccess } from '@/server/auth';
 import { getCategories } from '@/server/categories';
 import { getProductAdmin } from '@/server/products-admin';
+import { bundleChoices } from '@/server/bundles';
 import { SeoPanel } from '@/components/admin/SeoPanel';
 import { clipText } from '@/lib/format';
 import { seoPanelState } from '@/server/seo-cms';
@@ -23,7 +24,7 @@ const EMPTY: ProductFormValue = {
   name: '', seoName: '', category: 'cay-canh', sub: '', extraSubs: [], icon: 'plant', origin: 'Việt Nam', ship: 'plant', pesticide: false, noVoucher: false,
   unit: 'Chậu', spec: '', lead: '', keywords: '', active: true, flash: false, video: '', images: [], fengshui: NO_FENGSHUI, attrs: NO_ATTRS,
   specs: [], // form tự điền bộ thông số của danh mục + nhóm con
-  options: [{ label: '', price: 0, oldPrice: null, garden: null, cost: null, combo2: null, bulky: false, stock: 0 }],
+  options: [{ label: '', price: 0, oldPrice: null, garden: null, cost: null, combo2: null, bulky: false, stock: 0, parts: null }],
 };
 
 /** AdminProductForm: /admin/san-pham/moi để thêm, /admin/san-pham/<slug> để sửa. */
@@ -45,7 +46,7 @@ export default async function AdminProductPage({ params }: Props) {
         viTri: p.attrs.viTri ?? [], kichThuoc: p.attrs.kichThuoc ?? null, mau: p.attrs.mau ?? [],
         anhSang: p.attrs.anhSang ?? [], vaiTro: p.attrs.vaiTro ?? [], cham: p.attrs.cham ?? null, thuCung: p.attrs.thuCung ?? null, chiuGio: p.attrs.chiuGio ?? false,
       } : NO_ATTRS,
-      options: p.options.map((o) => ({ idx: o.idx, label: o.label, price: o.price, oldPrice: o.oldPrice, garden: o.garden, cost: o.cost, combo2: o.combo2, bulky: o.bulky, stock: o.stock })),
+      options: p.options.map((o) => ({ idx: o.idx, label: o.label, price: o.price, oldPrice: o.oldPrice, garden: o.garden, cost: o.cost, combo2: o.combo2, bulky: o.bulky, stock: o.stock, parts: o.parts })),
     };
     const path = `/san-pham/${p.slug}`;
     const st = await seoPanelState(path);
@@ -61,7 +62,7 @@ export default async function AdminProductPage({ params }: Props) {
   }
   return (
     <>
-      <ProductForm key={slug} initial={initial} categories={await getCategories()} canEdit={me.role === 'admin'} />
+      <ProductForm key={slug} initial={initial} categories={await getCategories()} canEdit={me.role === 'admin'} bundleChoices={await bundleChoices()} />
       {seo && <div className="ad-body">{seo}</div>}
     </>
   );

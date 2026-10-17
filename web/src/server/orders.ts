@@ -11,7 +11,7 @@ import { getProducts, mainImageOf } from './catalog';
 import { buildSlotOptions, dayLabel, regionOfAddress, slotTime, vnDate, type ShipRegion, type ShippingConfig } from '@/lib/shipping';
 import { plantZone } from '@/lib/stock';
 import { getAddress } from './addresses';
-import { applyStock, listStores, restoreOrderStock, type Tx } from './inventory';
+import { listStores, restoreOrderStock, takeStock, type Tx } from './inventory';
 import { notifyEvent, orderOwner } from './notify';
 import { db, schema } from './db';
 import { PAYMENT_METHODS, type OrderStatus } from './db/schema';
@@ -81,8 +81,12 @@ export async function createOrder(input: PlaceOrderInput, user: SessionUser | nu
     }
   }
 
-  // Kiểm tra tồn kho theo quy cách
-  for (const { p, it } of lines) {
+  // Kiểm tra tồn kho theo quy cách (bộ: đã xét từng món ở `soldOut`; trừ kho trong transaction mới là số chốt)
+  for (const { p, u, it } of lines) {
+    if (u.parts) {
+      if (u.soldOut) return { ok: false, error: `“${p.name} · ${u.label}” tạm hết hàng` };
+      continue;
+    }
     const [opt] = await db.select({ stock: productOptions.stock }).from(productOptions)
       .where(and(eq(productOptions.productSlug, p.slug), eq(productOptions.idx, it.option)));
     if (!opt || opt.stock < it.qty) return { ok: false, error: `“${p.name}” chỉ còn ${opt?.stock ?? 0} sản phẩm` };
@@ -111,7 +115,7 @@ export async function createOrder(input: PlaceOrderInput, user: SessionUser | nu
 
 /** Dòng hàng đưa vào computeTotals (giá lẻ, giá gạch ngang, combo 2 cây của quy cách). */
 export const pricedLine = ({ p, u, it }: { p: Product; u: Unit; it: { qty: number } }) => ({
-  price: u.price, oldPrice: u.oldPrice, combo2: u.combo2, qty: it.qty, ship: p.ship, pesticide: p.pesticide, bulky: u.bulky, noVoucher: p.noVoucher,
+  price: u.price, oldPrice: u.oldPrice, combo2: u.combo2, qty: it.qty, ship: p.ship, pesticide: p.pesticide, bulky: u.bulky, noVoucher: p.noVoucher, bundle: Boolean(u.parts),
   slug: p.slug, category: p.category, subs: [p.sub, ...(p.extraSubs ?? [])],
 });
 
@@ -218,7 +222,7 @@ async function createOrderTx(
       orderId: order.id, productSlug: p.slug, optionIdx: it.option, name: p.name, label: u.label, unit: p.unit,
       icon: p.icon, ship: p.ship, ...itemPrice(u), qty: it.qty,
     });
-    if (await applyStock(tx, p.slug, it.option, -it.qty, 'order', user ? 'Khách hàng' : 'Khách vãng lai', code) === null) {
+    if (!await takeStock(tx, p.slug, it.option, it.qty, 'order', user ? 'Khách hàng' : 'Khách vãng lai', code)) {
       throw new OutOfStock(p.name);
     }
   }

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState, useTransition, type FormEvent } from 'react';
+import { Fragment, useState, useTransition, type FormEvent } from 'react';
 import { saveProductAction } from '@/app/actions/admin';
 import { Art, type IconName } from '@/components/Icon';
 import { applySpecTemplate, ELEMENTS, ICON_LABELS, parseYoutubeId, PRODUCT_ICONS, specTemplate, type Category, type FengShui } from '@/lib/catalog';
@@ -14,9 +14,12 @@ import { tracksLots } from '@/lib/stock';
 import { ProductDeleteButton } from './ProductDeleteButton';
 import { ProductImages, type AdminImage } from './ProductImages';
 import { Select } from '@/components/Select';
+import { partKey, type BundleChoice, type BundlePart } from '@/lib/bundle';
+import { BundleParts, previewBundle, type PartRow } from './BundleParts';
 
 /** `idx` = số thứ tự trong database của quy cách đã lưu (chưa có = quy cách mới thêm, chưa lưu). */
-type Option = { idx?: number; label: string; garden: string; cost: string; price: string; combo2: string; oldPrice: string; bulky: boolean; stock: string; existingStock?: number };
+type Option = { idx?: number; label: string; garden: string; cost: string; price: string; combo2: string; oldPrice: string; bulky: boolean; stock: string; existingStock?: number;
+  /** Quy cách là bộ: các món (lib/bundle.ts); null = quy cách thường. */ parts: PartRow[] | null };
 type PriceKey = 'garden' | 'cost' | 'price' | 'combo2' | 'oldPrice';
 export type ProductFormValue = {
   slug?: string;
@@ -52,7 +55,7 @@ export type ProductFormValue = {
     /** Tư vấn chọn cây (lib/plant-advisor.ts). */
     anhSang: string[]; vaiTro: string[]; cham: string | null; thuCung: string | null; chiuGio: boolean;
   };
-  options: { idx?: number; label: string; price: number; oldPrice: number | null; garden: number | null; cost: number | null; combo2: number | null; bulky: boolean; stock: number }[];
+  options: { idx?: number; label: string; price: number; oldPrice: number | null; garden: number | null; cost: number | null; combo2: number | null; bulky: boolean; stock: number; parts: BundlePart[] | null }[];
 };
 
 /**
@@ -98,7 +101,7 @@ function cascade(o: Option, k: PriceKey, raw: string): Option {
 const pickSub = (c: Category | undefined, current: string) =>
   c?.subs.some((s) => s.slug === current) ? current : (c?.subs.find((s) => s.active) ?? c?.subs[0])?.slug ?? '';
 
-export function ProductForm({ initial, categories, canEdit }: { initial: ProductFormValue; categories: Category[]; canEdit: boolean }) {
+export function ProductForm({ initial, categories, canEdit, bundleChoices }: { initial: ProductFormValue; categories: Category[]; canEdit: boolean; bundleChoices: BundleChoice[] }) {
   const router = useRouter();
   const findCat = (slug: string) => categories.find((c) => c.slug === slug);
   const [v, setV] = useState(() => {
@@ -113,6 +116,7 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
       idx: initial.slug ? o.idx : undefined, label: o.label, garden: o.garden ? fmt(String(o.garden)) : '', cost: o.cost ? fmt(String(o.cost)) : '',
       price: fmt(String(o.price)), combo2: o.combo2 ? fmt(String(o.combo2)) : '', oldPrice: o.oldPrice ? fmt(String(o.oldPrice)) : '', bulky: o.bulky,
       stock: '', existingStock: initial.slug ? o.stock : undefined,
+      parts: o.parts ? o.parts.map((x) => ({ key: partKey(x.slug, x.idx), qty: String(x.qty) })) : null,
     })),
   );
   const [error, setError] = useState('');
@@ -123,6 +127,17 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
   /** Thuốc BVTV, phân bón, hạt giống nhập theo lô: Tồn đầu kỳ không có Số lô + Hạn dùng nên chỉ nhập ở trang Nhập hàng. */
   const lotted = tracksLots({ pesticide: v.pesticide, category: v.category });
   const videoId = parseYoutubeId(v.video);
+  // Sản phẩm bộ: mọi quy cách là bộ (cây + chậu + giá thể…), giá tự tính từ các món, không có tồn riêng
+  const isBundle = opts.some((o) => o.parts);
+  const choices = bundleChoices.filter((c) => c.slug !== v.slug);
+  /** Giá bộ đổi theo món → ghi luôn vào các ô giá (tắt "bộ" thì giữ số vừa tính). */
+  const withParts = (o: Option, parts: PartRow[] | null): Option => {
+    if (!parts) return { ...o, parts };
+    const b = previewBundle(parts, choices);
+    const show = (n: number) => (n ? fmt(String(n)) : '');
+    return { ...o, parts, price: show(b.price), oldPrice: b.retail > b.price ? show(b.retail) : '', cost: show(b.cost), garden: '', combo2: '' };
+  };
+  const setBundle = (on: boolean) => { setOpts((x) => x.map((o) => withParts(o, on ? (o.parts ?? [{ key: '', qty: '1' }]) : null))); setSaved(false); };
   const setFs = (patch: Partial<FengShui>) => set('fengshui', { ...v.fengshui, ...patch });
   const setAttrs = (patch: Partial<ProductFormValue['attrs']>) => set('attrs', { ...v.attrs, ...patch });
   const toggle = (list: string[], key: string, all: { key: string }[]) => all.map((o) => o.key).filter((k) => (k === key ? !list.includes(k) : list.includes(k)));
@@ -168,7 +183,11 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
         cost: num(o.cost),
         combo2: num(o.combo2),
         bulky: kind === 'plant' && o.bulky,
-        stock: o.existingStock === undefined ? (lotted ? 0 : Number(digits(o.stock) || 0)) : undefined,
+        stock: o.parts ? undefined : o.existingStock === undefined ? (lotted ? 0 : Number(digits(o.stock) || 0)) : undefined,
+        parts: o.parts ? o.parts.filter((x) => x.key).map((x) => {
+          const [slug, idx] = x.key.split('#');
+          return { slug, idx: Number(idx), qty: Number(x.qty) || 1 };
+        }) : null,
       })),
     };
     start(async () => {
@@ -416,7 +435,13 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
             <div className="ad-card">
               <div className="ad-card__h">
                 Quy cách bán
-                <a style={{ cursor: 'pointer' }} onClick={() => setOpts((o) => [...o, { label: '', garden: '', cost: '', price: '', combo2: '', oldPrice: '', bulky: false, stock: '' }])}>+ Thêm quy cách</a>
+                <a style={{ cursor: 'pointer' }} onClick={() => setOpts((o) => [...o, { label: '', garden: '', cost: '', price: '', combo2: '', oldPrice: '', bulky: false, stock: '', parts: isBundle ? [{ key: '', qty: '1' }] : null }])}>+ Thêm quy cách</a>
+              </div>
+              <div className="ad-card__b" style={{ paddingBottom: 0 }}>
+                <label className="vx-check">
+                  <input type="checkbox" checked={isBundle} onChange={(e) => setBundle(e.target.checked)} />
+                  <span><b>Sản phẩm bộ</b> (cây + chậu + giá thể…) — giá tự tính từ các món, bán bộ thì trừ kho từng món</span>
+                </label>
               </div>
               <div className="ad-tablewrap">
                 <table className="ad-table ad-vtable app-mtable">
@@ -432,11 +457,13 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
                       const upd = (k: keyof Option, val: string) => { setOpts((x) => x.map((y, j) => (j === i ? { ...y, [k]: val } : y))); setSaved(false); };
                       const price = (k: PriceKey, label: string, hint: string) => (
                         <td data-label={label}>
-                          <input className="vx-input app-pricein" inputMode="numeric" value={o[k]} onChange={(e) => { setOpts((x) => x.map((y, j) => (j === i ? cascade(y, k, e.target.value) : y))); setSaved(false); }} placeholder={hint} aria-label={label} />
+                          <input className="vx-input app-pricein" inputMode="numeric" value={o[k]} onChange={(e) => { setOpts((x) => x.map((y, j) => (j === i ? cascade(y, k, e.target.value) : y))); setSaved(false); }} placeholder={o.parts ? '—' : hint} aria-label={label} disabled={!!o.parts} />
                         </td>
                       );
+                      const setParts = (parts: PartRow[]) => { setOpts((x) => x.map((y, j) => (j === i ? withParts(y, parts) : y))); setSaved(false); };
                       return (
-                        <tr key={o.idx ?? `moi-${i}`}>
+                        <Fragment key={o.idx ?? `moi-${i}`}>
+                        <tr>
                           <td data-label="Quy cách"><input className="vx-input app-optlabel" value={o.label} onChange={(e) => upd('label', e.target.value)} placeholder={kind === 'plant' ? 'Cao 40–60cm' : v.category === 'chau' ? '25x22cm' : 'Chai 500ml'} aria-label="Tên quy cách" /></td>
                           {price('garden', 'Giá tại vườn', 'Nhập giá vườn')}
                           {price('cost', 'Giá gốc', 'Tự tính')}
@@ -451,7 +478,8 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
                             </td>
                           )}
                           <td className="num" data-label={o.existingStock !== undefined ? 'Tồn' : 'Tồn đầu kỳ'}>
-                            {o.existingStock !== undefined
+                            {o.parts ? <span title="Bộ không có tồn riêng — tồn là của từng món">Theo món</span>
+                              : o.existingStock !== undefined
                               ? <Link href="/admin/kho" title="Đổi tồn ở trang Kho">{o.existingStock}</Link>
                               : <input className="vx-input" inputMode="numeric" style={{ width: 80 }} value={lotted ? '' : o.stock} onChange={(e) => upd('stock', digits(e.target.value))} placeholder="0" disabled={lotted} title={lotted ? 'Hàng theo lô: nhập ở trang Nhập hàng kèm Số lô và Hạn dùng' : undefined} aria-label="Tồn đầu kỳ" />}
                           </td>
@@ -459,6 +487,14 @@ export function ProductForm({ initial, categories, canEdit }: { initial: Product
                             <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" onClick={removeOpt} aria-label={`Xóa quy cách ${o.label}`}>Xóa</button>
                           )}</td>
                         </tr>
+                        {o.parts && (
+                          <tr className="app-bundle-tr">
+                            <td colSpan={kind === 'plant' ? 9 : 8} data-wide data-label={`Món trong bộ “${o.label || i + 1}”`}>
+                              <BundleParts label={o.label || String(i + 1)} rows={o.parts} choices={choices} categories={categories} onChange={setParts} />
+                            </td>
+                          </tr>
+                        )}
+                        </Fragment>
                       );
                     })}
                   </tbody>

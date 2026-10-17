@@ -1,12 +1,12 @@
 import 'server-only';
-import { and, eq, inArray } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { cache } from 'react';
 import { floorOf, guardDiscounts, MarginGuardSchema, parseMarginGuard, type Discounts, type MarginGuard } from '@/lib/margin-guard';
 import { costFromGarden, PRICE_FORMULA, roundPrice, type Totals } from '@/lib/pricing';
 import { db, schema } from './db';
 import type { Tx } from './inventory';
 
-const { appSettings, productOptions } = schema;
+const { appSettings, productOptions, products } = schema;
 const KEY = 'margin-guard';
 
 /** Lãi tối thiểu + hao hụt cây sống đang dùng (chưa lưu / hỏng → 25% / 5%). */
@@ -32,15 +32,21 @@ export type FloorLine = { slug: string; option: number; qty: number; ship: 'plan
 /** Tổng tiền thu tối thiểu của các dòng hàng (đọc giá gốc trong database — không bao giờ gửi xuống trình duyệt). */
 export async function orderFloor(lines: FloorLine[], conn: Tx | typeof db = db): Promise<number> {
   if (!lines.length) return 0;
-  const [g, rows] = await Promise.all([
-    getMarginGuard(),
-    conn.select({ slug: productOptions.productSlug, idx: productOptions.idx, cost: productOptions.cost, garden: productOptions.garden, price: productOptions.price })
-      .from(productOptions).where(and(inArray(productOptions.productSlug, [...new Set(lines.map((l) => l.slug))]))),
-  ]);
-  const by = new Map(rows.map((r) => [`${r.slug}#${r.idx}`, r]));
+  const opts = (slugs: string[]) => conn.select({
+    slug: productOptions.productSlug, idx: productOptions.idx, cost: productOptions.cost, garden: productOptions.garden, price: productOptions.price,
+    parts: productOptions.parts, ship: products.ship,
+  }).from(productOptions).innerJoin(products, eq(products.slug, productOptions.productSlug)).where(inArray(productOptions.productSlug, slugs));
+  const [g, rows] = await Promise.all([getMarginGuard(), opts([...new Set(lines.map((l) => l.slug))])]);
+  // Bộ (lib/bundle.ts): giá sàn = cộng giá sàn từng món (món là cây sống mới tính hao hụt)
+  const partSlugs = [...new Set(rows.flatMap((r) => r.parts?.map((p) => p.slug) ?? []))];
+  const parts = partSlugs.length ? await opts(partSlugs) : [];
+  const by = new Map([...rows, ...parts].map((r) => [`${r.slug}#${r.idx}`, r]));
+  const floorUnit = (o: (typeof rows)[number], ship: 'plant' | 'supply'): number => (o.parts
+    ? o.parts.reduce((s, p) => { const x = by.get(`${p.slug}#${p.idx}`); return x ? s + floorOf(unitCost(x), x.ship === 'plant', g) * p.qty : s; }, 0)
+    : floorOf(unitCost(o), ship === 'plant', g));
   return lines.reduce((s, l) => {
     const o = by.get(`${l.slug}#${l.option}`);
-    return o ? s + floorOf(unitCost(o), l.ship === 'plant', g) * l.qty : s;
+    return o ? s + floorUnit(o, l.ship) * l.qty : s;
   }, 0);
 }
 

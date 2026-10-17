@@ -1,7 +1,7 @@
 import 'server-only';
 import { createHash } from 'node:crypto';
 import ExcelJS from 'exceljs';
-import { eq } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import { normalize } from '@/lib/catalog';
 import { expiryLevel, isGrade, todayVN, tracksLots } from '@/lib/stock';
 import { getCategories } from './categories';
@@ -257,7 +257,8 @@ export async function parseStockImport(buf: Buffer): Promise<ImportParse> {
   const [stores, opts] = await Promise.all([
     listStores(),
     db.select({ slug: products.slug, sku: products.sku, name: products.name, category: products.category, pesticide: products.pesticide, idx: productOptions.idx, label: productOptions.label })
-      .from(productOptions).innerJoin(products, eq(products.slug, productOptions.productSlug)).where(eq(productOptions.deleted, false)),
+      // bộ (lib/bundle.ts) không nhập kho — nhập từng món
+      .from(productOptions).innerJoin(products, eq(products.slug, productOptions.productSlug)).where(and(eq(productOptions.deleted, false), isNull(productOptions.parts))),
   ]);
   return parseStockSheet(buf, stores, opts);
 }

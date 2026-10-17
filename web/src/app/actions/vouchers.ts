@@ -28,7 +28,9 @@ export async function publicVouchersAction(): Promise<PublicVoucher[]> {
   const list = (await listActiveVouchers()).filter((v) => v.code !== WELCOME_CODE);
   const texts = await scopeTexts(list);
   return list
-    .map(({ code, label, kind, discountType, discountValue, maxDiscount, minOrder, scope }) => ({ code, label, kind, discountType, discountValue, maxDiscount, minOrder, scope, scopeText: texts.get(code) ?? null }))
+    .map(({ code, label, kind, discountType, discountValue, maxDiscount, minOrder, scope, endsAt, usedPct }) => ({
+      code, label, kind, discountType, discountValue, maxDiscount, minOrder, scope, scopeText: texts.get(code) ?? null, endsAt: endsAt?.toISOString() ?? null, usedPct,
+    }))
     .sort((a, b) => a.minOrder - b.minOrder);
 }
 

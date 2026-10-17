@@ -1,5 +1,6 @@
 // Schema database (PostgreSQL / Supabase qua Drizzle). Đổi schema xong chạy `npm run db:generate` để tạo migration.
 import { sql } from 'drizzle-orm';
+import type { BundlePart } from '../../lib/bundle';
 import type { FengShui, SpecField } from '../../lib/catalog';
 import { CASH_KINDS } from '../../lib/cash-labels';
 import type { Disease } from '../../lib/diseases';
@@ -184,6 +185,8 @@ export const productOptions = pgTable('product_options', {
   stock: integer('stock').notNull().default(100),
   /** Quy cách đã xóa: dòng giữ lại để số thứ tự `idx` không bao giờ dùng lại (đơn, kho, phiếu nhập, giỏ hàng, mã SKU-n tham chiếu theo idx). */
   deleted: boolean('deleted').notNull().default(false),
+  /** Sản phẩm bộ: các quy cách thành phần (lib/bundle.ts). null = quy cách thường. Bộ không có tồn riêng — bán thì trừ kho từng món. */
+  parts: jsonb('parts').$type<BundlePart[]>(),
 }, (t) => [primaryKey({ columns: [t.productSlug, t.idx] })]);
 
 // ---- Bệnh cây --------------------------------------------------------------------------------

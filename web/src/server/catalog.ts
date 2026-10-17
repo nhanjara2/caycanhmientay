@@ -5,7 +5,9 @@ import { and, asc, eq, getTableName, gt, gte, inArray, isNotNull, isNull, or, sq
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import type { IconName } from '@/components/Icon';
 import { isNewProduct, normalize, productImageUrl, type Product } from '@/lib/catalog';
+import type { BundleItem, BundlePart } from '@/lib/bundle';
 import { todayVN } from '@/lib/stock';
+import { bundleAvailable, partInfo, partOf, partStock } from './bundles';
 import { db, schema } from './db';
 
 const { products: P, productOptions: O, productImages: I, stockLots: L } = schema;
@@ -23,17 +25,27 @@ async function hydrate(rows: Row[]): Promise<Product[]> {
       .where(and(inArray(L.productSlug, slugs), gt(L.qty, 0), or(isNull(L.expiry), gte(L.expiry, todayVN())))),
   ]);
   const sellable = new Set(lots.map((l) => `${l.slug}:${l.idx}`));
-  const canSell = (o: { productSlug: string; idx: number; stock: number }) => o.stock > 0 && sellable.has(`${o.productSlug}:${o.idx}`);
+  // Sản phẩm bộ: còn hàng khi mọi món còn đủ (lô chưa hết hạn); tên món để hiện "Bộ gồm" trên trang sản phẩm
+  const partSlugs = [...new Set(opts.flatMap((o) => o.parts?.map((x) => x.slug) ?? []))];
+  const [pstock, pinfo] = await Promise.all([partStock(partSlugs), partInfo(partSlugs)]);
+  const canSell = (o: { productSlug: string; idx: number; stock: number; parts: BundlePart[] | null }) =>
+    o.parts ? o.parts.every((x) => !partOf(pinfo, x)?.deleted) && bundleAvailable(o.parts, pstock) > 0
+      : o.stock > 0 && sellable.has(`${o.productSlug}:${o.idx}`);
+  const itemsOf = (parts: BundlePart[]): BundleItem[] => parts.flatMap((x) => {
+    const i = partOf(pinfo, x);
+    return i ? [{ name: i.name, label: i.label, qty: x.qty, href: i.active ? `/san-pham/${i.slug}` : undefined }] : [];
+  });
   // ảnh đã xếp theo thứ tự, ảnh đầu của mỗi sản phẩm là ảnh chính
   const mainFile = (slug: string) => imgs.find((i) => i.slug === slug)?.file;
-  return rows.map((r) => ({
+  return rows.map((r) => { const bundle = opts.some((o) => o.productSlug === r.slug && o.parts); return {
     slug: r.slug, sku: r.sku, name: r.name, seoName: r.seoName ?? undefined, category: r.category, sub: r.sub, extraSubs: r.extraSubs.length ? r.extraSubs : undefined, icon: r.icon as IconName,
-    origin: r.origin, ship: r.ship, pesticide: r.pesticide || undefined, noVoucher: r.noVoucher || undefined, unit: r.unit, spec: r.spec, lead: r.lead,
+    origin: r.origin, ship: r.ship, pesticide: r.pesticide || undefined, noVoucher: r.noVoucher || bundle || undefined, unit: r.unit, spec: r.spec, lead: r.lead,
     specs: r.specs, keywords: r.keywords, rating: r.rating / 10, reviews: r.reviews, sold: r.sold,
     flash: r.flashTotal ? { sold: r.flashSold ?? 0, total: r.flashTotal } : undefined,
     options: opts.filter((o) => o.productSlug === r.slug).map((o) => ({
       idx: o.idx, label: o.label, price: o.price, oldPrice: o.oldPrice ?? undefined, combo2: o.combo2 ?? undefined, bulky: o.bulky || undefined,
       soldOut: !canSell(o) || undefined,
+      parts: o.parts ? itemsOf(o.parts) : undefined,
     })),
     images: imgs.filter((i) => i.slug === r.slug).map((i) => productImageUrl(i.file, i.slug)),
     imageAlts: imgs.some((i) => i.slug === r.slug && i.alt) ? imgs.filter((i) => i.slug === r.slug).map((i) => i.alt ?? '') : undefined,
@@ -43,7 +55,8 @@ async function hydrate(rows: Row[]): Promise<Product[]> {
     attrs: r.attrs ?? undefined,
     inStock: opts.some((o) => o.productSlug === r.slug && canSell(o)),
     isNew: isNewProduct(r.createdAt) || undefined,
-  }));
+    bundle: bundle || undefined,
+  }; });
 }
 
 /** Cột phụ cho truy vấn ở nơi khác (đơn, kho, bảo hành…): URL ảnh chính của sản phẩm, null khi chưa có ảnh.

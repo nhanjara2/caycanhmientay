@@ -13,6 +13,7 @@ import type { VoucherState } from '@/lib/voucher-pick';
 import { usePublicVouchers } from '@/lib/vouchers-client';
 import { useModalFocus } from '@/lib/use-modal';
 import { Icon } from './Icon';
+import { VoucherUrgency } from './VoucherUrgency';
 
 type Ticket = PublicVoucher & { gift?: WelcomeOffer };
 type Pick = Record<VoucherKind, string | null>;
@@ -167,6 +168,7 @@ function VoucherDialog({ tickets, state, amountOf, shipFee, onClose }: {
                               {v.scopeText && `${v.scopeText} · `}{v.minOrder > 0 ? `Đơn từ ${money(v.minOrder)}` : 'Không cần đơn tối thiểu'} · Mã {v.code}
                               {v.gift && ` · dùng đến ${fmtDate(new Date(v.gift.expiresAt))}`}
                             </span>
+                            <VoucherUrgency v={v} />
                             {gain > 0
                               ? <span className="need">Giảm {money(gain)} cho đơn này</span>
                               : outside ? <span className="exp">Không áp dụng cho sản phẩm trong giỏ</span>

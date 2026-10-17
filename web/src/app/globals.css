@@ -381,6 +381,18 @@ h2.vx-flash__title { margin: 0; }
 .pi-tile--add small { font-size: 0.6875rem; color: var(--ink-muted); }
 .pi-tile--add.pi-tile--main { border: 2px dashed var(--primary); }
 
+/* ---- Sản phẩm bộ trong form sản phẩm admin (BundleParts, lib/bundle.ts) ---- */
+/* khung nằm trong bảng quy cách (cuộn ngang) → giới hạn bề rộng cho vừa phần đang thấy */
+.app-bundle { display: grid; gap: var(--space-2); padding: var(--space-2) 0; max-width: min(40rem, calc(100vw - 4rem)); }
+.app-bundle__rows { display: grid; gap: var(--space-2); }
+.app-bundle__row { display: grid; grid-template-columns: minmax(0, 1fr) 4.5rem auto; gap: var(--space-2); align-items: center; }
+.app-bundle__sum { display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; margin: 0; font-size: 0.8125rem; }
+.app-bundle__sum div { display: flex; gap: 0.375rem; }
+.app-bundle__sum dt { color: var(--ink-muted); }
+.app-bundle__sum dd { margin: 0; font-weight: 600; }
+.app-bundle__sum dd[data-low] { color: var(--danger, #c62828); }
+.app-bundle-tr td { background: var(--surface-sunken); }
+
 /* Hộp Cắt ảnh khi tải ảnh lên trong admin (components/admin/ImageCropper.tsx; gắn vào body) */
 .app-crop .app-crop__box { max-width: 640px; text-align: left; }
 .app-crop__step { margin-left: 8px; font-size: 0.875rem; font-weight: 500; color: var(--ink-muted); }
@@ -1910,6 +1922,12 @@ button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
   .vx-pdpage .vx-expert b { font-size: 0.9375rem; }
 }
 
+/* ---- "Bộ gồm" trên trang sản phẩm bộ (BuyBox) ---- */
+.app-bitems { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.25rem; font-size: 0.9375rem; line-height: 1.4; }
+.app-bitems b { color: var(--primary-hover); }
+.app-bitems a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.app-bitems span { color: var(--ink-muted); }
+
 /* ---- Khối mua trang sản phẩm kiểu Shopee (BuyBox, 10/10/2026) ----
    Khung giá nền nhạt → các hàng "nhãn | nội dung" (Giá theo số lượng, Mã giảm giá, Vận chuyển, Quy cách, Số lượng) → Thêm vào giỏ hàng | Mua ngay.
    Máy tính / tablet: nhãn cột trái 8.5rem; điện thoại: nhãn nằm trên. Ô quy cách: tên + giá, ô đang chọn viền xanh + dấu ✓ góc dưới phải. */
@@ -2078,6 +2096,16 @@ button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .app-vpick .vx-voucher__body .left .bar { width: 100%; max-width: 12rem; }
 .app-vpick .vx-voucher__tag { font-size: 0.75rem; line-height: 1.3; padding: 1px 8px; }
 .app-vpick .vx-vcheck { width: 1.5rem; height: 1.5rem; }
+/* Thẻ mã sắp hết lượt / sắp hết hạn (VoucherUrgency — chỉ số thật: mã có giới hạn tổng lượt, hạn dùng) */
+.app-vurg { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.75rem; font-size: 0.875rem; line-height: 1.3; font-weight: 500; color: #b45309; }
+.app-vurg__used { display: inline-flex; align-items: center; gap: 0.375rem; }
+.app-vurg .bar { width: 4.5rem; height: 0.375rem; border-radius: 999px; background: var(--border); overflow: hidden; }
+.app-vurg .bar i { display: block; height: 100%; background: #f59e0b; }
+.app-vurg[data-hot] .app-vurg__used { color: #d0011b; }
+.app-vurg[data-hot] .bar i { background: #d0011b; }
+.app-vurg__end { color: #d0011b; }
+.pm-voucher__txt .app-vurg { margin-top: 0.125rem; }
+.app-warn-text { color: #b45309; }
 .app-vmodal .vx-vfoot__sum { font-size: 0.9375rem; }
 /* Hộp chọn mã: ô biểu tượng cùng màu với thẻ mã ở trang sản phẩm (giảm giá đỏ, miễn phí giao xanh dương) */
 .app-vpick:not([aria-disabled="true"]) .vx-voucher__ic.sale { background: #d0011b; color: #fff; }

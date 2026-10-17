@@ -6,7 +6,7 @@ import type { SessionUser } from './auth';
 import { mainImageOf } from './catalog';
 import { db, schema } from './db';
 import { WARRANTY_RESOLUTIONS, WARRANTY_STATUSES } from './db/schema';
-import { applyStock, type Tx } from './inventory';
+import { takeStock, type Tx } from './inventory';
 import { notifyEvent } from './notify';
 import { newOrderCode, snapshotItemCosts } from './orders';
 import { saveImage, type SavedImage } from './uploads';
@@ -245,7 +245,7 @@ async function createWarrantyOrder(tx: Tx, src: OrderRow, userId: number, lines:
       orderId: order.id, productSlug: l.slug, optionIdx: l.idx, name: l.name, label: l.label, unit: l.unit,
       icon: l.icon, ship: l.ship, price: 0, oldPrice: l.oldPrice, qty: l.qty,
     });
-    if (await applyStock(tx, l.slug, l.idx, -l.qty, 'warranty', actor, code) === null) {
+    if (!await takeStock(tx, l.slug, l.idx, l.qty, 'warranty', actor, code)) {
       throw new DecideError(`Kho không đủ “${l.name} · ${l.label}” (cần ${l.qty}). Nhập thêm hàng hoặc chọn hướng xử lý khác.`);
     }
   }

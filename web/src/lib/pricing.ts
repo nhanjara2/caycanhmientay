@@ -40,6 +40,7 @@ export const plantFreeFrom = (r: PlantRule, region: ShipRegion | null) => (regio
 export const plantFeeVaries = (r: PlantRule) => new Set(Object.values(r.regionFee)).size > 1 || new Set(Object.values(r.regionFree)).size > 1;
 
 export type PricedLine = { price: number; oldPrice?: number | null; combo2?: number | null; qty: number; ship: ShipGroup; pesticide?: boolean; /** Cây lớn / cồng kềnh: tính thêm phụ phí giao mỗi cây. */ bulky?: boolean; /** Không áp mã giảm giá: không tính vào `voucherBase`. */ noVoucher?: boolean;
+  /** Quy cách là bộ (lib/bundle.ts): giá bộ đã giảm — không áp mã, không tính chiết khấu đối tác. */ bundle?: boolean;
   /** Để xét phạm vi mã giảm giá (lib/voucher-scope.ts): slug, danh mục, nhóm con chính + phụ. */ slug?: string; category?: string; subs?: string[] };
 
 /** Giá thật của một dòng sau khi xét combo 2 cây (cùng thứ tự với dòng đưa vào). */
@@ -101,20 +102,21 @@ export function linePrice(l: PricedLine): LinePrice {
     total: l.price * l.qty - comboSaving,
     strike: (l.oldPrice && l.oldPrice > l.price ? l.oldPrice : l.price) * l.qty,
     combos, comboSaving,
-    item: { slug: l.slug, category: l.category, subs: l.subs, noVoucher: l.noVoucher },
+    item: { slug: l.slug, category: l.category, subs: l.subs, noVoucher: l.noVoucher || l.bundle },
   };
 }
 
 export function computeTotals(lines: PricedLine[], delivery: 'ship' | 'pickup' = 'ship', voucherDiscount = 0, rules: ShipRules = SHIP_RULES, partnerPct = 0, region: ShipRegion | null = null): Totals {
   const priced = lines.map(linePrice);
-  let subtotal = 0, original = 0, comboDiscount = 0, plantSubtotal = 0, supplySubtotal = 0, bulkyQty = 0, count = 0, noVoucher = 0;
+  let subtotal = 0, original = 0, comboDiscount = 0, plantSubtotal = 0, supplySubtotal = 0, bulkyQty = 0, count = 0, noVoucher = 0, bundles = 0;
   lines.forEach((l, i) => {
     const p = priced[i];
     subtotal += l.price * l.qty;
     original += p.strike;
     comboDiscount += p.comboSaving;
     count += l.qty;
-    if (l.noVoucher) noVoucher += p.total;
+    if (l.noVoucher || l.bundle) noVoucher += p.total;
+    if (l.bundle) bundles += p.total;
     if (l.ship === 'plant') {
       plantSubtotal += p.total;
       if (l.bulky) bulkyQty += l.qty;
@@ -133,7 +135,8 @@ export function computeTotals(lines: PricedLine[], delivery: 'ship' | 'pickup' =
   const supply = ship(supplySubtotal, rules.supply);
   const plantShip = plant.pay + bulkyShip;
   const supplyShip = supply.pay;
-  const partnerDiscount = partnerDiscountOf(goods, partnerPct);
+  // Mỗi món chỉ một mức giảm: bộ đã giảm giá nên không cộng chiết khấu đối tác.
+  const partnerDiscount = partnerDiscountOf(goods - bundles, partnerPct);
   return {
     count, subtotal, original, plantSubtotal, supplySubtotal, plantShip, supplyShip, bulkyShip, shipRegion: region,
     plantShipFree: plant.free, supplyShipFree: supply.free,
