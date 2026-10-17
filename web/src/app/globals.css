@@ -3004,6 +3004,15 @@ body[data-buybar] .app-site .app-fab { bottom: 6.25rem; }
   .app-site .app-sumbar > .app-sum-saved b { color: var(--sale); }
   .app-site .app-sumbar > .app-sum-go { grid-column: 2; width: auto; min-width: 10rem; }
   .app-site .app-sumbar > .app-sum-alt { display: none; }
+  /* Thứ tự trong thanh: ưu đãi + dòng nhắc → (thanh toán: ô xác nhận thuốc BVTV, báo lỗi) → Thành tiền → Tiết kiệm | Đặt hàng → câu điều khoản */
+  .app-site .app-sumbar > * { order: 1; }
+  .app-site .app-sumbar > :is(.vx-lines, .app-ventry, .app-vdrop, .vx-freeship) { order: 0; }
+  .app-site .app-sumbar > .vx-total { order: 2; }
+  .app-site .app-sumbar > :is(.app-sum-saved, .app-sum-go) { order: 3; }
+  .app-site .app-cart-alt .vx-terms { margin: 0.25rem 0 0; text-align: center; }
+  .app-site .app-sumbar > .vx-check { font-size: 0.875rem; line-height: 1.35; }
+  .app-site .app-sumbar > .vx-note { font-size: 0.8125rem; padding: 0.5rem 0.625rem; }
+  .app-site .app-sumbar > .app-sum-go:disabled { min-width: 0; font-size: 0.9375rem; }
   body[data-sumbar] .app-site { padding-bottom: calc(var(--sumbar-h, 10rem) + 0.75rem); }
   body[data-sumbar] .app-site .app-fab { display: none; }
   body[data-sumbar] .app-site .app-ck { bottom: calc(var(--sumbar-h, 10rem) + 0.5rem); }

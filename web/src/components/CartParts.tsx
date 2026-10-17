@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { type CartLine, type Totals, useCart } from '@/lib/cart';
 import { minOrderShort, plantFeeVaries, plantFreeFrom, type LinePrice } from '@/lib/pricing';
 import { REGION_LABEL } from '@/lib/shipping';
@@ -100,6 +100,23 @@ function Item({ l, pr, editable, setQty, remove }: {
       )}
     </div>
   );
+}
+
+/** Điện thoại: khối tổng tiền (OrderSummary bar) là thanh dính đáy → trang chừa đúng chiều cao thanh, ẩn thanh Zalo / Gọi
+ *  (CSS theo body[data-sumbar] + --sumbar-h). Gọi ở trang có `<OrderSummary bar>` (giỏ hàng, thanh toán). */
+export function useSumBar(active: boolean) {
+  useEffect(() => {
+    if (!active) return;
+    const bar = document.querySelector<HTMLElement>('.app-sumbar');
+    if (!bar) return;
+    const body = document.body;
+    const set = () => body.style.setProperty('--sumbar-h', `${bar.offsetHeight}px`);
+    set();
+    body.dataset.sumbar = '1';
+    const ro = new ResizeObserver(set);
+    ro.observe(bar);
+    return () => { ro.disconnect(); delete body.dataset.sumbar; body.style.removeProperty('--sumbar-h'); };
+  }, [active]);
 }
 
 /** OrderSummary: khối tổng tiền cột phải, dính khi cuộn. `voucher` = dòng "Ưu đãi dành cho bạn" (VoucherBox) mở hộp chọn mã;

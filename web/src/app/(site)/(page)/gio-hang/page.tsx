@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { refreshCartAction } from '@/app/actions/orders';
 import { EmptyState } from '@/components/Blocks';
-import { CartList, OrderSummary, Steps } from '@/components/CartParts';
+import { CartList, OrderSummary, Steps, useSumBar } from '@/components/CartParts';
 import { Icon } from '@/components/Icon';
 import { VoucherBox } from '@/components/VoucherBox';
 import { useAuth } from '@/lib/auth';
@@ -38,20 +38,8 @@ export default function CartPage() {
       .catch(() => {});
   }, [ready, lines, replace]);
 
-  // Điện thoại: khối tổng tiền là thanh dính đáy → trang chừa đúng chiều cao thanh, ẩn thanh Zalo / Gọi (CSS theo body[data-sumbar])
-  const hasLines = ready && lines.length > 0;
-  useEffect(() => {
-    if (!hasLines) return;
-    const bar = document.querySelector<HTMLElement>('.app-sumbar');
-    if (!bar) return;
-    const body = document.body;
-    const set = () => body.style.setProperty('--sumbar-h', `${bar.offsetHeight}px`);
-    set();
-    body.dataset.sumbar = '1';
-    const ro = new ResizeObserver(set);
-    ro.observe(bar);
-    return () => { ro.disconnect(); delete body.dataset.sumbar; body.style.removeProperty('--sumbar-h'); };
-  }, [hasLines]);
+  // Điện thoại: khối tổng tiền là thanh dính đáy
+  useSumBar(ready && lines.length > 0);
 
   if (!ready) return <div className="vx-checkout app-page" style={{ minHeight: 400 }} />;
 

@@ -8,7 +8,7 @@ import { AddressFields, EMPTY_ADDR, type AddrValue } from '@/components/AddressF
 import { AddressModal, useNewAddress } from '@/components/AddressBook';
 import { EmptyState } from '@/components/Blocks';
 import { PhoneModal } from '@/components/PhoneModal';
-import { CartList, OrderSummary, Steps } from '@/components/CartParts';
+import { CartList, OrderSummary, Steps, useSumBar } from '@/components/CartParts';
 import { Icon, type IconName } from '@/components/Icon';
 import { placeOrderAction } from '@/app/actions/orders';
 import { slotOptionsAction } from '@/app/actions/shipping';
@@ -116,6 +116,8 @@ export default function CheckoutPage() {
 
   // Mọi hook phải gọi TRƯỚC các lệnh return sớm bên dưới (giỏ chưa tải / giỏ trống) — đặt sau thì lúc giỏ tải xong số hook đổi, React báo lỗi và trang sập
   const formRef = useRef<HTMLFormElement>(null);
+  // Điện thoại: khối tổng tiền + nút Đặt hàng là thanh dính đáy (như giỏ hàng)
+  useSumBar(ready && lines.length > 0);
 
   if (!ready) return <div className="vx-checkout app-page" style={{ minHeight: 400 }} />;
   if (!lines.length) {
@@ -326,9 +328,14 @@ export default function CheckoutPage() {
               </div>
             </div>
           )}
+          {/* Điện thoại: thanh dính đáy chỉ giữ nút Đặt hàng — nút quay lại giỏ nằm cuối nội dung */}
+          <div className="app-cart-alt">
+            {short > 0 && <Link href="/gio-hang" className="vx-btn vx-btn--outline vx-btn--block">Quay lại giỏ hàng để mua thêm</Link>}
+            <p className="vx-terms">Bằng việc đặt hàng, bạn đồng ý với <Link href="/chinh-sach/dieu-khoan">Điều khoản dịch vụ</Link> và <Link href="/chinh-sach/doi-tra">Chính sách đổi trả cây</Link> của Cây Cảnh Miền Tây</p>
+          </div>
         </div>
 
-        <OrderSummary totals={totals} delivery={delivery} voucher={totals.voucherBase > 0 || !totals.goods ? <VoucherBox state={vouchers} totals={totals} shipFee={totals.plantShip + totals.supplyShip} /> : undefined}>
+        <OrderSummary bar totals={totals} delivery={delivery} voucher={totals.voucherBase > 0 || !totals.goods ? <VoucherBox state={vouchers} totals={totals} shipFee={totals.plantShip + totals.supplyShip} /> : undefined}>
           {totals.hasPesticide && (
             <label className="vx-check">
               <input type="checkbox" checked={safety} onChange={(e) => setSafety(e.target.checked)} />
@@ -337,9 +344,9 @@ export default function CheckoutPage() {
           )}
           {err('safety')}
           {serverError && <div className="vx-note" role="alert"><Icon name="alert" /><div>{serverError}</div></div>}
-          <button type="submit" className="vx-btn vx-btn--primary vx-btn--lg vx-btn--block" disabled={busy || short > 0}>{busy ? 'Đang đặt hàng…' : short > 0 ? 'Chưa đủ đơn tối thiểu để giao' : 'Đặt hàng'}</button>
-          {short > 0 && <Link href="/gio-hang" className="vx-btn vx-btn--outline vx-btn--block">Quay lại giỏ hàng để mua thêm</Link>}
-          <p className="vx-terms">
+          <button type="submit" className="vx-btn vx-btn--primary vx-btn--lg vx-btn--block app-sum-go" disabled={busy || short > 0}>{busy ? 'Đang đặt hàng…' : short > 0 ? 'Chưa đủ đơn tối thiểu để giao' : 'Đặt hàng'}</button>
+          {short > 0 && <Link href="/gio-hang" className="vx-btn vx-btn--outline vx-btn--block app-sum-alt">Quay lại giỏ hàng để mua thêm</Link>}
+          <p className="vx-terms app-sum-alt">
             Bằng việc đặt hàng, bạn đồng ý với <Link href="/chinh-sach/dieu-khoan">Điều khoản dịch vụ</Link> và <Link href="/chinh-sach/doi-tra">Chính sách đổi trả cây</Link> của Cây Cảnh Miền Tây
           </p>
         </OrderSummary>
