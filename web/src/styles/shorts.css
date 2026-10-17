@@ -76,7 +76,7 @@ html:has(.shv-dlg[open]) { overflow: hidden; }
 @media (max-width: 47.9375em) {
   .shv-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 12px; }
   /* Trang chủ: hàng vuốt ngang, thẻ sau ló ra một phần để khách biết còn video */
-  .shv-row { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 -16px; padding: 0 16px; scrollbar-width: none; }
+  .shv-row { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 -16px; padding: 0 16px; scroll-padding-inline: 16px; scrollbar-width: none; }
   .shv-row::-webkit-scrollbar { display: none; }
   .shv-row > * { flex: 0 0 46%; scroll-snap-align: start; }
   .shv-row > :nth-child(n + 5) { display: flex; }

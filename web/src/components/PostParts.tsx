@@ -30,9 +30,9 @@ export function PostThumb({ p, className = 'vx-thumbimg', tone }: { p: Pick<Card
 export function PostMeta({ p, cat = true }: { p: CardLike; cat?: boolean }) {
   return (
     <span className="vx-meta">
-      {cat && <><span className="cat">{categoryOf(p.category)?.name}</span>·</>}
-      <PostTime d={p.publishedAt} />·
-      <span>{p.kind === 'video' ? (durationLabel(p.videoSeconds) || 'Video') : `${p.readMinutes} phút đọc`}</span>
+      {cat && <span className="cat">{categoryOf(p.category)?.name}</span>}
+      <span className="vx-meta__i"><PostTime d={p.publishedAt} /></span>
+      <span className="vx-meta__i">{p.kind === 'video' ? (durationLabel(p.videoSeconds) || 'Video') : `${p.readMinutes} phút đọc`}</span>
     </span>
   );
 }

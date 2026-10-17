@@ -175,10 +175,12 @@ export default async function ProductPage({ params, searchParams }: Props) {
 
       <Content p={p} faq={faq.length > 0} />
 
-      <section className="vx-card">
-        <SectionHeader icon="cart" title="Thường mua kèm" />
-        <ProductGrid products={together} />
-      </section>
+      {together.length > 0 && (
+        <section className="vx-card">
+          <SectionHeader icon="cart" title="Thường mua kèm" />
+          <ProductGrid products={together} />
+        </section>
+      )}
 
       {faq.length > 0 && (
         <section className="vx-card" id="hoi-dap">

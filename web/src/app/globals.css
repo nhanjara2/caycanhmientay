@@ -1846,6 +1846,10 @@ button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
   .vx-pcard .app-pcard__buy .vx-price .app-fico { display: none; }
   .vx-pcard .app-pcard__was s .app-dong { display: none; }
 }
+/* Thẻ hẹp (2 cột trong khung Flash sale, màn 360px): bỏ đồng hồ trong nhãn -% để giá gạch 8 chữ số không bị cắt "99.000.…" */
+@container (max-width: 8.5rem) {
+  .vx-pcard .app-pcard__off .app-fico { display: none; }
+}
 .app-dong { font-size: 0.72em; font-weight: inherit; margin-left: 1px; }
 /* Có video: nút play tròn tối góc dưới phải ảnh, ngay trên dải sticker (không có dải thì sát đáy) */
 .app-pcard__play { position: absolute; right: 0.375rem; bottom: calc(1.75rem + 0.375rem); z-index: 2; display: grid; place-items: center; width: 1.75rem; height: 1.75rem; border-radius: 50%; background: rgb(0 0 0 / .62); box-shadow: 0 0 0 1.5px rgb(255 255 255 / .9); pointer-events: none; }
@@ -2773,6 +2777,13 @@ body[data-buybar] .app-site .app-fab { bottom: 6.25rem; }
   .app-site .vx-fcol__head { min-height: 3.5rem; font-size: 0.875rem; }
   .app-site .app-qrbox { display: none; }
   .app-site .vx-fband .vx-btn { margin-left: 0; }
+  /* Dải đầu chân trang: biểu tượng nằm cạnh tiêu đề (trước bị đẩy lên một dòng riêng phía trên chữ) */
+  .app-site .vx-fband__t { flex-wrap: nowrap; align-items: flex-start; gap: 0.75rem; }
+  .app-site .vx-fband__t > svg { flex: none; }
+  .app-site .vx-fband__t > span { min-width: 0; }
+  .app-site .vx-fnews { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 1rem 0.75rem; align-items: start; }
+  .app-site .vx-fnews > svg { margin-top: 0.125rem; }
+  .app-site .vx-fnews .f { grid-column: 1 / -1; }
   /* Banner cookie: nút to */
   .app-site .ck .acts { flex-wrap: wrap; }
   .app-site .ck .acts .vx-btn { min-height: 3rem; font-size: 0.875rem; }
@@ -2864,3 +2875,52 @@ body[data-buybar] .app-site .app-fab { bottom: 6.25rem; }
 @keyframes app-rise-in { from { opacity: 0; transform: translateY(1rem); } }
 @media print { [data-rv] { opacity: 1 !important; transform: none !important; } }
 /* <<< HIỆU ỨNG SINH ĐỘNG */
+
+/* >>> RÀ GIAO DIỆN ĐIỆN THOẠI (17/10/2026) — sửa chỗ lệch / vỡ tìm thấy khi chụp toàn bộ trang khách ở 360–390px */
+/* Dòng "Chuyên mục · ngày · phút đọc" của thẻ bài (PostMeta): dấu chấm nằm trong mục sau (trước là chữ trơn giữa các mục nên khi
+   xuống dòng thì dấu chấm lẻ loi ở đầu / cuối dòng) */
+.vx-meta > .vx-meta__i::before { content: "·"; margin-right: 6px; }
+.vx-meta > .vx-meta__i:first-child::before { content: none; }
+@media (max-width: 47.9375em) {
+  /* Thẻ bài dạng hàng ngang (ảnh nhỏ + chữ): chuyên mục một dòng, "ngày · phút đọc" dòng dưới */
+  .app-site .vx-hitem .vx-meta { flex-wrap: wrap; row-gap: 2px; }
+  .app-site .vx-hitem .vx-meta > .cat { flex-basis: 100%; }
+  .app-site .vx-hitem .vx-meta > .cat + .vx-meta__i::before { content: none; }
+
+  /* Luật "vùng chạm 44px" (khối DỄ DÙNG) đặt mọi link trong .vx-cblock / .vx-topics thành flex canh giữa → thẻ video co lại
+     thành sọc mảnh (ảnh 9:16 không có bề rộng), ngày đăng bài nhỏ canh giữa lệch với tiêu đề. Trả về bố cục cột canh trái */
+  .app-site .vx-cblock .vx-vcard, .app-site .vx-cblock__bot a { display: flex; align-items: stretch; }
+  /* Hộp "Bài liên quan" / "Bệnh nhắc tới" cạnh bài viết: tên bài + chuyên mục canh trái, không canh giữa */
+  .app-site .nw-box a:not([href^="mailto"]) { display: flex; align-items: stretch; justify-content: center; }
+  /* Link nằm trong câu chữ của hộp (hộp "Cách khác" ở /bao-gia-si): link thường trong dòng, không kẻ vạch / không khối 44px */
+  .app-site .nw-box p { margin: 0 0 0.5rem; line-height: 1.6; }
+  .app-site :is(.nw-box, .vx-cblock) :is(p, span) a, .app-site .nw-box :is(p, span) a[href^="mailto"] { display: inline !important; min-height: 0; padding: 0; border: 0; }
+  .app-site .app-empty-posts span a { color: var(--primary-hover); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+  /* Chủ đề nổi bật: các thẻ chủ đề xếp thành viên thuốc nối nhau thay vì mỗi chủ đề một dòng canh giữa */
+  .app-site .vx-topics { flex-direction: row; flex-wrap: wrap; gap: 0.5rem; }
+  .app-site .vx-topics h2 { flex-basis: 100%; margin-bottom: 0.25rem; }
+  .app-site .vx-topics a { flex-direction: row; align-items: center; gap: 0.375rem; min-height: 2.75rem; padding: 0 0.875rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-pill); }
+  .app-site .vx-topics .vx-link { flex-basis: 100%; justify-content: center; background: none; border: 0; }
+
+  /* Hàng "biểu tượng + chữ": responsive.css cho mọi hàng flex xuống dòng trên điện thoại → chữ dài bị đẩy xuống dưới, biểu
+     tượng đứng lẻ một dòng phía trên. Các khối này giữ biểu tượng cạnh chữ */
+  .app-site :is(.vx-note, .vx-callout, .vx-promo__head, .vx-expert, .vx-faq summary) { flex-wrap: nowrap; align-items: flex-start; }
+  .app-site :is(.vx-note, .vx-callout, .vx-promo__head, .vx-expert) > :first-child { flex: none; margin-top: 0.125rem; }
+  .app-site :is(.vx-note, .vx-callout, .vx-expert) > :not(:first-child) { min-width: 0; }
+  .app-site .vx-faq summary { align-items: center; }
+  .app-site .vx-faq summary > .vx-ico { flex: none; }
+
+  /* Danh sách công trình /doi-tac (bảng → thẻ): số thứ tự hàng chẵn mất nền tròn (luật kẻ sọc hàng chẵn xóa nền), nhãn dài
+     "Cây xanh, cảnh quan:" bóp cột giá trị còn 1–2 chữ mỗi dòng → nhãn và giá trị chảy chung một đoạn */
+  .app-site .dn-table tbody tr:nth-child(n) td.n { background: var(--primary-soft); }
+  .app-site .dn-table td[data-label] { display: block; }
+  .app-site .dn-table td[data-label]::before { margin-right: 0.375rem; }
+
+  /* Flash sale (/flash-sale): hàng chip lọc bị bóp còn mỗi chữ một dòng → chip xuống dòng, chữ không gãy */
+  .app-site .fs-bar .vx-seg { margin-left: 0 !important; flex-wrap: wrap; gap: 0.5rem; }
+  .app-site .fs-bar .vx-chip { white-space: nowrap; }
+  /* Lịch giao Tết (/cay-tet): 7 ô một hàng bóp ngày thành "22 /0 1" → 4 ô một hàng, chữ không gãy */
+  .app-site .cp-cal { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .app-site .cp-cal > div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}
+/* <<< RÀ GIAO DIỆN ĐIỆN THOẠI */
