@@ -105,16 +105,30 @@ export async function seedDiseasesIfEmpty(db: Db) {
 }
 
 /**
- * Gắn ảnh minh họa triệu chứng (lib/seed-disease-images.ts, file ở seed/benh-cay/) vào bài bệnh — chạy MỘT lần (dấu
- * `seeded:disease-images:v2`), kể cả database đã dùng. Chỉ gắn vào triệu chứng còn đúng chữ như bài mẫu và chưa có ảnh: bài
- * admin đã sửa chữ / đã tự thêm ảnh thì giữ nguyên; admin bỏ ảnh sau này thì không nạp lại. Trả về số ảnh đã gắn.
- * Dấu `:v2` vì migration 0055 (13/10/2026) đã xóa 45 ảnh nạp lần đầu (dấu `seeded:disease-images`); chủ shop muốn giữ ảnh bệnh
- * nên nạp lại bằng dấu mới.
+ * Gắn ảnh minh họa triệu chứng (lib/seed-disease-images.ts, file ở seed/benh-cay/) vào bài bệnh — mỗi đợt ảnh chạy MỘT lần
+ * (dấu riêng mỗi đợt), kể cả database đã dùng. Chỉ gắn vào triệu chứng còn đúng chữ như bài mẫu và chưa có ảnh: bài admin đã
+ * sửa chữ / đã tự thêm ảnh thì giữ nguyên; admin bỏ ảnh sau này thì không nạp lại. Trả về số ảnh đã gắn.
+ * Đợt 2 dùng dấu `:v2` vì migration 0055 (13/10/2026) đã xóa 45 ảnh nạp lần đầu (dấu `seeded:disease-images`); chủ shop muốn
+ * giữ ảnh bệnh nên nạp lại bằng dấu mới. Đợt 3 (17/10/2026) bổ sung ảnh cho triệu chứng còn trống. Thêm đợt mới = gắn
+ * `batch` mới cho các dòng trong danh sách + thêm một dòng vào BATCHES.
  */
+const DISEASE_IMAGE_BATCHES = [
+  { key: 'seeded:disease-images:v2', batch: 2 },
+  { key: 'seeded:disease-images:v3', batch: 3 },
+];
+
 export async function seedDiseaseImages(db: Db) {
-  const KEY = 'seeded:disease-images:v2';
+  let total = 0;
+  for (const b of DISEASE_IMAGE_BATCHES) {
+    total += await seedDiseaseImageBatch(db, b.key, SEED_DISEASE_IMAGES.filter((x) => (x.batch ?? 2) === b.batch));
+  }
+  return total;
+}
+
+async function seedDiseaseImageBatch(db: Db, KEY: string, list: typeof SEED_DISEASE_IMAGES) {
+  if (!list.length) return 0;
   const dir = path.join(process.cwd(), 'seed', 'benh-cay');
-  const missing = SEED_DISEASE_IMAGES.filter((x) => !fs.existsSync(path.join(dir, x.source)));
+  const missing = list.filter((x) => !fs.existsSync(path.join(dir, x.source)));
   if (missing.length) {
     console.warn(`[db] Thiếu ${missing.length} ảnh bệnh cây trong ${dir} — bỏ qua, lần deploy sau thử lại`);
     return 0;
@@ -123,12 +137,12 @@ export async function seedDiseaseImages(db: Db) {
     await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${KEY}))`);
     const [done] = await tx.select({ key: schema.appSettings.key }).from(schema.appSettings).where(eq(schema.appSettings.key, KEY));
     if (done) return 0;
-    const slugs = [...new Set(SEED_DISEASE_IMAGES.map((x) => x.disease))];
+    const slugs = [...new Set(list.map((x) => x.disease))];
     const rows = await tx.select({ slug: schema.diseases.slug, symptoms: schema.diseases.symptoms })
       .from(schema.diseases).where(inArray(schema.diseases.slug, slugs)).for('update');
     let n = 0;
     for (const d of rows) {
-      const imgs = SEED_DISEASE_IMAGES.filter((x) => x.disease === d.slug);
+      const imgs = list.filter((x) => x.disease === d.slug);
       const used: typeof imgs = [];
       const symptoms = d.symptoms.map((s) => {
         const m = !s.image && imgs.find((x) => x.symptom === s.text && !used.includes(x));

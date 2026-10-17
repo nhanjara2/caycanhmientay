@@ -1,4 +1,4 @@
-// Ảnh minh họa triệu chứng nạp sẵn cho bài bệnh mẫu: ảnh giấy phép mở trên Wikimedia Commons, đã cắt khung 4:3 và thu nhỏ
+// Ảnh minh họa triệu chứng nạp sẵn cho bài bệnh mẫu: ảnh giấy phép mở (Wikimedia Commons, Flickr), đã cắt khung 4:3 và thu nhỏ
 // 1000×750. File ảnh nằm ở web/seed/benh-cay/, được `seedDiseaseImages` (server/db/seed.ts) nạp vào bảng disease_images
 // MỘT lần khi chạy db:setup. Tác giả + giấy phép chỉ ghi ở trang /chinh-sach/nguon-anh (trang bệnh không ghi lại).
 
@@ -13,8 +13,10 @@ export type SeedDiseaseImage = {
   file: string;
   author: string;
   license: string;
-  /** Trang ảnh trên Wikimedia Commons. */
+  /** Trang gốc của ảnh (Wikimedia Commons / Flickr). */
   url: string;
+  /** Đợt nạp (server/db/seed.ts — mỗi đợt một dấu riêng). Không ghi = đợt 2. */
+  batch?: number;
 };
 
 export const SEED_DISEASE_IMAGES: SeedDiseaseImage[] = [
@@ -108,4 +110,66 @@ export const SEED_DISEASE_IMAGES: SeedDiseaseImage[] = [
     author: 'Maja Dumat', license: 'CC BY 2.0', url: 'https://commons.wikimedia.org/wiki/File:Blattfall_beim_Ficus_benjamina_(10577273353).jpg' },
   { disease: 'chay-re-do-phan', symptom: 'Mép và chóp lá cháy nâu đều trên nhiều lá cùng lúc', source: 'chay-re-do-phan-1.jpg', file: '4d8e0c2d9ca48224a4398ae434e66e0b.jpg',
     author: 'Fenrisulfir', license: 'CC BY-SA 3.0', url: 'https://commons.wikimedia.org/wiki/File:Fertilizer-Burn.jpg' },
+  // Đợt 3 (17/10/2026): bổ sung ảnh cho triệu chứng còn trống — ưu tiên ảnh CC0 / phạm vi công cộng (Flickr "Plant pests and
+  // diseases" của Scot Nelson, ĐH Hawaii), vài ảnh CC BY / CC BY-SA. Dấu nạp riêng `seeded:disease-images:v3`.
+  { disease: 'bo-tri', symptom: 'Cánh hoa có vệt, lốm đốm, nụ thui không nở', source: 'bo-tri-3.jpg', file: 'd532157b581925094534265643ed9554.jpg',
+    author: 'Plant pests and diseases', license: 'CC0', url: 'https://www.flickr.com/photos/62295966@N07/13902136334', batch: 3 },
+  { disease: 'chay-la-do-nang', symptom: 'Lá phía trong, phía khuất nắng vẫn xanh', source: 'chay-la-do-nang-3.jpg', file: '53b97d9e7c7b8448b25776e05ad68b1a.jpg',
+    author: 'Plant pests and diseases', license: 'CC0', url: 'https://www.flickr.com/photos/62295966@N07/42234149655', batch: 3 },
+  { disease: 'chay-la-vi-khuan', symptom: 'Trời ẩm có thể thấy giọt dịch nhầy trên vết bệnh', source: 'chay-la-vi-khuan-3.jpg', file: '2f5cda34a3f4549afea1dd3f97fb090f.jpg',
+    author: 'Plant pests and diseases', license: 'CC0', url: 'https://www.flickr.com/photos/62295966@N07/14415442736', batch: 3 },
+  { disease: 'dom-la-nam', symptom: 'Các đốm lan rộng, nối nhau thành mảng khô, lá vàng rồi rụng', source: 'dom-la-nam-2.jpg', file: '9817b47f5e98a547a68da16b89ff967d.jpg',
+    author: 'Plant pests and diseases', license: 'CC0', url: 'https://www.flickr.com/photos/62295966@N07/39987248121', batch: 3 },
+  { disease: 'dom-la-nam', symptom: 'Bệnh bắt đầu ở lá già phía dưới, lan dần lên trên', source: 'dom-la-nam-3.jpg', file: '1f2e53281f5944e5de425e0f09739eb1.jpg',
+    author: 'Plant pests and diseases', license: 'CC0', url: 'https://www.flickr.com/photos/62295966@N07/14790832181', batch: 3 },
+  { disease: 'gi-sat', symptom: 'Lá rụng nhiều, cây còi, ít hoa', source: 'gi-sat-3.jpg', file: '13efde1ab78aef80505f9d9a6652c721.jpg',
+    author: 'Plant pests and diseases', license: 'CC0', url: 'https://www.flickr.com/photos/62295966@N07/21120000920', batch: 3 },
+  { disease: 'heo-thieu-nuoc', symptom: 'Mép lá khô nâu, lá già rụng', source: 'heo-thieu-nuoc-2.jpg', file: 'f6b8897ae77c5158c698d6d7b45166b5.jpg',
+    author: 'Plant pests and diseases', license: 'CC0', url: 'https://www.flickr.com/photos/62295966@N07/9809817533', batch: 3 },
+  { disease: 'heo-thieu-nuoc', symptom: 'Đất khô, co lại, tách khỏi thành chậu', source: 'heo-thieu-nuoc-3.jpg', file: '406df4473330aae5a80f7fc26d90204a.jpg',
+    author: 'Casey Hugelfink', license: 'CC BY-SA 2.0', url: 'https://www.flickr.com/photos/93212986@N03/28148048666', batch: 3 },
+  { disease: 'heo-xanh-vi-khuan', symptom: 'Rễ thâm, nhưng không có tơ nấm trắng', source: 'heo-xanh-vi-khuan-3.jpg', file: 'd4fc1cd0d74995ef13fffe14906f66cd.jpg',
+    author: 'Scot Nelson', license: 'CC0', url: 'https://commons.wikimedia.org/wiki/File:Bacterial_wilt_2_(5684210791).jpg', batch: 3 },
+  { disease: 'kham-la', symptom: 'Cây lùn, ít hoa, quả méo', source: 'kham-la-3.jpg', file: '4f3ce461b5cfe5496c2e68fe6555ea0c.jpg',
+    author: 'Downtowngal', license: 'CC0', url: 'https://commons.wikimedia.org/w/index.php?curid=43083694', batch: 3 },
+  { disease: 'muoi-den', symptom: 'Mặt lá dính, bóng do mật côn trùng', source: 'muoi-den-2.jpg', file: '8abad8b07cbd3220493fb107d497c542.jpg',
+    author: 'Plant pests and diseases', license: 'CC0', url: 'https://www.flickr.com/photos/62295966@N07/26647664574', batch: 3 },
+  { disease: 'muoi-den', symptom: 'Quả bám đen, mất thẩm mỹ', source: 'muoi-den-3.jpg', file: 'b7134c9c3d49658566e8349c199905d3.jpg',
+    author: 'Plant pests and diseases', license: 'CC0', url: 'https://www.flickr.com/photos/62295966@N07/25039931462', batch: 3 },
+  { disease: 'nhen-do', symptom: 'Lá vàng, khô, rụng', source: 'nhen-do-3.jpg', file: '0f07530579077a38d11cfdc8f6e1aa68.jpg',
+    author: 'Plant pests and diseases', license: 'CC0', url: 'https://www.flickr.com/photos/62295966@N07/16018377441', batch: 3 },
+  { disease: 'oc-sen', symptom: 'Vệt nhớt bóng lấp lánh trên lá, chậu', source: 'oc-sen-2.jpg', file: 'fc60df6fbd54f5c2cc70b99632081f97.jpg',
+    author: 'Jidanni', license: 'CC0', url: 'https://commons.wikimedia.org/wiki/File:Forty_years_of_slug_and_snail_slime_trails.jpg', batch: 3 },
+  { disease: 'oc-sen', symptom: 'Nụ, đầu rễ lan bị ăn cụt', source: 'oc-sen-3.jpg', file: '0d3f4ac584df661ead7243cca8542d6b.jpg',
+    author: 'hedera.baltica', license: 'CC BY-SA 2.0', url: 'https://www.flickr.com/photos/125741467@N05/52556255459', batch: 3 },
+  { disease: 'rep-muoi', symptom: 'Lá non xoăn, cuộn lại, dính mật', source: 'rep-muoi-3.jpg', file: '7a4e88888d58353a795703c10c710f8f.jpg',
+    author: 'Plant pests and diseases', license: 'CC0', url: 'https://www.flickr.com/photos/62295966@N07/15157898149', batch: 3 },
+  { disease: 'rep-sap', symptom: 'Lá vàng, dính mật, sau bị muội đen', source: 'rep-sap-2.jpg', file: 'ca054deb2eabeda852444712cab31ea5.jpg',
+    author: 'Plant pests and diseases', license: 'CC0', url: 'https://www.flickr.com/photos/62295966@N07/16658799768', batch: 3 },
+  { disease: 'rep-sap', symptom: 'Sen đá, xương rồng: rệp bám rễ như mốc trắng khi nhổ cây lên', source: 'rep-sap-3.jpg', file: '3181fdc8f62ef6512223c04d748587e1.jpg',
+    author: 'Maja Dumat (blumenbiene)', license: 'CC BY 2.0', url: 'https://www.flickr.com/photos/47439717@N05/4798296367', batch: 3 },
+  { disease: 'rung-la-soc-moi-truong', symptom: 'Rễ và đọt non vẫn khỏe', source: 'rung-la-soc-moi-truong-2.jpg', file: 'eca1484f47a63f6dcf5ec2b9f426b961.jpg',
+    author: 'Bigul Malayi', license: 'CC0', url: 'https://wordpress.org/photos/photo/647660efe3/', batch: 3 },
+  { disease: 'sau-duc-than', symptom: 'Cành héo đột ngột từ chỗ lỗ đục trở lên', source: 'sau-duc-than-2.jpg', file: '48d23bc1dfebc9fe4dca99bfc0f0b0a6.jpg',
+    author: 'Plant pests and diseases', license: 'CC0', url: 'https://www.flickr.com/photos/62295966@N07/8846110007', batch: 3 },
+  { disease: 'sau-duc-than', symptom: 'Cây suy, lá vàng, cành dễ gãy', source: 'sau-duc-than-3.jpg', file: 'd22d64d90d15aef72058bd7f324b09af.jpg',
+    author: 'Plant pests and diseases', license: 'CC0', url: 'https://www.flickr.com/photos/62295966@N07/27212834503', batch: 3 },
+  { disease: 'than-thu', symptom: 'Cành non khô đen từ ngọn xuống', source: 'than-thu-3.jpg', file: 'fa6afa21ef90f3f065258360945c6c69.jpg',
+    author: 'Plant pests and diseases', license: 'CC0', url: 'https://www.flickr.com/photos/62295966@N07/5688171233', batch: 3 },
+  { disease: 'thoi-goc-nam-hach', symptom: 'Cây héo rũ nhanh dù đủ nước, nhổ lên gốc mục', source: 'thoi-goc-nam-hach-3.jpg', file: 'be6daf0796f224b59f9bc1042f5f4212.jpg',
+    author: 'Plant pests and diseases', license: 'CC0', url: 'https://www.flickr.com/photos/62295966@N07/18691015770', batch: 3 },
+  { disease: 'thoi-nhun', symptom: 'Có mùi hôi thối đặc trưng', source: 'thoi-nhun-3.jpg', file: 'ff23b38b83eaa8e50ba315f9627fbb13.jpg',
+    author: 'Plant pests and diseases', license: 'CC0', url: 'https://www.flickr.com/photos/62295966@N07/32107936316', batch: 3 },
+  { disease: 'tuyen-trung-sung-re', symptom: 'Lá vàng, nhỏ, héo vào buổi trưa rồi tươi lại chiều mát', source: 'tuyen-trung-sung-re-2.jpg', file: 'd982c371425dfc2f2318092a5fb6a0cc.jpg',
+    author: 'Plant pests and diseases', license: 'CC0', url: 'https://www.flickr.com/photos/62295966@N07/5684803580', batch: 3 },
+  { disease: 'tuyen-trung-sung-re', symptom: 'Cây còi cọc dù được bón phân đầy đủ', source: 'tuyen-trung-sung-re-3.jpg', file: '1db9a61777a0c79f8fd5d247b8c6bfea.jpg',
+    author: 'Plant pests and diseases', license: 'CC0', url: 'https://www.flickr.com/photos/62295966@N07/15336333729', batch: 3 },
+  { disease: 'vang-la-thieu-dam', symptom: 'Lá già phía dưới vàng đều cả phiến, kể cả gân', source: 'vang-la-thieu-dam-2.jpg', file: '0efdf8428e43d088b8d7e01bc4cc2e94.jpg',
+    author: 'Maja Dumat (blumenbiene)', license: 'CC BY 2.0', url: 'https://www.flickr.com/photos/47439717@N05/31700888857', batch: 3 },
+  { disease: 'vang-la-thieu-dam', symptom: 'Cây chậm lớn, ít đâm chồi', source: 'vang-la-thieu-dam-3.jpg', file: '59f7724b9343efea336ae07bef9fc0c3.jpg',
+    author: 'Maja Dumat (blumenbiene)', license: 'CC BY 2.0', url: 'https://www.flickr.com/photos/47439717@N05/35410565153', batch: 3 },
+  { disease: 'xoan-la-virus', symptom: 'Mép và gân lá vàng', source: 'xoan-la-virus-2.jpg', file: '263acdf339496e287509ade171a6848a.jpg',
+    author: 'Plant pests and diseases', license: 'CC0', url: 'https://www.flickr.com/photos/62295966@N07/8227475116', batch: 3 },
+  { disease: 'xoan-la-virus', symptom: 'Đọt chùn lại, cây ngưng phát triển, rụng hoa', source: 'xoan-la-virus-3.jpg', file: '557ef55d1a8986eec8927addd4ec3e74.jpg',
+    author: 'Plant pests and diseases', license: 'CC0', url: 'https://www.flickr.com/photos/62295966@N07/38085478412', batch: 3 },
 ];
