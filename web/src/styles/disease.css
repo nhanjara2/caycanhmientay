@@ -1,0 +1,162 @@
+/* Thư viện bệnh cây (/benh-cay) — 17/10/2026. Lớp `dz-*`, chỉ nạp ở app/(site)/(page)/benh-cay/page.tsx.
+   Quy ước như globals.css: cỡ chữ rem, @media em, vùng chạm ≥ 44px, chữ phụ ≥ 14px, thẻ có viền --border (nền web khách trắng). */
+
+.dz { max-width: 1240px; margin: 0 auto; padding: var(--space-4) var(--space-6) var(--space-8); display: flex; flex-direction: column; gap: var(--space-6); }
+.dz ul { list-style: none; margin: 0; padding: 0; }
+.dz a { text-decoration: none; }
+.dz img { display: block; }
+
+/* ---- Khung đầu trang: tìm theo triệu chứng + hỏi kỹ sư ---------------------------------------- */
+.dz-hero {
+  display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: var(--space-6); align-items: center;
+  padding: 2rem; border-radius: var(--radius-lg); color: var(--on-deep);
+  background:
+    radial-gradient(circle at 92% -10%, rgba(246, 185, 10, .22) 0, rgba(246, 185, 10, 0) 45%),
+    radial-gradient(circle at 0% 120%, rgba(255, 255, 255, .10) 0, rgba(255, 255, 255, 0) 50%),
+    linear-gradient(135deg, var(--primary-deep) 0%, #17633a 55%, #237a45 100%);
+  box-shadow: 0 10px 30px rgba(15, 74, 36, .18);
+}
+.dz-hero__main { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+.dz-eyebrow { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; padding: 4px 12px; border-radius: var(--radius-pill); background: rgba(255, 255, 255, .14); font-size: 0.875rem; font-weight: 600; color: #fff; }
+.dz-hero h1 { margin: 0; font-size: 2rem; line-height: 1.2; color: #fff; }
+
+.dz-search { display: flex; align-items: center; gap: var(--space-2); min-height: 3.5rem; padding: 6px 6px 6px 18px; border-radius: var(--radius-pill); background: var(--surface); color: var(--ink-muted); box-shadow: 0 6px 18px rgba(0, 0, 0, .14); }
+.dz-search:focus-within { outline: 3px solid var(--sun); outline-offset: 2px; }
+.dz-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: inherit; font-size: 1.0625rem; color: var(--ink); }
+.dz-search input::placeholder { color: var(--ink-muted); }
+.dz-search input::-webkit-search-cancel-button { cursor: pointer; }
+.dz-search .vx-btn { min-height: 2.75rem; padding: 0 1.5rem; border-radius: var(--radius-pill); font-size: 1rem; }
+
+.dz-quick { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.dz-quick__a { display: inline-flex; align-items: center; min-height: 2.25rem; padding: 0 14px; border-radius: var(--radius-pill); border: 1px solid rgba(255, 255, 255, .32); background: rgba(255, 255, 255, .08); color: #fff; font-size: 0.875rem; font-weight: 500; transition: background-color .15s ease, border-color .15s ease; }
+.dz-quick__a:hover { background: rgba(255, 255, 255, .2); border-color: rgba(255, 255, 255, .6); }
+.dz-quick__a[aria-current="true"] { background: var(--sun); border-color: var(--sun); color: var(--ink-on-sun); }
+
+.dz-stats { display: flex; flex-wrap: wrap; gap: 4px 20px; margin-top: 4px !important; font-size: 0.875rem; color: var(--on-deep-muted); }
+.dz-stats b { font-size: 1.125rem; color: #fff; margin-right: 2px; }
+
+.dz-help { display: flex; flex-direction: column; gap: var(--space-2); }
+.dz-help__a { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--space-3); min-height: 4rem; padding: 10px 12px; border-radius: var(--radius-md); background: var(--surface); color: var(--ink); box-shadow: 0 4px 14px rgba(0, 0, 0, .12); transition: transform .2s ease, box-shadow .2s ease; }
+.dz-help__a:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0, 0, 0, .18); }
+.dz-help__a b { display: block; font-size: 1rem; line-height: 1.3; }
+.dz-help__a small { display: block; font-size: 0.875rem; color: var(--ink-muted); }
+.dz-help__a > .vx-ico:last-child, .dz-help__a > svg:last-child { color: var(--ink-muted); }
+.dz-help__ic { width: 2.75rem; height: 2.75rem; border-radius: 50%; display: grid; place-items: center; background: var(--primary-soft); color: var(--primary); flex: none; }
+
+/* ---- Tiêu đề khối ------------------------------------------------------------------------------ */
+.dz-sec { display: flex; flex-direction: column; gap: var(--space-3); }
+.dz-h2 { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; margin: 0; font-size: 1.25rem; line-height: 1.3; font-weight: 700; color: var(--ink); }
+.dz-h2 small { font-size: 0.9375rem; font-weight: 500; color: var(--ink-muted); }
+.dz-h2__ic { width: 2.25rem; height: 2.25rem; border-radius: 50%; display: grid; place-items: center; background: var(--warning-soft); color: var(--sale); flex: none; }
+
+/* ---- Thẻ bệnh ---------------------------------------------------------------------------------- */
+.dz-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr)); gap: var(--space-4); }
+.dz-grid--season { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.dz-card { height: 100%; display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); color: var(--ink); transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+.dz-card:hover { border-color: var(--primary); box-shadow: 0 10px 24px rgba(12, 24, 16, .1); transform: translateY(-3px); }
+.dz-card:hover h3 { color: var(--primary-hover); }
+.dz-card__img { position: relative; aspect-ratio: 4 / 3; overflow: hidden; background: var(--surface-sunken); }
+.dz-card__img img { width: 100%; height: 100%; object-fit: cover; transition: transform .35s ease; }
+.dz-card:hover .dz-card__img img { transform: scale(1.05); }
+.dz-card__ph { position: absolute; inset: 0; display: grid; place-items: center; color: var(--primary); background: linear-gradient(160deg, var(--primary-soft), #f3faf5); }
+.dz-card__ph svg { width: 3.5rem; height: 3.5rem; opacity: .8; }
+.dz-cause { position: absolute; left: 8px; bottom: 8px; max-width: calc(100% - 16px); display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px 3px 6px; border-radius: var(--radius-pill); background: rgba(255, 255, 255, .94); color: var(--primary-hover); font-size: 0.8125rem; font-weight: 600; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 2px 6px rgba(0, 0, 0, .12); }
+.dz-cause .vx-ico { width: 15px; height: 15px; }
+.dz-cause[data-warm] { color: var(--sale); }
+.dz-card__b { flex: 1; display: flex; flex-direction: column; gap: 6px; padding: 12px 14px 14px; }
+.dz-card h3 { margin: 0; font-size: 1.0625rem; line-height: 1.35; font-weight: 700; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; transition: color .15s ease; }
+.dz-card__parts { font-size: 0.875rem; line-height: 1.4; color: var(--ink-muted); }
+.dz-sev { margin-top: auto; display: inline-flex; align-items: center; gap: 8px; font-size: 0.875rem; font-weight: 600; color: var(--ink-muted); }
+.dz-sev__bars { display: inline-flex; gap: 3px; }
+.dz-sev__bars i { width: 6px; height: 12px; border-radius: 2px; background: var(--border); }
+.dz-sev[data-n="1"] i[data-on], .dz-sev[data-n="2"] i[data-on] { background: var(--primary); }
+.dz-sev[data-n="3"] i[data-on] { background: var(--sun); }
+.dz-sev[data-n="4"] i[data-on], .dz-sev[data-n="5"] i[data-on] { background: var(--danger); }
+.dz-sev[data-n="4"], .dz-sev[data-n="5"] { color: var(--danger); }
+
+/* ---- Bộ lọc + danh sách ------------------------------------------------------------------------ */
+.dz-browse { display: grid; grid-template-columns: 20rem minmax(0, 1fr); gap: var(--space-6); align-items: start; scroll-margin-top: calc(var(--header-h, 0px) + 16px); }
+.dz-side { display: flex; flex-direction: column; gap: var(--space-4); }
+.dz-box { padding: var(--space-4); border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); }
+.dz-box__h { margin: 0 0 var(--space-2); font-size: 0.9375rem; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: var(--ink-muted); }
+
+.dz-parts { display: grid; grid-template-columns: 5.25rem minmax(0, 1fr); gap: 2px; align-items: start; }
+.dz-parts__art svg { width: 100%; height: auto; display: block; }
+
+.dz-opts { display: flex; flex-direction: column; gap: 2px; }
+.dz-opt { display: flex; align-items: center; gap: 10px; min-height: 2.75rem; padding: 4px 8px; border-radius: var(--radius-md); color: var(--ink); font-size: 0.9375rem; font-weight: 500; transition: background-color .15s ease, color .15s ease; }
+.dz-opt:hover { background: var(--surface-sunken); }
+.dz-opt__ic { width: 2rem; height: 2rem; border-radius: 50%; display: grid; place-items: center; flex: none; background: var(--primary-soft); color: var(--primary); }
+.dz-opt__ic .vx-ico { width: 17px; height: 17px; }
+.dz-opt[data-warm] .dz-opt__ic { background: var(--warning-soft); color: var(--sale); }
+.dz-opt__t { flex: 1; min-width: 0; line-height: 1.3; }
+.dz-opt small { font-size: 0.875rem; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+.dz-opt[aria-current="true"] { background: var(--primary-soft); color: var(--primary-hover); font-weight: 700; }
+.dz-opt[aria-current="true"] .dz-opt__ic { background: var(--primary); color: var(--on-primary); }
+.dz-opt[aria-current="true"] small { color: var(--primary-hover); }
+.dz-opts--chips { flex-direction: row; flex-wrap: wrap; gap: var(--space-2); }
+.dz-opts--chips .dz-opt { min-height: 2.5rem; padding: 0 14px; border: 1px solid var(--border); border-radius: var(--radius-pill); }
+.dz-opts--chips .dz-opt[aria-current="true"] { border-color: var(--primary); }
+
+.dz-main { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+.dz-main__head { display: flex; flex-direction: column; gap: var(--space-2); }
+.dz-active { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.dz-active__a { display: inline-flex; align-items: center; gap: 6px; min-height: 2.25rem; padding: 0 10px 0 14px; border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-hover); font-size: 0.875rem; font-weight: 600; }
+.dz-active__a:hover { background: #d3eadb; }
+.dz-active .dz-active__all { background: transparent; color: var(--ink-muted); text-decoration: underline; padding: 0 6px; }
+
+.dz-empty { display: flex; flex-direction: column; align-items: center; gap: var(--space-3); padding: 2.5rem var(--space-4); border: 1px dashed var(--border); border-radius: var(--radius-lg); text-align: center; }
+.dz-empty b { font-size: 1.0625rem; }
+.dz-empty__act { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-2); }
+.dz-empty__act .vx-btn { min-height: 2.75rem; }
+.dz .vx-pager { justify-content: center; }
+
+/* ---- Tablet + điện thoại: bộ lọc thành các hàng chip vuốt ngang trên danh sách ------------------ */
+@media (max-width: 63.9375em) {
+  .dz-hero { grid-template-columns: minmax(0, 1fr); }
+  .dz-help { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .dz-browse { grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
+  .dz-side { gap: var(--space-3); }
+  .dz-box { padding: 0; border: 0; border-radius: 0; background: transparent; }
+  .dz-box__h { margin-bottom: 6px; font-size: 0.875rem; }
+  .dz-parts { display: block; }
+  .dz-parts__art { display: none; }
+  .dz .dz-opts { flex-direction: row; flex-wrap: nowrap; gap: var(--space-2); overflow-x: auto; scrollbar-width: none; margin: 0 calc(-1 * var(--dz-gut, 24px)); padding: 2px var(--dz-gut, 24px); scroll-padding: 0 var(--dz-gut, 24px); }
+  .dz .dz-opts::-webkit-scrollbar { display: none; }
+  .dz-opts > li { flex: none; }
+  .dz-opt { gap: 6px; min-height: 2.75rem; padding: 0 14px 0 6px; border: 1px solid var(--border); border-radius: var(--radius-pill); background: var(--surface); white-space: nowrap; }
+  .dz-opts--chips .dz-opt { padding: 0 14px; }
+  .dz-opt__ic { width: 1.875rem; height: 1.875rem; }
+  .dz-opt[aria-current="true"] { border-color: var(--primary); }
+}
+
+@media (max-width: 47.9375em) {
+  .dz { --dz-gut: 16px; padding: 12px 16px 24px; gap: var(--space-4); }
+  .dz-hero { padding: 1.25rem 1rem; gap: var(--space-4); border-radius: 16px; margin: 0 -4px; }
+  .dz-hero h1 { font-size: 1.5rem; }
+  .dz-search { min-height: 3.25rem; padding-left: 14px; }
+  .dz-search .vx-btn { padding: 0 1.125rem; }
+  .dz-quick { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -1rem; padding: 0 1rem; }
+  .dz-quick::-webkit-scrollbar { display: none; }
+  .dz-quick li { flex: none; }
+  .dz-quick__a { min-height: 2.5rem; }
+  .dz-stats { gap: 2px 14px; }
+  /* Ba nút hỏi kỹ sư thành 3 ô ngang: biểu tượng + chữ đậm (bỏ dòng phụ, mũi tên) cho khung đầu trang khỏi dài */
+  .dz-help { gap: 8px; }
+  .dz-help__a { height: 100%; grid-template-columns: minmax(0, 1fr); justify-items: center; align-content: start; gap: 6px; min-height: 0; padding: 10px 6px; text-align: center; }
+  .dz-help__a b { font-size: 0.875rem; }
+  .dz-help__a small, .dz-help__a > svg:last-child { display: none; }
+  .dz-help__ic { width: 2.5rem; height: 2.5rem; }
+  .dz-h2 { font-size: 1.125rem; }
+  .dz-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+  .dz-card__b { padding: 10px 10px 12px; gap: 4px; }
+  .dz-card h3 { font-size: 1rem; }
+  .dz-cause { left: 6px; bottom: 6px; padding: 2px 8px 2px 5px; }
+  .dz-sev { gap: 6px; }
+}
+
+/* Màn rất hẹp / chữ phóng to: thẻ một cột cho tên bệnh khỏi bị cắt */
+@media (max-width: 22em) {
+  .dz-grid, .dz-grid--season, .dz-help { grid-template-columns: minmax(0, 1fr); }
+  .dz-help__a { grid-template-columns: auto minmax(0, 1fr); justify-items: start; align-content: center; text-align: left; }
+}

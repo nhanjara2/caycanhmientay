@@ -41,6 +41,8 @@ export const VoucherInputSchema = z.object({
 }).superRefine((v, ctx) => {
   if (v.kind === 'ship' && v.discountType !== 'amount') ctx.addIssue({ code: 'custom', path: ['discountType'], message: 'Mã miễn phí giao nhập số tiền giảm phí giao tối đa' });
   if (v.discountType === 'percent' && v.discountValue > 100) ctx.addIssue({ code: 'custom', path: ['discountValue'], message: 'Phần trăm tối đa 100' });
+  // Mã % luôn phải có trần: khách thấy "giảm 20%" nhưng shop chỉ mất tối đa số tiền này (đơn lớn không bị giảm quá sâu).
+  if (v.kind === 'discount' && v.discountType === 'percent' && !v.maxDiscount) ctx.addIssue({ code: 'custom', path: ['maxDiscount'], message: 'Mã giảm theo % phải có mức giảm tối đa (đ)' });
   if (v.startsAt && v.endsAt && v.startsAt > v.endsAt) ctx.addIssue({ code: 'custom', path: ['endsAt'], message: 'Ngày kết thúc phải sau ngày bắt đầu' });
 });
 export type VoucherInput = z.infer<typeof VoucherInputSchema>;

@@ -120,9 +120,9 @@ export function VoucherForm({ initial, options }: { initial: VoucherFormValue; o
             </div>
             {v.discountType === 'percent' && (
               <div className="ad-f">
-                <label htmlFor="vc-max">Giảm tối đa (đ, để trống = không giới hạn)</label>
-                <input id="vc-max" className="vx-input" inputMode="numeric" value={v.maxDiscount} onChange={(e) => set('maxDiscount', digits(e.target.value))} placeholder="50.000" />
-                {!v.maxDiscount && <span className="vx-help app-warn-text">Nên đặt mức giảm tối đa: khách thấy "giảm {v.discountValue || 'n'}%" nhưng shop chỉ mất tối đa số tiền này. Không đặt thì đơn lớn giảm rất nhiều (chỉ còn giá sàn chặn).</span>}
+                <label htmlFor="vc-max">Giảm tối đa (đ)</label>
+                <input id="vc-max" className="vx-input" inputMode="numeric" value={v.maxDiscount} onChange={(e) => set('maxDiscount', digits(e.target.value))} placeholder="50.000" required />
+                <span className="vx-help">Bắt buộc với mã %: khách thấy "giảm {v.discountValue || 'n'}%" nhưng mỗi đơn chỉ giảm tối đa số tiền này.</span>
               </div>
             )}
           </div>

@@ -2105,7 +2105,6 @@ button.vx-loc:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .app-vurg[data-hot] .bar i { background: #d0011b; }
 .app-vurg__end { color: #d0011b; }
 .pm-voucher__txt .app-vurg { margin-top: 0.125rem; }
-.app-warn-text { color: #b45309; }
 .app-vmodal .vx-vfoot__sum { font-size: 0.9375rem; }
 /* Hộp chọn mã: ô biểu tượng cùng màu với thẻ mã ở trang sản phẩm (giảm giá đỏ, miễn phí giao xanh dương) */
 .app-vpick:not([aria-disabled="true"]) .vx-voucher__ic.sale { background: #d0011b; color: #fff; }

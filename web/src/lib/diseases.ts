@@ -48,6 +48,18 @@ export const DISEASE_IMAGE_FILE = /^[a-f0-9]{32}\.(jpg|png|webp)$/;
 
 export const SEVERITY = ['', 'Thấp', 'Trung bình', 'Khá cao', 'Cao', 'Rất cao'] as const;
 
+/** Mùa ở miền Tây (giờ Việt Nam): mưa tháng 5 – 11, khô tháng 12 – 4. `key` dùng để dò cột `season` của bài bệnh. */
+export function seasonNow() {
+  const m = Number(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh', month: 'numeric' }));
+  return m >= 5 && m <= 11 ? { key: 'mưa', name: 'Mùa mưa' } : { key: 'khô', name: 'Mùa khô' };
+}
+
+/** Bài bệnh hay gặp trong mùa đang tới (cột `season` có chữ "mưa" / "khô"). */
+export const inSeason = (d: { season: string }, key: string) => d.season.normalize('NFC').toLowerCase().includes(key);
+
+/** Ảnh triệu chứng đầu tiên của bài (tên file), không có thì undefined. */
+export const coverOf = (d: { symptoms: { image?: string }[] }) => d.symptoms.find((s) => s.image)?.image;
+
 export const partName = (k: string) => PARTS.find((p) => p.key === k)?.name ?? k;
 export const causeOf = (k: string) => CAUSES.find((c) => c.key === k);
 export const plantName = (k: string) => PLANTS.find((p) => p.key === k)?.name ?? k;

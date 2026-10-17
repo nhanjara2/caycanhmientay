@@ -10,6 +10,7 @@ import { ProductGrid } from '@/components/ProductCard';
 import { ProjectCard } from '@/components/ProjectParts';
 import { ShortVideos } from '@/components/ShortVideos';
 import type { Product } from '@/lib/catalog';
+import { inSeason, seasonNow } from '@/lib/diseases';
 import { bannerImageUrl, slotOf, type Banner } from '@/lib/home-banners';
 import { responsive } from '@/lib/images';
 import { PARTNER_IMAGE, PARTNER_IMAGE_POS, PARTNER_INFO, PARTNER_TYPES, WHOLESALE_QUOTE_URL, WHOLESALE_URL } from '@/lib/partners';
@@ -53,14 +54,6 @@ const fromBanner = (b: Banner): Slide => ({
 const withImage = (list: Product[]) => list.filter((p) => p.images?.length);
 const bySold = (a: Product, b: Product) => b.sold - a.sold || Number(b.inStock) - Number(a.inStock);
 const pickImages = (list: Product[], n: number) => withImage(list).sort(bySold).slice(0, n).map((p) => p.images![0]);
-
-/** Mùa ở miền Tây: mưa tháng 5 – 11, khô tháng 12 – 4. */
-function seasonNow() {
-  const m = Number(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh', month: 'numeric' }));
-  return m >= 5 && m <= 11
-    ? { key: 'mưa', name: 'Mùa mưa' }
-    : { key: 'khô', name: 'Mùa khô' };
-}
 
 export const generateMetadata = (): Promise<Metadata> => withSeo(withShare({
   description: 'Cây Cảnh Miền Tây – nhà vườn tại Làng hoa Sa Đéc từ 2007: cây cảnh, cây văn phòng, cây công trình giá tại vườn, giá sỉ cho đối tác, giao toàn quốc.',
@@ -165,7 +158,7 @@ export default async function HomePage() {
   const best = [...products].sort((a, b) => Number(!!b.images?.length) - Number(!!a.images?.length) || bySold(a, b)).slice(0, 10);
 
   // ---- Bệnh cây theo mùa ----
-  const hasSeason = (d: (typeof diseases)[number]) => d.season.normalize('NFC').toLowerCase().includes(season.key);
+  const hasSeason = (d: (typeof diseases)[number]) => inSeason(d, season.key);
   const seasonal = diseases
     .filter((d) => d.symptoms.some((s) => s.image))
     .sort((a, b) => Number(hasSeason(b)) - Number(hasSeason(a)) || b.severity - a.severity)
