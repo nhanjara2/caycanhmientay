@@ -38,6 +38,21 @@ export default function CartPage() {
       .catch(() => {});
   }, [ready, lines, replace]);
 
+  // Điện thoại: khối tổng tiền là thanh dính đáy → trang chừa đúng chiều cao thanh, ẩn thanh Zalo / Gọi (CSS theo body[data-sumbar])
+  const hasLines = ready && lines.length > 0;
+  useEffect(() => {
+    if (!hasLines) return;
+    const bar = document.querySelector<HTMLElement>('.app-sumbar');
+    if (!bar) return;
+    const body = document.body;
+    const set = () => body.style.setProperty('--sumbar-h', `${bar.offsetHeight}px`);
+    set();
+    body.dataset.sumbar = '1';
+    const ro = new ResizeObserver(set);
+    ro.observe(bar);
+    return () => { ro.disconnect(); delete body.dataset.sumbar; body.style.removeProperty('--sumbar-h'); };
+  }, [hasLines]);
+
   if (!ready) return <div className="vx-checkout app-page" style={{ minHeight: 400 }} />;
 
   if (!lines.length) {
@@ -58,15 +73,21 @@ export default function CartPage() {
         <Steps step={1} />
         {notice && <div className="vx-note" role="status"><Icon name="alert" /><div>{notice}</div></div>}
         <CartList editable />
+        {/* Điện thoại: hai nút phụ nằm dưới danh sách (thanh dính đáy chỉ giữ nút Đặt hàng) */}
+        <div className="app-cart-alt">
+          <Link href={WHOLESALE_QUOTE_URL} className="vx-btn vx-btn--outline vx-btn--block">Gửi danh sách, nhận báo giá sỉ</Link>
+          <Link href="/danh-muc" className="vx-btn vx-btn--ghost vx-btn--block">Tiếp tục mua sắm</Link>
+        </div>
       </div>
       <OrderSummary
+        bar
         totals={withApplied(totals, vouchers.applied)}
         voucherHint
         voucher={totals.voucherBase > 0 || !totals.goods ? <VoucherBox state={vouchers} totals={totals} shipFee={totals.plantShip + totals.supplyShip} /> : undefined}
       >
-        <Link href="/thanh-toan" className="vx-btn vx-btn--primary vx-btn--lg vx-btn--block">Tiến hành đặt hàng</Link>
-        <Link href={WHOLESALE_QUOTE_URL} className="vx-btn vx-btn--outline vx-btn--block">Gửi danh sách, nhận báo giá sỉ</Link>
-        <Link href="/danh-muc" className="vx-btn vx-btn--ghost vx-btn--block">Tiếp tục mua sắm</Link>
+        <Link href="/thanh-toan" className="vx-btn vx-btn--primary vx-btn--lg vx-btn--block app-sum-go">Đặt hàng</Link>
+        <Link href={WHOLESALE_QUOTE_URL} className="vx-btn vx-btn--outline vx-btn--block app-sum-alt">Gửi danh sách, nhận báo giá sỉ</Link>
+        <Link href="/danh-muc" className="vx-btn vx-btn--ghost vx-btn--block app-sum-alt">Tiếp tục mua sắm</Link>
       </OrderSummary>
     </div>
   );

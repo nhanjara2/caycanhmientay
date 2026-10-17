@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { type CartLine, type Totals, useCart } from '@/lib/cart';
 import { minOrderShort, plantFeeVaries, plantFreeFrom, type LinePrice } from '@/lib/pricing';
 import { REGION_LABEL } from '@/lib/shipping';
@@ -75,26 +75,28 @@ function Item({ l, pr, editable, setQty, remove }: {
         {p.flash && <span><span className="vx-badge vx-badge--sale" style={{ fontSize: '0.6875rem', padding: '2px 6px' }}><Icon name="bolt" size={12} />Flash sale</span></span>}
         <p className="vx-item__name"><Link href={`/san-pham/${l.slug}`}>{p.name}</Link></p>
         <span className="vx-item__unit">Đơn vị: {p.unit} · {p.label}</span>
-        {pr && pr.combos > 0 && <span className="app-tier">Combo 2 {p.unit.toLowerCase()} ×{pr.combos}: −{money(pr.comboSaving)}</span>}
-        {pr && pr.combos === 0 && l.qty === 1 && p.combo2 && p.combo2 < 2 * p.price && (
-          <span className="app-tier app-tier--hint">Thêm 1 {p.unit.toLowerCase()} nữa: 2 {p.unit.toLowerCase()} chỉ {money(p.combo2)}</span>
-        )}
       </div>
       <div className="vx-item__price">
         <b>{money(pr ? pr.total : p.price * l.qty)}</b>
         {pr ? pr.strike > pr.total && <s className="vx-strike">{money(pr.strike)}</s> : p.oldPrice && <s className="vx-strike">{money(p.oldPrice * l.qty)}</s>}
       </div>
       {editable ? (
-        <div className="vx-item__qty" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+        <div className="vx-item__qty app-item-qty">
           <div className="vx-stepper">
             <button type="button" aria-label="Giảm" onClick={() => setQty(l.slug, l.option, l.qty - 1)}>−</button>
             <span>{l.qty}</span>
             <button type="button" aria-label="Tăng" onClick={() => setQty(l.slug, l.option, l.qty + 1)}>+</button>
           </div>
-          <button type="button" className="vx-remove" onClick={() => { if (confirm(`Bỏ "${p.name}" khỏi giỏ hàng?`)) remove(l.slug, l.option); }}>Xóa</button>
+          <button type="button" className="vx-remove" aria-label={`Xóa ${p.name} khỏi giỏ`} onClick={() => { if (confirm(`Bỏ "${p.name}" khỏi giỏ hàng?`)) remove(l.slug, l.option); }}>
+            <Icon name="trash" size={20} /><span>Xóa</span>
+          </button>
         </div>
       ) : (
         <div className="vx-item__qty">x{l.qty} {p.unit}</div>
+      )}
+      {pr && pr.combos > 0 && <div className="app-item-hint"><span className="app-tier">Combo 2 {p.unit.toLowerCase()} ×{pr.combos}: −{money(pr.comboSaving)}</span></div>}
+      {pr && pr.combos === 0 && l.qty === 1 && p.combo2 && p.combo2 < 2 * p.price && (
+        <div className="app-item-hint"><span className="app-tier app-tier--hint">Thêm 1 {p.unit.toLowerCase()} nữa: 2 {p.unit.toLowerCase()} chỉ {money(p.combo2)}</span></div>
       )}
     </div>
   );
@@ -102,7 +104,12 @@ function Item({ l, pr, editable, setQty, remove }: {
 
 /** OrderSummary: khối tổng tiền cột phải, dính khi cuộn. `voucher` = dòng "Ưu đãi dành cho bạn" (VoucherBox) mở hộp chọn mã;
  *  `voucherHint` (giỏ hàng): thêm gợi ý mua thêm để dùng mã giảm cao hơn. */
-export function OrderSummary({ totals: t, voucherHint = false, voucher, delivery = 'ship', children }: { totals: Totals; voucherHint?: boolean; voucher?: ReactNode; delivery?: 'ship' | 'pickup'; children: ReactNode }) {
+export function OrderSummary({ totals: t, voucherHint = false, voucher, delivery = 'ship', bar = false, children }: {
+  totals: Totals; voucherHint?: boolean; voucher?: ReactNode; delivery?: 'ship' | 'pickup';
+  /** Giỏ hàng: trên điện thoại khối này thành thanh dính đáy (kiểu Long Châu) — chi tiết phí thu gọn, mở bằng mũi tên cạnh Thành tiền. */
+  bar?: boolean; children: ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
   const { rules, minOrder } = useShipping();
   // Đơn giao hàng cần đủ tiền hàng tối thiểu (Cài đặt giao hàng); nhận tại vườn không giới hạn.
   const short = minOrderShort(t.goods, minOrder, delivery);
@@ -121,8 +128,8 @@ export function OrderSummary({ totals: t, voucherHint = false, voucher, delivery
   const amountOf = (v: { scope?: VoucherScope | null }) => voucherAmount(v.scope, t);
   const tiers = voucherHint ? voucherTiers(vouchers, amountOf) : { best: null, next: null };
   return (
-    <aside className="vx-sum">
-      <div className="vx-lines">
+    <aside className={bar ? 'vx-sum app-sumbar' : 'vx-sum'} data-open={open || undefined}>
+      <div className="vx-lines" id={bar ? 'sum-lines' : undefined}>
         <div><span>Tổng tiền</span><b>{money(t.subtotal)}</b></div>
         {t.comboDiscount > 0 && <div><span>Combo 2 cây</span><b className="neg">-{money(t.comboDiscount)}</b></div>}
         {t.plantSubtotal > 0 && <div><span>Phí giao cây sống{t.shipRegion && plantFeeVaries(rules.plant) ? ` (${REGION_LABEL[t.shipRegion]})` : estimate ? ' (tạm tính)' : ''}</span>{plantGross ? <b>{money(plantGross)}</b> : <b className="pos">Miễn phí</b>}</div>}
@@ -160,7 +167,13 @@ export function OrderSummary({ totals: t, voucherHint = false, voucher, delivery
           {saved > 0 && <s>{money(t.subtotal + plantGross + supplyGross)}</s>}
           <span className="amt">{money(t.total)}</span>
         </span>
+        {bar && (
+          <button type="button" className="app-sum-tog" aria-expanded={open} aria-controls="sum-lines" aria-label={open ? 'Ẩn chi tiết' : 'Xem chi tiết'} onClick={() => setOpen((o) => !o)}>
+            <Icon name="chevron" size={20} />
+          </button>
+        )}
       </div>
+      {bar && saved > 0 && <div className="app-sum-saved">Tiết kiệm được <b>{money(saved)}</b></div>}
       {children}
     </aside>
   );
