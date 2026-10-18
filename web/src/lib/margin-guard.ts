@@ -1,20 +1,21 @@
-// Giá sàn: mức lãi tối thiểu sau MỌI khoản giảm của một đơn (combo, giảm phí giao, mã giảm giá, mã miễn phí giao, chiết khấu đối tác).
-// Chủ shop chốt 16/10/2026: lãi tối thiểu 25% trên tiền thu, cây sống hao hụt (chết, bảo hành) 5%; 10% cộng vào giá vườn đã gồm tiền xe chở về.
-// Số % lưu ở app_settings (khóa `margin-guard`, sửa ở /admin/bang-gia). Tính toán thuần — giá vốn chỉ đưa vào ở server, không xuống trình duyệt khách.
+// Giá sàn: tiền thu tối thiểu của một đơn sau MỌI khoản giảm (combo, giảm phí giao, mã giảm giá, mã miễn phí giao, chiết khấu đối tác).
+// Chủ shop chốt 18/10/2026: giá vốn = giá gốc + 5% (giá gốc = vườn + 10% tiền xe chở về), giá bán lẻ thu về tối thiểu 152% giá vốn,
+// chưa gồm phí giao cho khách (phí giao shop chịu — miễn phí giao, mã miễn phí giao — trừ vào phần trên giá sàn).
+// Số % lưu ở app_settings (khóa `margin-guard`). Tính toán thuần — giá gốc chỉ đưa vào ở server, không xuống trình duyệt khách.
 import * as z from 'zod';
 
 export type MarginGuard = {
-  /** Lãi tối thiểu trên tiền shop thực thu của đơn (%). */
-  minMarginPct: number;
-  /** Hao hụt cây sống (%): cộng vào giá vốn cây sống khi tính giá sàn. Vật tư không tính. */
-  plantLossPct: number;
+  /** Giá vốn = giá gốc + % này (hao hụt, công chăm trước khi bán). */
+  costExtraPct: number;
+  /** Tiền thu tối thiểu = giá vốn + % này (152% giá vốn → 52). */
+  minMarkupPct: number;
 };
 
-export const DEFAULT_MARGIN_GUARD: MarginGuard = { minMarginPct: 25, plantLossPct: 5 };
+export const DEFAULT_MARGIN_GUARD: MarginGuard = { costExtraPct: 5, minMarkupPct: 52 };
 
 export const MarginGuardSchema = z.object({
-  minMarginPct: z.number().int('Lãi tối thiểu là số nguyên').min(0, 'Lãi tối thiểu không được âm').max(80, 'Lãi tối thiểu tối đa 80%'),
-  plantLossPct: z.number().int('Hao hụt là số nguyên').min(0, 'Hao hụt không được âm').max(50, 'Hao hụt tối đa 50%'),
+  costExtraPct: z.number().int('Phần cộng vào giá vốn là số nguyên').min(0, 'Không được âm').max(50, 'Tối đa 50%'),
+  minMarkupPct: z.number().int('Lãi tối thiểu là số nguyên').min(0, 'Lãi tối thiểu không được âm').max(300, 'Lãi tối thiểu tối đa 300%'),
 });
 
 export function parseMarginGuard(raw: unknown): MarginGuard {
@@ -22,15 +23,15 @@ export function parseMarginGuard(raw: unknown): MarginGuard {
   return r.success ? r.data : DEFAULT_MARGIN_GUARD;
 }
 
-/** Vốn thật một đơn vị: giá gốc (vườn + 10% tiền xe) + hao hụt nếu là cây sống. */
-export const trueCost = (cost: number, plant: boolean, g: MarginGuard) => cost * (1 + (plant ? g.plantLossPct : 0) / 100);
+/** Giá vốn một đơn vị = giá gốc + `costExtraPct`. */
+export const trueCost = (cost: number, g: MarginGuard) => cost * (1 + g.costExtraPct / 100);
 
-/** Tiền thu tối thiểu cho một đơn vị để còn đủ lãi tối thiểu (chưa làm tròn). */
-export const floorOf = (cost: number, plant: boolean, g: MarginGuard) => trueCost(cost, plant, g) / (1 - g.minMarginPct / 100);
+/** Tiền thu tối thiểu cho một đơn vị (chưa làm tròn) = giá vốn × (1 + `minMarkupPct`). */
+export const floorOf = (cost: number, g: MarginGuard) => trueCost(cost, g) * (1 + g.minMarkupPct / 100);
 
 /** Giá sàn một đơn vị để hiện ở bảng giá: làm tròn lên nghìn (dưới 10.000đ lên trăm). */
-export const floorPrice = (cost: number, plant: boolean, g: MarginGuard) => {
-  const v = floorOf(cost, plant, g);
+export const floorPrice = (cost: number, g: MarginGuard) => {
+  const v = floorOf(cost, g);
   return v >= 10_000 ? Math.ceil(v / 1000) * 1000 : Math.ceil(v / 100) * 100;
 };
 

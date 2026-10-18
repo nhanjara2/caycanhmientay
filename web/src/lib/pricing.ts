@@ -6,9 +6,11 @@ import { DEFAULT_SHIPPING, type FeeRule, type PlantRule, type ShipRegion } from 
 
 // ---- Công thức giá ----------------------------------------------------------------------------
 // Chủ shop (10/10/2026) chỉ nhập Giá tại vườn; các giá khác tự tính rồi sửa tay được ở form sản phẩm:
-//   Giá gốc = vườn + 10% · Giá lẻ (giá bán) = gốc + 80% · Combo 2 cây = (lẻ × 2) − 10% · Giá gạch ngang = lẻ + ngẫu nhiên 20–30%.
+//   Giá gốc = vườn + 10% · Giá lẻ (giá bán) = gốc + 100% · Combo 2 cây = (lẻ × 2) − 10% · Giá gạch ngang = lẻ + ngẫu nhiên 20–30%.
+// 18/10/2026 giá lẻ từ gốc + 80% lên gốc + 100%: giá sàn mới (giá vốn = gốc + 5%, thu tối thiểu 152% giá vốn — lib/margin-guard.ts)
+// = gốc × 1,596, nên giá lẻ gốc × 2 chừa ~20% để giảm: combo 10% + mã giảm giá ≤ 5% + phí giao shop chịu ≤ 5% (xem mã + mức miễn phí giao).
 // Giá sỉ công trình: liên hệ báo giá (không tính trên web).
-export const PRICE_FORMULA = { costPct: 10, retailPct: 80, comboPct: 10, strikeMinPct: 20, strikeMaxPct: 30 } as const;
+export const PRICE_FORMULA = { costPct: 10, retailPct: 100, comboPct: 10, strikeMinPct: 20, strikeMaxPct: 30 } as const;
 
 /** Làm tròn giá: từ 10.000đ tròn nghìn, dưới đó tròn trăm. */
 export const roundPrice = (n: number) => (n >= 10_000 ? Math.round(n / 1000) * 1000 : Math.round(n / 100) * 100);

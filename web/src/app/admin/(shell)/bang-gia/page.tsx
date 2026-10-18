@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Icon } from '@/components/Icon';
 import { money } from '@/lib/format';
 import { requireAccess } from '@/server/auth';
+import { getMarginGuard } from '@/server/margin-guard';
 import { factorTable, listPriceRows, REVENUE_TAX_PCT, WHOLESALE_TIERS } from '@/server/price-list';
 
 export const metadata: Metadata = { title: 'Bảng giá' };
@@ -20,8 +21,9 @@ export default async function AdminPriceListPage({ searchParams }: Props) {
   const sp = await searchParams;
   const all = sp.xem === 'tat-ca';
   const q = sp.q?.slice(0, 60);
-  const rows = await listPriceRows({ q, onlyActive: !all });
+  const [rows, guard] = await Promise.all([listPriceRows({ q, onlyActive: !all }), getMarginGuard()]);
   const low = rows.filter((r) => r.retailTooLow).length;
+  const under = rows.filter((r) => r.belowFloor).length;
   const noCost = rows.filter((r) => !r.cost).length;
   const href = (xem?: string) => `/admin/bang-gia${xem ? `?xem=${xem}` : ''}`;
 
@@ -42,7 +44,7 @@ export default async function AdminPriceListPage({ searchParams }: Props) {
           <table className="ad-table app-mtable">
             <thead><tr><th>Loại giá</th><th>Cách tính</th><th className="num">Hệ số trên giá gốc</th><th className="num">Hệ số trên giá vườn</th></tr></thead>
             <tbody>
-              {factorTable().map((f) => (
+              {factorTable(guard).map((f) => (
                 <tr key={f.label}>
                   <td><b>{f.label}</b></td>
                   <td data-label="Cách tính" data-m="note">{f.how}</td>
@@ -62,10 +64,11 @@ export default async function AdminPriceListPage({ searchParams }: Props) {
           File tải về chỉ có giá lẻ và giá của cấp đó, không có giá vườn / giá gốc.
         </div>
       </div>
-      {(low > 0 || noCost > 0) && (
+      {(low > 0 || noCost > 0 || under > 0) && (
         <div className="vx-note" role="alert" style={{ marginBottom: 12 }}>
           <Icon name="alert" />
           <div>
+            {under > 0 && <>Có <b>{under}</b> quy cách giá lẻ hoặc combo mỗi cây dưới giá sàn (dòng tô đỏ). </>}
             {low > 0 && <>Có <b>{low}</b> quy cách giá lẻ đang bằng hoặc thấp hơn giá đại lý cấp 2 (dòng tô đỏ) — đại lý không còn chỗ bán lại, nên xem lại giá lẻ. </>}
             {noCost > 0 && <>Có <b>{noCost}</b> quy cách chưa có giá vườn nên chưa tính được giá sỉ.</>}
           </div>
@@ -89,7 +92,7 @@ export default async function AdminPriceListPage({ searchParams }: Props) {
           <table className="ad-table app-mtable">
             <thead>
               <tr>
-                <th>Cây · quy cách</th><th className="num">Giá vườn</th><th className="num">Giá gốc</th><th className="num">Giá lẻ</th><th className="num">Combo 2 cây</th>
+                <th>Cây · quy cách</th><th className="num">Giá vườn</th><th className="num">Giá gốc</th><th className="num">Giá lẻ</th><th className="num">Combo 2 cây</th><th className="num">Giá sàn</th>
                 {WHOLESALE_TIERS.map((t) => <th key={t.key} className="num">{t.label}</th>)}
                 <th className="num">Lãi lẻ</th><th className="num">Lãi {WHOLESALE_TIERS[1].label.toLowerCase()}</th>
               </tr>
@@ -98,7 +101,7 @@ export default async function AdminPriceListPage({ searchParams }: Props) {
               {rows.map((r) => {
                 const dl1 = r.tiers.dl1;
                 return (
-                  <tr key={`${r.slug}-${r.idx}`} style={r.retailTooLow ? { background: '#fdecea' } : undefined}>
+                  <tr key={`${r.slug}-${r.idx}`} style={r.retailTooLow || r.belowFloor ? { background: '#fdecea' } : undefined}>
                     <td>
                       <Link href={`/admin/san-pham/${r.slug}`} className="app-rowlink" style={{ color: 'inherit' }}>
                         <b>{r.name}</b>
@@ -109,13 +112,14 @@ export default async function AdminPriceListPage({ searchParams }: Props) {
                     <td className="num" data-label="Giá gốc" data-m="third">{vnd(r.cost)}</td>
                     <td className="num" data-label="Giá lẻ" data-m="third"><b>{r.price > 0 ? money(r.price) : 'Liên hệ'}</b></td>
                     <td className="num" data-label="Combo 2 cây" data-m="third">{vnd(r.combo2)}</td>
+                    <td className="num" data-label="Giá sàn" data-m="third">{vnd(r.floor)}</td>
                     {WHOLESALE_TIERS.map((t) => <td key={t.key} className="num" data-label={t.label} data-m="third">{vnd(r.tiers[t.key])}</td>)}
                     <td className="num" data-label="Lãi lẻ" data-m="third">{pct(r.retailMargin)}</td>
                     <td className="num" data-label={`Lãi ${WHOLESALE_TIERS[1].label.toLowerCase()}`} data-m="third">{pct(dl1 && r.cost ? (dl1 - r.cost) / dl1 : null)}</td>
                   </tr>
                 );
               })}
-              {!rows.length && <tr><td colSpan={7 + WHOLESALE_TIERS.length} style={{ textAlign: 'center', padding: 32, color: 'var(--ink-muted)' }}>Không có quy cách nào.</td></tr>}
+              {!rows.length && <tr><td colSpan={8 + WHOLESALE_TIERS.length} style={{ textAlign: 'center', padding: 32, color: 'var(--ink-muted)' }}>Không có quy cách nào.</td></tr>}
             </tbody>
           </table>
         </div>

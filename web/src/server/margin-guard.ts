@@ -9,7 +9,7 @@ import type { Tx } from './inventory';
 const { appSettings, productOptions, products } = schema;
 const KEY = 'margin-guard';
 
-/** Lãi tối thiểu + hao hụt cây sống đang dùng (chưa lưu / hỏng → 25% / 5%). */
+/** Giá vốn (+5%) + lãi tối thiểu (152% giá vốn) đang dùng (chưa lưu / hỏng → mặc định). */
 export const getMarginGuard = cache(async (): Promise<MarginGuard> => {
   const [r] = await db.select({ value: appSettings.value }).from(appSettings).where(eq(appSettings.key, KEY));
   return parseMarginGuard(r?.value);
@@ -34,19 +34,19 @@ export async function orderFloor(lines: FloorLine[], conn: Tx | typeof db = db):
   if (!lines.length) return 0;
   const opts = (slugs: string[]) => conn.select({
     slug: productOptions.productSlug, idx: productOptions.idx, cost: productOptions.cost, garden: productOptions.garden, price: productOptions.price,
-    parts: productOptions.parts, ship: products.ship,
+    parts: productOptions.parts,
   }).from(productOptions).innerJoin(products, eq(products.slug, productOptions.productSlug)).where(inArray(productOptions.productSlug, slugs));
   const [g, rows] = await Promise.all([getMarginGuard(), opts([...new Set(lines.map((l) => l.slug))])]);
-  // Bộ (lib/bundle.ts): giá sàn = cộng giá sàn từng món (món là cây sống mới tính hao hụt)
+  // Bộ (lib/bundle.ts): giá sàn = cộng giá sàn từng món
   const partSlugs = [...new Set(rows.flatMap((r) => r.parts?.map((p) => p.slug) ?? []))];
   const parts = partSlugs.length ? await opts(partSlugs) : [];
   const by = new Map([...rows, ...parts].map((r) => [`${r.slug}#${r.idx}`, r]));
-  const floorUnit = (o: (typeof rows)[number], ship: 'plant' | 'supply'): number => (o.parts
-    ? o.parts.reduce((s, p) => { const x = by.get(`${p.slug}#${p.idx}`); return x ? s + floorOf(unitCost(x), x.ship === 'plant', g) * p.qty : s; }, 0)
-    : floorOf(unitCost(o), ship === 'plant', g));
+  const floorUnit = (o: (typeof rows)[number]): number => (o.parts
+    ? o.parts.reduce((s, p) => { const x = by.get(`${p.slug}#${p.idx}`); return x ? s + floorOf(unitCost(x), g) * p.qty : s; }, 0)
+    : floorOf(unitCost(o), g));
   return lines.reduce((s, l) => {
     const o = by.get(`${l.slug}#${l.option}`);
-    return o ? s + floorUnit(o, l.ship) * l.qty : s;
+    return o ? s + floorUnit(o) * l.qty : s;
   }, 0);
 }
 

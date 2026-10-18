@@ -101,7 +101,7 @@ export function voucherTiers(all: PublicVoucher[], amountOf: (v: PublicVoucher) 
 export const WELCOME_CODE = 'CHAOBANMOI';
 export const WELCOME_DAYS = 30;
 /** Giá trị lúc tạo mã (seed) — sau đó admin sửa trực tiếp trên mã. */
-export const WELCOME_DEFAULT = { discountValue: 50_000, minOrder: 300_000 };
+export const WELCOME_DEFAULT = { discountValue: 30_000, minOrder: 600_000 };
 
 export type WelcomeProgram = {
   code: string; discountType: DiscountType; discountValue: number; maxDiscount: number | null; minOrder: number; days: number;
