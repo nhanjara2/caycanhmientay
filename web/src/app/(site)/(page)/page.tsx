@@ -7,7 +7,6 @@ import {
 } from '@/components/home/HomeParts';
 import { Icon } from '@/components/Icon';
 import { ProductGrid } from '@/components/ProductCard';
-import { ProjectCard } from '@/components/ProjectParts';
 import { ShortVideos } from '@/components/ShortVideos';
 import type { Product } from '@/lib/catalog';
 import { inSeason, seasonNow } from '@/lib/diseases';
@@ -21,7 +20,6 @@ import { menuCategories } from '@/server/categories';
 import { allDiseases } from '@/server/diseases';
 import { liveBanners } from '@/server/home-banners';
 import { publishedPosts, publishedVideos } from '@/server/posts';
-import { publishedProjects } from '@/server/projects';
 import '@/styles/home.css';
 import { withShare } from '@/lib/seo';
 import { withSeo } from '@/server/seo-cms';
@@ -61,9 +59,9 @@ export const generateMetadata = (): Promise<Metadata> => withSeo(withShare({
 }));
 
 export default async function HomePage() {
-  const [banners, products, flash, categories, counts, posts, allVideos, projects, diseases] = await Promise.all([
+  const [banners, products, flash, categories, counts, posts, allVideos, diseases] = await Promise.all([
     liveBanners(), allProducts(), flashProducts(), menuCategories(), categoryCounts(),
-    publishedPosts(), publishedVideos(), publishedProjects(), allDiseases(),
+    publishedPosts(), publishedVideos(), allDiseases(),
   ]);
   // Mỗi vị trí chỉ hiện tối đa `max` ảnh đầu (BANNER_SLOTS).
   const inSlot = (slot: Banner['slot']) => banners.filter((b) => b.slot === slot).slice(0, slotOf(slot).max).map(fromBanner);
@@ -171,7 +169,6 @@ export default async function HomePage() {
   const care = posts.filter((p) => p.kind === 'article' && categoryOf(p.category)?.section === 'blog' && !categoryOf(p.category)?.promo).slice(0, 6);
   const careChips = CATEGORIES.filter((c) => c.section === 'blog' && posts.some((p) => p.category === c.key))
     .map((c) => ({ label: c.name, href: `${SECTIONS.blog.path}?chuyen-muc=${c.key}` }));
-  const shownProjects = projects.filter((p) => p.images.length).slice(0, 3);
 
   return (
     <div className="hm">
@@ -218,7 +215,7 @@ export default async function HomePage() {
               <li key={t}>
                 <Link href={`${WHOLESALE_URL}#dang-ky`} className="hm-ptype app-plain">
                   <img {...responsive(PARTNER_IMAGE[t], '(max-width: 47.9375em) 44vw, 400px', 640)} alt="" loading="lazy" style={{ objectPosition: PARTNER_IMAGE_POS[t] }} />
-                  <span><Icon name={PARTNER_INFO[t].icon} /><b>{PARTNER_INFO[t].label}</b></span>
+                  <span><Icon name={PARTNER_INFO[t].icon} /><b>{PARTNER_INFO[t].label.replace(/^Đối tác /, '').replace(/^./, (c) => c.toUpperCase())}</b></span>
                 </Link>
               </li>
             ))}
@@ -258,13 +255,7 @@ export default async function HomePage() {
             <HomeHead icon="gift" title="Sự kiện & khuyến mãi" href="/khuyen-mai" />
             <NewsBoard posts={news} />
           </section>
-        )}
 
-        {shownProjects.length > 0 && (
-          <section className="hm-sec">
-            <HomeHead icon="trees" title="Công trình đã cung cấp cây" href={`${WHOLESALE_URL}#cong-trinh`} />
-            <div className="hm-projects">{shownProjects.map((p) => <ProjectCard key={p.id} p={p} />)}</div>
-          </section>
         )}
 
         {care.length > 0 && (

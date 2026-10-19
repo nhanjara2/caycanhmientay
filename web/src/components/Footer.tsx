@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { CARE_PHONE, FACEBOOK_URL, formatPhone, LINKEDIN_URL, SALES_PHONE, SHOP_ADDRESS, SHOP_EMAIL, SUPPORT_PHONE, TIKTOK_URL, YOUTUBE_URL, ZALO_QR, ZALO_URL } from '@/lib/contact';
+import { CARE_PHONE, FACEBOOK_URL, formatPhone, LINKEDIN_URL, SALES_PHONE, SHOP_ADDRESS, SUPPORT_PHONE, TIKTOK_URL, YOUTUBE_URL, ZALO_QR, ZALO_URL } from '@/lib/contact';
 import { menuCategories } from '@/server/categories';
 import { FooterGroup } from './FooterGroup';
 import { Icon } from './Icon';
@@ -108,7 +108,7 @@ export async function Footer() {
       </div>
       <div className="vx-flegal">
         <span>© 2007 - 2026 Cây Cảnh Miền Tây · Số ĐKKD 087096010726 cấp 04/2026 · được quản lý bởi Thuế cơ sở 6 tỉnh Đồng Tháp</span>
-        <span>Địa chỉ: {SHOP_ADDRESS} · Điện thoại: {SALES_PHONE} · Email: {SHOP_EMAIL} · Người chịu trách nhiệm nội dung: Lê Hoài Nhân</span>
+        <span>Địa chỉ: {SHOP_ADDRESS} · Điện thoại: {SALES_PHONE} · Email: sale@caycanhmientay.com</span>
       </div>
     </footer>
   );

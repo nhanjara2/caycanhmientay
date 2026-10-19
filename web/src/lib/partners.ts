@@ -42,7 +42,7 @@ export const PARTNER_IMAGE: Record<PartnerType, string> = {
 export const PARTNER_IMAGE_POS: Record<PartnerType, string> = {
   landscape: '50% 25%',
   project: '50% 36%',
-  trade: '50% 57%',
+  trade: '57% 35%',
 };
 
 export const WHOLESALE_URL = '/doi-tac';

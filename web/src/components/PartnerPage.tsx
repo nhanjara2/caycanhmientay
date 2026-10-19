@@ -52,7 +52,7 @@ const CAPABILITIES: { icon: IconName; b: string; text: string; link?: [string, s
 const MAIL_SUBJECT = 'Yêu cầu báo giá sỉ cây cảnh';
 const MAIL_BODY = [
   'Kính gửi Cây Cảnh Miền Tây,', '', 'Đơn vị / cửa hàng: ', 'Người liên hệ: ', 'Số điện thoại: ', '',
-  'Nơi giao hàng: ', 'Thời gian cần hàng: ', '', 'Danh sách cây / vật tư (hoặc file đính kèm): ', '', 'Yêu cầu khác: ',
+  'Nơi giao hàng: ', '', 'Ghi chú (hoặc file đính kèm): ',
 ].join('\n');
 const MAILTO = `mailto:${SHOP_EMAIL}?subject=${encodeURIComponent(MAIL_SUBJECT)}&body=${encodeURIComponent(MAIL_BODY)}`;
 
@@ -91,8 +91,7 @@ export function PartnerPage({ projects, profile }: { projects: Project[]; profil
             nhà thầu công trình và cửa hàng, đại lý buôn bán — nguồn cây từ gần 200 nhà vườn miền Nam.
           </p>
           <div className="acts">
-            <Link href={WHOLESALE_QUOTE_URL} className="vx-btn vx-btn--lg vx-btn--light">Gửi danh sách, nhận báo giá</Link>
-            <Link href="/danh-muc/cay-canh" className="vx-btn vx-btn--lg vx-btn--line">Xem giá sỉ trên web</Link>
+            <Link href={WHOLESALE_QUOTE_URL} className="vx-btn vx-btn--lg vx-btn--light">Gửi báo giá</Link>
           </div>
           <ul className="dn-hero__facts">
             {facts.map((f) => <li key={f.b}><b>{f.b}</b>{f.text}</li>)}
@@ -105,8 +104,8 @@ export function PartnerPage({ projects, profile }: { projects: Project[]; profil
           </Link>
         ) : (
           <div className="sv-art sv-art--img dn-hero__art">
-            <img {...responsive(PARTNER_IMAGE.project, '(max-width: 63.9375em) 100vw, 600px', 640)} alt="Ba công nhân đội mũ bảo hộ cắt tỉa, tưới và chăm bồn cây cảnh quan trước tòa nhà" width={960} height={720} fetchPriority="high" style={{ objectPosition: PARTNER_IMAGE_POS.project }} />
-            <span className="tag"><b>Giá sỉ công trình</b>Gửi danh sách cây, shop báo giá</span>
+            <img src="/images/doi-tac/lang-hoa-sa-dec.jpg" alt="Làng hoa Sa Đéc" width={1280} height={720} fetchPriority="high" />
+            <span className="tag"><b>Giá sỉ công trình</b>Gửi báo giá, shop liên hệ</span>
           </div>
         )}
       </section>
@@ -115,7 +114,7 @@ export function PartnerPage({ projects, profile }: { projects: Project[]; profil
         <div className="dn-nav__links">
           {NAV.map(([id, label]) => <a key={id} href={`#${id}`}>{label}</a>)}
         </div>
-        <Link href={WHOLESALE_QUOTE_URL} className="vx-btn vx-btn--primary vx-btn--sm dn-nav__cta">Yêu cầu báo giá</Link>
+        <Link href={WHOLESALE_QUOTE_URL} className="vx-btn vx-btn--primary vx-btn--sm dn-nav__cta">Gửi báo giá</Link>
       </nav>
 
       <section id="doi-tac" className="dn-sec">
@@ -135,7 +134,7 @@ export function PartnerPage({ projects, profile }: { projects: Project[]; profil
                   {OFFER[t].map((x) => <li key={x}><Icon name="check" />{x}</li>)}
                 </ul>
                 <Link href={`${WHOLESALE_QUOTE_URL}?loai=${t}`}>
-                  Gửi yêu cầu báo giá
+                  Gửi báo giá
                   <Icon name="chevron" size={14} />
                 </Link>
               </span>
@@ -161,9 +160,9 @@ export function PartnerPage({ projects, profile }: { projects: Project[]; profil
           </div>
           <div className="dn-way">
             <span className="dn-way__ic"><Icon name="receipt" /></span>
-            <b>Gửi danh sách, nhận báo giá</b>
-            <p>Số lượng lớn, quy cách đặc biệt, cây chưa có trên web hoặc có bảng khối lượng (BOQ): ghi danh sách hoặc chụp ảnh gửi lên, shop báo giá qua Zalo.</p>
-            <Link href={WHOLESALE_QUOTE_URL} className="vx-btn vx-btn--outline">Mở form báo giá</Link>
+            <b>Gửi báo giá</b>
+            <p>Số lượng lớn, quy cách đặc biệt, cây chưa có trên web hoặc có bảng khối lượng (BOQ): ghi chú hoặc chụp ảnh gửi lên, shop báo giá qua Zalo.</p>
+            <Link href={WHOLESALE_QUOTE_URL} className="vx-btn vx-btn--outline">Gửi báo giá</Link>
           </div>
           <div className="dn-way">
             <span className="dn-way__ic"><Icon name="phone" /></span>
@@ -309,9 +308,9 @@ export function PartnerPage({ projects, profile }: { projects: Project[]; profil
       </div>
 
       <ServiceCta
-        title="Gửi danh sách, nhận báo giá sỉ"
-        text="Ghi tên cây, quy cách, số lượng hoặc chụp ảnh bảng khối lượng"
-        label="Yêu cầu báo giá"
+        title="Gửi báo giá sỉ"
+        text="Ghi chú hoặc chụp ảnh bảng khối lượng"
+        label="Gửi báo giá"
         href={WHOLESALE_QUOTE_URL}
       />
     </div>

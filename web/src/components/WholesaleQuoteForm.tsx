@@ -8,9 +8,8 @@ import { isPhone } from '@/lib/auth';
 import { compressImage } from '@/lib/compress-image';
 import { errId, focusFirstError, invalidProps } from '@/lib/form-a11y';
 import { money } from '@/lib/format';
-import { PARTNER_INFO, PARTNER_TYPES, WHOLESALE_URL, type PartnerType } from '@/lib/partners';
+import { PARTNER_IMAGE, PARTNER_IMAGE_POS, PARTNER_INFO, PARTNER_TYPES, WHOLESALE_URL, type PartnerType } from '@/lib/partners';
 import { ADVISOR_URL, KINDS, PLAN_STORE_KEY, type SavedPlan } from '@/lib/plant-advisor';
-import { NEED_BY } from '@/lib/service-labels';
 import { Icon } from './Icon';
 
 export type WholesaleDefaults = { type?: PartnerType; company: string; name: string; phone: string; address: string };
@@ -96,7 +95,7 @@ export function WholesaleQuoteForm({ defaults, fromAdvisor = false }: { defaults
 
   const errors = {
     type: !v.type && 'Chọn bạn là đối tác nào',
-    items: v.items.trim().length < 5 && !plan && !photos.length && 'Ghi danh sách hàng cần báo giá, hoặc gửi kèm ảnh',
+    items: v.items.trim().length < 5 && !plan && !photos.length && 'Nhập ghi chú hoặc gửi kèm ảnh',
     name: v.name.trim().length < 2 && 'Nhập tên người liên hệ',
     phone: !isPhone(v.phone) && 'Số điện thoại chưa đúng',
     address: v.address.trim().length < 3 && 'Nhập nơi giao hàng (tỉnh / thành hoặc địa chỉ công trình)',
@@ -161,7 +160,7 @@ export function WholesaleQuoteForm({ defaults, fromAdvisor = false }: { defaults
         <div className="qf-opts app-qf-opts3" role="radiogroup" aria-label="Loại đối tác" {...bad('type')} tabIndex={touched && errors.type ? -1 : undefined}>
           {PARTNER_TYPES.map((t) => (
             <button key={t} type="button" role="radio" className="qf-opt" aria-checked={v.type === t} onClick={() => set('type', t)}>
-              <Icon name={PARTNER_INFO[t].icon} />
+              <span className="app-qf-optimg"><img src={PARTNER_IMAGE[t]} alt="" width={960} height={720} style={{ objectPosition: PARTNER_IMAGE_POS[t] }} /></span>
               {PARTNER_INFO[t].label}<small>{PARTNER_INFO[t].hint}</small>
             </button>
           ))}
@@ -170,7 +169,7 @@ export function WholesaleQuoteForm({ defaults, fromAdvisor = false }: { defaults
       </div>
 
       <div className="qf-sec">
-        <h2><b>2</b>Hàng cần báo giá</h2>
+        <h2><b>2</b>Ghi chú</h2>
         {plan && (
           <div className="qf-plan">
             <div className="qf-plan__h">
@@ -190,14 +189,13 @@ export function WholesaleQuoteForm({ defaults, fromAdvisor = false }: { defaults
           </div>
         )}
         <div className="ad-f">
-          <label htmlFor="qf-items">Danh sách cây / vật tư{plan || photos.length ? ' (thêm nếu cần)' : ''}</label>
-          <textarea id="qf-items" {...bad('items')} className={`vx-input app-qf-items${touched && errors.items ? ' vx-input--error' : ''}`} maxLength={4000} value={v.items}
+          <textarea id="qf-items" aria-label="Ghi chú" {...bad('items')} className={`vx-input app-qf-items${touched && errors.items ? ' vx-input--error' : ''}`} maxLength={4000} value={v.items}
             onChange={(e) => set('items', e.target.value)}
-            placeholder={'Mỗi dòng một loại: tên cây, quy cách (chiều cao, đường kính gốc, cỡ bầu), số lượng\nVí dụ:\nCau vua, cao 3–3,5m, bầu 60cm — 40 cây\nLá màu, bầu 15cm — 2.000 bầu'} />
+            placeholder={'Tên cây, quy cách, số lượng…'} />
           {err('items')}
         </div>
         <div className="ad-f">
-          <label>Ảnh bảng khối lượng, bản vẽ hoặc danh sách viết tay (không bắt buộc, tối đa {MAX_PHOTOS} ảnh)</label>
+          <label>Ảnh đính kèm (không bắt buộc, tối đa {MAX_PHOTOS} ảnh)</label>
           <div className="qf-up">
             {photos.map((p, i) => (
               <span key={p.url} className="app-qf-photo" style={{ backgroundImage: `url(${p.url})` }}>
@@ -211,14 +209,6 @@ export function WholesaleQuoteForm({ defaults, fromAdvisor = false }: { defaults
               </button>
             )}
             <input ref={fileInput} type="file" accept="image/*" multiple hidden onChange={(e) => addPhotos(e.target.files)} />
-          </div>
-        </div>
-        <div className="ad-f">
-          <label id="qf-needby">Khi nào cần hàng?</label>
-          <div className="vx-row" role="group" aria-labelledby="qf-needby">
-            {NEED_BY.map((b) => (
-              <button key={b} type="button" className="vx-chip" aria-pressed={v.needBy === b} onClick={() => set('needBy', v.needBy === b ? '' : b)}>{b}</button>
-            ))}
           </div>
         </div>
       </div>

@@ -100,10 +100,6 @@ export default async function PromotionsPage() {
             <li key={t}><span className="n">{i + 1}</span><span><b>{t}</b>{d}</span></li>
           ))}
         </ol>
-        <ul className="pm-rules">
-          <li>Mỗi đơn hàng dùng được <b>một mã giảm giá và một mã miễn phí giao</b>. Mã giảm giá tính trên tiền hàng sau khi đã trừ giá giảm của sản phẩm, chưa gồm phí giao.</li>
-          <li>Mỗi mã có điều kiện riêng (đơn tối thiểu, hạn dùng, số lượt) — xem ngay trên thẻ mã. Mã hết lượt hoặc hết hạn thì trang thanh toán sẽ báo rõ.</li>
-        </ul>
       </section>
 
       <section id="dang-giam-gia" className="pm-sec">

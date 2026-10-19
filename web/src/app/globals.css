@@ -2791,11 +2791,15 @@ body[data-buybar] .app-site .app-fab { bottom: 6.25rem; }
   /* Danh sách: sắp xếp xuống dòng (không còn bị cắt "Giá thấp → c…"); bộ lọc chỉ còn một nút lớn */
   .app-site .fb-sort { flex-wrap: wrap; overflow: visible; white-space: normal; gap: 0 1.125rem; font-size: 0.875rem; }
   .app-site .fb-sort a { display: inline-flex; align-items: center; min-height: 2.75rem; padding: 0; }
-  .app-site .app-fbar__chips { display: none; }
-  .app-site .app-fbar__all { flex: 1; justify-content: center; min-height: 3.25rem; font-size: 0.9375rem; }
+  /* Gọn mobile: bỏ thanh bộ lọc, ẩn "Phổ biến" và "Bán chạy" (hai mục sắp xếp đầu) */
+  .app-site .pl-head .app-fbar { display: none; }
+  .app-site .fb-sort a:nth-of-type(-n+2) { display: none; }
   .app-site .app-ftag { min-height: 2.75rem; font-size: 0.875rem; }
   .app-site .app-ftags__clear { display: inline-flex; align-items: center; min-height: 2.75rem; font-size: 0.875rem; }
-  .app-site .pl-subs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; overflow: visible; }
+  /* Danh mục con: một thanh cuộn ngang thay vì lưới 2 cột */
+  .app-site .pl-subs { display: flex; gap: 0.5rem; overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none; margin-inline: calc(-1 * var(--space-4)); padding-inline: var(--space-4); }
+  .app-site .pl-subs::-webkit-scrollbar { display: none; }
+  .app-site .pl-sub { flex: none; scroll-snap-align: start; white-space: nowrap; }
   .app-site .pl-sub span { flex: none; }
   .app-site .pl-sub { flex-wrap: nowrap; flex-direction: row; align-items: center; justify-content: flex-start; gap: 0.5rem; min-height: 3.25rem; font-size: 0.875rem; line-height: 1.3; text-align: left; }
   /* Chân trang: hotline lớn, bấm được; bỏ mã QR (đã có nút Chat Zalo ở thanh dưới) */
@@ -3072,3 +3076,6 @@ body[data-buybar] .app-site .app-fab { bottom: 6.25rem; }
   .app-gcc .vx-hitem { grid-template-columns: 7.5rem minmax(0, 1fr); }
   .app-gcc .vx-hitem > span:first-child { width: 7.5rem; height: 4.25rem; }
 }
+/* Ảnh nhóm đối tác trong form báo giá sỉ */
+.app-qf-optimg { display: block; aspect-ratio: 4 / 3; border-radius: 8px; overflow: hidden; margin-bottom: 8px; background: var(--surface-sunken); }
+.app-qf-optimg img { width: 100%; height: 100%; object-fit: cover; display: block; }
