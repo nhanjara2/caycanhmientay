@@ -415,7 +415,8 @@ export function ProductForm({ initial, categories, canEdit, bundleChoices }: { i
               <div className="ad-card__b">
                 <div className="ad-f">
                   <label>Ảnh sản phẩm</label>
-                  <ProductImages key={v.slug} slug={v.slug} name={v.name} initial={v.images} canEdit={canEdit} />
+                  <ProductImages key={v.slug} slug={v.slug} name={v.name} initial={v.images} canEdit={canEdit}
+                    options={opts.flatMap((o) => (o.idx !== undefined ? [{ idx: o.idx, label: o.label || `Quy cách ${o.idx + 1}` }] : []))} />
                 </div>
                 <div className="ad-f">
                   <label htmlFor="pf-video">Video YouTube</label>

@@ -13,6 +13,8 @@ import { WHOLESALE_QUOTE_URL } from '@/lib/partners';
 import { computeTotals } from '@/lib/pricing';
 import { seoNameOf } from '@/lib/seo-name';
 import { useShipping } from '@/lib/shipping-client';
+import { thumbUrl } from '@/lib/images';
+import { showVariantImage } from '@/lib/variant-image';
 import type { PublicVoucher } from '@/lib/voucher-labels';
 import { inScope, productScopeItem } from '@/lib/voucher-scope';
 import { usePublicVouchers } from '@/lib/vouchers-client';
@@ -46,6 +48,12 @@ export function BuyBox({ product: p, category, wishlisted = false, initialOpt }:
   // Quy cách hiện theo giá thấp → cao; chọn sẵn quy cách rẻ nhất (khớp giá "Từ …" ở thẻ sản phẩm)
   const order = optionOrder(p.options);
   const [opt, setOpt] = useState(() => initialOpt ?? cheapestOption(p.options));
+  // Chọn quy cách có ảnh riêng (vd. màu hoa) → ảnh lớn bên trái đổi theo
+  const pick = (i: number) => {
+    setOpt(i);
+    const im = p.options[i]?.image;
+    if (im !== undefined) showVariantImage(p.slug, im);
+  };
   const [qty, setQty] = useState(1);
   const u = p.options[opt];
   const quote = isQuote(u);
@@ -180,8 +188,11 @@ export function BuyBox({ product: p, category, wishlisted = false, initialOpt }:
             <div className="app-vopts" role="group" aria-labelledby="buy-opt">
               {order.map((i) => {
                 const o = p.options[i];
+                const img = o.image !== undefined ? p.images?.[o.image] : undefined;
                 return (
-                  <button key={o.label} type="button" className="app-vopt" aria-pressed={i === opt} onClick={() => setOpt(i)} data-stock={!isQuote(o) && o.soldOut ? 'out' : undefined}>
+                  <button key={o.label} type="button" className="app-vopt" aria-pressed={i === opt} onClick={() => pick(i)} data-stock={!isQuote(o) && o.soldOut ? 'out' : undefined}
+                    data-img={img ? '' : undefined}>
+                    {img && <img className="app-vopt__img" src={thumbUrl(img, 160)} alt="" width={160} height={160} loading="lazy" />}
                     <span className="app-vopt__l">{o.label}</span>
                     <small>{isQuote(o) ? 'Liên hệ báo giá' : money(o.price)}</small>
                     {!isQuote(o) && o.soldOut && <small className="app-vopt__out">{SOLD_OUT_TEXT}</small>}
@@ -228,7 +239,7 @@ export function BuyBox({ product: p, category, wishlisted = false, initialOpt }:
       {/* Thanh mua dính đáy: điện thoại = ảnh + tên + giá trên, Gọi / Thêm vào giỏ / Mua ngay dưới; máy tính = một hàng nổi giữa màn hình có chọn quy cách + số lượng */}
       <div className="app-buybar" data-show={bar || undefined} inert={!bar}>
         <div className="app-buybar__prod">
-          <span className="app-buybar__img"><Thumb src={p.images?.[0]} icon={p.icon} /></span>
+          <span className="app-buybar__img"><Thumb src={p.images?.[u.image ?? 0] ?? p.images?.[0]} icon={p.icon} /></span>
           <span className="app-buybar__info">
             <b className="app-buybar__name" title={seoNameOf(p)}>{p.name}</b>
             <small className="app-buybar__meta">{p.options.length > 1 ? u.label : p.unit}{buyable && qty > 1 && ` · SL ${qty}`}{out && ` · ${SOLD_OUT_TEXT}`}</small>
@@ -241,7 +252,7 @@ export function BuyBox({ product: p, category, wishlisted = false, initialOpt }:
         {p.options.length > 1 && (
           <label className="app-buybar__opt">
             <span className="app-sr">Chọn quy cách</span>
-            <Select value={opt} onChange={(e) => setOpt(Number(e.target.value))}>
+            <Select value={opt} onChange={(e) => pick(Number(e.target.value))}>
               {order.map((i) => <option key={p.options[i].label} value={i}>{p.options[i].label}{p.options[i].soldOut && !isQuote(p.options[i]) ? ` (${SOLD_OUT_TEXT})` : ''}</option>)}
             </Select>
           </label>

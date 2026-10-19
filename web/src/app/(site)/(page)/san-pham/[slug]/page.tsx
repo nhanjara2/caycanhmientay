@@ -160,7 +160,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
       />
       <section className="vx-pd">
         <GalleryCol>
-          <ProductGallery p={p} />
+          <ProductGallery p={p} start={p.options[selected]?.image} />
           <p className="vx-gal__note">
             {p.ship === 'plant' ? 'Mỗi cây là một cá thể, dáng lá có thể khác đôi chút so với ảnh.' : 'Bao bì có thể thay đổi theo lô sản xuất.'}
           </p>

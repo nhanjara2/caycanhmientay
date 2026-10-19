@@ -50,6 +50,8 @@ export type Unit = {
   soldOut?: boolean;
   /** Sản phẩm bộ: các món trong bộ (lib/bundle.ts). Không có = quy cách thường. */
   parts?: BundleItem[];
+  /** Vị trí trong `Product.images` của ảnh riêng quy cách này (vd. hoa màu đỏ) — chọn quy cách thì ảnh lớn đổi sang. */
+  image?: number;
 };
 
 /** Quy cách theo số thứ tự database (`Unit.idx`); undefined khi quy cách đã bị xóa. */

@@ -19,7 +19,7 @@ async function hydrate(rows: Row[]): Promise<Product[]> {
   const slugs = rows.map((r) => r.slug);
   const [opts, imgs, lots] = await Promise.all([
     db.select().from(O).where(and(inArray(O.productSlug, slugs), eq(O.deleted, false))).orderBy(asc(O.idx)),
-    db.select({ slug: I.productSlug, file: I.file, alt: I.alt }).from(I).where(inArray(I.productSlug, slugs)).orderBy(asc(I.idx), asc(I.id)),
+    db.select({ slug: I.productSlug, file: I.file, alt: I.alt, option: I.optionIdx }).from(I).where(inArray(I.productSlug, slugs)).orderBy(asc(I.idx), asc(I.id)),
     // Quy cách bán được = còn lô có hàng chưa hết hạn (đặt hàng không xuất lô hết hạn) — "Hết hàng" trên trang khớp lúc đặt
     db.selectDistinct({ slug: L.productSlug, idx: L.optionIdx }).from(L)
       .where(and(inArray(L.productSlug, slugs), gt(L.qty, 0), or(isNull(L.expiry), gte(L.expiry, todayVN())))),
@@ -37,6 +37,11 @@ async function hydrate(rows: Row[]): Promise<Product[]> {
   });
   // ảnh đã xếp theo thứ tự, ảnh đầu của mỗi sản phẩm là ảnh chính
   const mainFile = (slug: string) => imgs.find((i) => i.slug === slug)?.file;
+  // ảnh riêng của quy cách: ảnh đầu tiên (theo thứ tự) gắn với quy cách đó
+  const optionImage = (slug: string, idx: number) => {
+    const i = imgs.filter((x) => x.slug === slug).findIndex((x) => x.option === idx);
+    return i >= 0 ? i : undefined;
+  };
   return rows.map((r) => { const bundle = opts.some((o) => o.productSlug === r.slug && o.parts); return {
     slug: r.slug, sku: r.sku, name: r.name, seoName: r.seoName ?? undefined, category: r.category, sub: r.sub, extraSubs: r.extraSubs.length ? r.extraSubs : undefined, icon: r.icon as IconName,
     origin: r.origin, ship: r.ship, pesticide: r.pesticide || undefined, noVoucher: r.noVoucher || bundle || undefined, unit: r.unit, spec: r.spec, lead: r.lead,
@@ -46,6 +51,7 @@ async function hydrate(rows: Row[]): Promise<Product[]> {
       idx: o.idx, label: o.label, price: o.price, oldPrice: o.oldPrice ?? undefined, combo2: o.combo2 ?? undefined, bulky: o.bulky || undefined,
       soldOut: !canSell(o) || undefined,
       parts: o.parts ? itemsOf(o.parts) : undefined,
+      image: optionImage(r.slug, o.idx),
     })),
     images: imgs.filter((i) => i.slug === r.slug).map((i) => productImageUrl(i.file, i.slug)),
     imageAlts: imgs.some((i) => i.slug === r.slug && i.alt) ? imgs.filter((i) => i.slug === r.slug).map((i) => i.alt ?? '') : undefined,

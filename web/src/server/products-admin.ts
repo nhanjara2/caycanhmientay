@@ -152,9 +152,22 @@ export async function getProductAdmin(slug: string) {
 const touch = (tx: Pick<typeof db, 'update'>, slug: string) => tx.update(products).set({ updatedAt: new Date() }).where(eq(products.slug, slug));
 
 export async function listProductImages(slug: string) {
-  const rows = await db.select({ id: productImages.id, file: productImages.file, alt: productImages.alt }).from(productImages)
+  const rows = await db.select({ id: productImages.id, file: productImages.file, alt: productImages.alt, option: productImages.optionIdx }).from(productImages)
     .where(eq(productImages.productSlug, slug)).orderBy(asc(productImages.idx), asc(productImages.id));
-  return rows.map((r) => ({ id: r.id, url: productImageUrl(r.file), alt: r.alt ?? '' }));
+  return rows.map((r) => ({ id: r.id, url: productImageUrl(r.file), alt: r.alt ?? '', option: r.option ?? null }));
+}
+
+/** Gắn ảnh vào một quy cách (null = ảnh chung). Quy cách phải còn bán (chưa xóa) của chính sản phẩm đó. */
+export async function setProductImageOption(slug: string, id: number, option: number | null) {
+  if (option !== null) {
+    const [o] = await db.select({ idx: productOptions.idx }).from(productOptions)
+      .where(and(eq(productOptions.productSlug, slug), eq(productOptions.idx, option), eq(productOptions.deleted, false)));
+    if (!o) return false;
+  }
+  const r = await db.update(productImages).set({ optionIdx: option })
+    .where(and(eq(productImages.productSlug, slug), eq(productImages.id, id))).returning({ id: productImages.id });
+  if (r.length) await touch(db, slug);
+  return r.length > 0;
 }
 
 /** Mô tả ảnh (alt): khoảng trắng gộp lại, bỏ ký tự < >; trống = null (web tự dùng tên sản phẩm). */

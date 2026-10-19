@@ -7,7 +7,7 @@ import { requireAccess, requireStaff, staffName } from '@/server/auth';
 import { countLot, deleteLot, recentMoves, transferStock } from '@/server/inventory';
 import { cleanText, MAX_DOC_NO, MAX_RECEIPT_NOTE, MAX_SUPPLIER, receiveGoods } from '@/server/receipts';
 import { LOT_GRADES, todayVN, tracksLots } from '@/lib/stock';
-import { addProductImage, deleteProduct, deleteProductImage, listProductImages, moveProductImage, ProductInputSchema, replaceProductImage, saveProduct, setProductActive, setProductImageAlt } from '@/server/products-admin';
+import { addProductImage, deleteProduct, deleteProductImage, listProductImages, moveProductImage, ProductInputSchema, replaceProductImage, saveProduct, setProductActive, setProductImageAlt, setProductImageOption } from '@/server/products-admin';
 import { applyStockImport, DuplicateImportError, findDuplicateImport, MAX_IMPORT_BYTES, parseStockImport } from '@/server/stock-import';
 import { saveImage } from '@/server/uploads';
 import { db, schema } from '@/server/db';
@@ -107,6 +107,18 @@ export async function setProductImageAltAction(input: unknown) {
   const p = ImageAlt.safeParse(input);
   if (!p.success) return { ok: false as const, error: 'Yêu cầu không hợp lệ' };
   if (!(await setProductImageAlt(p.data.slug, p.data.id, p.data.alt))) return { ok: false as const, error: 'Không tìm thấy ảnh' };
+  refreshCatalog(p.data.slug);
+  return { ok: true as const, images: await listProductImages(p.data.slug) };
+}
+
+const ImageOption = z.object({ slug: slugSchema, id: z.number().int().positive(), option: z.number().int().min(0).max(9999).nullable() });
+
+/** Gắn ảnh vào quy cách (vd. hoa màu đỏ) — khách chọn quy cách đó thì ảnh lớn trang sản phẩm đổi sang ảnh này. */
+export async function setProductImageOptionAction(input: unknown) {
+  await requireStaff('admin');
+  const p = ImageOption.safeParse(input);
+  if (!p.success) return { ok: false as const, error: 'Yêu cầu không hợp lệ' };
+  if (!(await setProductImageOption(p.data.slug, p.data.id, p.data.option))) return { ok: false as const, error: 'Không tìm thấy ảnh hoặc quy cách — tải lại trang rồi thử lại' };
   refreshCatalog(p.data.slug);
   return { ok: true as const, images: await listProductImages(p.data.slug) };
 }

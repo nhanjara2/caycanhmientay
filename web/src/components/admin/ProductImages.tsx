@@ -2,15 +2,20 @@
 
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
-import { editProductImageAction, replaceProductImageAction, setProductImageAltAction, uploadProductImageAction } from '@/app/actions/admin';
+import { editProductImageAction, replaceProductImageAction, setProductImageAltAction, setProductImageOptionAction, uploadProductImageAction } from '@/app/actions/admin';
 import { compressImage, WATERMARK } from '@/lib/compress-image';
 import { imageAlt, MAX_IMAGE_ALT, MAX_PRODUCT_IMAGES } from '@/lib/catalog';
+import { Select } from '../Select';
 import { PRODUCT_ASPECTS, useImageCrop } from './ImageCropper';
 
-export type AdminImage = { id: number; url: string; alt: string };
+/** `option` = số thứ tự quy cách ảnh này thuộc về (vd. hoa màu đỏ); null = ảnh chung. */
+export type AdminImage = { id: number; url: string; alt: string; option: number | null };
 
-/** Ảnh sản phẩm: tải lên ngay (không cần bấm Lưu), ảnh đầu tiên là ảnh đại diện. */
-export function ProductImages({ slug, name, initial, canEdit }: { slug?: string; name: string; initial: AdminImage[]; canEdit: boolean }) {
+/** Ảnh sản phẩm: tải lên ngay (không cần bấm Lưu), ảnh đầu tiên là ảnh đại diện.
+ *  `options` = quy cách đã lưu — gắn ảnh vào quy cách thì khách chọn quy cách đó là ảnh lớn đổi theo. */
+export function ProductImages({ slug, name, initial, canEdit, options = [] }: {
+  slug?: string; name: string; initial: AdminImage[]; canEdit: boolean; options?: { idx: number; label: string }[];
+}) {
   const router = useRouter();
   const [images, setImages] = useState(initial);
   const [busy, setBusy] = useState('');
@@ -90,6 +95,17 @@ export function ProductImages({ slug, name, initial, canEdit }: { slug?: string;
     router.refresh();
   };
 
+  /** Gắn ảnh vào quy cách — lưu ngay. */
+  const saveOption = async (id: number, value: string) => {
+    setError('');
+    const option = value === '' ? null : Number(value);
+    const r = await setProductImageOptionAction({ slug, id, option }).catch(() => ({ ok: false as const, error: 'Có lỗi, vui lòng thử lại' }));
+    if (!r.ok) return setError(r.error);
+    setImages(r.images);
+    router.refresh();
+  };
+  const optionLabel = (idx: number | null) => (idx === null ? undefined : options.find((o) => o.idx === idx)?.label);
+
   const edit = async (id: number, op: 'delete' | 'first' | 'left' | 'right') => {
     if (op === 'delete' && !confirm('Xóa ảnh này?')) return;
     setError('');
@@ -112,6 +128,7 @@ export function ProductImages({ slug, name, initial, canEdit }: { slug?: string;
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={img.url} alt={main ? 'Ảnh chính' : `Ảnh phụ ${i}`} loading="lazy" />
               <span className={main ? 'pi-tag pi-tag--main' : 'pi-tag'}>{main ? '★ Ảnh chính' : `Ảnh phụ ${i}`}</span>
+              {optionLabel(img.option) && <span className="pi-tag pi-tag--opt">{optionLabel(img.option)}</span>}
               {canEdit && (
                 <figcaption>
                   {!main && <button type="button" className="pi-primary" onClick={() => edit(img.id, 'first')} disabled={!!busy}>★ Làm ảnh chính</button>}
@@ -136,6 +153,25 @@ export function ProductImages({ slug, name, initial, canEdit }: { slug?: string;
       {busy && images.length >= MAX_PRODUCT_IMAGES && <span className="hint">{busy}</span>}
       {error && <span className="vx-err" role="alert">{error}</span>}
       {cropDialog}
+      {images.length > 0 && options.length > 1 && (
+        <div className="pi-alts">
+          <b>Ảnh theo quy cách</b>
+          <span className="hint">Chọn quy cách cho từng ảnh (vd. ảnh hoa đỏ → “Màu đỏ”). Khách bấm quy cách nào thì ảnh lớn đổi sang ảnh đó. Lưu ngay.</span>
+          {images.map((img, i) => (
+            <div key={img.id} className="pi-alt">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={img.url} alt="" loading="lazy" />
+              <span>{i === 0 ? 'Ảnh chính' : `Ảnh phụ ${i}`}</span>
+              <Select className="vx-input" value={img.option === null ? '' : String(img.option)} disabled={!canEdit || !!busy}
+                aria-label={`Quy cách của ${i === 0 ? 'ảnh chính' : `ảnh phụ ${i}`}`} onChange={(e) => saveOption(img.id, e.target.value)}>
+                <option value="">Ảnh chung (mọi quy cách)</option>
+                {options.map((o) => <option key={o.idx} value={String(o.idx)}>{o.label}</option>)}
+                {img.option !== null && !optionLabel(img.option) && <option value={String(img.option)}>(Quy cách đã xóa)</option>}
+              </Select>
+            </div>
+          ))}
+        </div>
+      )}
       {images.length > 0 && (
         <details className="pi-alts">
           <summary>Mô tả ảnh cho Google ({images.filter((x) => x.alt).length}/{images.length} ảnh đã viết)</summary>

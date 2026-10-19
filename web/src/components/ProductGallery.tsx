@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
 import { imageAlt, type Product } from '@/lib/catalog';
 import { responsive, thumbUrl } from '@/lib/images';
+import { useVariantImage } from '@/lib/variant-image';
 import { Art } from './Icon';
 import { ProductStickers } from './ProductStickers';
 
@@ -26,13 +27,15 @@ export function GalleryCol({ children }: { children: ReactNode }) {
 }
 
 /** ProductGallery: ảnh lớn + dải ảnh nhỏ. Chưa có ảnh thì hiện biểu tượng. Mọi ảnh đều do shop tự chụp / tải lên.
- *  Máy có chuột: rê lên ảnh lớn hiện kính lúp, khung phóng to phủ lên cột thông tin bên phải. */
-export function ProductGallery({ p }: { p: Product }) {
+ *  Máy có chuột: rê lên ảnh lớn hiện kính lúp, khung phóng to phủ lên cột thông tin bên phải.
+ *  `start` = ảnh mở sẵn (ảnh riêng của quy cách chọn sẵn); chọn quy cách khác có ảnh riêng thì đổi theo (lib/variant-image.ts). */
+export function ProductGallery({ p, start = 0 }: { p: Product; start?: number }) {
   const images = p.images ?? [];
-  const [cur, setCur] = useState(0);
+  const [cur, setCur] = useState(() => (start < images.length ? start : 0));
   const mainRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const [lens, setLens] = useState<Lens | null>(null);
+  useVariantImage(p.slug, (i) => { if (i < images.length) { setCur(i); setLens(null); } });
 
   const move = (e: MouseEvent) => {
     const box = mainRef.current;
@@ -68,7 +71,7 @@ export function ProductGallery({ p }: { p: Product }) {
         onMouseMove={images.length ? move : undefined}
         onMouseLeave={() => setLens(null)}
       >
-        {images.length ? <img ref={imgRef} {...responsive(images[cur], '(max-width: 47.9375em) 100vw, 600px')} alt={imageAlt(p, cur)} fetchPriority={cur === 0 ? 'high' : undefined} /> : <Art name={p.icon} />}
+        {images.length ? <img ref={imgRef} {...responsive(images[cur], '(max-width: 47.9375em) 100vw, 600px')} alt={imageAlt(p, cur)} fetchPriority={cur === start ? 'high' : undefined} /> : <Art name={p.icon} />}
         {p.ship === 'plant' && images.length > 0 && <span className="vx-gal__tag vx-badge vx-badge--origin">Ảnh chụp tại vườn</span>}
         {/* Dấu "Ảnh thật 100%" nằm trong dải sticker; chưa có ảnh thì không có dấu này */}
         <ProductStickers p={p} size="lg" real={images.length > 0} />

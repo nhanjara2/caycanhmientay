@@ -160,6 +160,8 @@ export const productImages = pgTable('product_images', {
   data: bytea('data').notNull(),
   /** Mô tả ảnh (alt) do admin nhập; null = web tự dùng tên sản phẩm (`imageAlt` trong lib/catalog.ts). */
   alt: text('alt'),
+  /** Ảnh của quy cách (`product_options.idx`, vd. hoa màu đỏ): khách chọn quy cách đó thì ảnh lớn đổi sang ảnh này. null = ảnh chung. */
+  optionIdx: integer('option_idx'),
   createdAt: createdAt(),
 }, (t) => [index('product_images_slug_idx').on(t.productSlug, t.idx)]);
 

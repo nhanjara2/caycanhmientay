@@ -33,7 +33,7 @@ export type CartLine = { slug: string; option: number; qty: number; snap: CartSn
 export const snapOf = (p: Product, option: number): CartSnap => {
   const u = optionOf(p, option)!;
   return {
-    name: p.name, label: u.label, unit: p.unit, icon: p.icon, image: p.images?.[0], ship: p.ship, pesticide: p.pesticide,
+    name: p.name, label: u.label, unit: p.unit, icon: p.icon, image: p.images?.[u.image ?? 0] ?? p.images?.[0], ship: p.ship, pesticide: p.pesticide,
     flash: Boolean(p.flash), price: u.price, oldPrice: u.oldPrice, combo2: u.combo2, bulky: u.bulky, noVoucher: p.noVoucher, bundle: u.parts ? true : undefined,
     category: p.category, subs: [p.sub, ...(p.extraSubs ?? [])],
   };

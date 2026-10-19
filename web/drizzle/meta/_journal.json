@@ -512,6 +512,13 @@
       "when": 1792420050200,
       "tag": "0072_hoa_hong_chau_c8",
       "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1792420777303,
+      "tag": "0073_anh_theo_quy_cach",
+      "breakpoints": true
     }
   ]
 }
