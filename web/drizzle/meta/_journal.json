@@ -505,6 +505,13 @@
       "when": 1792325142850,
       "tag": "0071_gia_le_gia_san_moi",
       "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "7",
+      "when": 1792420050200,
+      "tag": "0072_hoa_hong_chau_c8",
+      "breakpoints": true
     }
   ]
 }
