@@ -276,6 +276,12 @@ export function mentionsPesticide(p: Pick<PostDraft, 'title' | 'excerpt' | 'body
 
 export const TITLE_MIN = 10, TITLE_MAX = 150, SEO_MIN = 50, SEO_MAX = 160;
 
+/** Đoạn dẫn nên dài bao nhiêu từ để làm đoạn trả lời nhanh (AI Overview, ChatGPT, Perplexity trích). */
+export const LEAD_WORDS_MIN = 25;
+export const LEAD_WORDS_MAX = 70;
+/** Tiêu đề mục dạng câu hỏi — kiểu người dùng hỏi máy AI. */
+export const isQuestionHeading = (s: string) => /\?\s*$/.test(s.trim()) || /(là gì|thế nào|ra sao|bao lâu|bao nhiêu|khi nào|vì sao|tại sao|có nên|cách )/i.test(s);
+
 export function postChecks(p: PostDraft, pesticideSlugs: ReadonlySet<string>): Check[] {
   const cat = categoryOf(p.category);
   const len = p.title.trim().length;
@@ -294,7 +300,18 @@ export function postChecks(p: PostDraft, pesticideSlugs: ReadonlySet<string>): C
     out.push({ ok: hasText, required: true, label: hasText ? 'Có nội dung bài' : 'Chưa có đoạn văn nào trong bài' });
     out.push({ ok: !!p.coverFile, label: p.coverFile ? 'Có ảnh bìa' : 'Chưa có ảnh bìa (trang sẽ hiện hình minh họa)' });
   }
-  out.push({ ok: !!plainText(p.excerpt).trim(), label: p.excerpt.trim() ? 'Có đoạn dẫn' : 'Chưa có đoạn dẫn (hiện dưới tiêu đề và trên thẻ bài)' });
+  // Đoạn dẫn = câu trả lời thẳng cho máy AI / Google trích (AEO): ~40–60 từ là vừa.
+  const leadWords = plainText(p.excerpt).trim().split(/\s+/).filter(Boolean).length;
+  out.push(!leadWords
+    ? { ok: false, label: 'Chưa có đoạn dẫn (hiện dưới tiêu đề và trên thẻ bài)' }
+    : { ok: leadWords >= LEAD_WORDS_MIN && leadWords <= LEAD_WORDS_MAX, label: leadWords >= LEAD_WORDS_MIN && leadWords <= LEAD_WORDS_MAX
+      ? `Đoạn dẫn ${leadWords} từ (vừa để Google / AI trích làm câu trả lời)`
+      : `Đoạn dẫn ${leadWords} từ — nên ${LEAD_WORDS_MIN}–${LEAD_WORDS_MAX} từ, trả lời thẳng câu hỏi chính của bài` });
+  if (p.kind === 'article') {
+    const h2 = p.body.filter((b): b is { type: 'h2'; text: string } => b.type === 'h2');
+    const asks = h2.some((b) => isQuestionHeading(b.text));
+    if (h2.length) out.push({ ok: asks, label: asks ? 'Có tiêu đề mục dạng câu hỏi' : 'Nên có ít nhất một tiêu đề mục (H2) dạng câu hỏi: "… là gì?", "Cách … như thế nào?"' });
+  }
   if (cat?.shop) {
     const has = p.body.some((b) => b.type === 'products' && b.slugs.length);
     out.push({ ok: has, label: has ? 'Có khối sản phẩm' : 'Chưa có khối sản phẩm' });

@@ -5,6 +5,7 @@ import * as z from 'zod';
 import { requireAccess } from '@/server/auth';
 import { addDiseaseImage, DiseaseInputSchema, saveDisease, setDiseaseActive } from '@/server/diseases';
 import { saveImage } from '@/server/uploads';
+import { pingIndexNow } from '@/server/indexnow';
 
 // Chỉ quản trị viên được sửa thư viện bệnh cây: kiểm tra quyền trước, rồi mới kiểm tra đầu vào.
 
@@ -12,6 +13,7 @@ function refresh(slug?: string) {
   revalidatePath('/admin/benh-cay', 'layout');
   revalidatePath('/benh-cay');
   if (slug) revalidatePath(`/benh-cay/${slug}`);
+  pingIndexNow([slug && `/benh-cay/${slug}`, '/benh-cay']);
 }
 
 export async function saveDiseaseAction(input: unknown) {

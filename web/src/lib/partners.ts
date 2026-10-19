@@ -30,7 +30,7 @@ export const MAX_PARTNER_DISCOUNT = 50;
 
 /**
  * Ảnh minh họa từng nhóm đối tác (public/images/doi-tac/) — ảnh chủ shop đưa, file gốc ở design-system/file out/:
- * dịch vụ cảnh quan 736×736 (vuông), công trình 735×919 và buôn bán 800×1067 (hai ảnh dọc).
+ * dịch vụ cảnh quan 736×736 (vuông), công trình 735×919 (dọc), buôn bán 1280×709 (ngang).
  */
 export const PARTNER_IMAGE: Record<PartnerType, string> = {
   landscape: '/images/doi-tac/dich-vu-canh-quan.jpg',
@@ -42,7 +42,7 @@ export const PARTNER_IMAGE: Record<PartnerType, string> = {
 export const PARTNER_IMAGE_POS: Record<PartnerType, string> = {
   landscape: '50% 25%',
   project: '50% 36%',
-  trade: '57% 35%',
+  trade: '50% 40%',
 };
 
 export const WHOLESALE_URL = '/doi-tac';

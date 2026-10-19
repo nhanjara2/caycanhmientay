@@ -316,6 +316,8 @@ export type LdPost = {
   /** Địa chỉ trình phát nhúng (YouTube / TikTok) — chỉ bài video. */
   embedUrl?: string;
   videoSeconds?: number | null;
+  /** Đoạn dẫn (câu trả lời nhanh) — khai là abstract + speakable cho máy trả lời / AI trích. */
+  summary?: string;
 };
 
 /**
@@ -358,6 +360,9 @@ export function postLd(p: LdPost): Json {
     publisher: orgRef(),
     articleSection: p.categoryName,
     keywords: p.tags.length ? p.tags.join(', ') : undefined,
+    abstract: p.summary || undefined,
+    // Phần đọc to / trích làm câu trả lời: tiêu đề + đoạn tóm tắt đầu bài.
+    speakable: p.summary ? { '@type': 'SpeakableSpecification', cssSelector: ['h1', '.ar-lead'] } : undefined,
     inLanguage: 'vi',
   };
 }

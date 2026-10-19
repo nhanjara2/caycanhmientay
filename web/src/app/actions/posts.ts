@@ -13,6 +13,7 @@ import { downloadTiktokThumb, resolveTiktokShortLink } from '@/server/tiktok';
 import { saveImage } from '@/server/uploads';
 import { youtubeInfo } from '@/server/youtube';
 import { logSeo } from '@/server/seo-cms';
+import { pingIndexNow } from '@/server/indexnow';
 
 // Bài viết & video: nhân viên soạn nháp / gửi duyệt; chỉ quản trị viên đăng, gỡ, xóa và sửa bài đã đăng.
 
@@ -22,6 +23,7 @@ function refresh(p?: { slug: string; category: string }) {
   revalidatePath(SECTIONS.news.path);
   revalidatePath(VIDEO_PAGE);
   if (p) revalidatePath(postPath(p));
+  pingIndexNow([p && postPath(p), SECTIONS[sectionOf(p?.category ?? '')].path]);
 }
 
 export async function savePostAction(input: unknown, intent: unknown) {

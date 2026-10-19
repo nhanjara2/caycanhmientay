@@ -82,7 +82,7 @@ export async function PostDetail({ section, ...props }: PostPageProps & { sectio
     kind: p.kind, section, title: p.title, description: describe(p), path: postPath(p), thumb: p.thumb,
     publishedAt: p.publishedAt, updatedAt: p.updatedAt, authorName: p.authorName, categoryName: cat?.name, tags: p.tags,
     embedUrl: p.tiktokId ? tiktokPlayer(p.tiktokId) : p.youtubeId ? `https://www.youtube.com/embed/${p.youtubeId}` : undefined,
-    videoSeconds: p.videoSeconds,
+    videoSeconds: p.videoSeconds, summary: plainText(p.excerpt).trim(),
   }) : null;
 
   return (
@@ -117,7 +117,7 @@ export async function PostDetail({ section, ...props }: PostPageProps & { sectio
           { label: p.title },
         ]} />
         <h1>{p.title}</h1>
-        {p.excerpt && <p className="ar-lead">{plainText(p.excerpt)}</p>}
+        {p.excerpt && <p className="ar-lead app-answer">{plainText(p.excerpt)}</p>}
         <div className="ar-by">
           <span className="vx-avatar">{initials(author)}</span>
           <span>

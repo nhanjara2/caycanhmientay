@@ -486,6 +486,10 @@ a.vx-chip[aria-current="true"] { background: var(--primary-soft); border-color: 
 .vx-social { flex-wrap: wrap; }
 .vx-social a { display: block; border-radius: 50%; }
 .vx-social img { display: block; width: 36px; height: 36px; }
+/* Hỏi AI về Cây Cảnh Miền Tây (chân trang, lib/ask-ai.ts) */
+.app-askai { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.app-askai a { display: inline-flex; align-items: center; min-height: 2.25rem; padding: 0 0.75rem; border: 1px solid var(--border); border-radius: 999px; background: #fff; color: var(--text); font-size: 0.875rem; font-weight: 600; text-decoration: none; }
+.app-askai a:hover { border-color: var(--primary); color: var(--primary-hover); }
 .vx-qr.app-qr { width: 112px; height: 112px; padding: 4px; background: #fff; }
 .vx-qr.app-qr img { display: block; width: 100%; height: 100%; }
 .app-fab-logo { display: block; width: 24px; height: 24px; }
@@ -2557,6 +2561,12 @@ a.app-mm__card:hover .app-mm__name { color: var(--primary); }
 .app-catintro p { margin: 0; }
 .app-catintro p + p { margin-top: 12px; }
 @media (max-width: 47.9375em) { .app-catintro { padding: 16px; margin-top: 24px; } }
+
+/* Đoạn dẫn đầu bài viết = câu trả lời nhanh (AEO): khung nhấn bên trái để người đọc lẫn máy AI thấy đây là ý chính. */
+.app-site .ar-lead.app-answer {
+  margin: 0.75rem 0 1rem; padding: 0.75rem 1rem; border-left: 4px solid var(--primary);
+  background: var(--primary-soft); border-radius: 0 8px 8px 0; color: var(--ink);
+}
 
 /* >>> DỄ DÙNG ĐIỆN THOẠI */
 /* ===================== Dễ dùng trên điện thoại cho người lớn tuổi (06/10/2026) =====================

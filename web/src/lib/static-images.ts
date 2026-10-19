@@ -77,6 +77,10 @@ export const STATIC_IMAGE_WIDTHS: Record<string, readonly number[]> = {
     320,
     640
   ],
+  "/images/danh-muc/cay-cong-trinh.webp": [
+    320,
+    640
+  ],
   "/images/danh-muc/cay-de-ban.webp": [
     320,
     640
@@ -96,7 +100,8 @@ export const STATIC_IMAGE_WIDTHS: Record<string, readonly number[]> = {
   "/images/doi-tac/buon-ban.jpg": [
     320,
     640,
-    800
+    960,
+    1280
   ],
   "/images/doi-tac/cong-trinh.jpg": [
     320,
@@ -107,5 +112,11 @@ export const STATIC_IMAGE_WIDTHS: Record<string, readonly number[]> = {
     320,
     640,
     736
+  ],
+  "/images/doi-tac/lang-hoa-sa-dec.jpg": [
+    320,
+    640,
+    960,
+    1280
   ]
 };

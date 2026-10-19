@@ -201,7 +201,12 @@ test('robots.txt: không chặn cả web, không chặn /_next, chặn trang ri�
   for (const p of ['/admin', '/tai-khoan', '/gio-hang', '/thanh-toan', '/tim-kiem']) assert.ok(disallow.includes(p), p);
   for (const p of ['/san-pham', '/danh-muc', '/benh-cay', '/goc-cham-cay']) assert.ok(!disallow.some((d) => p.startsWith(d)), p);
   assert.ok(allow.includes('/api/product-images/'));
-  assert.equal(r.sitemap, `${SITE_ORIGIN}/sitemap.xml`);
+  assert.ok(([] as string[]).concat(r.sitemap ?? []).includes(`${SITE_ORIGIN}/sitemap.xml`));
+  // Máy AI được mời đích danh, cùng luật chặn trang riêng tư, không bị chặn cả web.
+  const rules = Array.isArray(r.rules) ? r.rules : [r.rules];
+  const ai = rules.find((x) => ([] as string[]).concat(x.userAgent ?? []).includes('GPTBot'));
+  assert.ok(ai && !([] as string[]).concat(ai.disallow ?? []).includes('/'));
+  assert.ok(([] as string[]).concat(ai!.allow ?? []).includes('/llms.txt'));
 });
 
 // ---- Hreflang --------------------------------------------------------------------------------

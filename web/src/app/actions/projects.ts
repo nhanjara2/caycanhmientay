@@ -7,6 +7,7 @@ import { requireAccess } from '@/server/auth';
 import { addProjectImage, deleteProject, ProjectInputSchema, saveProject, setProjectPublished } from '@/server/projects';
 import { saveImage } from '@/server/uploads';
 import { logSeo } from '@/server/seo-cms';
+import { pingIndexNow } from '@/server/indexnow';
 
 // Công trình đã cung cấp cây (trang Đối tác sỉ /doi-tac): ai có quyền Bài viết toàn quyền (Quản lý, Kỹ sư) được sửa.
 
@@ -14,6 +15,7 @@ function refresh(slug?: string) {
   revalidatePath('/admin/du-an', 'layout');
   revalidatePath('/doi-tac');
   if (slug) revalidatePath(projectPath(slug));
+  pingIndexNow([slug && projectPath(slug), '/doi-tac']);
 }
 
 export async function saveProjectAction(input: unknown) {

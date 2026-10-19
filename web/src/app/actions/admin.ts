@@ -12,6 +12,7 @@ import { applyStockImport, DuplicateImportError, findDuplicateImport, MAX_IMPORT
 import { saveImage } from '@/server/uploads';
 import { db, schema } from '@/server/db';
 import { logSeo } from '@/server/seo-cms';
+import { pingIndexNow } from '@/server/indexnow';
 
 // Mọi action trong file này: kiểm tra quyền nhân viên trước, rồi mới kiểm tra đầu vào.
 
@@ -21,6 +22,7 @@ function refreshCatalog(slug?: string) {
   revalidatePath('/admin', 'layout');
   revalidatePath('/', 'layout');
   if (slug) revalidatePath(`/san-pham/${slug}`);
+  pingIndexNow([slug && `/san-pham/${slug}`]);
 }
 
 export async function saveProductAction(input: unknown) {

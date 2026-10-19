@@ -139,7 +139,7 @@ export default async function HomePage() {
   };
   // Ảnh riêng của chủ shop cho từng nhóm con Cây cảnh (public/images/danh-muc/, vuông 640px); nhóm chưa có ảnh (vd. Cây công trình) dùng ảnh sản phẩm bán chạy.
   const TILE_IMAGE: Record<string, string> = Object.fromEntries(
-    ['cay-de-ban', 'cay-van-phong', 'cay-trong-nha', 'cay-ban-cong', 'cay-san-vuon'].map((s) => [`cay-canh/${s}`, `/images/danh-muc/${s}.webp`]),
+    ['cay-de-ban', 'cay-van-phong', 'cay-trong-nha', 'cay-ban-cong', 'cay-san-vuon', 'cay-cong-trinh'].map((s) => [`cay-canh/${s}`, `/images/danh-muc/${s}.webp`]),
   );
   const stocked = categories.filter((c) => counts[c.slug]);
   const mosaic: MosaicItem[] = stocked.flatMap((c) => {
