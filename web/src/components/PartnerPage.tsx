@@ -8,8 +8,6 @@ import { Breadcrumb } from './Blocks';
 import { Icon, type IconName } from './Icon';
 import { ServiceCta, ServiceFaq } from './LandingParts';
 import { PartnerSignup, type SignupProfile } from './PartnerSignup';
-import { ProjectList } from './ProjectList';
-import { ProjectShowcase } from './ProjectShowcase';
 import { responsive } from '@/lib/images';
 
 // Trang Đối tác sỉ (/doi-tac). Từ 09/10/2026 shop thôi làm dịch vụ, chỉ cung cấp sỉ cho 3 nhóm đối tác (lib/partners.ts).
@@ -27,7 +25,6 @@ const NAV: [string, string][] = [
   ['doi-tac', 'Đối tác'],
   ['cach-mua', 'Cách mua sỉ'],
   ['dang-ky', 'Đăng ký'],
-  ['cong-trinh', 'Công trình'],
   ['nang-luc', 'Năng lực'],
   ['phap-ly', 'Pháp lý'],
   ['hoi-dap', 'Hỏi đáp'],
@@ -67,8 +64,6 @@ function MapLink({ href, children }: { href: string; children: ReactNode }) {
 
 export function PartnerPage({ projects, profile }: { projects: Project[]; profile: SignupProfile | null }) {
   const featured = projects.find((p) => p.featured && p.images.length) ?? projects.find((p) => p.images.length);
-  const withPhotos = projects.filter((p) => p.images.length);
-  const listOnly = projects.filter((p) => !p.images.length);
   const regions = regionsOf(projects);
   // Từ 3 công trình trở lên mới đưa số công trình lên đầu trang.
   const facts = projects.length >= 3
@@ -153,8 +148,7 @@ export function PartnerPage({ projects, profile }: { projects: Project[]; profil
             <span className="dn-way__ic"><Icon name="cart" /></span>
             <b>Đặt hàng trên web</b>
             <p>
-              Giá trên web là giá lẻ; mua 2 cây cùng loại có giá combo, đơn từ 1 triệu có mã giảm giá. Đối tác đã được duyệt có thể được
-              <b> chiết khấu thêm</b> theo thỏa thuận — chiết khấu tự trừ trong giỏ hàng khi đăng nhập. Số lượng lớn cho công trình: gửi danh sách để nhận <b>giá sỉ</b>.
+              Mua 2 cây có giá combo. Đối tác được <b>chiết khấu thêm</b>, tự trừ trong giỏ.
             </p>
             <Link href="/danh-muc/cay-canh" className="vx-btn vx-btn--primary">Xem sản phẩm</Link>
           </div>
@@ -199,40 +193,6 @@ export function PartnerPage({ projects, profile }: { projects: Project[]; profil
           </ul>
         </section>
       )}
-
-      <section id="cong-trinh" className="dn-sec dn-sec--white">
-        <header className="dn-head">
-          <p className="dn-eyebrow">Hồ sơ năng lực</p>
-          <h2>Công trình đã cung cấp cây</h2>
-          <p>
-            {projects.length > 0 && <>{projects.length} công trình tại {regions.length} tỉnh, thành phố. </>}
-            {withPhotos.length > 0 && 'Hình ảnh chụp tại công trình. '}
-            Tên chủ đầu tư chỉ được ghi khi khách hàng đồng ý công khai.
-          </p>
-        </header>
-        {withPhotos.length > 0 && <ProjectShowcase projects={withPhotos} />}
-        {listOnly.length > 0 && (
-          <div className="dn-listbox">
-            {withPhotos.length > 0 && <h3>Các công trình khác đã tham gia</h3>}
-            <ProjectList projects={listOnly} />
-            <p className="dn-note">
-              Cần hình ảnh thực tế hoặc thông tin tham khảo của một công trình cụ thể (cho hồ sơ mời thầu, trình duyệt nội bộ)?{' '}
-              <a href={ZALO_URL} target="_blank" rel="noopener noreferrer">Nhắn Zalo</a> hoặc <a href={MAILTO}>gửi email</a> để được gửi trực tiếp.
-            </p>
-          </div>
-        )}
-        {!projects.length && (
-          <div className="dn-empty">
-            <span className="dn-empty__ic"><Icon name="camera" /></span>
-            <b>Hồ sơ công trình đang được cập nhật lên website</b>
-            <p>Cần danh sách công trình tham khảo và hình ảnh thực tế (cho hồ sơ mời thầu, trình duyệt nội bộ…), vui lòng liên hệ để được gửi trực tiếp.</p>
-            <div className="acts">
-              <a href={ZALO_URL} target="_blank" rel="noopener noreferrer" className="vx-btn vx-btn--primary">Nhắn Zalo</a>
-              <a href={MAILTO} className="vx-btn vx-btn--outline">Gửi email</a>
-            </div>
-          </div>
-        )}
-      </section>
 
       {quotes.length > 0 && (
         <section className="dn-sec" aria-labelledby="dn-quotes-h">

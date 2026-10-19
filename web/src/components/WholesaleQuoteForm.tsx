@@ -8,7 +8,7 @@ import { isPhone } from '@/lib/auth';
 import { compressImage } from '@/lib/compress-image';
 import { errId, focusFirstError, invalidProps } from '@/lib/form-a11y';
 import { money } from '@/lib/format';
-import { PARTNER_IMAGE, PARTNER_IMAGE_POS, PARTNER_INFO, PARTNER_TYPES, WHOLESALE_URL, type PartnerType } from '@/lib/partners';
+import { PARTNER_INFO, PARTNER_TYPES, WHOLESALE_URL, type PartnerType } from '@/lib/partners';
 import { ADVISOR_URL, KINDS, PLAN_STORE_KEY, type SavedPlan } from '@/lib/plant-advisor';
 import { Icon } from './Icon';
 
@@ -28,7 +28,6 @@ export function WholesaleQuoteForm({ defaults, fromAdvisor = false }: { defaults
   const [plan, setPlan] = useState<SavedPlan | null>(null);
   const [touched, setTouched] = useState(false);
   const [error, setError] = useState('');
-  const [info, setInfo] = useState('');
   const [done, setDone] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const fileInput = useRef<HTMLInputElement>(null);
@@ -47,7 +46,6 @@ export function WholesaleQuoteForm({ defaults, fromAdvisor = false }: { defaults
         type: defaults.type ?? (d.type && PARTNER_TYPES.includes(d.type) ? d.type : x.type),
         company: d.company || x.company, name: d.name || x.name, phone: d.phone || x.phone, address: d.address || x.address,
       }));
-      setInfo('Đã mở lại bản nháp bạn lưu trước đó.');
     } catch { /* trình duyệt chặn lưu trữ: bỏ qua */ }
   }, [defaults.type]);
 
@@ -64,14 +62,13 @@ export function WholesaleQuoteForm({ defaults, fromAdvisor = false }: { defaults
     try { sessionStorage.removeItem(PLAN_STORE_KEY); } catch { /* bỏ qua */ }
   };
 
-  const saveDraft = () => {
-    try {
-      localStorage.setItem(DRAFT_KEY, JSON.stringify(v));
-      setInfo('Đã lưu nháp trên máy này (ảnh cần chọn lại khi gửi).');
-    } catch {
-      setInfo('Trình duyệt không cho lưu nháp.');
-    }
-  };
+  // Tự lưu nháp trên máy này (không gồm ảnh) — khách khỏi bấm Lưu nháp
+  const loaded = useRef(false);
+  useEffect(() => {
+    if (!loaded.current) { loaded.current = true; return; }
+    const t = setTimeout(() => { try { localStorage.setItem(DRAFT_KEY, JSON.stringify(v)); } catch { /* bỏ qua */ } }, 500);
+    return () => clearTimeout(t);
+  }, [v]);
 
   const addPhotos = async (files: FileList | null) => {
     if (!files?.length) return;
@@ -156,12 +153,11 @@ export function WholesaleQuoteForm({ defaults, fromAdvisor = false }: { defaults
       <h1>Yêu cầu báo giá sỉ</h1>
 
       <div className="qf-sec">
-        <h2><b>1</b>Bạn là đối tác nào?</h2>
-        <div className="qf-opts app-qf-opts3" role="radiogroup" aria-label="Loại đối tác" {...bad('type')} tabIndex={touched && errors.type ? -1 : undefined}>
+        <h2>Bạn là</h2>
+        <div className="app-qf-chips" role="radiogroup" aria-label="Loại đối tác" {...bad('type')} tabIndex={touched && errors.type ? -1 : undefined}>
           {PARTNER_TYPES.map((t) => (
-            <button key={t} type="button" role="radio" className="qf-opt" aria-checked={v.type === t} onClick={() => set('type', t)}>
-              <span className="app-qf-optimg"><img src={PARTNER_IMAGE[t]} alt="" width={960} height={720} style={{ objectPosition: PARTNER_IMAGE_POS[t] }} /></span>
-              {PARTNER_INFO[t].label}<small>{PARTNER_INFO[t].hint}</small>
+            <button key={t} type="button" role="radio" className="app-qf-chip" aria-checked={v.type === t} onClick={() => set('type', t)} title={PARTNER_INFO[t].hint}>
+              <Icon name={PARTNER_INFO[t].icon} size={18} />{PARTNER_INFO[t].short}
             </button>
           ))}
         </div>
@@ -169,7 +165,7 @@ export function WholesaleQuoteForm({ defaults, fromAdvisor = false }: { defaults
       </div>
 
       <div className="qf-sec">
-        <h2><b>2</b>Ghi chú</h2>
+        <h2>Cần mua gì?</h2>
         {plan && (
           <div className="qf-plan">
             <div className="qf-plan__h">
@@ -191,11 +187,10 @@ export function WholesaleQuoteForm({ defaults, fromAdvisor = false }: { defaults
         <div className="ad-f">
           <textarea id="qf-items" aria-label="Ghi chú" {...bad('items')} className={`vx-input app-qf-items${touched && errors.items ? ' vx-input--error' : ''}`} maxLength={4000} value={v.items}
             onChange={(e) => set('items', e.target.value)}
-            placeholder={'Tên cây, quy cách, số lượng…'} />
+            placeholder={'VD: Kim tiền cao 60cm × 20 cây\nLưỡi hổ chậu C9 × 50'} />
           {err('items')}
         </div>
         <div className="ad-f">
-          <label>Ảnh đính kèm (không bắt buộc, tối đa {MAX_PHOTOS} ảnh)</label>
           <div className="qf-up">
             {photos.map((p, i) => (
               <span key={p.url} className="app-qf-photo" style={{ backgroundImage: `url(${p.url})` }}>
@@ -204,8 +199,8 @@ export function WholesaleQuoteForm({ defaults, fromAdvisor = false }: { defaults
             ))}
             {photos.length < MAX_PHOTOS && (
               <button type="button" className="add app-qf-add" onClick={() => fileInput.current?.click()}>
-                <Icon name="camera" />
-                Thêm ảnh
+                <Icon name="camera" size={18} />
+                {photos.length ? 'Thêm ảnh' : 'Gửi ảnh danh sách / BOQ'}
               </button>
             )}
             <input ref={fileInput} type="file" accept="image/*" multiple hidden onChange={(e) => addPhotos(e.target.files)} />
@@ -214,17 +209,17 @@ export function WholesaleQuoteForm({ defaults, fromAdvisor = false }: { defaults
       </div>
 
       <div className="qf-sec">
-        <h2><b>3</b>Thông tin liên hệ</h2>
-        <div className="ad-frow">
+        <h2>Liên hệ</h2>
+        <div className="ad-frow app-qf-grid">
           <div className="vx-field">
-            <div className="vx-fl"><label htmlFor="qf-company">Tên đơn vị / cửa hàng (không bắt buộc)</label><input id="qf-company" value={v.company} onChange={(e) => set('company', e.target.value)} autoComplete="organization" maxLength={120} /></div>
+            <div className="vx-fl"><label htmlFor="qf-company">Đơn vị / cửa hàng</label><input id="qf-company" value={v.company} onChange={(e) => set('company', e.target.value)} autoComplete="organization" maxLength={120} /></div>
           </div>
           <div className="vx-field">
             <div className="vx-fl"><label htmlFor="qf-name">Người liên hệ</label><input id="qf-name" {...bad('name')} value={v.name} onChange={(e) => set('name', e.target.value)} autoComplete="name" maxLength={80} /></div>
             {err('name')}
           </div>
           <div className="vx-field">
-            <div className="vx-fl"><label htmlFor="qf-phone">Số điện thoại / Zalo</label><input id="qf-phone" {...bad('phone')} value={v.phone} onChange={(e) => set('phone', e.target.value)} inputMode="tel" autoComplete="tel" maxLength={15} /></div>
+            <div className="vx-fl"><label htmlFor="qf-phone">SĐT / Zalo</label><input id="qf-phone" {...bad('phone')} value={v.phone} onChange={(e) => set('phone', e.target.value)} inputMode="tel" autoComplete="tel" maxLength={15} /></div>
             {err('phone')}
           </div>
           <div className="vx-field">
@@ -237,10 +232,8 @@ export function WholesaleQuoteForm({ defaults, fromAdvisor = false }: { defaults
       </div>
 
       {error && <span className="vx-err" role="alert">{error}</span>}
-      {info && !error && <span className="vx-help" role="status">{info}</span>}
       <div className="app-qf-actions">
-        <button type="button" className="vx-btn vx-btn--outline" onClick={saveDraft}>Lưu nháp</button>
-        <button type="submit" className="vx-btn vx-btn--primary vx-btn--lg" disabled={pending}>{pending ? 'Đang gửi…' : 'Gửi yêu cầu báo giá'}</button>
+        <button type="submit" className="vx-btn vx-btn--primary vx-btn--lg" disabled={pending}>{pending ? 'Đang gửi…' : 'Gửi yêu cầu'}</button>
       </div>
     </form>
   );

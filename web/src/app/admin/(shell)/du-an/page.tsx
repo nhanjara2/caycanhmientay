@@ -20,7 +20,7 @@ export default async function AdminProjectsPage() {
       <div className="ad-title">
         <h1>Dự án doanh nghiệp</h1>
         <span className="acts">
-          <Link href="/doi-tac#cong-trinh" target="_blank" className="vx-btn vx-btn--outline">Xem trên web</Link>
+          <Link href="/doi-tac" target="_blank" className="vx-btn vx-btn--outline">Xem trên web</Link>
           {canEdit && <Link href="/admin/du-an/moi" className="vx-btn vx-btn--primary">+ Thêm dự án</Link>}
         </span>
       </div>
