@@ -2,7 +2,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { imageAlt, type Product } from '@/lib/catalog';
 import { diseaseImageUrl, type Disease } from '@/lib/diseases';
-import { postPath } from '@/lib/posts';
+import { categoryOf, postPath } from '@/lib/posts';
 import type { PostCard } from '@/server/posts';
 import { Art, Icon, type IconName } from '../Icon';
 import { PostMeta, PostThumb } from '../PostParts';
@@ -143,6 +143,41 @@ export function PostCards({ posts }: { posts: PostCard[] }) {
           <b>{p.title}</b>
         </Link>
       ))}
+    </div>
+  );
+}
+
+/** Góc chăm cây kiểu Long Châu: chip chuyên mục, 1 bài lớn trái + danh sách bài ảnh nhỏ phải. */
+export function CareBoard({ posts, chips }: { posts: PostCard[]; chips: { label: string; href: string }[] }) {
+  const [main, ...rest] = posts;
+  if (!main) return null;
+  return (
+    <div className="hm-care">
+      {chips.length > 0 && (
+        <nav className="hm-care__chips" aria-label="Chuyên mục Góc chăm cây">
+          {chips.map((c) => <Link key={c.href} href={c.href} className="hm-care__chip app-plain">{c.label}</Link>)}
+        </nav>
+      )}
+      <div className="hm-care__grid">
+        <Link href={postPath(main)} className="hm-care__main app-plain">
+          <PostThumb p={main} className="hm-care__img" />
+          <span className="hm-care__tag">{categoryOf(main.category)?.name}</span>
+          <b>{main.title}</b>
+        </Link>
+        <ul className="hm-care__list">
+          {rest.map((p) => (
+            <li key={p.id}>
+              <Link href={postPath(p)} className="hm-care__item app-plain">
+                <PostThumb p={p} className="hm-care__thumb" />
+                <span>
+                  <span className="hm-care__tag">{categoryOf(p.category)?.name}</span>
+                  <b>{p.title}</b>
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }

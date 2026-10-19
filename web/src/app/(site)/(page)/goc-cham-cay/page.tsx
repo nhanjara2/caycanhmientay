@@ -150,7 +150,7 @@ export default async function BlogPage({ searchParams }: Props) {
   );
 
   if (!all.length) {
-    return <>{top}<div className="vx-blog app-blog-solo"><div className="vx-blog__main"><EmptyPosts text="Góc chăm cây đang được biên soạn" /></div></div></>;
+    return <div className="app-gcc">{top}<div className="vx-blog app-blog-solo"><div className="vx-blog__main"><EmptyPosts text="Góc chăm cây đang được biên soạn" /></div></div></div>;
   }
 
   if (listing) {
@@ -161,7 +161,7 @@ export default async function BlogPage({ searchParams }: Props) {
     if (page > pages) redirect(href({ ...q, trang: pages > 1 ? pages : undefined }));
     const shown = rows.slice((page - 1) * PER_PAGE, page * PER_PAGE);
     return (
-      <>
+      <div className="app-gcc">
         {top}
         <div className={side ? 'vx-blog' : 'vx-blog app-blog-solo'}>
           <div className="vx-blog__main">
@@ -179,7 +179,7 @@ export default async function BlogPage({ searchParams }: Props) {
           </div>
           {side}
         </div>
-      </>
+      </div>
     );
   }
 
@@ -189,7 +189,7 @@ export default async function BlogPage({ searchParams }: Props) {
     .filter((x) => x.posts.length);
 
   return (
-    <>
+    <div className="app-gcc">
       {top}
       <div className={side ? 'vx-blog' : 'vx-blog app-blog-solo'}>
         <div className="vx-blog__main">
@@ -237,7 +237,7 @@ export default async function BlogPage({ searchParams }: Props) {
         </div>
         {side}
       </div>
-    </>
+    </div>
   );
 }
 

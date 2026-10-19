@@ -3046,3 +3046,29 @@ body[data-buybar] .app-site .app-fab { bottom: 6.25rem; }
   html:has(body[data-sumbar]) { scroll-padding-bottom: calc(var(--sumbar-h, 10rem) + 12px); }
 }
 /* <<< RÀ GIAO DIỆN ĐIỆN THOẠI */
+
+/* >>> GÓC CHĂM CÂY (/goc-cham-cay) — khung giữa trang kiểu Long Châu (19/10/2026) */
+.app-gcc { max-width: 76rem; margin: 0 auto; padding: 0 16px; }
+.app-gcc .vx-blogtop { padding-left: 0; padding-right: 0; background: none; }
+.app-gcc .vx-blogtop h1 { font-size: 1.75rem; margin: 8px 0 12px; }
+.app-gcc .app-chiprow .vx-chip { border-radius: 999px; }
+.app-gcc .vx-hero { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 24px; align-items: start; margin-top: 16px; }
+.app-gcc .vx-hero__main { display: flex; flex-direction: column; gap: 10px; text-decoration: none; }
+.app-gcc .vx-hero__main > span:first-child { position: relative; display: block; aspect-ratio: 16 / 9; max-height: 26rem; overflow: hidden; border-radius: 12px; }
+.app-gcc .vx-hero__main > span:first-child img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.app-gcc .vx-hero__main h2 { font-size: 1.5rem; line-height: 1.35; margin: 0; }
+.app-gcc .vx-hero__main p { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin: 0; color: var(--ink-2, #4a5a50); }
+.app-gcc .vx-hero__list { display: flex; flex-direction: column; gap: 14px; }
+.app-gcc .vx-hitem { display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); gap: 12px; align-items: center; }
+.app-gcc .vx-hitem > span:first-child { position: relative; display: block; width: 9.5rem; height: 5.35rem; overflow: hidden; border-radius: 10px; }
+.app-gcc .vx-hitem > span:first-child img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.app-gcc .vx-blog { margin-top: 24px; }
+@media (max-width: 63.9375em) {
+  .app-gcc .vx-hero { grid-template-columns: 1fr; }
+}
+@media (max-width: 47.9375em) {
+  .app-gcc { padding: 0 12px; }
+  .app-gcc .vx-hero__main h2 { font-size: 1.25rem; }
+  .app-gcc .vx-hitem { grid-template-columns: 7.5rem minmax(0, 1fr); }
+  .app-gcc .vx-hitem > span:first-child { width: 7.5rem; height: 4.25rem; }
+}

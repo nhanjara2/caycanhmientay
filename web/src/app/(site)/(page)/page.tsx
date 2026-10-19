@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { FlashSale } from '@/components/FlashSale';
 import { HomeCarousel, HomeHero, type Slide } from '@/components/home/HomeCarousel';
 import {
-  CategoryMosaic, HomeHead, type MosaicItem, NewsBoard, PhotoWall, PostCards, QuickLinks, SeasonDiseases, TrustRow,
+  CareBoard, CategoryMosaic, HomeHead, type MosaicItem, NewsBoard, PhotoWall, QuickLinks, SeasonDiseases, TrustRow,
 } from '@/components/home/HomeParts';
 import { Icon } from '@/components/Icon';
 import { ProductGrid } from '@/components/ProductCard';
@@ -14,7 +14,7 @@ import { inSeason, seasonNow } from '@/lib/diseases';
 import { bannerImageUrl, slotOf, type Banner } from '@/lib/home-banners';
 import { responsive } from '@/lib/images';
 import { PARTNER_IMAGE, PARTNER_IMAGE_POS, PARTNER_INFO, PARTNER_TYPES, WHOLESALE_QUOTE_URL, WHOLESALE_URL } from '@/lib/partners';
-import { categoryOf, SECTIONS, VIDEO_PAGE } from '@/lib/posts';
+import { CATEGORIES, categoryOf, SECTIONS, VIDEO_PAGE } from '@/lib/posts';
 import { WARRANTY_DAYS } from '@/lib/warranty-labels';
 import { allProducts, categoryCounts, flashProducts } from '@/server/catalog';
 import { menuCategories } from '@/server/categories';
@@ -168,7 +168,9 @@ export default async function HomePage() {
   const news = posts.filter((p) => categoryOf(p.category)?.promo || categoryOf(p.category)?.section === 'news').slice(0, 5);
   // Video ngắn nổi bật: video admin đánh dấu Nổi bật trước, rồi mới nhất (publishedVideos đã xếp sẵn).
   const videos = allVideos.slice(0, 8);
-  const care = posts.filter((p) => p.kind === 'article' && categoryOf(p.category)?.section === 'blog' && !categoryOf(p.category)?.promo).slice(0, 4);
+  const care = posts.filter((p) => p.kind === 'article' && categoryOf(p.category)?.section === 'blog' && !categoryOf(p.category)?.promo).slice(0, 6);
+  const careChips = CATEGORIES.filter((c) => c.section === 'blog' && posts.some((p) => p.category === c.key))
+    .map((c) => ({ label: c.name, href: `${SECTIONS.blog.path}?chuyen-muc=${c.key}` }));
   const shownProjects = projects.filter((p) => p.images.length).slice(0, 3);
 
   return (
@@ -268,7 +270,7 @@ export default async function HomePage() {
         {care.length > 0 && (
           <section className="hm-sec">
             <HomeHead icon="sprout" title="Góc chăm cây" href={SECTIONS.blog.path} />
-            <PostCards posts={care} />
+            <CareBoard posts={care} chips={careChips} />
           </section>
         )}
 
