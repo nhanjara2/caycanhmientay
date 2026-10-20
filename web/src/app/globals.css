@@ -475,8 +475,8 @@ a.vx-chip[aria-current="true"] { background: var(--primary-soft); border-color: 
 @media (prefers-reduced-motion: reduce) { .vx-flash__title svg { animation: none; } }
 
 /* Logo cổng thanh toán (public/images/pay/): chân trang + trang thanh toán */
-.vx-payl { background: #fff; padding: 0 5px; }
-.vx-payl img { display: block; height: 18px; width: auto; max-width: 52px; object-fit: contain; }
+.vx-payl { background: #fff; padding: 0 5px; width: 3.5rem; height: 1.75rem; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; }
+.vx-payl img { display: block; height: 18px; width: 100%; max-width: 100%; object-fit: contain; }
 .vx-hot b a { color: inherit; }
 .vx-pay__mark.app-pay-logo { width: 56px; background: #fff; padding: 4px; }
 .vx-pay__mark.app-pay-logo img { display: block; width: 48px; height: 24px; object-fit: contain; }
@@ -2767,7 +2767,7 @@ body[data-buybar] .app-site .app-fab { bottom: 6.25rem; }
   /* khoảng đệm đặt ở h3 (ngoài vùng cắt) — đệm trong link làm lộ dấu của dòng 3 */
   .app-site .vx-pcard__name { padding-block: 0.1875rem; }
   .app-site .vx-pcard__name a { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; padding-block: 0; min-height: 0; }
-  .app-site .vx-social a { display: inline-grid; place-items: center; min-width: 2.75rem; min-height: 2.75rem; }
+  .app-site .vx-social a, .app-site .app-askai a { display: inline-grid; place-items: center; min-width: 2.75rem; min-height: 2.75rem; }
   .app-site .vx-hot b a { padding-block: 0.625rem; }
   .app-site .nw-box a[href^="mailto"] { display: inline-flex !important; align-items: center; min-height: 2.75rem; }
   .app-site .sv-card .b a { min-height: 2.75rem; }
@@ -2900,9 +2900,9 @@ body[data-buybar] .app-site .app-fab { bottom: 6.25rem; }
     .app-site .vx-pcard__media > img, .app-site .vx-thumbimg > img { transition: transform .45s ease; }
     .app-site .vx-pcard:hover .vx-pcard__media > img, .app-site a:hover > .vx-thumbimg > img, .app-site a:hover .vx-thumbimg > img { transform: scale(1.06); }
     .app-site .vx-thumbimg { overflow: hidden; }
-    .app-site .vx-dtile, .app-site .pm-voucher, .app-site .dn-cap, .app-site .vx-social a { transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, background-color .15s ease; }
+    .app-site .vx-dtile, .app-site .pm-voucher, .app-site .dn-cap, .app-site .vx-social a, .app-site .app-askai a { transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, background-color .15s ease; }
     .app-site .vx-dtile:hover, .app-site .pm-voucher:hover, .app-site .dn-cap:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(12, 24, 16, .1); }
-    .app-site .vx-social a:hover { transform: translateY(-3px); }
+    .app-site .vx-social a:hover, .app-site .app-askai a:hover { transform: translateY(-3px); }
   }
 
   /* 4. Khối hiện dần khi cuộn tới (components/ScrollReveal.tsx gắn / gỡ data-rv). Đặt SAU mục 3 để thắng transition của thẻ */

@@ -519,6 +519,13 @@
       "when": 1792420777303,
       "tag": "0073_anh_theo_quy_cach",
       "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "7",
+      "when": 1792464808509,
+      "tag": "0074_bieu_tuong_bai_viet",
+      "breakpoints": true
     }
   ]
 }
