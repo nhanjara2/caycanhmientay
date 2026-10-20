@@ -87,7 +87,7 @@ export function ShareButton({ title }: { title: string }) {
   );
 }
 
-/** Mục lục bên trái: tô đậm mục đang đọc (tiêu đề cuối cùng đã cuộn qua mép trên, dưới thanh header). */
+/** Mục lục bên trái: tô đậm mục đang đọc (tiêu đề cuối cùng đã lên tới 1/3 trên màn hình). */
 export function TocLinks({ items }: { items: { id: string; text: string }[] }) {
   const [active, setActive] = useState(items[0]?.id);
   useEffect(() => {
@@ -96,7 +96,8 @@ export function TocLinks({ items }: { items: { id: string; text: string }[] }) {
     let raf = 0;
     const update = () => {
       raf = 0;
-      const line = (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 96) + 24;
+      // Vạch đọc ở 1/3 trên màn hình (--header-h ghi bằng rem nên không parseFloat ra px được).
+      const line = window.innerHeight / 3;
       // Cuộn tới đáy trang thì mục cuối luôn sáng (mục ngắn không bao giờ chạm mép trên).
       const atEnd = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4;
       let cur = heads[0].id;

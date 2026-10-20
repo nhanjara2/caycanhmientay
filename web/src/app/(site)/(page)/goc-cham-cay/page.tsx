@@ -163,7 +163,7 @@ export default async function BlogPage({ searchParams }: Props) {
     return (
       <div className="app-gcc">
         {top}
-        <div className="vx-blog app-blog-solo">
+        <div className={side ? 'vx-blog' : 'vx-blog app-blog-solo'}>
           <div className="vx-blog__main">
             <section className="vx-cblock">
               {!shown.length ? (
@@ -191,17 +191,17 @@ export default async function BlogPage({ searchParams }: Props) {
   return (
     <div className="app-gcc">
       {top}
-      <div className="vx-blog app-blog-solo">
-        <div className="vx-blog__main">
-          {videos.length > 0 && (
-            <section className="vx-cblock">
+      <div className={side ? 'vx-blog' : 'vx-blog app-blog-solo'}>
+        {videos.length > 0 && (
+            <section className="vx-cblock app-gcc-video">
               <div className="vx-sect">
-                <h2 style={{ fontSize: '1.125rem' }}><span className="vx-sect__mark"><Icon name="camera" /></span>Video ngắn</h2>
+                <h2 style={{ fontSize: '1.125rem' }}><span className="vx-sect__mark"><Icon name="camera" /></span>Video ngắn nổi bật</h2>
                 <Link href={VIDEO_PAGE} className="vx-link" aria-label="Xem tất cả video ngắn">Xem tất cả <Icon name="chevron" size={14} /></Link>
               </div>
-              <div className="vx-vrow">{videos.slice(0, 6).map((p, i) => <VCard key={p.id} p={p} alt={i % 2 === 1} />)}</div>
+              <div className="vx-vrow">{videos.slice(0, 12).map((p, i) => <VCard key={p.id} p={p} alt={i % 2 === 1} />)}</div>
             </section>
           )}
+        <div className="vx-blog__main">
           {blocks.map(({ c, posts }) => (
             <section key={c.key} className="vx-cblock">
               <div className="vx-cblock__head">
