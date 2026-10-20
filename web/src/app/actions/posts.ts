@@ -133,6 +133,9 @@ const QuickVideosSchema = z.array(z.object({
   category: z.enum(CATEGORY_KEYS),
   featured: z.boolean(),
   channel: z.string().max(200),
+  /** Thông tin bài viết về video: đoạn dẫn + nội dung (đoạn văn cách nhau bằng dòng trống). */
+  excerpt: z.string().max(400).default(''),
+  content: z.string().max(8000).default(''),
   /** Ảnh video TikTok (link tạm) — lưu thành ảnh bìa; chỉ nhận máy chủ ảnh của TikTok (isThumbUrl). */
   thumb: z.string().max(2000).nullable(),
 })).min(1, 'Chưa chọn video nào').max(MAX_QUICK_VIDEOS);
@@ -152,7 +155,9 @@ export async function quickAddVideosAction(input: unknown) {
     const k = key(v.source, v.videoId);
     if (used.has(k)) { results.push({ key: k, ok: false, error: 'Video này đã có trên web' }); continue; }
     const input = PostInputSchema.safeParse({
-      kind: 'video', category: v.category, title: v.title, excerpt: '', body: [], coverFile: null,
+      kind: 'video', category: v.category, title: v.title, excerpt: v.excerpt.trim(),
+      body: v.content.split(/\n\s*\n/).map((t) => t.replace(/\s*\n\s*/g, ' ').trim()).filter(Boolean).map((text) => ({ type: 'p' as const, text })),
+      coverFile: null,
       youtubeId: v.source === 'youtube' ? v.videoId : null, tiktokId: v.source === 'tiktok' ? v.videoId : null,
       videoVertical: v.vertical, videoSeconds: null, authorName: (v.channel.trim() || staffName(user)).slice(0, 60),
       reviewerName: '', reviewerTitle: '', diseases: [], tags: [], seoDescription: '', featured: v.featured, publishAt: null,

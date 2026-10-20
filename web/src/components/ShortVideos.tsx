@@ -168,6 +168,7 @@ export function ShortVideos({ videos, layout, openSlug }: { videos: ShortVideo[]
             <div className="shv-side">
               <h2 id={titleId}>{v.title}</h2>
               {v.categoryName && <span className="shv-meta">{v.categoryName}</span>}
+              {v.excerpt && <p className="shv-lead">{v.excerpt.replace(/\*\*|\[([^\]]*)\]\([^)]*\)/g, '$1')}</p>}
               <div className="shv-acts">
                 {n > 1 && (
                   <>

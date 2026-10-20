@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import '@/styles/disease-detail.css';
 import Link from 'next/link';
 import { Breadcrumb, SectionHeader } from '@/components/Blocks';
 import { PartIcon } from '@/components/DiseaseArt';
@@ -47,116 +48,127 @@ export default async function DiseaseDetailPage({ params }: Props) {
     .sort((a, b) => Number(b.cause === d.cause) - Number(a.cause === d.cause))
     .slice(0, 8);
 
+  const sec = (n: number, id: string, title: string) => (
+    <h2 className="ddp-h" id={id}><span>{n}</span>{title}</h2>
+  );
+  let n = 0;
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '16px 24px 32px', background: 'var(--surface)' }}>
+    <div className="ddp">
       <JsonLd data={diseaseLd({ ...d, images: d.symptoms.flatMap((s) => (s.image ? [diseaseImageUrl(s.image, d.slug)] : [])) })} />
-      <div className="dd-hero">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <Breadcrumb items={[
-            { label: 'Góc chăm cây', href: '/goc-cham-cay' },
-            { label: 'Bệnh cây trồng', href: '/benh-cay' },
-            { label: shortName(d.name).replace(/^./, (c) => c.toUpperCase()) },
-          ]} />
-          <h1>{d.name}</h1>
-          <span className="ad-tags">
-            {cause && <Link href={`/benh-cay?nguyen_nhan=${cause.key}#danh-sach`} className="vx-badge vx-badge--info">{cause.name}</Link>}
-            <span className="vx-badge vx-badge--info">{d.parts.map(partName).join(', ')}</span>
-            {d.season && <span className="vx-badge vx-badge--info">{d.season}</span>}
-          </span>
-          <p style={{ margin: 0, color: 'var(--ink-muted)', fontSize: '0.9375rem', lineHeight: '24px' }}>{d.summary}</p>
-          <div className="dd-facts">
-            <div>
-              Mức nguy hiểm<b>{SEVERITY[d.severity]}</b>
+      <Breadcrumb items={[
+        { label: 'Góc chăm cây', href: '/goc-cham-cay' },
+        { label: 'Bệnh cây trồng', href: '/benh-cay' },
+        { label: shortName(d.name).replace(/^./, (c) => c.toUpperCase()) },
+      ]} />
+
+      <header className="ddp-hero">
+        <span className="ddp-tags">
+          {cause && <Link href={`/benh-cay?nguyen_nhan=${cause.key}#danh-sach`} className="vx-badge vx-badge--info">{cause.name}</Link>}
+          <span className="vx-badge vx-badge--info">{d.parts.map(partName).join(', ')}</span>
+        </span>
+        <h1>{d.name}</h1>
+        <p className="ddp-sum">{d.summary}</p>
+        <dl className="ddp-facts">
+          <div>
+            <dt>Mức nguy hiểm</dt>
+            <dd>{SEVERITY[d.severity]}
               <span className="dd-sev" aria-label={`${d.severity}/5`}>
                 {[1, 2, 3, 4, 5].map((i) => <i key={i} className={i <= d.severity ? 'on' : undefined} />)}
               </span>
+            </dd>
+          </div>
+          <div><dt>Lây lan</dt><dd>{d.spread || '—'}</dd></div>
+          <div><dt>Hay gặp ở</dt><dd>{d.plants.length ? d.plants.map(plantName).join(', ') : 'Nhiều loại cây'}</dd></div>
+          <div><dt>Mùa</dt><dd>{d.season || 'Quanh năm'}</dd></div>
+        </dl>
+      </header>
+
+      <div className="ddp-body">
+        <article className="ddp-main">
+          <section className="ddp-card">
+            {sec(++n, 'trieu-chung', 'Triệu chứng')}
+            <div className="dd-sym">
+              {d.symptoms.map((s, i) => (
+                <div key={i}>
+                  <span className={s.image ? 'img img--photo' : 'img'}>
+                    {s.image ? <img {...responsive(diseaseImageUrl(s.image, d.slug), '(max-width: 47.9375em) 100vw, 280px', 960)} alt={s.text} width={1000} height={750} loading={i === 0 ? undefined : 'lazy'} /> : <PartIcon part={s.part} plain />}
+                    <em>{partName(s.part)}</em>
+                  </span>
+                  {s.text}
+                </div>
+              ))}
             </div>
-            <div>Lây lan<b>{d.spread || '—'}</b></div>
-            <div>Hay gặp ở<b>{d.plants.length ? d.plants.map(plantName).join(', ') : 'Nhiều loại cây'}</b></div>
-            <div>Mùa<b>{d.season || 'Quanh năm'}</b></div>
-          </div>
-        </div>
-        <div className="ar-cta">
-          <b>Chưa chắc cây bị {shortName(d.name)}?</b>
-          <span>So sánh với các bệnh dễ nhầm bên dưới. Cây mua tại vườn dưới 7 ngày: gửi ảnh để kỹ sư xem và bảo hành.</span>
-          <Link href="/tai-khoan/bao-hanh" className="vx-btn">Gửi ảnh bảo hành</Link>
-          <Link href="/he-thong-cua-hang" className="app-cta-alt">Hoặc mang mẫu lá đến cửa hàng gần bạn</Link>
-        </div>
-      </div>
+            {d.confusions.length > 0 && (
+              <div className="ddp-cmp">
+                {d.confusions.map((c, i) => (
+                  <div key={i}>
+                    <b>Dễ nhầm với: {c.name}</b>
+                    <p>{c.text}</p>
+                    {c.slug && live.has(c.slug) && <Link href={`/benh-cay/${c.slug}`}>Xem bài {c.name} →</Link>}
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
 
-      <h2 style={{ margin: '8px 0 0', fontSize: '1.25rem' }}>Triệu chứng</h2>
-      <div className="dd-sym">
-        {d.symptoms.map((s, i) => (
-          <div key={i}>
-            <span className={s.image ? 'img img--photo' : 'img'}>
-              {s.image ? <img {...responsive(diseaseImageUrl(s.image, d.slug), '(max-width: 47.9375em) 100vw, 360px', 960)} alt={s.text} width={1000} height={750} loading={i === 0 ? undefined : 'lazy'} /> : <PartIcon part={s.part} plain />}
-              <em>{partName(s.part)}</em>
-            </span>
-            {s.text}
-          </div>
-        ))}
-      </div>
-      {d.confusions.length > 0 && (
-        <div className="dd-cmp">
-          {d.confusions.map((c, i) => (
-            <div key={i}>
-              <b>Dễ nhầm với: {c.name}</b>
-              {c.text}
-              {c.slug && live.has(c.slug) && <> <Link href={`/benh-cay/${c.slug}`}>Xem bài →</Link></>}
-            </div>
-          ))}
-        </div>
-      )}
+          <section className="ddp-card">
+            {sec(++n, 'cach-xu-ly', 'Cách xử lý')}
+            <ol className="ddp-steps">
+              {d.steps.map((s, i) => (
+                <li key={i}><b>{s.title}</b>{s.detail && <small>{s.detail}</small>}</li>
+              ))}
+            </ol>
+            {d.safety && (
+              <div className="vx-note">
+                <Icon name="alert" />
+                <div><b>Lưu ý an toàn:</b> {d.safety}</div>
+              </div>
+            )}
+          </section>
 
-      <h2 style={{ margin: '8px 0 0', fontSize: '1.25rem' }}>Cách xử lý</h2>
-      <div className="dd-steps">
-        {d.steps.map((s, i) => (
-          <div key={i} className="dd-step">
-            <b className="n">{i + 1}</b>
-            <span><b>{s.title}</b>{s.detail && <small>{s.detail}</small>}</span>
-          </div>
-        ))}
-      </div>
-      {d.safety && (
-        <div className="vx-note">
-          <Icon name="alert" />
-          <div><b>Lưu ý an toàn:</b> {d.safety}</div>
-        </div>
-      )}
+          {d.prevention.length > 0 && (
+            <section className="ddp-card">
+              {sec(++n, 'phong-benh', 'Phòng bệnh')}
+              <ul className="ddp-prev">{d.prevention.map((p, i) => <li key={i}>{p}</li>)}</ul>
+            </section>
+          )}
 
-      {d.prevention.length > 0 && (
-        <>
-          <h2 style={{ margin: '8px 0 0', fontSize: '1.25rem' }}>Phòng bệnh</h2>
-          <ul className="dd-prev">{d.prevention.map((p, i) => <li key={i}>{p}</li>)}</ul>
-        </>
-      )}
+          {posts.length > 0 && (
+            <section className="ddp-card">
+              <h2 className="ddp-h2">Bài viết Góc chăm cây về bệnh này</h2>
+              <div className="ddp-links">
+                {posts.slice(0, 8).map((p) => (
+                  <Link key={p.id} href={postPath(p)}>{p.title}<small>{p.kind === 'video' ? 'Video' : categoryOf(p.category)?.name}</small></Link>
+                ))}
+              </div>
+            </section>
+          )}
+        </article>
+
+        <aside className="ddp-side">
+          <div className="ar-cta">
+            <b>Chưa chắc cây bị {shortName(d.name)}?</b>
+            <span>Cây mua tại vườn dưới 7 ngày: gửi ảnh để kỹ sư xem và bảo hành.</span>
+            <Link href="/tai-khoan/bao-hanh" className="vx-btn">Gửi ảnh bảo hành</Link>
+            <Link href="/he-thong-cua-hang" className="app-cta-alt">Hoặc mang mẫu lá đến cửa hàng</Link>
+          </div>
+          {related.length > 0 && (
+            <section className="ddp-card ddp-rel">
+              <h2 className="ddp-h2">Bệnh liên quan</h2>
+              <div className="ddp-links">
+                {related.map((x) => (
+                  <Link key={x.slug} href={`/benh-cay/${x.slug}`}>{x.name}<small>{causeOf(x.cause)?.name}</small></Link>
+                ))}
+              </div>
+            </section>
+          )}
+        </aside>
+      </div>
 
       {products.length > 0 && (
         <section>
           <SectionHeader icon="flask" title={`Sản phẩm xử lý ${shortName(d.name)}`} />
           <ProductGrid products={products} />
-        </section>
-      )}
-
-      {posts.length > 0 && (
-        <section className="vx-dpanel">
-          <div className="vx-dpanel__head"><b>Bài viết Góc chăm cây về bệnh này</b></div>
-          <div className="vx-dlist">
-            {posts.slice(0, 8).map((p) => (
-              <Link key={p.id} href={postPath(p)}>{p.title}<small>{p.kind === 'video' ? 'Video' : categoryOf(p.category)?.name}</small></Link>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {related.length > 0 && (
-        <section className="vx-dpanel">
-          <div className="vx-dpanel__head"><b>Bệnh liên quan</b></div>
-          <div className="vx-dlist">
-            {related.map((x) => (
-              <Link key={x.slug} href={`/benh-cay/${x.slug}`}>{x.name}<small>{causeOf(x.cause)?.name}</small></Link>
-            ))}
-          </div>
         </section>
       )}
     </div>

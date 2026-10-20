@@ -210,6 +210,8 @@ export const videoShareUrl = (slug: string) => `${VIDEO_PAGE}?v=${encodeURICompo
 export type ShortVideo = {
   id: number; slug: string; href: string; category: string; categoryName: string; title: string;
   source: VideoSource; videoId: string; vertical: boolean; seconds: number | null;
+  /** Đoạn dẫn của bài video (hiện dưới tiêu đề trong khung xem). */
+  excerpt: string;
   /** null = video TikTok chưa có ảnh bìa → thẻ hiện nền TikTok. */
   thumb: string | null;
   /** Ảnh YouTube của video ngang (có viền đen trên / dưới) — phóng to cho kín thẻ dọc. */

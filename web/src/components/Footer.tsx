@@ -95,7 +95,7 @@ export async function Footer() {
           <h4 style={{ marginTop: 8 }}>HỎI AI VỀ CÂY CẢNH MIỀN TÂY</h4>
           <div className="app-askai">
             {ASK_AI.map((a) => (
-              <a key={a.name} href={a.href} target="_blank" rel="noopener noreferrer nofollow" aria-label={`Hỏi ${a.name} về Cây Cảnh Miền Tây`}>{a.name}</a>
+              <a key={a.name} href={a.href} target="_blank" rel="noopener noreferrer nofollow" title={a.name} aria-label={`Hỏi ${a.name} về Cây Cảnh Miền Tây`}><img src={`/images/ai/${a.name.toLowerCase()}.svg`} alt="" width={36} height={36} loading="lazy" /></a>
             ))}
           </div>
           {/* Mã QR chỉ có ích khi xem trên máy tính; điện thoại đã có nút "Chat Zalo" ở thanh dưới. */}

@@ -51,7 +51,7 @@ export const publishedPosts = cache(async () => {
 export async function publishedVideos(): Promise<ShortVideo[]> {
   const videos = (await publishedPosts()).filter((p) => p.kind === 'video' && (p.youtubeId || p.tiktokId));
   return [...videos.filter((p) => p.featured), ...videos.filter((p) => !p.featured)].map((p) => ({
-    id: p.id, slug: p.slug, href: postPath(p), category: p.category, categoryName: categoryOf(p.category)?.name ?? '', title: p.title,
+    id: p.id, slug: p.slug, href: postPath(p), category: p.category, categoryName: categoryOf(p.category)?.name ?? '', title: p.title, excerpt: p.excerpt,
     ...(p.tiktokId ? { source: 'tiktok' as const, videoId: p.tiktokId } : { source: 'youtube' as const, videoId: p.youtubeId! }),
     vertical: p.videoVertical, seconds: p.videoSeconds, thumb: p.thumb, zoomThumb: !p.coverFile && !p.tiktokId && !p.videoVertical,
   }));

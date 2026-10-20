@@ -11,7 +11,7 @@ import { Select } from '../Select';
 type Row = {
   key: string; source: VideoSource; videoId: string; url: string; vertical: boolean; title: string; channel: string;
   thumb: string | null; error: string | null; existing: { id: number; title: string; published: boolean } | null;
-  category: CategoryKey; featured: boolean; pick: boolean;
+  category: CategoryKey; featured: boolean; pick: boolean; excerpt: string; content: string;
 };
 
 const watchUrl = (r: Row) => (r.source === 'tiktok' ? tiktokPlayer(r.videoId) : `https://www.youtube.com/watch?v=${r.videoId}`);
@@ -55,7 +55,7 @@ export function QuickVideos() {
     const r = await lookupVideosAction(text).catch(() => ({ ok: false as const, error: 'Mất kết nối, thử lại' }));
     setBusy('');
     if (!r.ok) { setError(r.error); return; }
-    setRows(r.items.map((x) => ({ ...x, category, featured: false, pick: !x.error && !x.existing })));
+    setRows(r.items.map((x) => ({ ...x, category, featured: false, excerpt: '', content: '', pick: !x.error && !x.existing })));
     for (const x of r.items) {
       if (x.source !== 'tiktok' || x.error || x.existing || (x.title && x.thumb)) continue;
       tiktokOembed(x.url).then((t) => {
@@ -67,8 +67,8 @@ export function QuickVideos() {
   const save = async () => {
     if (!picked.length || invalid) return;
     setBusy('save'); setError('');
-    const r = await quickAddVideosAction(picked.map(({ source, videoId, title, vertical, category, featured, channel, thumb }) =>
-      ({ source, videoId, title, vertical, category, featured, channel, thumb: source === 'tiktok' ? thumb : null })))
+    const r = await quickAddVideosAction(picked.map(({ source, videoId, title, vertical, category, featured, channel, thumb, excerpt, content }) =>
+      ({ source, videoId, title, vertical, category, featured, channel, excerpt, content, thumb: source === 'tiktok' ? thumb : null })))
       .catch(() => ({ ok: false as const, error: 'Mất kết nối, thử lại' }));
     setBusy('');
     if (!r.ok) { setError(r.error); return; }
@@ -161,6 +161,18 @@ export function QuickVideos() {
                       {r.existing && <> · Đã có trên web: <Link href={`/admin/noi-dung/${r.existing.id}`}>{r.existing.title}</Link>{!r.existing.published && ' (chưa đăng)'}</>}
                     </span>
                     {r.error && <span className="vx-err">{r.error}</span>}
+                    {!locked && (
+                      <details className="qv-info" open={!!(r.excerpt || r.content) || undefined}>
+                        <summary>Thông tin bài viết về video {r.excerpt || r.content ? '✓' : '(không bắt buộc)'}</summary>
+                        <textarea className="vx-input" rows={2} maxLength={400} value={r.excerpt} aria-label="Đoạn dẫn"
+                          placeholder="Đoạn dẫn: 1–2 câu tóm tắt video (hiện dưới tiêu đề, trên thẻ và trên Google)"
+                          onChange={(e) => patch(r.key, { excerpt: e.target.value.replace(/\n/g, ' ') })} />
+                        <textarea className="vx-input" rows={5} maxLength={8000} value={r.content} aria-label="Nội dung bài viết"
+                          placeholder={'Nội dung: cách làm, lưu ý, sản phẩm dùng trong video…\nCách một dòng trống để xuống đoạn mới.'}
+                          onChange={(e) => patch(r.key, { content: e.target.value })} />
+                        <span className="hint">Muốn thêm ảnh, tiêu đề mục, khối sản phẩm: đăng xong mở video trong danh sách để sửa.</span>
+                      </details>
+                    )}
                     {!locked && (
                       <div className="qv-opts">
                         <CategorySelect value={r.category} label="Chuyên mục" onChange={(c) => patch(r.key, { category: c })} />
