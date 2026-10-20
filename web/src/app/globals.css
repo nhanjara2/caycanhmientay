@@ -1171,6 +1171,12 @@ a.vx-chip { text-decoration: none; }
 .vx-vcard__img > small, .vx-vcard__img > b { position: relative; z-index: 2; }
 .app-yt--v { aspect-ratio: 9 / 16; max-width: 360px; }
 /* Bài chi tiết */
+/* Bố cục 3 cột cân giữa: cột bài trước bị giới hạn 720px nhưng bám trái → lệch, thừa khoảng trống bên phải */
+@media (min-width: 64em) {
+  .ar-page { grid-template-columns: 220px minmax(0, 720px) 280px; justify-content: center; gap: var(--space-8, 40px); max-width: 1360px; margin-inline: auto; width: 100%; box-sizing: border-box; }
+  .ar-main { max-width: none; }
+  .ar-side { top: calc(var(--header-h) + var(--space-4)); }
+}
 .app-toc-h { font-size: 0.75rem; color: var(--ink-muted); padding: 0 12px 6px; }
 .ar-main h2 { scroll-margin-top: calc(var(--header-h) + var(--space-4)); }
 .ar-main h3 { margin: var(--space-2) 0 0; font-size: 1.125rem; line-height: 1.625rem; }
