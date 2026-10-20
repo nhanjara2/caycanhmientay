@@ -86,3 +86,28 @@ export function ShareButton({ title }: { title: string }) {
     </button>
   );
 }
+
+/** Mục lục bên trái: tô đậm mục đang đọc (tiêu đề cuối cùng đã cuộn qua mép trên, dưới thanh header). */
+export function TocLinks({ items }: { items: { id: string; text: string }[] }) {
+  const [active, setActive] = useState(items[0]?.id);
+  useEffect(() => {
+    const heads = items.map((t) => document.getElementById(t.id)).filter((el): el is HTMLElement => !!el);
+    if (!heads.length) return;
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const line = (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 96) + 24;
+      // Cuộn tới đáy trang thì mục cuối luôn sáng (mục ngắn không bao giờ chạm mép trên).
+      const atEnd = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4;
+      let cur = heads[0].id;
+      for (const h of heads) if (h.getBoundingClientRect().top <= line) cur = h.id;
+      setActive(atEnd ? heads[heads.length - 1].id : cur);
+    };
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(update); };
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    return () => { window.removeEventListener('scroll', onScroll); window.removeEventListener('resize', onScroll); cancelAnimationFrame(raf); };
+  }, [items]);
+  return <>{items.map((t) => <a key={t.id} href={`#${t.id}`} aria-current={t.id === active ? 'true' : undefined}>{t.text}</a>)}</>;
+}

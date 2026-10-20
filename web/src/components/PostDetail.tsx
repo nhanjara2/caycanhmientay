@@ -10,7 +10,7 @@ import { getCurrentUser } from '@/server/auth';
 import { getProducts } from '@/server/catalog';
 import { allDiseases } from '@/server/diseases';
 import { addPostView, getPost, publishedPosts, type PostFull } from '@/server/posts';
-import { PostHelpful, ShareButton } from './PostClient';
+import { PostHelpful, ShareButton, TocLinks } from './PostClient';
 import { PostBody, PostLinks, PostTime, TikTok, YouTube } from './PostParts';
 import { withShare } from '@/lib/seo';
 import { movedOrNotFound, withSeo } from '@/server/seo-cms';
@@ -91,7 +91,7 @@ export async function PostDetail({ section, ...props }: PostPageProps & { sectio
         {toc.length ? (
           <>
             <b className="app-toc-h">MỤC LỤC</b>
-            {toc.map((t) => <a key={t.id} href={`#${t.id}`}>{t.text}</a>)}
+            <TocLinks items={toc} />
           </>
         ) : (
           <>

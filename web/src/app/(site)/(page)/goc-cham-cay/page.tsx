@@ -163,7 +163,7 @@ export default async function BlogPage({ searchParams }: Props) {
     return (
       <div className="app-gcc">
         {top}
-        <div className={side ? 'vx-blog' : 'vx-blog app-blog-solo'}>
+        <div className="vx-blog app-blog-solo">
           <div className="vx-blog__main">
             <section className="vx-cblock">
               {!shown.length ? (
@@ -191,7 +191,7 @@ export default async function BlogPage({ searchParams }: Props) {
   return (
     <div className="app-gcc">
       {top}
-      <div className={side ? 'vx-blog' : 'vx-blog app-blog-solo'}>
+      <div className="vx-blog app-blog-solo">
         <div className="vx-blog__main">
           {videos.length > 0 && (
             <section className="vx-cblock">
