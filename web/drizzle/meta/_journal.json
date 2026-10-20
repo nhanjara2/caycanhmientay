@@ -526,6 +526,20 @@
       "when": 1792464808509,
       "tag": "0074_bieu_tuong_bai_viet",
       "breakpoints": true
+    },
+    {
+      "idx": 75,
+      "version": "7",
+      "when": 1792488837025,
+      "tag": "0075_cam_nang_tung_cay",
+      "breakpoints": true
+    },
+    {
+      "idx": 76,
+      "version": "7",
+      "when": 1792488897025,
+      "tag": "0076_chau_long_chau",
+      "breakpoints": true
     }
   ]
 }
