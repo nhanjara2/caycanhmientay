@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Be_Vietnam_Pro } from 'next/font/google';
+import { Be_Vietnam_Pro, Noto_Color_Emoji } from 'next/font/google';
 import { AuthProvider } from '@/lib/auth';
 import { CartProvider } from '@/lib/cart';
 import { WishlistProvider } from '@/lib/wishlist';
@@ -18,6 +18,10 @@ const font = Be_Vietnam_Pro({
   variable: '--font-be-vietnam',
   display: 'swap',
 });
+
+// Emoji giống nhau trên mọi máy (iPhone, Android, Samsung, Windows) thay vì bộ hình riêng của từng hãng; máy cũ không hiện ô trống.
+// Font chia nhiều file theo unicode-range → máy khách chỉ tải phần chứa biểu tượng có trên trang. Đứng sau Be Vietnam Pro trong --font-sans.
+const emoji = Noto_Color_Emoji({ weight: '400', subsets: ['emoji'], variable: '--font-emoji', display: 'swap', preload: false, adjustFontFallback: false });
 
 export const metadata: Metadata = {
   // canonical / ảnh chia sẻ ghi đường dẫn tương đối ("/san-pham/…") → Next ghép thành URL tuyệt đối trên tên miền chính.
@@ -45,7 +49,7 @@ export const viewport: Viewport = { themeColor: '#0f4a24', colorScheme: 'light' 
 /** Khung gốc dùng chung cho website khách, admin và app nhân viên. */
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="vi" className={font.variable}>
+    <html lang="vi" className={`${font.variable} ${emoji.variable}`}>
       <body>
         <AuthProvider>
           <ShippingProvider>

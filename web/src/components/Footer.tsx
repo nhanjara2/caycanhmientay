@@ -25,10 +25,12 @@ const HOTLINES: [string, string, string?][] = [
   ['Góp ý, khiếu nại, bảo hành', SUPPORT_PHONE, 'Trâm'],
 ];
 // Logo trong public/images/pay/
-const PAY: [string, string][] = [
-  ['Visa', 'visa.svg'], ['Mastercard', 'mastercard.svg'], ['JCB', 'jcb.svg'], ['Napas', 'napas.png'],
-  ['VietQR', 'vietqr.svg'], ['MoMo', 'momo.svg'], ['ZaloPay', 'zalopay.svg'], ['VNPay', 'vnpay.svg'],
-  ['Apple Pay', 'applepay.svg'],
+const PAY: [string, string, string][] = [
+  ['Visa', 'visa.svg', 'https://www.visa.com.vn'], ['Mastercard', 'mastercard.svg', 'https://www.mastercard.com.vn'],
+  ['JCB', 'jcb.svg', 'https://www.global.jcb'], ['Napas', 'napas.png', 'https://napas.com.vn'],
+  ['VietQR', 'vietqr.svg', 'https://vietqr.net'], ['MoMo', 'momo.svg', 'https://www.momo.vn'],
+  ['ZaloPay', 'zalopay.svg', 'https://zalopay.vn'], ['VNPay', 'vnpay.svg', 'https://vnpay.vn'],
+  ['Apple Pay', 'applepay.svg', 'https://www.apple.com/vn/apple-pay/'],
 ];
 
 export async function Footer() {
@@ -107,8 +109,8 @@ export async function Footer() {
           </div>
           <h4 style={{ marginTop: 8 }}>HỖ TRỢ THANH TOÁN</h4>
           <div className="vx-paylogos">
-            {PAY.map(([name, file]) => (
-              <span key={name} className="vx-payl" title={name}><img src={`/images/pay/${file}`} alt={name} loading="lazy" /></span>
+            {PAY.map(([name, file, url]) => (
+              <a key={name} className="vx-payl" href={url} target="_blank" rel="noopener noreferrer" title={`Tìm hiểu ${name}`} aria-label={`Trang chủ ${name} (mở tab mới)`}><img src={`/images/pay/${file}`} alt="" loading="lazy" /></a>
             ))}
           </div>
         </div>

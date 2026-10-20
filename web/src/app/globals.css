@@ -6,7 +6,7 @@
  */
 
 :root {
-  --font-sans: var(--font-be-vietnam), "Be Vietnam Pro", "Segoe UI", Roboto, Arial, sans-serif;
+  --font-sans: var(--font-be-vietnam), "Be Vietnam Pro", var(--font-emoji), "Segoe UI", Roboto, Arial, sans-serif;
   --header-h: 96px;
 }
 
@@ -2900,9 +2900,10 @@ body[data-buybar] .app-site .app-fab { bottom: 6.25rem; }
     .app-site .vx-pcard__media > img, .app-site .vx-thumbimg > img { transition: transform .45s ease; }
     .app-site .vx-pcard:hover .vx-pcard__media > img, .app-site a:hover > .vx-thumbimg > img, .app-site a:hover .vx-thumbimg > img { transform: scale(1.06); }
     .app-site .vx-thumbimg { overflow: hidden; }
-    .app-site .vx-dtile, .app-site .pm-voucher, .app-site .dn-cap, .app-site .vx-social a, .app-site .app-askai a { transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, background-color .15s ease; }
+    .app-site .vx-dtile, .app-site .pm-voucher, .app-site .dn-cap, .app-site .vx-social a, .app-site .app-askai a, .app-site .vx-payl { transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, background-color .15s ease; }
     .app-site .vx-dtile:hover, .app-site .pm-voucher:hover, .app-site .dn-cap:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(12, 24, 16, .1); }
-    .app-site .vx-social a:hover, .app-site .app-askai a:hover { transform: translateY(-3px); }
+    .app-site .vx-social a:hover, .app-site .app-askai a:hover, .app-site .vx-payl:hover { transform: translateY(-3px); }
+    .app-site .vx-payl:hover { box-shadow: 0 4px 10px rgb(0 0 0 / .12); }
   }
 
   /* 4. Khối hiện dần khi cuộn tới (components/ScrollReveal.tsx gắn / gỡ data-rv). Đặt SAU mục 3 để thắng transition của thẻ */
