@@ -40,7 +40,8 @@ export type FeedItem = { p: Product; u: Unit };
 export async function merchantItems(): Promise<FeedItem[]> {
   const [products, excluded] = await Promise.all([allProducts(), sitemapExcluded()]);
   return products
-    .filter((p) => !excluded.has(`/san-pham/${p.slug}`))
+    // Google bắt buộc image_link: sản phẩm chưa có ảnh không gửi (Merchant Center báo lỗi "thiếu hình ảnh"), tải ảnh xong tự có lại.
+    .filter((p) => !excluded.has(`/san-pham/${p.slug}`) && (p.images?.length ?? 0) > 0)
     .flatMap((p) => p.options.filter((u) => !isQuote(u)).map((u) => ({ p, u })));
 }
 
@@ -51,7 +52,10 @@ function itemXml({ p, u }: FeedItem, ctx: { catName: (p: Product) => string; shi
   const tail = seo.startsWith(p.name) ? seo.slice(p.name.length).replace(/^[\s,–-]+/, '') : seo;
   const title = clipText([many ? `${p.name} – ${u.label}` : p.name, tail].filter(Boolean).join(' – '), 150);
   const description = clipText([p.lead, ...p.specs.filter(([, v]) => v.trim()).slice(0, 8).map(([k, v]) => `${k}: ${v}`)].join(' '), 5000);
-  const images = (p.images ?? []).map(absoluteUrl);
+  // Ảnh riêng của quy cách (màu hoa…) lên đầu làm ảnh chính của dòng đó.
+  const all = p.images ?? [];
+  const own = u.image != null && all[u.image] ? u.image : 0;
+  const images = [all[own], ...all.filter((_, i) => i !== own)].map(absoluteUrl);
   const fee = ctx.ship(p, u);
   return [
     '<item>',
@@ -75,7 +79,7 @@ function itemXml({ p, u }: FeedItem, ctx: { catName: (p: Product) => string; shi
   ].join('');
 }
 
-/** Toàn bộ file XML. Sản phẩm chưa có ảnh vẫn ghi (Merchant Center báo "thiếu ảnh" ngay trong tài khoản để chủ shop biết). */
+/** Toàn bộ file XML. Sản phẩm chưa có ảnh không có trong file (xem merchantItems). */
 export async function merchantFeedXml() {
   const [items, categories, shipping] = await Promise.all([merchantItems(), getCategories(), getShippingConfig()]);
   const catName = (p: Product) => { const l = categoryLabel(categories, p.category, p.sub); return [l.cat, l.sub].filter(Boolean).join(' > '); };
