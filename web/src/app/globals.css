@@ -3082,7 +3082,8 @@ body[data-buybar] .app-site .app-fab { bottom: 6.25rem; }
 .app-gcc { --gcc-w: 76rem; --gcc-pad: max(16px, calc((100% - var(--gcc-w)) / 2)); background: var(--surface-sunken); }
 .app-gcc .vx-blogtop { background: var(--surface); padding: 12px var(--gcc-pad) 24px; }
 .app-gcc .vx-blogtop h1 { font-size: 1.75rem; margin: 12px 0; }
-.app-gcc .app-chiprow { flex-wrap: wrap; gap: 8px; }
+.app-gcc .app-chiprow { flex-wrap: nowrap; gap: 8px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; padding-bottom: 4px; }
+.app-gcc .app-chiprow .vx-chip { flex: none; white-space: nowrap; }
 .app-gcc .app-chiprow .vx-chip { border-radius: 999px; }
 .app-gcc .vx-hero { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); gap: 16px; align-items: start; margin-top: 20px; }
 .app-gcc .vx-hero__main { display: flex; flex-direction: column; gap: 12px; text-decoration: none; }
