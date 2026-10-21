@@ -11,7 +11,11 @@ import { DeliverToButton } from './DeliverTo';
 import { NotificationBell } from './NotificationBell';
 import { Icon } from './Icon';
 
-/** Từ khóa chạy ngang dưới ô tìm kiếm (máy tính). Chọn tay theo cây đang bán — web chưa ghi lại lượt tìm của khách. */
+/**
+ * Từ khóa chạy ngang dưới ô tìm kiếm (máy tính): từ khóa khách tìm thật (`trending`, server/monitor.ts trendingSearches)
+ * đứng trước, còn chỗ thì lấy danh sách chọn tay này (cây đang bán) cho đủ TRENDING_COUNT.
+ */
+const TRENDING_COUNT = 16;
 const TRENDING = [
   'Vạn lộc', 'Lưỡi hổ', 'Phú quý', 'Ngân hậu', 'Môn quan âm', 'Môn melo', 'Dạ lan thanh', 'Đuôi công', 'Đế vương',
   'Bạch mã hoàng tử', 'Vạn niên thanh', 'Ngọc ngân', 'Dương xỉ', 'Tùng thơm', 'Giữ tiền', 'Tắc cẩm thạch',
@@ -90,7 +94,21 @@ function SearchWithParams(props: SearchBoxProps) {
 }
 
 /** Hai bản danh sách nối nhau, CSS kéo đúng một nửa rồi lặp nên chạy liền mạch; rê chuột / Tab vào thì dừng. */
-function TrendingSearches() {
+function trendingList(real: string[]) {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const k of [...real.map((q) => q.charAt(0).toLocaleUpperCase('vi') + q.slice(1)), ...TRENDING]) {
+    const key = k.toLocaleLowerCase('vi');
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(k);
+    if (out.length >= TRENDING_COUNT) break;
+  }
+  return out;
+}
+
+function TrendingSearches({ real }: { real: string[] }) {
+  const list = trendingList(real);
   return (
     <nav className="app-trend" aria-label="Xu hướng tìm kiếm">
       <span className="app-trend__label">
@@ -100,7 +118,7 @@ function TrendingSearches() {
       <div className="app-trend__view" onBlur={(e) => { e.currentTarget.scrollLeft = 0; }}>
         <ul className="app-trend__track">
           {[0, 1].map((copy) =>
-            TRENDING.map((k) => (
+            list.map((k) => (
               <li key={`${copy}-${k}`} aria-hidden={copy === 1 || undefined}>
                 <Link href={`/tim-kiem?q=${encodeURIComponent(k)}`} tabIndex={copy === 1 ? -1 : undefined}>
                   <Icon name="trend" />
@@ -137,7 +155,7 @@ function SearchForm({ initial, placeholder, below }: SearchBoxProps & { initial:
 }
 
 /** `nav`: thanh danh mục ngang (CategoryNav) — SiteChrome đọc danh mục trên server rồi truyền vào. */
-export function Header({ nav }: { nav?: ReactNode }) {
+export function Header({ nav, trending = [] }: { nav?: ReactNode; trending?: string[] }) {
   const { totals, ready } = useCart();
   const count = ready ? totals.count : 0;
   const menuOpen = useSidebarOpen();
@@ -161,7 +179,7 @@ export function Header({ nav }: { nav?: ReactNode }) {
           {/* Hai nửa tên: máy tính / tablet nằm một dòng, điện thoại xếp 2 dòng cạnh logo (kiểu Long Châu) */}
           <span className="app-logo-text"><span>Cây Cảnh</span> <span>Miền Tây</span></span>
         </Link>
-        <SearchBox below={<TrendingSearches />} />
+        <SearchBox below={<TrendingSearches real={trending} />} />
         <DeliverToButton />
         <div className="vx-hactions">
           <NotificationBell />

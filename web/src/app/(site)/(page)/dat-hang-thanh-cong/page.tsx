@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { Icon } from '@/components/Icon';
-import { formatPhone, PICKUP_PLACE, SALES_PHONE, ZALO_URL } from '@/lib/contact';
+import { CopyVoucherCode } from '@/components/CopyVoucherCode';
+import { BANK, formatPhone, PICKUP_PLACE, SALES_PHONE, vietQrUrl, ZALO_URL } from '@/lib/contact';
 import { money } from '@/lib/format';
 import { PAY_LABEL, payStatus } from '@/lib/order-labels';
 import { getCurrentUser } from '@/server/auth';
@@ -35,7 +36,7 @@ export default async function OrderSuccessPage({ searchParams }: Props) {
   }
 
   const hasPlant = order.items.some((i) => i.ship === 'plant');
-  const deposit = order.paymentMethod === 'deposit' && !order.paid;
+  const deposit = order.paymentMethod === 'deposit' && !order.paid && order.status !== 'cancelled';
 
   return (
     <div className="os-page">
@@ -78,15 +79,20 @@ export default async function OrderSuccessPage({ searchParams }: Props) {
               : 'Lần sau đăng nhập trước khi đặt để theo dõi đơn và tích điểm.'}
           </span>
         </div>
-        {deposit && (
-          <div className="os-box" style={{ gridColumn: '1 / -1' }}>
-            <h3><Icon name="phone" />Bước tiếp theo: đặt cọc</h3>
-            <ol style={{ margin: 0, paddingLeft: '1.25rem', display: 'grid', gap: 4, fontSize: '0.875rem', lineHeight: 1.5 }}>
-              <li>Shop gọi hoặc nhắn Zalo cho bạn để xác nhận cây, giá và thời gian giao.</li>
-              <li>Shop gửi thông tin chuyển khoản và mức cọc. <b>Chỉ chuyển tiền theo thông tin do shop gửi.</b></li>
-              <li>Shop báo khi đã nhận cọc và bắt đầu chuẩn bị cây.</li>
-            </ol>
-            <span style={{ color: 'var(--ink-muted)' }}>Muốn nhanh hơn, bạn nhắn Zalo hoặc gọi shop kèm mã đơn <b style={{ color: 'var(--ink)' }}>{order.code}</b>.</span>
+        {deposit && order.total > 0 && (
+          <div className="os-box os-bank" style={{ gridColumn: '1 / -1' }}>
+            <h3><Icon name="card" />Chuyển khoản trước (không bắt buộc)</h3>
+            <div className="os-bank__row">
+              {/* eslint-disable-next-line @next/next/no-img-element -- ảnh QR từ img.vietqr.io, không qua tối ưu ảnh của Next */}
+              <img className="os-bank__qr" src={vietQrUrl(order.total, order.code)} alt={`Mã QR chuyển khoản ${money(order.total)} cho đơn ${order.code}`} width={270} height={320} />
+              <dl className="os-bank__info">
+                <dt>Ngân hàng</dt><dd>{BANK.name}</dd>
+                <dt>Số tài khoản</dt><dd><b>{BANK.account}</b> <CopyVoucherCode code={BANK.account} /></dd>
+                <dt>Số tiền</dt><dd><b>{money(order.total)}</b></dd>
+                <dt>Nội dung</dt><dd><b>{order.code}</b> <CopyVoucherCode code={order.code} /></dd>
+              </dl>
+            </div>
+            <span style={{ color: 'var(--ink-muted)' }}>Shop vẫn gọi xác nhận đơn dù bạn chưa chuyển khoản.</span>
             <div className="os-actions" style={{ flexWrap: 'wrap' }}>
               <a className="vx-btn vx-btn--primary" href={ZALO_URL} target="_blank" rel="noreferrer">Nhắn Zalo cho shop</a>
               <a className="vx-btn vx-btn--outline" href={`tel:${SALES_PHONE}`}>Gọi {formatPhone(SALES_PHONE)}</a>

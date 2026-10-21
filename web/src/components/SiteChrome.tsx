@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { menuCategories } from '@/server/categories';
+import { trendingSearches } from '@/server/monitor';
 import { Analytics } from './Analytics';
 import { RumVitals } from './RumVitals';
 import { AuthModal } from './AuthModal';
@@ -16,14 +17,14 @@ import { ScrollReveal } from './ScrollReveal';
 import { WebVitals } from './WebVitals';
 
 export async function SiteChrome({ children }: { children: ReactNode }) {
-  const categories = await menuCategories();
+  const [categories, trending] = await Promise.all([menuCategories(), trendingSearches()]);
   // .app-site: gốc cho các chỉnh "dễ dùng trên điện thoại" (globals.css, khối cuối) — chỉ áp cho trang khách, không đụng admin / POS / app nhân viên.
   return (
     <div className="app-site">
       {/* Điểm Tab đầu tiên: người dùng bàn phím / trình đọc màn hình nhảy qua đầu trang + menu (mục 12 checklist SEO) */}
       <a href="#noi-dung" className="app-skip">Bỏ qua, tới nội dung chính</a>
       <NavProgress />
-      <Header nav={<CategoryNav categories={categories} />} />
+      <Header nav={<CategoryNav categories={categories} />} trending={trending} />
       {children}
       <Footer />
       <ContactFab />

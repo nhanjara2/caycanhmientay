@@ -16,7 +16,7 @@ import { notifyEvent, orderOwner } from './notify';
 import { db, schema } from './db';
 import { PAYMENT_METHODS, type OrderStatus } from './db/schema';
 import { getShippingConfig, usedSlots } from './shipping';
-import { checkVoucher } from './vouchers';
+import { checkVoucher, reviewReward } from './vouchers';
 import { guardOrder, orderFloor } from './margin-guard';
 
 const { orders, orderItems, orderEvents, productOptions } = schema;
@@ -408,6 +408,11 @@ export async function setOrderStatus(code: string, next: OrderStatus, actor: str
       await tx.update(schema.users).set({ points: sql`${schema.users.points} + ${Math.floor(o.total / 10000)}` }).where(eq(schema.users.id, owner));
     }
     if (owner) await notifyEvent(tx, owner, STATUS_EVENT[next], { ma_don: o.code }, `/tai-khoan/don-hang/${o.code}`);
+    // Mời đánh giá kèm mã quà (khách chưa dùng mã) — đơn bán, không phải đơn đổi cây bảo hành.
+    if (next === 'delivered' && owner && o.kind === 'sale') {
+      const gift = await reviewReward(owner);
+      if (gift) await notifyEvent(tx, owner, 'review_invite', { ma_don: o.code, ma_voucher: gift.code, noi_dung_qua: gift.text }, `/tai-khoan/don-hang/${o.code}`);
+    }
     return { ok: true as const };
   });
 }

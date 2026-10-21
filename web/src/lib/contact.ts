@@ -1,6 +1,11 @@
 /** Kênh liên hệ của shop — dùng chung cho chân trang, nút liên hệ nổi, trang chủ, trang sản phẩm. */
 export const SALES_PHONE = '0703005001';
 export const ZALO_URL = `https://zalo.me/${SALES_PHONE}`;
+/** Tài khoản nhận chuyển khoản (trang đặt hàng thành công). bin = mã ngân hàng theo chuẩn VietQR (TPBank 970423). */
+export const BANK = { name: 'TPBank – Ngân hàng Tiên Phong', bin: '970423', account: '0703005001' };
+/** Ảnh mã VietQR (img.vietqr.io, miễn phí) — quét bằng app ngân hàng bất kỳ, điền sẵn số tiền + nội dung. */
+export const vietQrUrl = (amount: number, info: string) =>
+  `https://img.vietqr.io/image/${BANK.bin}-${BANK.account}-compact2.svg?amount=${Math.max(0, Math.round(amount))}&addInfo=${encodeURIComponent(info)}`;
 export const FACEBOOK_URL = 'https://facebook.com/caycanhmientayy';
 export const YOUTUBE_URL = 'https://www.youtube.com/channel/UCLnO5s6HZWpud5z0S-Byqnw';
 /** Tên kênh của shop, ghi cạnh logo trên thẻ video ngắn. */

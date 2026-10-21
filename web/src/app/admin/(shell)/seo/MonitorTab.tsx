@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { botLabel, ERROR_KINDS, pageGroupLabel, VITALS, type VitalName } from '@/lib/monitor';
 import { seoTime } from '@/lib/seo-cms';
-import { crawlStats, listErrors, listNotFound, vitalsStats, type VitalCell } from '@/server/monitor';
+import { crawlStats, listErrors, listNotFound, topSearches, vitalsStats, type VitalCell } from '@/server/monitor';
 import { pruneMonitor } from '@/server/monitor-store';
 
 const muted = { color: 'var(--ink-muted)' } as const;
@@ -14,7 +14,7 @@ const fmt = (m: VitalName, v: number) => (m === 'CLS' ? v.toFixed(2) : `${(v / 1
  */
 export async function MonitorTab() {
   await pruneMonitor();
-  const [nf, errs, crawl, vitals] = await Promise.all([listNotFound(30, 100), listErrors(14, 100), crawlStats(), vitalsStats(28)]);
+  const [nf, errs, crawl, vitals, searches] = await Promise.all([listNotFound(30, 100), listErrors(14, 100), crawlStats(), vitalsStats(28), topSearches(30, 50)]);
   const dayAgo = Date.now() - 86_400_000;
   const nf24 = nf.filter((n) => n.lastSeen.getTime() > dayAgo).length;
   const err24 = errs.filter((e) => e.lastSeen.getTime() > dayAgo);
@@ -44,6 +44,28 @@ export async function MonitorTab() {
         <div className="ad-kpi"><span>Googlebot thật (7 ngày)</span><b>{gReal}</b><small>{gFake ? `${gFake} lượt xưng Googlebot nhưng không phải` : 'Không thấy Googlebot giả'}</small></div>
         <div className="ad-kpi"><span>Google tải URL có tham số</span><b>{allHits ? Math.round((paramHits / allHits) * 100) : 0}%</b><small>{paramHits > allHits * 0.3 ? 'Cao — xem bộ lọc / tìm kiếm' : 'Bình thường'}</small></div>
       </div>
+
+      <section>
+        <h2 className="ad-card__h" style={{ padding: 0, marginBottom: 6 }}>Khách tìm gì (30 ngày)</h2>
+        <p className="hint" style={{ margin: '0 0 8px', ...muted }}>Từ khóa khách gõ ở ô tìm kiếm. Dòng đỏ = không tìm ra sản phẩm nào: shop chưa bán, hoặc nên thêm tên gọi đó vào ô &ldquo;Tên gọi khác&rdquo; của sản phẩm. Từ khóa được tìm từ 2 ngày trở lên tự lên dải &ldquo;Xu hướng tìm kiếm&rdquo; ở đầu trang (cập nhật mỗi giờ).</p>
+        <div className="ad-tablewrap">
+          <table className="ad-table app-mtable">
+            <thead><tr><th>Từ khóa</th><th className="num">Lượt</th><th className="num">Số ngày</th><th className="num">Sản phẩm tìm ra</th><th>Gần nhất</th></tr></thead>
+            <tbody>
+              {searches.map((s) => (
+                <tr key={s.q}>
+                  <td><Link href={`/tim-kiem?q=${encodeURIComponent(s.q)}`} target="_blank" style={{ color: 'var(--primary)', fontWeight: 600 }}>{s.q}</Link></td>
+                  <td className="num" data-label="Lượt" data-m="third">{s.hits}</td>
+                  <td className="num" data-label="Số ngày" data-m="third">{s.days}</td>
+                  <td className="num" data-label="Tìm ra" data-m="third">{s.results ? s.results : <b style={{ color: 'var(--danger, #c62828)' }}>0 — chưa có</b>}</td>
+                  <td data-label="Gần nhất">{s.lastDay.split('-').reverse().join('/')}</td>
+                </tr>
+              ))}
+              {!searches.length && empty(5, 'Chưa có lượt tìm nào trong 30 ngày.')}
+            </tbody>
+          </table>
+        </div>
+      </section>
 
       <section>
         <h2 className="ad-card__h" style={{ padding: 0, marginBottom: 6 }}>Trang không tìm thấy (404)</h2>

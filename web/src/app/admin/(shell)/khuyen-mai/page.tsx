@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { VoucherActiveToggle } from '@/components/admin/VoucherActiveToggle';
 import { money } from '@/lib/format';
 import { fmtDate } from '@/lib/order-labels';
-import { VOUCHER_STATUS_LABEL, voucherStatus, voucherValueText, WELCOME_CODE, WELCOME_DAYS } from '@/lib/voucher-labels';
+import { REVIEW_CODE, VOUCHER_STATUS_LABEL, voucherStatus, voucherValueText, WELCOME_CODE, WELCOME_DAYS } from '@/lib/voucher-labels';
 import { requireAccess } from '@/server/auth';
 import { listVouchers, scopeTexts } from '@/server/vouchers';
 
@@ -38,6 +38,7 @@ export default async function AdminVouchersPage() {
                       {isAdmin ? <Link className="code app-rowlink" href={`/admin/khuyen-mai/${v.id}`}>{v.code}</Link> : <b className="code">{v.code}</b>}
                       <small>{v.kind === 'ship' && <span className="vx-badge vx-badge--info">Miễn phí giao</span>} {v.label}</small>
                       {v.code === WELCOME_CODE && <small><span className="vx-badge vx-badge--info">Quà tài khoản mới</span> tự tặng khi đăng nhập lần đầu, dùng trong {WELCOME_DAYS} ngày</small>}
+                      {v.code === REVIEW_CODE && <small><span className="vx-badge vx-badge--info">Quà đánh giá</span> chỉ khách đã đánh giá cây đã mua dùng được</small>}
                     </td>
                     <td data-label="Giá trị">{voucherValueText(v, money)}</td>
                     <td data-label="Điều kiện">{v.minOrder > 0 ? `Đơn từ ${money(v.minOrder)}` : 'Không điều kiện'}<small>Tối đa {v.perCustomerLimit} lượt/khách</small><small>{scopes.get(v.code) ? `Áp dụng: ${scopes.get(v.code)}` : 'Mọi sản phẩm'}</small></td>

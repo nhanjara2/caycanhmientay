@@ -35,6 +35,13 @@ body:has(.app-site) { --surface-page: #fff; }
 .app-site .vx-receipt { border: 1px solid var(--border); border-radius: var(--radius-lg); margin-bottom: 0; }
 .app-site .vx-receipt::after { content: none; }
 .app-site .os-next { padding: 0; background: none; }
+/* Ô chuyển khoản trang đặt thành công: mã VietQR + thông tin tài khoản; điện thoại QR nằm trên, chữ dưới. */
+.os-bank__row { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.os-bank__qr { width: 15rem; max-width: 100%; height: auto; aspect-ratio: 540 / 640; border: 1px solid var(--border); border-radius: var(--radius-md); background: #fff; }
+.os-bank__info { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 6px 12px; margin: 0; font-size: 0.9375rem; line-height: 1.4; flex: 1 1 14rem; }
+.os-bank__info dt { color: var(--ink-muted); }
+.os-bank__info dd { margin: 0; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; overflow-wrap: anywhere; }
+@media (max-width: 47.9375em) { .os-bank__row { justify-content: center; } }
 /* Dòng sản phẩm trong đơn hàng trên điện thoại: bốn cột (ảnh | tên | giá | số lượng) bóp tên còn một chữ mỗi dòng — tên rộng hết hàng trên, số lượng + giá nằm hàng dưới. */
 @media (max-width: 47.9375em) {
   .app-site .vx-oline { grid-template-columns: 56px minmax(0, 1fr) auto; align-items: start; }
@@ -373,6 +380,9 @@ h2.vx-flash__title { margin: 0; }
 .pi-tile figcaption .pi-primary { width: 100%; font-size: 0.75rem; font-weight: 600; color: var(--primary); }
 .pi-tile figcaption button:disabled { opacity: .5; cursor: default; }
 .pi-alts { margin-top: var(--space-2); }
+.pi-mark { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-top: var(--space-2); font-size: 0.875rem; cursor: pointer; }
+.pi-mark input { width: 18px; height: 18px; margin: 0; }
+.pi-mark small { flex-basis: 100%; color: var(--ink-muted); font-size: 0.8125rem; }
 .pi-alts > summary { cursor: pointer; font-weight: 600; color: var(--primary); }
 .pi-alt { display: grid; grid-template-columns: 40px 5.5rem minmax(0, 1fr); align-items: center; gap: var(--space-2); margin-top: var(--space-2); }
 .pi-alt img { width: 40px; height: 40px; object-fit: cover; border-radius: 4px; }

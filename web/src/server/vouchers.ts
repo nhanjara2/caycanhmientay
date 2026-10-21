@@ -3,7 +3,7 @@ import { and, desc, eq, inArray, ne, or, sql } from 'drizzle-orm';
 import * as z from 'zod';
 import { money } from '@/lib/format';
 import { fmtDate } from '@/lib/order-labels';
-import { discountOf, usedPct, voucherStatus, WELCOME_CODE, WELCOME_DAYS, welcomeText, type VoucherKind, type WelcomeOffer, type WelcomeProgram } from '@/lib/voucher-labels';
+import { discountOf, REVIEW_CODE, usedPct, voucherStatus, WELCOME_CODE, WELCOME_DAYS, welcomeText, type VoucherKind, type WelcomeOffer, type WelcomeProgram } from '@/lib/voucher-labels';
 import type { Totals } from '@/lib/pricing';
 import { isScoped, voucherAmount, type VoucherScope } from '@/lib/voucher-scope';
 import { getCategories } from './categories';
@@ -11,7 +11,7 @@ import { db, schema } from './db';
 import type { Tx } from './inventory';
 import { notifyEvent } from './notify';
 
-const { vouchers, orders, users, products } = schema;
+const { vouchers, orders, users, products, reviews } = schema;
 
 export type Voucher = typeof vouchers.$inferSelect;
 
@@ -176,6 +176,12 @@ export async function checkVoucher(
     const [u] = await executor.select({ createdAt: users.createdAt }).from(users).where(eq(users.id, ctx.userId));
     if (!u || welcomeEnds(u.createdAt) < new Date()) return { ok: false, error: `Mã chỉ dùng trong ${WELCOME_DAYS} ngày đầu kể từ khi tạo tài khoản` };
   }
+  if (v.code === REVIEW_CODE) {
+    if (!ctx.userId) return { ok: false, error: 'Mã tặng khách đã đánh giá — vui lòng đăng nhập để dùng' };
+    const [r] = await executor.select({ id: reviews.id }).from(reviews)
+      .where(and(eq(reviews.userId, ctx.userId), eq(reviews.verified, true), ne(reviews.status, 'hidden'))).limit(1);
+    if (!r) return { ok: false, error: 'Mã tặng khách đã đánh giá cây đã mua' };
+  }
   const amount = ctx.totals ? voucherAmount(v.scope, ctx.totals) : ctx.subtotal;
   if (isScoped(v.scope) && amount <= 0) return { ok: false, error: 'Mã không áp dụng cho sản phẩm trong đơn này' };
   if (amount < v.minOrder) return { ok: false, error: isScoped(v.scope) ? `Sản phẩm thuộc phạm vi mã cần từ ${v.minOrder.toLocaleString('vi-VN')}đ để dùng mã này` : `Đơn cần từ ${v.minOrder.toLocaleString('vi-VN')}đ để dùng mã này` };
@@ -211,8 +217,8 @@ const countUses = (where: ReturnType<typeof and>) =>
   db.select({ n: sql<number>`count(*)`.mapWith(Number) }).from(orders).where(where).then(([r]) => r.n);
 
 /** Mã quà đang chạy: có mã, đang bật, trong thời gian áp dụng, chưa hết tổng lượt. null = không có quà. */
-async function runningWelcome() {
-  const [v] = await db.select().from(vouchers).where(eq(vouchers.code, WELCOME_CODE));
+async function runningWelcome(code = WELCOME_CODE) {
+  const [v] = await db.select().from(vouchers).where(eq(vouchers.code, code));
   if (!v || voucherStatus(v) !== 'active') return null;
   if (v.usageLimit != null && await countUses(and(eq(orders.voucherCode, v.code), ne(orders.status, 'cancelled'))) >= v.usageLimit) return null;
   return v;
@@ -250,4 +256,19 @@ export async function announceWelcome(userId: number): Promise<WelcomeOffer | nu
   const what = welcomeText(offer, money);
   await notifyEvent(db, userId, 'welcome_gift', { ma_voucher: offer.code, noi_dung_qua: `${what.charAt(0).toLowerCase()}${what.slice(1)}`, han_dung: fmtDate(new Date(offer.expiresAt)) }, '/khuyen-mai');
   return offer;
+}
+
+// ---- Quà đánh giá (REVIEW_CODE) ---------------------------------------------------------------
+
+/**
+ * Mã quà đánh giá đang chạy mà tài khoản này còn lượt dùng: { code, text "giảm 20.000đ cho đơn từ 400.000đ" }.
+ * null = mã tắt / hết hạn / hết lượt, hoặc khách đã dùng.
+ */
+export async function reviewReward(userId: number) {
+  const v = await runningWelcome(REVIEW_CODE);
+  if (!v) return null;
+  const used = await countUses(and(eq(orders.voucherCode, v.code), ne(orders.status, 'cancelled'), eq(orders.userId, userId)));
+  if (used >= v.perCustomerLimit) return null;
+  const what = welcomeText(toProgram(v), money);
+  return { code: v.code, text: `${what.charAt(0).toLowerCase()}${what.slice(1)}` };
 }

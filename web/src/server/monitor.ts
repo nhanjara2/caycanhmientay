@@ -104,3 +104,29 @@ export async function monitorHealth(hours = 6) {
     googlebot: crawl,
   };
 }
+
+export type SearchRow = { q: string; hits: number; days: number; results: number; lastDay: string };
+
+/** Từ khóa khách tìm trong `days` ngày qua, nhiều lượt trước; `results` = số sản phẩm tìm ra lần gần nhất (0 = shop chưa có). */
+export async function topSearches(days = 30, limit = 50): Promise<SearchRow[]> {
+  const r = await rows<{ q: string; hits: number; days: number; results: number; last_day: string }>(sql`
+    SELECT q, sum(hits) AS hits, count(*) AS days, (array_agg(results ORDER BY day DESC))[1] AS results, max(day) AS last_day
+    FROM search_queries WHERE day >= ${daysAgo(days - 1)}
+    GROUP BY q ORDER BY sum(hits) DESC, max(day) DESC LIMIT ${limit}`);
+  return r.map((x) => ({ q: x.q, hits: Number(x.hits), days: Number(x.days), results: Number(x.results), lastDay: x.last_day }));
+}
+
+/**
+ * Từ khóa cho dải "Xu hướng tìm kiếm" ở đầu trang: tìm ra sản phẩm, được tìm ≥ 2 ngày khác nhau trong 30 ngày (một người
+ * gõ đi gõ lại không thành xu hướng). Nhớ trong bộ nhớ 1 giờ để mỗi lượt xem trang không phải đọc database. Lỗi → [].
+ */
+const g = globalThis as unknown as { __ccmtTrending?: { at: number; list: string[] } };
+export async function trendingSearches(limit = 16): Promise<string[]> {
+  if (g.__ccmtTrending && Date.now() - g.__ccmtTrending.at < 3_600_000) return g.__ccmtTrending.list;
+  let list: string[] = [];
+  try {
+    list = (await topSearches(30, 60)).filter((s) => s.results > 0 && s.days >= 2).slice(0, limit).map((s) => s.q);
+  } catch { /* database lỗi: dùng danh sách chọn tay */ }
+  g.__ccmtTrending = { at: Date.now(), list };
+  return list;
+}

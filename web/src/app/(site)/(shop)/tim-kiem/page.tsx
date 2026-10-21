@@ -1,9 +1,13 @@
 import type { Metadata } from 'next';
+import { headers } from 'next/headers';
+import { after } from 'next/server';
 import Link from 'next/link';
 import { Breadcrumb, EmptyState } from '@/components/Blocks';
 import { ProductGrid } from '@/components/ProductCard';
 import { findCategory } from '@/lib/catalog';
+import { botOf } from '@/lib/monitor';
 import { allProducts, searchProducts } from '@/server/catalog';
+import { recordSearch } from '@/server/monitor-store';
 import { getCategories } from '@/server/categories';
 import { sortProducts } from '@/lib/sort';
 import { one, redirectIfNotCanonical, type SearchParams } from '@/lib/url-params';
@@ -46,6 +50,10 @@ export default async function SearchPage({ searchParams }: Props) {
   const nhom = findCategory(await getCategories(), one(sp.nhom) ?? '');
   redirectIfNotCanonical('/tim-kiem', sp, [['q', q], ['nhom', q ? nhom?.slug : undefined]]);
   const items = q ? await run(q, nhom?.slug) : [];
+  // Ghi từ khóa khách gõ (không tính 2 từ khóa nội bộ của menu, không tính máy tìm kiếm) — xem /admin/seo tab Theo dõi.
+  if (q && q !== 'giảm' && q !== 'bán chạy' && !nhom && !botOf((await headers()).get('user-agent'))) {
+    after(() => recordSearch(q, items.length));
+  }
 
   return (
     <>

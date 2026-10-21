@@ -13,6 +13,7 @@ import { mainImageOf } from './catalog';
 import { db, schema } from './db';
 import type { ReviewStatus } from './db/schema';
 import { notifyEvent } from './notify';
+import { reviewReward } from './vouchers';
 import { saveImage, type SavedImage } from './uploads';
 
 const {
@@ -159,7 +160,7 @@ export async function saveReview(user: SessionUser, input: ReviewInput, files: F
   const verified = await hasPurchased(user, input.slug);
 
   try {
-    return await db.transaction(async (tx) => {
+    const r = await db.transaction(async (tx) => {
       const [old] = await tx.select({ id: R.id, status: R.status }).from(R)
         .where(and(eq(R.userId, user.id), eq(R.productSlug, input.slug))).for('update');
 
@@ -181,8 +182,18 @@ export async function saveReview(user: SessionUser, input: ReviewInput, files: F
         [{ id }] = await tx.insert(R).values({ productSlug: input.slug, userId: user.id, ...values }).returning({ id: R.id });
       }
       if (imgs.length) await tx.insert(RP).values(imgs.map((img) => ({ reviewId: id, file: img.file, mime: img.mime, data: img.data })));
-      return { ok: true as const };
+      return { ok: true as const, first: !old };
     });
+    // Đánh giá đầu tiên cho sản phẩm đã mua → tặng mã quà đánh giá (chỉ lần đầu: tài khoản đúng 1 đánh giá "đã mua").
+    if (r.ok && r.first && verified) {
+      const [{ n }] = await db.select({ n: count() }).from(R).where(and(eq(R.userId, user.id), eq(R.verified, true)));
+      const gift = n === 1 ? await reviewReward(user.id) : null;
+      if (gift) {
+        const [prod] = await db.select({ name: products.name }).from(products).where(eq(products.slug, input.slug));
+        await notifyEvent(db, user.id, 'review_reward', { ten_san_pham: prod?.name ?? 'sản phẩm', ma_voucher: gift.code, noi_dung_qua: gift.text }, '/khuyen-mai');
+      }
+    }
+    return r.ok ? { ok: true } : r;
   } catch (e) {
     // Bấm gửi 2 lần cùng lúc: lần sau vướng khóa duy nhất (user, sản phẩm).
     if ((e as { code?: string }).code === '23505' || (e as { cause?: { code?: string } }).cause?.code === '23505') {

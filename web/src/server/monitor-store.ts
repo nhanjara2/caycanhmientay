@@ -52,6 +52,22 @@ export async function record404(e: { path: string; referrer: string; external: b
      ON CONFLICT (path) DO UPDATE SET hits = not_found_hits.hits + 1, bot_hits = not_found_hits.bot_hits + $2, last_seen = now()`, args);
 }
 
+/** Mỗi ngày tối đa từng này từ khóa khác nhau (chặn spam); quá thì chỉ cộng dồn từ khóa đã có. */
+const MAX_SEARCH_PER_DAY = 3000;
+
+/** Một lượt tìm trong shop: `q` đã làm sạch ở trang tìm kiếm, ở đây chỉ chuyển chữ thường. */
+export async function recordSearch(q: string, results: number) {
+  const key = q.toLocaleLowerCase('vi').slice(0, 100);
+  if (!key) return;
+  const day = vnDay();
+  const n = await run(`UPDATE search_queries SET hits = hits + 1, results = $3 WHERE day = $1 AND q = $2`, [day, key, results]);
+  if (n) return;
+  await run(
+    `INSERT INTO search_queries (day, q, hits, results) SELECT $1::text, $2::text, 1, $3::int
+     WHERE (SELECT count(*) FROM search_queries WHERE day = $1) < ${MAX_SEARCH_PER_DAY}
+     ON CONFLICT (day, q) DO UPDATE SET hits = search_queries.hits + 1, results = $3`, [day, key, results]);
+}
+
 export async function recordCrawl(e: { bot: string; verified: boolean; group: string }) {
   await run(
     `INSERT INTO crawl_hits (day, bot, verified, section, hits) VALUES ($1, $2, $3, $4, 1)
@@ -69,10 +85,11 @@ export async function recordVitals(rows: { group: string; device: string; metric
   }
 }
 
-/** Dọn số liệu cũ: lỗi > 30 ngày, 404 > 90 ngày, lượt máy tìm kiếm / tốc độ > 120 ngày. */
+/** Dọn số liệu cũ: lỗi > 30 ngày, 404 > 90 ngày, lượt máy tìm kiếm / tốc độ > 120 ngày, từ khóa tìm kiếm > 1 năm. */
 export async function pruneMonitor() {
   await run(`DELETE FROM error_events WHERE last_seen < now() - interval '30 days'`, []);
   await run(`DELETE FROM not_found_hits WHERE last_seen < now() - interval '90 days'`, []);
   await run(`DELETE FROM crawl_hits WHERE day < $1`, [vnDay(new Date(Date.now() - 120 * 86_400_000))]);
   await run(`DELETE FROM web_vitals WHERE day < $1`, [vnDay(new Date(Date.now() - 120 * 86_400_000))]);
+  await run(`DELETE FROM search_queries WHERE day < $1`, [vnDay(new Date(Date.now() - 365 * 86_400_000))]);
 }

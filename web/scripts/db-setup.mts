@@ -4,7 +4,7 @@ import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import pg from 'pg';
 import * as schema from '../src/server/db/schema';
-import { seedDiseaseImages, seedDiseasesIfEmpty, seedIfEmpty, seedPlantAttrs, seedPostsIfEmpty, seedWelcomeVoucher } from '../src/server/db/seed';
+import { seedDiseaseImages, seedDiseasesIfEmpty, seedIfEmpty, seedPlantAttrs, seedPostsIfEmpty, seedReviewVoucher, seedWelcomeVoucher } from '../src/server/db/seed';
 
 const url = process.env.DATABASE_URL;
 if (!url) {
@@ -21,4 +21,5 @@ if (await seedDiseasesIfEmpty(db)) console.log('[db] Đã nạp bài bệnh cây
 { const n = await seedDiseaseImages(db); if (n) console.log(`[db] Đã gắn ${n} ảnh minh họa triệu chứng bệnh cây`); }
 if (await seedPostsIfEmpty(db)) console.log('[db] Đã nạp bài Góc chăm cây mẫu');
 if (await seedWelcomeVoucher(db)) console.log('[db] Đã tạo mã quà tài khoản mới');
+if (await seedReviewVoucher(db)) console.log('[db] Đã tạo mã quà đánh giá');
 await client.end();

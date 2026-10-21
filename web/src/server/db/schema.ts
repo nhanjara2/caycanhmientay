@@ -1189,3 +1189,15 @@ export const webVitals = pgTable('web_vitals', {
   hits: integer('hits').notNull().default(0),
   total: doublePrecision('total').notNull().default(0),
 }, (t) => [primaryKey({ columns: [t.day, t.section, t.device, t.metric, t.rating] })]);
+
+/**
+ * Khách tìm gì trong ô tìm kiếm (/tim-kiem), gom theo ngày × từ khóa (chữ thường, gộp khoảng trắng) — để biết khách cần
+ * cây gì shop chưa bán, và để dải "Xu hướng tìm kiếm" dùng số thật. Không lưu IP / cookie / mã khách; máy tìm kiếm không tính.
+ */
+export const searchQueries = pgTable('search_queries', {
+  day: text('day').notNull(),
+  q: text('q').notNull(),
+  hits: integer('hits').notNull().default(0),
+  /** Số sản phẩm tìm ra ở lần tìm gần nhất (0 = shop chưa có hàng khớp). */
+  results: integer('results').notNull().default(0),
+}, (t) => [primaryKey({ columns: [t.day, t.q] })]);

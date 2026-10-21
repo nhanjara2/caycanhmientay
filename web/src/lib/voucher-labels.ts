@@ -98,6 +98,12 @@ export function voucherTiers(all: PublicVoucher[], amountOf: (v: PublicVoucher) 
 // nhưng chỉ tài khoản đã đăng nhập, trong WELCOME_DAYS ngày kể từ lần đăng nhập đầu tiên (users.created_at) mới dùng được.
 // Mỗi tài khoản / mỗi SĐT nhận hàng dùng theo "lượt/khách" của mã (mặc định 1). Luật kiểm ở checkVoucher (server/vouchers.ts).
 
+// Quà đánh giá: mã dùng chung, chỉ tài khoản đã viết ≥ 1 đánh giá cho sản phẩm đã mua (reviews.verified, chưa bị ẩn) mới dùng
+// được (checkVoucher). Mời đánh giá khi đơn đã giao, tặng mã khi viết đánh giá đầu tiên (server/vouchers.ts reviewReward).
+export const REVIEW_CODE = 'CAMONDANHGIA';
+/** Giá trị lúc tạo mã (seed): ≤ 5% đơn tối thiểu để không chạm giá sàn (lib/margin-guard.ts). Admin sửa ở /admin/khuyen-mai. */
+export const REVIEW_DEFAULT = { discountValue: 20_000, minOrder: 400_000 };
+
 export const WELCOME_CODE = 'CHAOBANMOI';
 export const WELCOME_DAYS = 30;
 /** Giá trị lúc tạo mã (seed) — sau đó admin sửa trực tiếp trên mã. */

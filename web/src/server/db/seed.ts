@@ -10,7 +10,7 @@ import { readMinutes } from '@/lib/posts';
 import { seedPosts } from '@/lib/seed-posts';
 import { seedProducts } from '@/lib/seed-products';
 import { tracksLots } from '@/lib/stock';
-import { WELCOME_CODE, WELCOME_DEFAULT } from '@/lib/voucher-labels';
+import { REVIEW_CODE, REVIEW_DEFAULT, WELCOME_CODE, WELCOME_DEFAULT } from '@/lib/voucher-labels';
 import * as schema from './schema';
 
 /** Q7 / NVL / TD là cửa hàng mẫu (tọa độ ước lượng, không hiện cho khách); SD là cửa hàng thật. Tồn mẫu chỉ chia cho 3 cửa hàng đầu. */
@@ -187,6 +187,19 @@ export async function seedWelcomeVoucher(db: NodePgDatabase<typeof schema>) {
     discountType: 'amount',
     discountValue: WELCOME_DEFAULT.discountValue,
     minOrder: WELCOME_DEFAULT.minOrder,
+    perCustomerLimit: 1,
+  }).onConflictDoNothing({ target: schema.vouchers.code }).returning({ id: schema.vouchers.id });
+  return rows.length > 0;
+}
+
+/** Tạo mã quà đánh giá (REVIEW_CODE) nếu chưa có. Có rồi thì giữ nguyên — admin sửa / tắt ở /admin/khuyen-mai. */
+export async function seedReviewVoucher(db: NodePgDatabase<typeof schema>) {
+  const rows = await db.insert(schema.vouchers).values({
+    code: REVIEW_CODE,
+    label: 'Quà đánh giá cây đã mua',
+    discountType: 'amount',
+    discountValue: REVIEW_DEFAULT.discountValue,
+    minOrder: REVIEW_DEFAULT.minOrder,
     perCustomerLimit: 1,
   }).onConflictDoNothing({ target: schema.vouchers.code }).returning({ id: schema.vouchers.id });
   return rows.length > 0;

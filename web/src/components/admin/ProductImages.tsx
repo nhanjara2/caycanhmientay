@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { editProductImageAction, replaceProductImageAction, setProductImageAltAction, setProductImageOptionAction, uploadProductImageAction } from '@/app/actions/admin';
 import { compressImage, WATERMARK } from '@/lib/compress-image';
 import { imageAlt, MAX_IMAGE_ALT, MAX_PRODUCT_IMAGES } from '@/lib/catalog';
@@ -10,6 +10,8 @@ import { PRODUCT_ASPECTS, useImageCrop } from './ImageCropper';
 
 /** `option` = số thứ tự quy cách ảnh này thuộc về (vd. hoa màu đỏ); null = ảnh chung. */
 export type AdminImage = { id: number; url: string; alt: string; option: number | null };
+
+const MARK_KEY = 'ccmt-admin-watermark';
 
 /** Ảnh sản phẩm: tải lên ngay (không cần bấm Lưu), ảnh đầu tiên là ảnh đại diện.
  *  `options` = quy cách đã lưu — gắn ảnh vào quy cách thì khách chọn quy cách đó là ảnh lớn đổi theo. */
@@ -22,6 +24,10 @@ export function ProductImages({ slug, name, initial, canEdit, options = [] }: {
   const [error, setError] = useState('');
   const input = useRef<HTMLInputElement>(null);
   const { crop, cropDialog } = useImageCrop();
+  // Chữ ký chìm chống lấy ảnh: Google Merchant Center không nhận ảnh chính có chữ đè lên → cho tắt; nhớ trên trình duyệt này.
+  const [mark, setMark] = useState(true);
+  useEffect(() => { try { if (localStorage.getItem(MARK_KEY) === '0') setMark(false); } catch {} }, []);
+  const toggleMark = (on: boolean) => { setMark(on); try { localStorage.setItem(MARK_KEY, on ? '1' : '0'); } catch {} };
 
   if (!slug) {
     return <span className="hint">Bấm <b>Lưu sản phẩm</b> trước, sau đó tải ảnh lên ở trang sửa.</span>;
@@ -42,7 +48,7 @@ export function ProductImages({ slug, name, initial, canEdit, options = [] }: {
       try {
         const fd = new FormData();
         fd.set('slug', slug);
-        fd.set('photo', await compressImage(f, 1600, WATERMARK, c));
+        fd.set('photo', await compressImage(f, 1600, mark ? WATERMARK : undefined, c));
         const r = await uploadProductImageAction(fd);
         if (!r.ok) { setError(r.error); break; }
         setImages(r.images);
@@ -150,6 +156,13 @@ export function ProductImages({ slug, name, initial, canEdit, options = [] }: {
           </button>
         )}
       </div>
+      {canEdit && images.length < MAX_PRODUCT_IMAGES && (
+        <label className="pi-mark">
+          <input type="checkbox" checked={mark} onChange={(e) => toggleMark(e.target.checked)} disabled={!!busy} />
+          Đóng chữ ký &ldquo;{WATERMARK}&rdquo; lên ảnh mới
+          <small>Tắt khi đưa sản phẩm lên Google Mua sắm (Google không nhận ảnh có chữ đè).</small>
+        </label>
+      )}
       {busy && images.length >= MAX_PRODUCT_IMAGES && <span className="hint">{busy}</span>}
       {error && <span className="vx-err" role="alert">{error}</span>}
       {cropDialog}
