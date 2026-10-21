@@ -57,10 +57,7 @@ export function proxy(request: NextRequest, event: NextFetchEvent) {
   // Chỉ xét đuôi .vercel.app: lỡ đọc sai host thì tên miền chính cũng không bao giờ bị noindex.
   // Link xem trước của admin (?xem-truoc=1 — bài / dự án chưa đăng) cũng noindex ngay ở header, kể cả khi lỡ bị chia sẻ
   // ra ngoài (SEO mục 13); trang chưa đăng còn tự có meta noindex.
-  // Đường dẫn khách đang mở → trang 404 (app/not-found.tsx) đọc header này để ghi đường dẫn hỏng (giám sát SEO mục 19).
-  const headers = new Headers(request.headers);
-  headers.set('x-ccmt-path', pathname);
-  const res = NextResponse.next({ request: { headers } });
+  const res = NextResponse.next();
   const host = (request.headers.get('x-forwarded-host') ?? request.headers.get('host') ?? '').toLowerCase();
   if (host.endsWith('.vercel.app') || params.has('xem-truoc')) res.headers.set('X-Robots-Tag', 'noindex, nofollow');
   return res;

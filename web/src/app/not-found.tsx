@@ -1,13 +1,9 @@
 import type { Metadata } from 'next';
-import { headers } from 'next/headers';
 import Link from 'next/link';
-import { after } from 'next/server';
 import { SearchBox } from '@/components/Header';
 import { Icon } from '@/components/Icon';
+import { NotFoundBeacon } from '@/components/NotFoundBeacon';
 import { SiteChrome } from '@/components/SiteChrome';
-import { botOf } from '@/lib/monitor';
-import { SITE_ORIGIN } from '@/lib/site';
-import { record404 } from '@/server/monitor-store';
 
 // Next tự thêm <meta name="robots" content="noindex"> cho mọi trang 404.
 export const metadata: Metadata = { title: 'Không tìm thấy trang' };
@@ -17,18 +13,12 @@ export const metadata: Metadata = { title: 'Không tìm thấy trang' };
  * Next 16 trả mã 404 + noindex nhưng HTML máy chủ rỗng (<html id="__next_error__">), giao diện này hiện sau khi chạy JS —
  * hành vi của Next (thử trên app tối giản cũng vậy), không phải lỗi của web. Xem seo:templates.
  */
-export default async function NotFound() {
-  // Giám sát SEO (mục 19): ghi đường dẫn hỏng (proxy gửi qua header x-ccmt-path) + trang dẫn tới, sau khi đã trả trang.
-  const h = await headers();
-  const path = h.get('x-ccmt-path');
-  if (path) {
-    const ref = h.get('referer') ?? '';
-    const host = (() => { try { return new URL(ref).host; } catch { return ''; } })();
-    const own = !host || host === new URL(SITE_ORIGIN).host || host === h.get('host');
-    after(() => record404({ path, referrer: ref, external: !own, bot: !!botOf(h.get('user-agent')) }));
-  }
+export default function NotFound() {
   return (
     <SiteChrome>
+    {/* Giám sát SEO (mục 19): ghi đường dẫn hỏng từ trình duyệt. KHÔNG ghi ở máy chủ: Next dựng sẵn component này kèm
+        MỌI trang (làm khung bắt 404), nên ghi ở đây là trang nào mở ra cũng bị đếm thành "không tìm thấy". */}
+    <NotFoundBeacon />
     <main id="noi-dung" tabIndex={-1} className="nf">
       <div className="nf-art" aria-hidden="true">
         4

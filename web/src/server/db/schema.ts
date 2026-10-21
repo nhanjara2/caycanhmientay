@@ -962,7 +962,7 @@ export const messageTemplates = pgTable('message_templates', {
   updatedAt: ts('updated_at').notNull().defaultNow(),
 });
 
-export const MESSAGE_CHANNELS = ['zalo', 'email'] as const;
+export const MESSAGE_CHANNELS = ['zalo', 'email', 'telegram'] as const;
 export const MESSAGE_STATUSES = ['sent', 'failed', 'skipped'] as const;
 
 /** Nhật ký tin gửi ra ngoài (Zalo ZNS, email): gửi được, lỗi, hay bỏ qua vì chưa cấu hình. */

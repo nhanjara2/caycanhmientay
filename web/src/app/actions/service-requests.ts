@@ -1,6 +1,8 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { SERVICE_INFO } from '@/lib/service-labels';
+import { alertShop } from '@/server/shop-alert';
 import { getCurrentUser, requireAccess, staffName } from '@/server/auth';
 import {
   addServiceNote, createByStaff, createServiceRequest, NoteSchema, ServiceInputSchema, StaffCreateSchema, UpdateSchema, updateServiceRequest,
@@ -35,7 +37,18 @@ export async function createServiceRequestAction(fd: FormData) {
   if (!p.success) return { ok: false as const, error: p.error.issues[0].message };
   const files = fd.getAll('photos').filter((f): f is File => f instanceof File && f.size > 0);
   const r = await createServiceRequest(p.data, files, await getCurrentUser());
-  if (r.ok) revalidatePath('/admin', 'layout');
+  if (r.ok) {
+    revalidatePath('/admin', 'layout');
+    const d = p.data;
+    alertShop(`📋 Yêu cầu báo giá sỉ ${r.code}`, [
+      `${SERVICE_INFO[d.service].label}${d.company ? ` · ${d.company}` : ''}`,
+      `Liên hệ: ${d.name} · ${d.phone}`,
+      `Giao tới: ${d.address}`,
+      ...(d.needBy ? [`Cần hàng: ${d.needBy}`] : []),
+      ...(d.note ? [`Danh sách: ${d.note.slice(0, 600)}`] : []),
+      ...(files.length ? [`Kèm ${files.length} ảnh`] : []),
+    ], '/admin/dich-vu');
+  }
   return r;
 }
 

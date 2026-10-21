@@ -10,6 +10,7 @@ import { optionOf } from '@/lib/catalog';
 import { createOrder, LAST_ORDER_COOKIE, PlaceOrderSchema, setOrderPaid, setOrderStatus } from '@/server/orders';
 import { ORDER_STATUSES } from '@/server/db/schema';
 import { snapOf, type CartLine } from '@/lib/cart-snap';
+import { alertNewOrder } from '@/server/shop-alert';
 
 export async function placeOrderAction(input: unknown) {
   const p = PlaceOrderSchema.safeParse(input);
@@ -19,6 +20,7 @@ export async function placeOrderAction(input: unknown) {
   if (r.ok) {
     (await cookies()).set(LAST_ORDER_COOKIE, r.code, { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 60 * 60 * 24, secure: process.env.NODE_ENV === 'production' });
     revalidatePath('/admin', 'layout');
+    await alertNewOrder(r.code).catch((e) => console.error('[shop-alert]', e));
   }
   return r;
 }

@@ -1,7 +1,9 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { getCurrentUser, publicUser, requireAccess } from '@/server/auth';
+import { PARTNER_INFO } from '@/lib/partners';
+import { alertShop } from '@/server/shop-alert';
+import { accountPhone, getCurrentUser, publicUser, requireAccess } from '@/server/auth';
 import { AdminPartnerSchema, applyPartner, ApplySchema, setPartner } from '@/server/partners';
 
 /** Khách đăng ký làm đối tác sỉ (trang /doi-tac) — phải đăng nhập. Trả về bản người dùng mới để cập nhật đầu trang / giỏ hàng. */
@@ -11,6 +13,13 @@ export async function applyPartnerAction(input: unknown) {
   const p = ApplySchema.safeParse(input);
   if (!p.success) return { ok: false as const, error: p.error.issues[0].message };
   const r = await applyPartner(me, p.data);
+  if (!r.approved && me.partnerStatus !== 'pending') {
+    alertShop('🤝 Đăng ký đối tác sỉ mới', [
+      `${PARTNER_INFO[p.data.type].label}${p.data.company ? ` · ${p.data.company}` : ''}`,
+      `${me.name ?? 'Khách'} · ${accountPhone(me) ?? me.email ?? ''}`,
+      ...(p.data.area ? [`Khu vực: ${p.data.area}`] : []),
+    ], `/admin/khach-hang/${me.id}`);
+  }
   revalidatePath('/admin', 'layout');
   revalidatePath('/doi-tac');
   const next = r.approved ? me : { ...me, partnerType: p.data.type, partnerStatus: 'pending' as const };
