@@ -29,10 +29,24 @@ export const getCategories = cache(async (): Promise<Category[]> => {
   }));
 });
 
-/** Danh mục + nhóm con đang hiện — cho menu trái, trang chủ, chân trang, chip nhóm con. */
+/**
+ * Danh mục + nhóm con đang hiện VÀ có sản phẩm đang bán — cho menu trái, thanh danh mục, trang chủ, chân trang.
+ * Danh mục / nhóm con chưa có hàng tự ẩn khỏi menu (trang vẫn mở, noindex) — nhập sản phẩm vào là tự hiện lại.
+ */
 export const menuCategories = cache(async (): Promise<Category[]> => {
   await connection();
-  return (await getCategories()).filter((c) => c.active).map((c) => ({ ...c, subs: c.subs.filter((s) => s.active) }));
+  const [cats, rows] = await Promise.all([
+    getCategories(),
+    db.select({ c: P.category, s: P.sub, x: P.extraSubs }).from(P).where(eq(P.active, true)),
+  ]);
+  const has = new Set<string>();
+  for (const r of rows) {
+    has.add(r.c);
+    for (const s of [r.s, ...(r.x ?? [])]) has.add(`${r.c}/${s}`);
+  }
+  return cats
+    .filter((c) => c.active && has.has(c.slug))
+    .map((c) => ({ ...c, subs: c.subs.filter((s) => s.active && has.has(`${c.slug}/${s.slug}`)) }));
 });
 
 export async function getCategory(slug: string) {

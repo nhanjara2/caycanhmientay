@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { Icon, Thumb } from '@/components/Icon';
-import { PICKUP_PLACE } from '@/lib/contact';
+import { GOOGLE_REVIEW_URL, PICKUP_PLACE } from '@/lib/contact';
 import { money } from '@/lib/format';
 import { fmtDate, fmtDateTime, fmtDayMonth, fmtTime, PAY_LABEL, PAY_LOGO, payStatus, STATUS_LABEL, TIMELINE, type Status } from '@/lib/order-labels';
 import type { OrderFull } from '@/server/orders';
@@ -121,6 +121,9 @@ export function OrderDetail({ o }: { o: OrderFull }) {
             )}
             <h3>{STATE_TEXT[o.status][0]}</h3>
             <p>{STATE_TEXT[o.status][1]}</p>
+            {o.status === 'delivered' && (
+              <a href={GOOGLE_REVIEW_URL} target="_blank" rel="noreferrer" className="vx-btn vx-btn--outline app-greview"><Icon name="star" size={16} />Đánh giá shop trên Google</a>
+            )}
             <OrderTimeline o={o} />
           </div>
           <div className="vx-od__cols">

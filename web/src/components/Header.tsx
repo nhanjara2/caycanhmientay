@@ -93,7 +93,9 @@ function SearchWithParams(props: SearchBoxProps) {
   return <SearchForm key={q} initial={q} {...props} />;
 }
 
-/** Hai bản danh sách nối nhau, CSS kéo đúng một nửa rồi lặp nên chạy liền mạch; rê chuột / Tab vào thì dừng. */
+/** Hai bản danh sách nối nhau, CSS kéo đúng một nửa rồi lặp nên chạy liền mạch; rê chuột / Tab vào thì dừng.
+ *  HTML máy chủ chỉ có MỘT bản (máy tìm kiếm khỏi thấy từ khóa lặp — Google AI từng chê "nhồi từ khóa");
+ *  bản thứ hai trình duyệt tự thêm sau khi chạy, có đủ hai bản mới bắt đầu chạy (`data-loop`). */
 function trendingList(real: string[]) {
   const seen = new Set<string>();
   const out: string[] = [];
@@ -109,6 +111,8 @@ function trendingList(real: string[]) {
 
 function TrendingSearches({ real }: { real: string[] }) {
   const list = trendingList(real);
+  const [loop, setLoop] = useState(false);
+  useEffect(() => setLoop(true), []);
   return (
     <nav className="app-trend" aria-label="Xu hướng tìm kiếm">
       <span className="app-trend__label">
@@ -116,8 +120,8 @@ function TrendingSearches({ real }: { real: string[] }) {
       </span>
       {/* Tab tới link đang khuất làm khung tự cuộn — rời đi thì trả về đầu để vòng lặp không hở */}
       <div className="app-trend__view" onBlur={(e) => { e.currentTarget.scrollLeft = 0; }}>
-        <ul className="app-trend__track">
-          {[0, 1].map((copy) =>
+        <ul className="app-trend__track" data-loop={loop || undefined}>
+          {(loop ? [0, 1] : [0]).map((copy) =>
             list.map((k) => (
               <li key={`${copy}-${k}`} aria-hidden={copy === 1 || undefined}>
                 <Link href={`/tim-kiem?q=${encodeURIComponent(k)}`} tabIndex={copy === 1 ? -1 : undefined}>

@@ -49,6 +49,9 @@ export default async function AllProductsPage() {
     menuCategories().then((list) => Promise.all(list.map(async (c) => ({ category: c, products: await productsIn(c.slug) })))),
   ]);
   const total = blocks.reduce((n, b) => n + b.products.length, 0);
+  // Lối tắt tới danh mục / nhóm con chưa có hàng thì ẩn (cùng luật menuCategories).
+  const shown = new Set(blocks.flatMap(({ category: c }) => [`/danh-muc/${c.slug}`, ...c.subs.map((s) => `/danh-muc/${c.slug}/${s.slug}`)]));
+  const collections = COLLECTIONS.filter((c) => !c.href?.startsWith('/danh-muc/') || shown.has(c.href));
   return (
     <>
       {/* ItemList = đúng các thẻ đang hiện: 8 sản phẩm đầu của mỗi khối danh mục (CategoryBlock). */}
@@ -59,7 +62,7 @@ export default async function AllProductsPage() {
       </div>
 
       <nav className="vx-strip" aria-label="Bộ sưu tập">
-        {COLLECTIONS.map((c) => (
+        {collections.map((c) => (
           <Link key={c.label} href={c.href ?? `/tim-kiem?q=${encodeURIComponent(c.q ?? '')}`} className={`vx-strip__item app-plain${c.hot ? ' hot' : ''}`}>
             <span className="vx-strip__img"><Icon name={c.icon} /></span>
             {c.label}

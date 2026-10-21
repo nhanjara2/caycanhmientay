@@ -26,7 +26,7 @@ const emoji = Noto_Color_Emoji({ weight: '400', subsets: ['emoji'], variable: '-
 export const metadata: Metadata = {
   // canonical / ảnh chia sẻ ghi đường dẫn tương đối ("/san-pham/…") → Next ghép thành URL tuyệt đối trên tên miền chính.
   metadataBase: new URL(SITE_ORIGIN),
-  title: { default: 'Cây Cảnh Miền Tây — Cung cấp sỉ cây cảnh & vật tư', template: '%s | Cây Cảnh Miền Tây' },
+  title: { default: 'Cây Cảnh Miền Tây – Nhà vườn Sa Đéc, cung cấp sỉ cây cảnh', template: '%s | Cây Cảnh Miền Tây' },
   // Mô tả dự phòng — trang nào cũng nên tự đặt description riêng (npm run seo:metadata báo trang dùng chung).
   description: 'Cung cấp sỉ và lẻ cây cảnh, cây công trình, phân bón, chậu và vật tư từ gần 200 nhà vườn miền Nam. Giá tại vườn, giao toàn quốc.',
   applicationName: SITE_NAME,

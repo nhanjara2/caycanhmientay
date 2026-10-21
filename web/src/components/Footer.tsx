@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { CARE_PHONE, FACEBOOK_URL, formatPhone, LINKEDIN_URL, SALES_PHONE, SHOP_ADDRESS, SUPPORT_PHONE, TIKTOK_URL, YOUTUBE_URL, ZALO_QR, ZALO_URL } from '@/lib/contact';
+import { CARE_PHONE, FACEBOOK_URL, formatPhone, LINKEDIN_URL, GOOGLE_REVIEW_URL, SALES_PHONE, SHOP_ADDRESS, SUPPORT_PHONE, TIKTOK_URL, YOUTUBE_URL, ZALO_QR, ZALO_URL } from '@/lib/contact';
 import { ASK_AI } from '@/lib/ask-ai';
 import { menuCategories } from '@/server/categories';
 import { FooterGroup } from './FooterGroup';
@@ -93,6 +93,7 @@ export async function Footer() {
             <a href={YOUTUBE_URL} target="_blank" rel="noreferrer" title="YouTube"><img src="/images/social/youtube.svg" alt="YouTube" width={36} height={36} loading="lazy" /></a>
             <a href={TIKTOK_URL} target="_blank" rel="noreferrer" title="TikTok"><img src="/images/social/tiktok.svg" alt="TikTok" width={36} height={36} loading="lazy" /></a>
             <a href={LINKEDIN_URL} target="_blank" rel="noreferrer" title="LinkedIn"><img src="/images/social/linkedin.svg" alt="LinkedIn" width={36} height={36} loading="lazy" /></a>
+            <a href={GOOGLE_REVIEW_URL} target="_blank" rel="noreferrer" title="Đánh giá trên Google"><img src="/images/social/google.svg" alt="Đánh giá trên Google" width={36} height={36} loading="lazy" /></a>
           </div>
           <h4 style={{ marginTop: 8 }}>HỎI AI VỀ CÂY CẢNH MIỀN TÂY</h4>
           <div className="app-askai">
