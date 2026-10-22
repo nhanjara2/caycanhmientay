@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { CARE_PHONE, FACEBOOK_URL, formatPhone, LINKEDIN_URL, GOOGLE_REVIEW_URL, SALES_PHONE, SHOP_ADDRESS, SUPPORT_PHONE, TIKTOK_URL, YOUTUBE_URL, ZALO_QR, ZALO_URL } from '@/lib/contact';
 import { ASK_AI } from '@/lib/ask-ai';
-import { menuCategories } from '@/server/categories';
 import { FooterGroup } from './FooterGroup';
 import { Icon } from './Icon';
 
@@ -33,8 +32,7 @@ const PAY: [string, string, string][] = [
   ['Apple Pay', 'applepay.svg', 'https://www.apple.com/vn/apple-pay/'],
 ];
 
-export async function Footer() {
-  const categories = await menuCategories();
+export function Footer() {
   return (
     <footer className="vx-footer">
       <div className="vx-fband">
@@ -62,11 +60,6 @@ export async function Footer() {
       <div className="vx-fcols">
         <FooterGroup title="VỀ CÂY CẢNH MIỀN TÂY">
           {ABOUT.map(([t, h]) => <Link key={t} href={h}>{t}</Link>)}
-        </FooterGroup>
-        <FooterGroup title="DANH MỤC">
-          {categories.slice(0, 8).map((c) => (
-            <Link key={c.slug} href={`/danh-muc/${c.slug}`}>{c.name}</Link>
-          ))}
         </FooterGroup>
         <FooterGroup title="TÌM HIỂU THÊM">
           {LEARN.map(([t, h]) => <Link key={t} href={h}>{t}</Link>)}

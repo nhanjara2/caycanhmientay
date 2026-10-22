@@ -68,6 +68,8 @@ a.vx-btn, a.vx-link { text-decoration: none; }
 .vx-side__promo a.plain { color: var(--ink); }
 .vx-acc__list a[aria-current="true"] { color: var(--primary); }
 .vx-keywords a:hover, .vx-fcol a:hover { text-decoration: underline; }
+/* Chân trang bỏ nhóm DANH MỤC (22/10/2026) → 4 cột thay vì 5 của design system */
+.vx-fcols { grid-template-columns: 1.2fr 1fr 1.2fr 1.1fr; }
 
 /* Header dính trên cùng */
 .app-header { position: sticky; top: 0; z-index: 40; }
