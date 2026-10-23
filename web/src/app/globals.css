@@ -1248,13 +1248,13 @@ a.vx-chip { text-decoration: none; }
 .pe-tools button:disabled { opacity: .45; cursor: default; }
 /* Nhóm nút theo màu: cấu trúc xanh dương, định dạng xám, ảnh-video tím, khối cam, sản phẩm xanh lá */
 .pe-tools { gap: 6px; align-items: center; }
-.pe-tg { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 2px; border-radius: var(--radius-md); background: var(--tg-bg); }
+.pe-tools span.pe-tg { display: inline-flex; flex-wrap: nowrap; gap: 2px; padding: 2px; height: auto; min-width: 0; min-height: 0; font-size: inherit; border-radius: var(--radius-md); background: var(--tg-bg); }
 .pe-tg[data-g="text"] { --tg-bg: #e8f0fe; --tg-ink: #1a56c4; }
 .pe-tg[data-g="fmt"] { --tg-bg: #eef1ef; --tg-ink: #3d4a43; }
 .pe-tg[data-g="media"] { --tg-bg: #f3e8fd; --tg-ink: #7a2fc0; }
 .pe-tg[data-g="block"] { --tg-bg: #fff1e0; --tg-ink: #b45309; }
 .pe-tg[data-g="shop"] { --tg-bg: #e3f6e8; --tg-ink: #15803d; }
-.pe-tools .pe-tg button { color: var(--tg-ink); white-space: nowrap; }
+.pe-tools .pe-tg button { display: inline-flex; align-items: center; gap: 4px; color: var(--tg-ink); white-space: nowrap; }
 .pe-tools .pe-tg button:hover:not(:disabled) { background: #fff; color: var(--tg-ink); }
 .pe-doc { gap: 6px; }
 .pe-bare { display: block; width: 100%; border: 0; background: transparent; font: inherit; color: inherit; resize: none; padding: 4px 8px; border-radius: var(--radius-sm); outline: none; overflow: hidden; }
