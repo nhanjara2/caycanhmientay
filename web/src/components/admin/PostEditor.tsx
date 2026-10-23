@@ -2,10 +2,11 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode, type TextareaHTMLAttributes } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ClipboardEvent as PasteEvent, type ReactNode, type TextareaHTMLAttributes } from 'react';
 import { deletePostAction, lookupVideosAction, savePostAction, uploadPostImageAction } from '@/app/actions/posts';
 import { normalize, parseYoutubeId } from '@/lib/catalog';
 import { compressImage } from '@/lib/compress-image';
+import { htmlToBlocks } from '@/lib/paste-html';
 import { ARTICLE_ASPECTS, COVER_ASPECTS, useImageCrop } from './ImageCropper';
 import { money } from '@/lib/format';
 import {
@@ -262,6 +263,32 @@ export function PostEditor({ initial, role, products, diseases, people, stats }:
     wrap('[', `](${url.trim()})`, 'chữ bấm vào');
   };
   const remember = (f: Field) => { lastField.current = f; };
+  /** Dán từ web khác / Word / Google Docs: giữ tiêu đề, đoạn, danh sách, bảng, ảnh, chữ đậm, link. */
+  const pasteRich = (e: PasteEvent<HTMLDivElement>) => {
+    const html = e.clipboardData.getData('text/html');
+    const t = e.target;
+    const host = t instanceof HTMLElement ? t.closest<HTMLElement>('[data-i]') : null;
+    if (!html || !host || !(t instanceof HTMLTextAreaElement || t instanceof HTMLInputElement)) return;
+    const blocks = htmlToBlocks(html);
+    if (!blocks.length) return;
+    const i = Number(host.dataset.i);
+    const cur = items[i]?.b;
+    if (!cur) return;
+    const f = lastField.current;
+    // Một đoạn dán vào ô đang gõ: chèn tại con trỏ.
+    if (blocks.length === 1 && blocks[0].type === 'p' && f?.el === t) {
+      e.preventDefault();
+      const s = t.selectionStart ?? t.value.length, end = t.selectionEnd ?? s, text = blocks[0].text;
+      f.set(t.value.slice(0, s) + text + t.value.slice(end));
+      requestAnimationFrame(() => { t.focus(); t.setSelectionRange(s + text.length, s + text.length); });
+      return;
+    }
+    if (blocks.length === 1 && (blocks[0].type === 'p' || blocks[0].type === 'h2' || blocks[0].type === 'h3')) return;
+    e.preventDefault();
+    const empty = (cur.type === 'p' || cur.type === 'h2' || cur.type === 'h3') && !cur.text.trim();
+    if (empty) setItems((xs) => xs.filter((_, j) => j !== i));
+    insert(blocks, empty ? i : i + 1);
+  };
 
   const tool = (label: ReactNode, onClick: () => void, title: string, extra?: string) => (
     <button type="button" className={extra} title={title} aria-label={title} disabled={!canEdit || !!busy}
@@ -306,7 +333,7 @@ export function PostEditor({ initial, role, products, diseases, people, stats }:
               {tool('Lưu ý', () => insert([BLANK.note()]), 'Hộp lưu ý (bắt buộc khi bài nhắc tới thuốc BVTV)')}
               {tool('+ Sản phẩm', () => insert([BLANK.products()]), 'Khối sản phẩm — khách thêm vào giỏ ngay trong bài', 'on')}
             </div>
-            <div className="ad-doc pe-doc">
+            <div className="ad-doc pe-doc" onPaste={pasteRich}>
               <AutoText className="pe-title" value={v.title} onValue={(x) => set('title', x.replace(/\n/g, ' '))} maxLength={150}
                 placeholder={v.kind === 'video' ? 'Tiêu đề video' : 'Tiêu đề bài viết'} aria-label="Tiêu đề" />
               <AutoText className="pe-lead" value={v.excerpt} onValue={(x) => set('excerpt', x)} maxLength={400}
@@ -375,7 +402,7 @@ export function PostEditor({ initial, role, products, diseases, people, stats }:
               )}
 
               {items.map((it, i) => (
-                <div key={it.k} className="pe-block" data-active={active === i || undefined} onFocus={() => setActive(i)}>
+                <div key={it.k} className="pe-block" data-i={i} data-active={active === i || undefined} onFocus={() => setActive(i)}>
                   <div className="pe-block__bar">
                     <span>{BLOCK_NAMES[it.b.type]}</span>
                     <button type="button" disabled={i === 0} onClick={() => move(i, -1)} aria-label="Đưa lên" title="Đưa lên">↑</button>
