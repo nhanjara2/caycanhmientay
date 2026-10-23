@@ -320,18 +320,28 @@ export function PostEditor({ initial, role, products, diseases, people, stats }:
         <div className="ad-editor">
           <div className="ad-paper">
             <div className="ad-tools pe-tools" role="toolbar" aria-label="Thêm nội dung">
-              {tool('H2', () => insert([BLANK.h2()]), 'Tiêu đề mục (hiện trong mục lục)')}
-              {tool('H3', () => insert([BLANK.h3()]), 'Tiêu đề nhỏ')}
-              {tool('¶ Đoạn', () => insert([BLANK.p()]), 'Đoạn văn')}
-              {tool(<b>B</b>, () => wrap('**', '**', 'chữ đậm'), 'In đậm chữ đang chọn')}
-              {tool('Link', addLink, 'Chèn đường dẫn vào chữ đang chọn')}
-              {tool('• Danh sách', () => insert([BLANK.list()]), 'Danh sách')}
-              {tool('Ảnh', () => { replaceAt.current = null; imageInput.current?.click(); }, 'Chèn ảnh (chọn được nhiều ảnh)')}
-              {tool('Link ảnh', () => addImageUrl(), 'Chèn ảnh bằng link trực tiếp (không tải về máy chủ)')}
-              {tool('Video', () => insert([BLANK.video()]), 'Chèn video YouTube')}
-              {tool('Bảng', () => insert([BLANK.table()]), 'Bảng')}
-              {tool('Lưu ý', () => insert([BLANK.note()]), 'Hộp lưu ý (bắt buộc khi bài nhắc tới thuốc BVTV)')}
-              {tool('+ Sản phẩm', () => insert([BLANK.products()]), 'Khối sản phẩm — khách thêm vào giỏ ngay trong bài', 'on')}
+              <span className="pe-tg" data-g="text">
+                {tool('H2 Tiêu đề', () => insert([BLANK.h2()]), 'Tiêu đề mục (hiện trong mục lục)')}
+                {tool('H3 Tiêu đề nhỏ', () => insert([BLANK.h3()]), 'Tiêu đề nhỏ')}
+                {tool('¶ Đoạn văn', () => insert([BLANK.p()]), 'Đoạn văn')}
+                {tool('• Danh sách', () => insert([BLANK.list()]), 'Danh sách')}
+              </span>
+              <span className="pe-tg" data-g="fmt">
+                {tool(<><b>B</b> Đậm</>, () => wrap('**', '**', 'chữ đậm'), 'In đậm chữ đang chọn')}
+                {tool('🔗 Link', addLink, 'Chèn đường dẫn vào chữ đang chọn')}
+              </span>
+              <span className="pe-tg" data-g="media">
+                {tool('🖼 Ảnh', () => { replaceAt.current = null; imageInput.current?.click(); }, 'Chèn ảnh (chọn được nhiều ảnh)')}
+                {tool('🌐 Link ảnh', () => addImageUrl(), 'Chèn ảnh bằng link trực tiếp (không tải về máy chủ)')}
+                {tool('▶ Video', () => insert([BLANK.video()]), 'Chèn video YouTube')}
+              </span>
+              <span className="pe-tg" data-g="block">
+                {tool('▦ Bảng', () => insert([BLANK.table()]), 'Bảng')}
+                {tool('⚠ Lưu ý', () => insert([BLANK.note()]), 'Hộp lưu ý (bắt buộc khi bài nhắc tới thuốc BVTV)')}
+              </span>
+              <span className="pe-tg" data-g="shop">
+                {tool('🛒 Sản phẩm', () => insert([BLANK.products()]), 'Khối sản phẩm — khách thêm vào giỏ ngay trong bài')}
+              </span>
             </div>
             <div className="ad-doc pe-doc" onPaste={pasteRich}>
               <AutoText className="pe-title" value={v.title} onValue={(x) => set('title', x.replace(/\n/g, ' '))} maxLength={150}
