@@ -420,15 +420,6 @@ export function PostEditor({ initial, role, products, diseases, people, stats }:
                   {v.kind === 'video' ? 'Chưa có mô tả.' : 'Bài chưa có nội dung.'} Bấm các nút trên thanh công cụ để thêm đoạn văn, tiêu đề mục, ảnh, khối sản phẩm…
                 </p>
               )}
-              {canEdit && (
-                <div className="pe-add">
-                  <span>Thêm:</span>
-                  <button type="button" onClick={() => insert([BLANK.p()], items.length)}>Đoạn văn</button>
-                  <button type="button" onClick={() => insert([BLANK.h2()], items.length)}>Tiêu đề mục</button>
-                  <button type="button" onClick={() => { setActive(items.length - 1); replaceAt.current = null; imageInput.current?.click(); }}>Ảnh</button>
-                  <button type="button" onClick={() => insert([BLANK.products()], items.length)}>Sản phẩm</button>
-                </div>
-              )}
             </div>
           </div>
 
