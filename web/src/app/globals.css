@@ -2395,6 +2395,11 @@ a.app-mm__card:hover .app-mm__name { color: var(--primary); }
 .dn-cap__ic { margin-bottom: 0.25rem; }
 .dn-cap b, .dn-way b { font-size: 1.0625rem; line-height: 1.4; }
 .dn-cap p, .dn-way p { margin: 0; font-size: 0.9375rem; line-height: 1.6; color: var(--ink-muted); }
+.dn-trees { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.dn-chips { display: flex; flex-wrap: wrap; gap: 0.375rem; margin: 0.25rem 0 0; padding: 0; list-style: none; }
+.dn-chips a { display: inline-flex; align-items: center; min-height: 2.25rem; padding: 0 0.75rem; border: 1px solid var(--border); border-radius: var(--radius-pill); background: var(--surface-sunken); font-size: 0.875rem; font-weight: 600; color: var(--ink); }
+.dn-chips a:hover { border-color: var(--primary); color: var(--primary); }
+.dn-trees__cta { align-self: flex-start; }
 .dn-cap > a { display: inline-flex; align-items: center; gap: 0.25rem; min-height: 2.75rem; margin-top: auto; font-size: 0.9375rem; font-weight: 600; color: var(--primary); }
 
 
@@ -2489,7 +2494,7 @@ a.app-mm__card:hover .app-mm__name { color: var(--primary); }
   .dn-hero__media, .dn-hero__art { max-width: 40rem; width: 100%; }
   .dn-nav { position: static; }
   .dn-nav__cta { display: none; }
-  .dn-grid, .dn-caps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dn-grid, .dn-caps, .dn-trees { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dn-ways, .dn-legal { grid-template-columns: minmax(0, 1fr); }
   .dn-card--wide { flex-direction: column; }
   .dn-card--wide .dn-card__media { flex: none; min-height: 0; aspect-ratio: 16 / 9; }
@@ -2510,7 +2515,8 @@ a.app-mm__card:hover .app-mm__name { color: var(--primary); }
   .dn-nav__links a { padding: 0 0.75rem; }
   .dn-sec { padding: 2rem var(--space-3); gap: 1.25rem; }
   .dn-head h2 { font-size: 1.5rem; }
-  .dn-grid, .dn-caps { grid-template-columns: minmax(0, 1fr); }
+  .dn-grid, .dn-caps, .dn-trees { grid-template-columns: minmax(0, 1fr); }
+  .dn-trees__cta { align-self: stretch; }
   .dn-card--wide .dn-card__body { padding: 1rem 1.25rem 1.25rem; }
   .dn-card--wide .dn-card__title { font-size: 1.25rem; }
   .dn-cap, .dn-way { padding: 1.25rem; }

@@ -23,6 +23,7 @@ const FACTS: { b: string; text: string }[] = [
 
 const NAV: [string, string][] = [
   ['doi-tac', 'Đối tác'],
+  ['cay-cong-trinh', 'Cây công trình'],
   ['cach-mua', 'Cách mua sỉ'],
   ['dang-ky', 'Đăng ký'],
   ['nang-luc', 'Năng lực'],
@@ -36,6 +37,24 @@ const OFFER: Record<PartnerType, string[]> = {
   project: ['Cây bóng mát, cau, cây bụi, thảm cỏ theo bảng khối lượng', 'Đồng đều chủng loại, chiều cao, đường kính gốc, cỡ bầu', 'Chia đợt giao theo tiến độ công trình'],
   trade: ['Cây cảnh, cây để bàn, cây văn phòng đủ cỡ để bán lại', 'Vật tư, phân bón, chậu đi kèm', 'Lấy hàng định kỳ, giao toàn quốc'],
 };
+
+/** Các nhóm cây công trình shop cung cấp sỉ; tên cây mở trang tìm kiếm. */
+const TREE_GROUPS: { icon: IconName; b: string; use: string; trees: string[] }[] = [
+  { icon: 'trees', b: 'Cây bóng mát, cây đường phố', use: 'Vỉa hè, trục đường, công viên, khu dân cư, nhà máy', trees: ['Sao đen', 'Dầu rái', 'Giáng hương', 'Lim xẹt', 'Bằng lăng', 'Phượng vĩ', 'Me tây', 'Long não', 'Sấu', 'Muồng hoàng yến', 'Xà cừ'] },
+  { icon: 'leaf', b: 'Cây điểm nhấn, cây hoa', use: 'Cổng dự án, quảng trường, sảnh, resort', trees: ['Cau vua', 'Cọ dầu', 'Kèn hồng', 'Lộc vừng'] },
+  { icon: 'sprout', b: 'Cây bụi, cây viền', use: 'Dải phân cách, bồn hoa, viền lối đi', trees: ['Chuỗi ngọc', 'Trang đỏ', 'Nguyệt quế', 'Vàng anh', 'Dâm bụt', 'Ắc ó'] },
+  { icon: 'box', b: 'Cây thảm nền, cỏ', use: 'Bãi cỏ, taluy, sân vườn, dải xanh', trees: ['Cỏ lá gừng', 'Cỏ nhung Nhật', 'Cỏ Bermuda', 'Lan chi', 'Lẻ bạn', 'Cẩm thạch', 'Dền cảnh', 'Lá gấm'] },
+];
+
+const TREE_BY_USE: [string, string][] = [
+  ['Vỉa hè, đường phố', 'Sao đen, dầu rái, giáng hương, lim xẹt'],
+  ['Công viên, quảng trường', 'Me tây, lộc vừng, bằng lăng, kèn hồng'],
+  ['Khu đô thị, khu dân cư', 'Giáng hương, cau vua, bằng lăng, muồng hoàng yến'],
+  ['Khu công nghiệp, nhà máy', 'Sao đen, dầu rái, lim xẹt'],
+  ['Dải phân cách', 'Chuỗi ngọc, trang đỏ, ắc ó'],
+  ['Resort, khách sạn', 'Cau vua, cọ dầu, kèn hồng, lộc vừng'],
+  ['Bồn hoa, viền lối đi', 'Nguyệt quế, trang đỏ, lan chi, cỏ nhung Nhật'],
+];
 
 const CAPABILITIES: { icon: IconName; b: string; text: string; link?: [string, string] }[] = [
   { icon: 'trees', b: 'Nguồn cây lớn, ổn định', text: 'Mạng lưới gần 200 nhà vườn ở miền Nam và Trung Nam Bộ giúp gom đủ số lượng lớn và chọn cây đồng đều quy cách.' },
@@ -138,7 +157,37 @@ export function PartnerPage({ projects, profile }: { projects: Project[]; profil
         </div>
       </section>
 
-      <section id="cach-mua" className="dn-sec dn-sec--white">
+      <section id="cay-cong-trinh" className="dn-sec dn-sec--white">
+        <header className="dn-head">
+          <p className="dn-eyebrow">Cây công trình</p>
+          <h2>Các loại cây công trình cung cấp sỉ</h2>
+        </header>
+        <div className="dn-caps dn-trees">
+          {TREE_GROUPS.map((g) => (
+            <div key={g.b} className="dn-cap">
+              <span className="dn-cap__ic"><Icon name={g.icon} /></span>
+              <b>{g.b}</b>
+              <p>{g.use}</p>
+              <ul className="dn-chips">
+                {g.trees.map((t) => <li key={t}><Link href={`/tim-kiem?q=${encodeURIComponent(t)}`}>{t}</Link></li>)}
+              </ul>
+            </div>
+          ))}
+        </div>
+        <div className="dn-tablewrap">
+          <table className="dn-table">
+            <thead><tr><th>Công trình</th><th>Cây tham khảo</th></tr></thead>
+            <tbody>
+              {TREE_BY_USE.map(([u, t]) => (
+                <tr key={u}><td className="t"><b>{u}</b></td><td data-label="Cây">{t}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <Link href={WHOLESALE_QUOTE_URL} className="vx-btn vx-btn--primary dn-trees__cta">Gửi báo giá cây công trình</Link>
+      </section>
+
+      <section id="cach-mua" className="dn-sec">
         <header className="dn-head">
           <p className="dn-eyebrow">Cách mua sỉ</p>
           <h2>Đặt ngay trên web hoặc gửi danh sách</h2>
