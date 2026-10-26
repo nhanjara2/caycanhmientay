@@ -12,17 +12,20 @@ import { PARTNER_INFO, PARTNER_TYPES, WHOLESALE_URL, type PartnerType } from '@/
 import { ADVISOR_URL, KINDS, PLAN_STORE_KEY, type SavedPlan } from '@/lib/plant-advisor';
 import { Icon } from './Icon';
 
-export type WholesaleDefaults = { type?: PartnerType; company: string; name: string; phone: string; address: string };
+export type WholesaleDefaults = { type?: PartnerType; company: string; name: string; phone: string; address: string; items?: string };
 
 const DRAFT_KEY = 'ccmt-wholesale-quote-draft';
 const MAX_PHOTOS = 3;
 
 type Draft = { type: PartnerType | null; items: string; needBy: string; company: string; name: string; phone: string; address: string };
 
-/** Form Yêu cầu báo giá sỉ (/bao-gia-si): loại đối tác → danh sách hàng (+ ảnh bảng khối lượng, phương án từ Tư vấn chọn cây) → liên hệ. */
-export function WholesaleQuoteForm({ defaults, fromAdvisor = false }: { defaults: WholesaleDefaults; fromAdvisor?: boolean }) {
+/**
+ * Form Yêu cầu báo giá sỉ (/bao-gia-si): loại đối tác → danh sách hàng (+ ảnh bảng khối lượng, phương án từ Tư vấn chọn cây) → liên hệ.
+ * `embedded`: đặt trong trang /doi-tac (#bao-gia) — không breadcrumb, tiêu đề h2.
+ */
+export function WholesaleQuoteForm({ defaults, fromAdvisor = false, embedded = false }: { defaults: WholesaleDefaults; fromAdvisor?: boolean; embedded?: boolean }) {
   const [v, setV] = useState<Draft>({
-    type: defaults.type ?? null, items: '', needBy: '', company: defaults.company, name: defaults.name, phone: defaults.phone, address: defaults.address,
+    type: defaults.type ?? null, items: defaults.items ?? '', needBy: '', company: defaults.company, name: defaults.name, phone: defaults.phone, address: defaults.address,
   });
   const [photos, setPhotos] = useState<{ file: File; url: string }[]>([]);
   const [plan, setPlan] = useState<SavedPlan | null>(null);
@@ -32,6 +35,12 @@ export function WholesaleQuoteForm({ defaults, fromAdvisor = false }: { defaults
   const [pending, start] = useTransition();
   const fileInput = useRef<HTMLInputElement>(null);
   const honeypot = useRef<HTMLInputElement>(null);
+
+  // Trong trang /doi-tac tiêu đề trang là h1 riêng → form dùng h2 / h3.
+  const Title = embedded ? 'h2' : 'h1';
+  const Sub = embedded ? 'h3' : 'h2';
+  const doneRef = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (done !== null && embedded) doneRef.current?.focus(); }, [done, embedded]);
 
   const set = <K extends keyof Draft>(k: K, val: Draft[K]) => setV((x) => ({ ...x, [k]: val }));
 
@@ -43,11 +52,12 @@ export function WholesaleQuoteForm({ defaults, fromAdvisor = false }: { defaults
       const d = JSON.parse(raw) as Partial<Draft>;
       setV((x) => ({
         ...x, ...d,
+        items: defaults.items && !d.items?.includes(defaults.items) ? [defaults.items, d.items].filter(Boolean).join('\n') : d.items ?? x.items,
         type: defaults.type ?? (d.type && PARTNER_TYPES.includes(d.type) ? d.type : x.type),
         company: d.company || x.company, name: d.name || x.name, phone: d.phone || x.phone, address: d.address || x.address,
       }));
     } catch { /* trình duyệt chặn lưu trữ: bỏ qua */ }
-  }, [defaults.type]);
+  }, [defaults.type, defaults.items]);
 
   // Phương án từ trang Tư vấn chọn cây: đính kèm danh sách cây + số lượng
   useEffect(() => {
@@ -127,20 +137,21 @@ export function WholesaleQuoteForm({ defaults, fromAdvisor = false }: { defaults
       if (!r.ok) { setError(r.error); return; }
       try { localStorage.removeItem(DRAFT_KEY); sessionStorage.removeItem(PLAN_STORE_KEY); } catch { /* bỏ qua */ }
       setDone(r.code);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (embedded) formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      else window.scrollTo({ top: 0, behavior: 'smooth' });
     });
   };
 
   if (done !== null) {
     return (
-      <div className="qf-card app-qf-done">
+      <div className="qf-card app-qf-done" ref={doneRef} tabIndex={-1}>
         <span className="os-check"><Icon name="check" /></span>
-        <h1>Đã nhận yêu cầu báo giá{done ? ` ${done}` : ''}</h1>
+        <Title>Đã nhận yêu cầu báo giá{done ? ` ${done}` : ''}</Title>
         <p>
           Nhân viên kinh doanh sẽ gọi số <b>{v.phone}</b> để xác nhận danh sách hàng, quy cách và nơi giao, rồi gửi báo giá sỉ qua Zalo.
         </p>
         <div className="vx-row" style={{ justifyContent: 'center' }}>
-          <Link href={WHOLESALE_URL} className="vx-btn vx-btn--outline">Về trang Đối tác</Link>
+          {!embedded && <Link href={WHOLESALE_URL} className="vx-btn vx-btn--outline">Về trang Đối tác</Link>}
           <Link href="/danh-muc" className="vx-btn vx-btn--primary">Xem sản phẩm</Link>
         </div>
       </div>
@@ -149,11 +160,11 @@ export function WholesaleQuoteForm({ defaults, fromAdvisor = false }: { defaults
 
   return (
     <form ref={formRef} className="qf-card" onSubmit={(e) => { e.preventDefault(); submit(); }} noValidate>
-      <Breadcrumb items={[{ label: 'Trang chủ', href: '/' }, { label: 'Đối tác sỉ', href: WHOLESALE_URL }, { label: 'Yêu cầu báo giá sỉ' }]} />
-      <h1>Yêu cầu báo giá sỉ</h1>
+      {!embedded && <Breadcrumb items={[{ label: 'Trang chủ', href: '/' }, { label: 'Đối tác sỉ', href: WHOLESALE_URL }, { label: 'Yêu cầu báo giá sỉ' }]} />}
+      {!embedded && <h1>Yêu cầu báo giá sỉ</h1>}
 
       <div className="qf-sec">
-        <h2>Bạn là</h2>
+        <Sub>Bạn là</Sub>
         <div className="app-qf-chips" role="radiogroup" aria-label="Loại đối tác" {...bad('type')} tabIndex={touched && errors.type ? -1 : undefined}>
           {PARTNER_TYPES.map((t) => (
             <button key={t} type="button" role="radio" className="app-qf-chip" aria-checked={v.type === t} onClick={() => set('type', t)} title={PARTNER_INFO[t].hint}>
@@ -165,7 +176,7 @@ export function WholesaleQuoteForm({ defaults, fromAdvisor = false }: { defaults
       </div>
 
       <div className="qf-sec">
-        <h2>Cần mua gì?</h2>
+        <Sub>Cần mua gì?</Sub>
         {plan && (
           <div className="qf-plan">
             <div className="qf-plan__h">
@@ -209,7 +220,7 @@ export function WholesaleQuoteForm({ defaults, fromAdvisor = false }: { defaults
       </div>
 
       <div className="qf-sec">
-        <h2>Liên hệ</h2>
+        <Sub>Liên hệ</Sub>
         <div className="ad-frow app-qf-grid">
           <div className="vx-field">
             <div className="vx-fl"><label htmlFor="qf-company">Đơn vị / cửa hàng</label><input id="qf-company" value={v.company} onChange={(e) => set('company', e.target.value)} autoComplete="organization" maxLength={120} /></div>
@@ -225,6 +236,9 @@ export function WholesaleQuoteForm({ defaults, fromAdvisor = false }: { defaults
           <div className="vx-field">
             <div className="vx-fl"><label htmlFor="qf-addr">Nơi giao hàng</label><input id="qf-addr" {...bad('address')} value={v.address} onChange={(e) => set('address', e.target.value)} autoComplete="street-address" maxLength={200} placeholder="Tỉnh / thành, hoặc địa chỉ công trình" /></div>
             {err('address')}
+          </div>
+          <div className="vx-field">
+            <div className="vx-fl"><label htmlFor="qf-needby">Thời gian cần hàng</label><input id="qf-needby" value={v.needBy} onChange={(e) => set('needBy', e.target.value)} maxLength={80} placeholder="VD: đầu tháng 12" /></div>
           </div>
         </div>
         {/* Ô bẫy bot — người dùng không thấy */}

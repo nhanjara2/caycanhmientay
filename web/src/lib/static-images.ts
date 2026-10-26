@@ -103,6 +103,42 @@ export const STATIC_IMAGE_WIDTHS: Record<string, readonly number[]> = {
     960,
     1280
   ],
+  "/images/doi-tac/cay-bong-mat.webp": [
+    320,
+    640,
+    960,
+    1280
+  ],
+  "/images/doi-tac/cay-bui.webp": [
+    320,
+    640,
+    960,
+    1280
+  ],
+  "/images/doi-tac/cay-cau-co.webp": [
+    320,
+    640,
+    960,
+    1280
+  ],
+  "/images/doi-tac/cay-co-lon.webp": [
+    320,
+    640,
+    960,
+    1280
+  ],
+  "/images/doi-tac/cay-hoa.webp": [
+    320,
+    640,
+    960,
+    1280
+  ],
+  "/images/doi-tac/cay-tham.webp": [
+    320,
+    640,
+    960,
+    1280
+  ],
   "/images/doi-tac/cong-trinh.jpg": [
     320,
     640,

@@ -7,6 +7,7 @@ import { policyBody, policyNeedsShipping, type Section } from '@/lib/policy-cont
 import { SEED_DISEASE_IMAGES } from '@/lib/seed-disease-images';
 import { seedDiseases } from '@/lib/seed-diseases';
 import { DEFAULT_SHIPPING } from '@/lib/shipping';
+import { TREE_IMAGE_CREDITS } from '@/lib/tree-guides';
 import { getShippingConfig } from '@/server/shipping';
 import { withShare } from '@/lib/seo';
 import { withSeo } from '@/server/seo-cms';
@@ -35,6 +36,18 @@ function diseaseCredits(): Section {
   };
 }
 
+/** Ảnh minh họa các nhóm cây công trình ở trang Đối tác sỉ (lib/tree-guides.ts). */
+function treeCredits(): Section {
+  return {
+    id: 'anh-cay-cong-trinh',
+    h: 'Ảnh nhóm cây công trình',
+    blocks: [
+      'Ảnh minh họa nhóm cây ở trang Đối tác sỉ, đã được cắt khung 4:3 và thu nhỏ.',
+      { ul: TREE_IMAGE_CREDITS.map((x) => `${x.what}: ảnh của ${x.author}, ${x.license}, nguồn ${x.url}`) },
+    ],
+  };
+}
+
 /** PolicyLayout: trang Giới thiệu viết tay (components/AboutView), các trang khác dựng từ lib/policy-content. */
 export default async function Page({ params }: Props) {
   const p = getPolicy((await params).slug);
@@ -46,7 +59,7 @@ export default async function Page({ params }: Props) {
   const body = policyBody(p.slug, { shipping });
   if (!body) notFound();
 
-  const sections = p.slug === 'nguon-anh' ? [...body, diseaseCredits()] : body;
+  const sections = p.slug === 'nguon-anh' ? [...body, diseaseCredits(), treeCredits()] : body;
 
   return <PolicyArticle title={p.title} updated={p.updated} sections={sections} />;
 }
