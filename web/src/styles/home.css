@@ -21,6 +21,10 @@
 /* Banner không có nền riêng: nền là chính ảnh banner làm mờ (tràn ra ngoài 3rem để mép mờ không lộ viền trong) */
 .hm-hero__layer[data-blur] img { inset: -3rem; width: calc(100% + 6rem); height: calc(100% + 6rem); object-position: center; filter: blur(2.5rem) saturate(1.15); }
 @media (prefers-reduced-motion: reduce) { .hm-hero__layer { transition: none; } }
+/* Nền tràn lên sau đầu trang (kiểu Long Châu): đổi ảnh là cả đầu trang đổi theo. Lớp tối mỏng trên cùng giữ chữ trắng đầu trang dễ đọc */
+.hm-hero__bg { top: calc(-1 * var(--hm-hdr, 0px)); }
+.hm-hero__bg::before { content: ""; position: absolute; inset: 0 0 auto; z-index: 2; height: calc(var(--hm-hdr, 0px) + 2rem); background: linear-gradient(180deg, rgba(0, 0, 0, .28), rgba(0, 0, 0, 0)); pointer-events: none; }
+html[data-hm-top] .app-site .app-header { background: transparent; }
 
 .hm-hero__grid { display: grid; gap: 16px; }
 

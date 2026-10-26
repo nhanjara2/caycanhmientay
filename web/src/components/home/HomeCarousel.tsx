@@ -191,10 +191,27 @@ export function HomeHero({ tops, slides, sides, backdrop }: {
     const t = setTimeout(() => setAt((a) => ({ ...a, prev: -1 })), 1000);
     return () => clearTimeout(t);
   }, [i, prev]);
+  // Nền tràn lên sau đầu trang (kiểu Long Châu): đo khoảng từ đỉnh trang tới khung này làm --hm-hdr; đầu trang trong suốt
+  // khi còn ở đỉnh trang (html[data-hm-top]), cuộn xuống thì đầu trang (dính trên cùng) trả lại nền đặc.
+  const stage = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const hero = stage.current?.closest<HTMLElement>('.hm-hero');
+    const header = document.querySelector('.app-header');
+    if (!hero) return;
+    const root = document.documentElement;
+    const measure = () => hero.style.setProperty('--hm-hdr', `${Math.max(0, hero.getBoundingClientRect().top + scrollY)}px`);
+    const onScroll = () => { if (scrollY < 8) root.dataset.hmTop = ''; else delete root.dataset.hmTop; };
+    measure();
+    onScroll();
+    const ro = new ResizeObserver(measure);
+    if (header) ro.observe(header);
+    addEventListener('scroll', onScroll, { passive: true });
+    return () => { ro.disconnect(); removeEventListener('scroll', onScroll); delete root.dataset.hmTop; };
+  }, []);
   const lead = tops.length ? tops : heroSlides;
   const style = { '--hm-sides': sides.length } as CSSProperties;
   return (
-    <div className="hm-hero__stage" data-sides={sides.length || undefined} style={style}>
+    <div ref={stage} className="hm-hero__stage" data-sides={sides.length || undefined} style={style}>
       <div className="hm-hero__bg" aria-hidden="true">
         {backdrop && (
           <picture>
