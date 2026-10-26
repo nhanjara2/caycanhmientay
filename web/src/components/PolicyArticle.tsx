@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { Breadcrumb } from './Blocks';
 import type { ReactNode } from 'react';
 import type { Block, Section } from '@/lib/policy-content';
-import { PolicyNav } from './PolicyNav';
+import { PolicyNav, type NavGroup } from './PolicyNav';
+import type { Crumb } from '@/lib/jsonld';
 import { ShareButton } from './PostClient';
 
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
@@ -81,14 +82,14 @@ function BlockView({ b }: { b: Block }) {
 }
 
 /** Khung chung các trang chính sách / hướng dẫn: breadcrumb, menu bài trong danh mục, tiêu đề, nội dung theo mục. */
-export function PolicyArticle({ title, updated, sections }: { title: string; updated: string; sections: Section[] }) {
+export function PolicyArticle({ title, updated, sections, crumbs, nav }: { title: string; updated: string; sections: Section[]; crumbs?: Crumb[]; nav?: NavGroup[] }) {
   return (
     <>
       <div style={{ padding: '12px 24px 0', background: 'var(--surface)' }}>
-        <Breadcrumb items={[{ label: title }]} />
+        <Breadcrumb items={[...(crumbs ?? []), { label: title }]} />
       </div>
       <div className="vx-policypage">
-        <PolicyNav />
+        <PolicyNav groups={nav} />
         <article className="vx-policy">
           <h1>{title}</h1>
           <div className="vx-policy__meta">

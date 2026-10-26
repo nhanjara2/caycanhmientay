@@ -1,4 +1,5 @@
 import 'server-only';
+import { TREE_GUIDES, treeGuidePath } from '@/lib/tree-guides';
 import { connection } from 'next/server';
 import { asc, eq } from 'drizzle-orm';
 import { productImageUrl } from '@/lib/catalog';
@@ -103,6 +104,7 @@ async function pages(): Promise<SitemapEntry[]> {
   if (videos.length) out.push(...entry(VIDEO_PAGE, latest(videos.map(changed))));
 
   out.push(...policies.flatMap((p) => entry(`/chinh-sach/${p.slug}`, vnDate(p.updated))));
+  out.push(...TREE_GUIDES.flatMap((g) => entry(treeGuidePath(g.slug), vnDate(g.updated))));
   return out;
 }
 
