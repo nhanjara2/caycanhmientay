@@ -17,6 +17,7 @@ import { boughtTogether, getProduct } from '@/server/catalog';
 import { getCurrentUser } from '@/server/auth';
 import { getCategories } from '@/server/categories';
 import { productFaqs } from '@/server/faqs';
+import { careFaqs, careNotes, careSteps } from '@/lib/plant-care';
 import { productQuestions } from '@/server/questions';
 import { productReviews } from '@/server/reviews';
 import { isWishlisted } from '@/server/wishlist';
@@ -61,6 +62,8 @@ function FengShuiBlock({ f }: { f: NonNullable<Product['fengshui']> }) {
 
 function Content({ p, faq }: { p: Product; faq: boolean }) {
   const isPlant = p.ship === 'plant';
+  const care = isPlant ? careSteps(p) : [];
+  const notes = isPlant && care.length ? careNotes(p) : [];
   return (
     <div className="vx-content">
       <nav className="vx-toc">
@@ -86,7 +89,7 @@ function Content({ p, faq }: { p: Product; faq: boolean }) {
         {p.fengshui && <FengShuiBlock f={p.fengshui} />}
         <h3 id="cach-dung">{isPlant ? 'Cách chăm sóc' : 'Cách sử dụng'}</h3>
         <ul>
-          {p.specs.slice(0, 4).map(([k, v]) => (
+          {(care.length ? care : p.specs.slice(0, 4)).map(([k, v]) => (
             <li key={k}><b>{k}:</b> {v}.</li>
           ))}
         </ul>
@@ -95,6 +98,8 @@ function Content({ p, faq }: { p: Product; faq: boolean }) {
           <div>
             {p.pesticide ? (
               <><b>Lưu ý an toàn:</b> Đọc kỹ hướng dẫn trên bao bì, đeo găng tay và khẩu trang khi pha, để xa tầm tay trẻ em và vật nuôi. Tuân thủ thời gian cách ly trước khi thu hoạch.</>
+            ) : notes.length ? (
+              <><b>Lưu ý khi cây mới về:</b><ul>{notes.map((n) => <li key={n}>{n}</li>)}</ul></>
             ) : isPlant ? (
               <><b>Lưu ý:</b> Tuần đầu để cây chỗ sáng nhẹ cho quen môi trường rồi mới chuyển ra vị trí chính.</>
             ) : (
@@ -127,6 +132,12 @@ export default async function ProductPage({ params, searchParams }: Props) {
     productQuestions(p.slug, user),
     productFaqs(p),
   ]);
+  // Câu admin nhập trước, rồi câu tự sinh từ thông số chăm sóc (bỏ câu trùng)
+  const asked = new Set(faq.map((f) => f.question.trim().toLowerCase()));
+  const faqs = [
+    ...faq.map((f) => ({ key: `f${f.id}`, question: f.question, answer: f.answer })),
+    ...(p.ship === 'plant' ? careFaqs(p) : []).filter((f) => !asked.has(f.question.toLowerCase())).map((f, i) => ({ key: `c${i}`, ...f })),
+  ];
   // Số sao ở BuyBox tính từ đánh giá thật (products.rating/reviews là số mẫu, không dùng để hiển thị)
   const rs = reviewStats(reviews);
   const [categories, shipping] = await Promise.all([getCategories(), getShippingConfig()]);
@@ -173,7 +184,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
         <BuyBox product={{ ...p, rating: rs.avg, reviews: rs.count }} category={{ ...label, extra }} wishlisted={wishlisted} initialOpt={selected} />
       </section>
 
-      <Content p={p} faq={faq.length > 0} />
+      <Content p={p} faq={faqs.length > 0} />
 
       {together.length > 0 && (
         <section className="vx-card">
@@ -182,18 +193,18 @@ export default async function ProductPage({ params, searchParams }: Props) {
         </section>
       )}
 
-      {faq.length > 0 && (
+      {faqs.length > 0 && (
         <section className="vx-card" id="hoi-dap">
           <h3 className="vx-card__title">Câu hỏi thường gặp</h3>
           <div className="vx-faq">
-            {faq.map((f, i) => (
-              <details key={f.id} open={i === 0}>
+            {faqs.map((f, i) => (
+              <details key={f.key} open={i === 0}>
                 <summary><span className="q">?</span>{f.question}<Icon name="chevron" /></summary>
                 <p style={{ whiteSpace: 'pre-line' }}>{f.answer}</p>
               </details>
             ))}
           </div>
-          <JsonLd data={faqLd(faq)} />
+          <JsonLd data={faqLd(faqs)} />
         </section>
       )}
 
