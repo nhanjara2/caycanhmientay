@@ -32,8 +32,11 @@ function drawWatermark(g: CanvasRenderingContext2D, w: number, h: number, text: 
 /** Vùng cắt (từ hộp Cắt ảnh): xoay `rotate` độ trước, rồi lấy khung x, y, w, h — tính bằng pixel của ảnh ĐÃ xoay. */
 export type Crop = { rotate: 0 | 90 | 180 | 270; x: number; y: number; w: number; h: number };
 
-/** Nén ảnh: cạnh dài tối đa `max` px, JPEG ~80%. Có `watermark` thì đóng chữ ký lên ảnh; có `crop` thì xoay + cắt trước. */
-export async function compressImage(file: Blob, max = 1600, watermark?: string, crop?: Crop): Promise<File> {
+/**
+ * Nén ảnh: cạnh dài tối đa `max` px, JPEG ~80%. Có `watermark` thì đóng chữ ký lên ảnh; có `crop` thì xoay + cắt trước.
+ * `alpha`: giữ nền trong suốt (ảnh PNG banner đặt trên nền riêng) — xuất WebP thay vì JPEG.
+ */
+export async function compressImage(file: Blob, max = 1600, watermark?: string, crop?: Crop, alpha = false): Promise<File> {
   const bmp = await createImageBitmap(file);
   const rot = crop?.rotate ?? 0;
   const side = rot % 180 !== 0;
@@ -47,8 +50,10 @@ export async function compressImage(file: Blob, max = 1600, watermark?: string, 
   canvas.height = Math.max(1, Math.round(h * scale));
   const g = canvas.getContext('2d')!;
   // nền trắng: ảnh PNG nền trong suốt đổi sang JPEG không bị thành nền đen
-  g.fillStyle = '#fff';
-  g.fillRect(0, 0, canvas.width, canvas.height);
+  if (!alpha) {
+    g.fillStyle = '#fff';
+    g.fillRect(0, 0, canvas.width, canvas.height);
+  }
   g.imageSmoothingQuality = 'high';
   g.save();
   g.scale(canvas.width / w, canvas.height / h);
@@ -58,7 +63,9 @@ export async function compressImage(file: Blob, max = 1600, watermark?: string, 
   g.restore();
   bmp.close();
   if (watermark) drawWatermark(g, canvas.width, canvas.height, watermark);
-  const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, 'image/jpeg', 0.8));
+  // Trình duyệt không xuất được WebP (Safari cũ) thì trả PNG — vẫn giữ nền trong suốt.
+  const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, alpha ? 'image/webp' : 'image/jpeg', alpha ? 0.85 : 0.8));
   if (!blob) throw new Error('Không đọc được ảnh');
-  return new File([blob], 'photo.jpg', { type: 'image/jpeg' });
+  const ext = { 'image/webp': 'webp', 'image/png': 'png' }[blob.type] ?? 'jpg';
+  return new File([blob], `photo.${ext}`, { type: blob.type });
 }

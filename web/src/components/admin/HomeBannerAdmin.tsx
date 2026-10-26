@@ -88,7 +88,8 @@ function Editor({ initial, onClose }: { initial: Draft; onClose: () => void }) {
     setBusy({ image: 'Đang tải ảnh…', imageMobile: 'Đang tải ảnh điện thoại…', bgImage: 'Đang tải ảnh nền…', bgImageMobile: 'Đang tải ảnh nền điện thoại…' }[key]);
     try {
       const fd = new FormData();
-      fd.set('photo', await compressImage(f, 1920, undefined, c));
+      // Ảnh băng rộng là PNG nền trong suốt đặt trên ảnh nền riêng — giữ trong suốt, không đổ nền trắng.
+      fd.set('photo', await compressImage(f, 1920, undefined, c, slot.key === 'top' && (key === 'image' || key === 'imageMobile')));
       const r = await uploadBannerImageAction(fd);
       if (r.ok) set(key, r.file); else setError(r.error);
     } catch {
