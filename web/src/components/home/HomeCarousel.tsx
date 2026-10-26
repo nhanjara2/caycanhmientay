@@ -168,8 +168,8 @@ function useCompact() {
  * Khung đầu trang chủ (kiểu Long Châu): nền phủ kín bề ngang, băng ảnh rộng trên cùng, rồi ảnh lớn + tối đa 2 ảnh nhỏ bên phải.
  * Tablet / điện thoại (< 1024px) không đủ chỗ đặt ảnh nhỏ bên cạnh: các ảnh nhỏ nhập vào băng ảnh lớn thành MỘT băng chạy chung
  * (ô ảnh nhỏ riêng ẩn bằng CSS) thay vì xếp thành hàng bên dưới.
- * Nền đổi theo băng ảnh rộng: mỗi ảnh một lớp nền (nền riêng chủ shop tải; không có thì ảnh nền sự kiện chung;
- * chưa có nữa thì chính ảnh đó phóng to, làm mờ) — qua ảnh mới thì lớp nền của nó hiện dần
+ * Nền đổi theo băng ảnh rộng (kiểu Long Châu): banner là ảnh PNG nền trong suốt, nằm trên ảnh nền trơn riêng của nó
+ * (không có nền riêng thì ảnh nền sự kiện chung, chưa có nữa thì nền xanh) — qua ảnh mới thì lớp nền của nó hiện dần
  * lên trên lớp cũ (lớp cũ giữ nguyên tới khi lớp mới rõ hẳn, không lộ nền xanh giữa chừng), cả khoảng trên trang đổi theo.
  * Không có băng ảnh rộng thì nền đổi theo ảnh lớn.
  */
@@ -191,27 +191,10 @@ export function HomeHero({ tops, slides, sides, backdrop }: {
     const t = setTimeout(() => setAt((a) => ({ ...a, prev: -1 })), 1000);
     return () => clearTimeout(t);
   }, [i, prev]);
-  // Nền tràn lên sau đầu trang (kiểu Long Châu): đo khoảng từ đỉnh trang tới khung này làm --hm-hdr; đầu trang trong suốt
-  // khi còn ở đỉnh trang (html[data-hm-top]), cuộn xuống thì đầu trang (dính trên cùng) trả lại nền đặc.
-  const stage = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const hero = stage.current?.closest<HTMLElement>('.hm-hero');
-    const header = document.querySelector('.app-header');
-    if (!hero) return;
-    const root = document.documentElement;
-    const measure = () => hero.style.setProperty('--hm-hdr', `${Math.max(0, hero.getBoundingClientRect().top + scrollY)}px`);
-    const onScroll = () => { if (scrollY < 8) root.dataset.hmTop = ''; else delete root.dataset.hmTop; };
-    measure();
-    onScroll();
-    const ro = new ResizeObserver(measure);
-    if (header) ro.observe(header);
-    addEventListener('scroll', onScroll, { passive: true });
-    return () => { ro.disconnect(); removeEventListener('scroll', onScroll); delete root.dataset.hmTop; };
-  }, []);
   const lead = tops.length ? tops : heroSlides;
   const style = { '--hm-sides': sides.length } as CSSProperties;
   return (
-    <div ref={stage} className="hm-hero__stage" data-sides={sides.length || undefined} style={style}>
+    <div className="hm-hero__stage" data-sides={sides.length || undefined} style={style}>
       <div className="hm-hero__bg" aria-hidden="true">
         {backdrop && (
           <picture>
@@ -220,10 +203,9 @@ export function HomeHero({ tops, slides, sides, backdrop }: {
           </picture>
         )}
         {lead.map((s, k) => {
-          // Có Ảnh nền sự kiện chung (vẽ ở trên) thì ảnh không có nền riêng dùng nền chung đó, không cần lớp riêng.
-          if (!s.bg && backdrop) return null;
-          // Không có nền nào: lấy chính ảnh của banner (bản điện thoại nếu có) làm mờ.
-          const own: NonNullable<Slide['bg']> = s.bg ?? { image: s.image, imageMobile: s.imageMobile ?? undefined };
+          // Chỉ ảnh có nền riêng (ảnh nền trơn chủ shop tải, kiểu Long Châu) mới có lớp nền; còn lại dùng nền sự kiện chung / nền xanh.
+          if (!s.bg) return null;
+          const own = s.bg;
           return (
             <div
               key={s.key}
@@ -232,14 +214,12 @@ export function HomeHero({ tops, slides, sides, backdrop }: {
               data-prev={k === prev || undefined}
               // Có màu nền: ảnh nền giữ nguyên tỉ lệ, đặt sát trên, phần dưới là màu (như Long Châu); không màu thì ảnh phủ kín.
               data-fit={(own.image && own.color) || undefined}
-              data-blur={!s.bg || undefined}
-              style={own.color ? { background: own.color } : undefined}
+                            style={own.color ? { background: own.color } : undefined}
             >
               {seen.has(k) && own.image && (
-                // Nền làm mờ chỉ cần bản thu nhỏ (mờ thì không thấy chi tiết) — khỏi tải lại ảnh gốc 1800px làm nền.
                 <picture>
-                  {own.imageMobile && <source media="(max-width: 47.9375em)" srcSet={s.bg ? own.imageMobile : thumbUrl(own.imageMobile, 320)} />}
-                  <img src={s.bg ? own.image : thumbUrl(own.image, 640)} alt="" />
+                  {own.imageMobile && <source media="(max-width: 47.9375em)" srcSet={own.imageMobile} />}
+                  <img src={own.image} alt="" />
                 </picture>
               )}
             </div>
