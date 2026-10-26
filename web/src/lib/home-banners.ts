@@ -4,8 +4,8 @@
 export const BANNER_SLOTS = [
   {
     key: 'top', name: 'Băng ảnh rộng trên cùng', max: 8,
-    size: '1216 × 280 px', ratio: 4.34, mobile: { size: '720 × 300 px', ratio: 2.4 },
-    hint: 'Băng ảnh rộng nằm trên cùng trang chủ (trên ảnh lớn), chạy vòng 6 giây. Mỗi ảnh kèm một nền riêng phủ kín cả khoảng phía sau — qua ảnh mới thì cả nền đổi theo, như Long Châu.',
+    size: '2432 × 560 px', ratio: 4.34, mobile: { size: '1080 × 450 px', ratio: 2.4 },
+    hint: 'Băng ảnh rộng nằm trên cùng trang chủ (trên ảnh lớn), chạy vòng 6 giây. Mỗi ảnh kèm một nền riêng phủ kín cả khoảng phía sau — qua ảnh mới thì cả nền đổi theo, như Long Châu. Máy tính và điện thoại mỗi bên một cặp ảnh banner + ảnh nền.',
   },
   {
     key: 'hero', name: 'Ảnh lớn đầu trang', max: 8,

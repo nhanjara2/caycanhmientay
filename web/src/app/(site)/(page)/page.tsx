@@ -42,7 +42,7 @@ const QUICK = [
 const fromBanner = (b: Banner): Slide => ({
   key: `b${b.id}`, title: b.title, subtitle: b.subtitle || undefined, cta: b.cta || undefined, href: b.href || undefined,
   showText: b.showText, image: bannerImageUrl(b.image), imageMobile: b.imageMobile ? bannerImageUrl(b.imageMobile) : null,
-  bg: b.slot === 'top' && (b.bgImage || b.bgColor) ? {
+  bg: b.slot === 'top' && (b.bgImage || b.bgImageMobile || b.bgColor) ? {
     image: b.bgImage ? bannerImageUrl(b.bgImage) : undefined,
     imageMobile: b.bgImageMobile ? bannerImageUrl(b.bgImageMobile) : undefined,
     color: b.bgColor ?? undefined,

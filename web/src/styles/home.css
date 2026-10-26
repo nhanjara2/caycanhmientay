@@ -18,6 +18,7 @@
 .hm-hero__layer[data-on] { z-index: 1; opacity: 1; }
 .hm-hero__layer[data-prev] { opacity: 1; transition: none; }
 .hm-hero__layer[data-fit] img { bottom: auto; height: auto; }
+@media (min-width: 48em) { .hm-hero__layer img[data-mob-only] { display: none; } }
 @media (prefers-reduced-motion: reduce) { .hm-hero__layer { transition: none; } }
 
 .hm-hero__grid { display: grid; gap: 16px; }
@@ -405,6 +406,22 @@
 .ad-bnr-stage { position: relative; isolation: isolate; overflow: hidden; padding: 6% 8% 8%; border-radius: 12px; background: var(--surface-sunken); }
 .ad-bnr-stage > img { position: absolute; inset: 0; z-index: -1; width: 100%; height: 100%; object-fit: cover; object-position: top; }
 .ad-bnr-stage[data-fit] > img { bottom: auto; height: auto; }
+/* Băng ảnh rộng: 2 cột Máy tính | Điện thoại, mỗi cột ảnh banner + ảnh nền */
+.ad-bnr-pair { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 12px; }
+.ad-bnr-dev { display: flex; flex-direction: column; gap: 10px; min-width: 0; padding: 10px 12px 12px; border: 1px solid var(--border); border-radius: var(--radius-md); }
+.ad-bnr-dev h4 { margin: 0; font-size: 0.9375rem; }
+.ad-bnr-dev--mob { background: var(--surface-sunken); }
+.ad-bnr-dev .ad-bnr-mob { max-width: none; }
+.ad-bnr-pick2 { display: flex; flex-direction: column; gap: 4px; }
+.ad-bnr-pick2__lb { font-size: 0.8125rem; font-weight: 600; }
+.ad-bnr-pick2__lb i { color: var(--danger); font-style: normal; }
+.ad-bnr-pick2__lb small { font-weight: 400; color: var(--ink-muted); }
+.ad-bnr-pick2__img { display: block; width: 100%; max-height: 160px; padding: 0; overflow: hidden; border: 1px solid var(--border); border-radius: 8px; cursor: pointer;
+  background: repeating-conic-gradient(#e6e9e7 0 25%, #fff 0 50%) 0 0 / 14px 14px; }
+.ad-bnr-pick2__img.pi-tile { min-height: 56px; }
+.ad-bnr-pick2__img img { width: 100%; height: 100%; object-fit: contain; }
+.ad-bnr-pick2__acts { display: flex; gap: 6px; }
+@media (max-width: 47.9375em) { .ad-bnr-pair { grid-template-columns: minmax(0, 1fr); } }
 .ad-bnr-bg { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 10px 12px 12px; border: 1px solid var(--border); border-radius: var(--radius-md); }
 .ad-bnr-bg legend { padding: 0 4px; font-size: 0.875rem; font-weight: 600; }
 .ad-bnr-bg legend small { font-weight: 400; color: var(--ink-muted); }

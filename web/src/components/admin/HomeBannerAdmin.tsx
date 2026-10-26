@@ -13,6 +13,36 @@ import { ORIGINAL, useImageCrop } from './ImageCropper';
 import { BANNER_SLOTS, bannerImageUrl, slotOf, type Banner, type BannerSlot } from '@/lib/home-banners';
 import '@/styles/home.css';
 
+/** Ảnh nền phía sau băng ảnh rộng: máy tính 1920 × 940, điện thoại 1080 × 910 (đúng tỉ lệ file thiết kế nền điện thoại của shop). */
+const BG_SIZE = { desktop: '1920 × 940 px', mobile: '1080 × 910 px' };
+const BG_RATIO = { desktop: 1920 / 940, mobile: 1080 / 910 };
+
+/** Một ô chọn ảnh: chưa có thì ô nét đứt "+ Chọn", có rồi thì ảnh nhỏ (nền ô caro để thấy phần trong suốt) + Đổi / Bỏ. */
+function ImgPick({ label, size, file, ratio, busy, required, onPick, onClear }: {
+  label: string; size: string; file: string | null; ratio: number; busy: boolean; required?: boolean; onPick: () => void; onClear?: () => void;
+}) {
+  return (
+    <div className="ad-bnr-pick2">
+      <span className="ad-bnr-pick2__lb">{label}{required && <i> *</i>} <small>{size}</small></span>
+      {file ? (
+        <>
+          <button type="button" className="ad-bnr-pick2__img" style={{ aspectRatio: String(ratio) }} disabled={busy} onClick={onPick} aria-label={`Đổi ${label.toLowerCase()}`}>
+            <img src={bannerImageUrl(file)} alt="" />
+          </button>
+          <span className="ad-bnr-pick2__acts">
+            <button type="button" className="vx-btn vx-btn--outline vx-btn--sm" disabled={busy} onClick={onPick}>Đổi</button>
+            {onClear && <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" onClick={onClear}>Bỏ</button>}
+          </span>
+        </>
+      ) : (
+        <button type="button" className="pi-tile pi-tile--add ad-bnr-pick2__img" style={{ aspectRatio: String(ratio) }} disabled={busy} onClick={onPick}>
+          <b>+ Chọn ảnh</b>
+        </button>
+      )}
+    </div>
+  );
+}
+
 type Row = Banner & { updatedBy: string | null; updatedAt: Date };
 
 const vnDay = (d: Date | null) => (d ? d.toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }) : null);
@@ -53,8 +83,8 @@ function Preview({ d, mobile }: { d: Draft; mobile?: boolean }) {
     </div>
   );
   // Băng ảnh rộng có nền riêng: xem trước ảnh đặt trên nền đó như trang chủ.
-  if (d.slot !== 'top' || (!d.bgImage && !d.bgColor)) return car;
   const bg = mobile ? d.bgImageMobile ?? d.bgImage : d.bgImage;
+  if (d.slot !== 'top' || (!bg && !d.bgColor)) return car;
   return (
     <div className="ad-bnr-stage" data-fit={(bg && d.bgColor) || undefined} style={{ backgroundColor: d.bgColor ?? undefined }}>
       {bg && <img src={bannerImageUrl(bg)} alt="" />}
@@ -81,7 +111,7 @@ function Editor({ initial, onClose }: { initial: Draft; onClose: () => void }) {
     if (!f) return;
     setError('');
     // khung cắt đúng tỉ lệ ô trên trang chủ (ảnh nền băng rộng: 1920 × 940 / 720 × 900)
-    const ratio = { image: slot.ratio, imageMobile: slot.mobile?.ratio ?? slot.ratio, bgImage: 1920 / 940, bgImageMobile: 720 / 900 }[key];
+    const ratio = { image: slot.ratio, imageMobile: slot.mobile?.ratio ?? slot.ratio, bgImage: BG_RATIO.desktop, bgImageMobile: BG_RATIO.mobile }[key];
     const c = await crop(f, { aspects: [{ label: 'Đúng khung banner', ratio }, ORIGINAL], max: 1920, minSide: ratio >= 1 ? Math.round(1200 / ratio) : 600 });
     for (const r of [main, mob, bg, bgm]) if (r.current) r.current.value = '';
     if (c === 'cancel' || c === 'skip') return;
@@ -146,7 +176,33 @@ function Editor({ initial, onClose }: { initial: Draft; onClose: () => void }) {
           <input ref={bg} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(e) => void upload(e.target.files?.[0], 'bgImage')} />
           <input ref={bgm} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(e) => void upload(e.target.files?.[0], 'bgImageMobile')} />
           {cropDialog}
-          {d.image ? (
+          {d.slot === 'top' ? (
+            <>
+              <div className="ad-bnr-pair">
+                <section className="ad-bnr-dev">
+                  <h4>Máy tính, tablet</h4>
+                  <ImgPick label="Ảnh banner" size={slot.size} file={d.image} ratio={slot.ratio} busy={!!busy} required onPick={() => main.current?.click()} />
+                  <ImgPick label="Ảnh nền" size={BG_SIZE.desktop} file={d.bgImage} ratio={BG_RATIO.desktop} busy={!!busy} onPick={() => bg.current?.click()} onClear={() => set('bgImage', null)} />
+                  {d.image && <Preview d={d} />}
+                </section>
+                <section className="ad-bnr-dev ad-bnr-dev--mob">
+                  <h4>Điện thoại</h4>
+                  <ImgPick label="Ảnh banner" size={slot.mobile?.size ?? slot.size} file={d.imageMobile} ratio={slot.mobile?.ratio ?? slot.ratio} busy={!!busy} onPick={() => mob.current?.click()} onClear={() => set('imageMobile', null)} />
+                  <ImgPick label="Ảnh nền" size={BG_SIZE.mobile} file={d.bgImageMobile} ratio={BG_RATIO.mobile} busy={!!busy} onPick={() => bgm.current?.click()} onClear={() => set('bgImageMobile', null)} />
+                  {d.image && <div className="ad-bnr-mob"><Preview d={d} mobile /></div>}
+                </section>
+              </div>
+              {busy && <span className="vx-help">{busy}</span>}
+              <span className="vx-help">Điện thoại để trống thì dùng ảnh máy tính thu nhỏ. Ảnh banner nên là PNG nền trong suốt.</span>
+              <div className="ad-bnr-bg__row">
+                <label className="ad-bnr-bg__color">
+                  <input type="color" value={d.bgColor ?? '#e8f2ea'} onChange={(e) => set('bgColor', e.target.value)} />
+                  {d.bgColor ? `Màu nền ${d.bgColor}` : 'Chọn màu nền (kéo dài dưới ảnh nền)'}
+                </label>
+                {d.bgColor && <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" onClick={() => set('bgColor', null)}>Bỏ màu</button>}
+              </div>
+            </>
+          ) : d.image ? (
             <div className="ad-bnr-imgs">
               <Preview d={d} />
               <div className="ad-bnr-imgacts">
@@ -154,11 +210,11 @@ function Editor({ initial, onClose }: { initial: Draft; onClose: () => void }) {
                 {slot.mobile && (
                   d.imageMobile
                     ? <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" onClick={() => set('imageMobile', null)}>Bỏ ảnh riêng cho điện thoại</button>
-                    : <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" disabled={!!busy} onClick={() => mob.current?.click()}>+ Ảnh riêng cho điện thoại ({slot.mobile.size})</button>
+                    : <button type="button" className="vx-btn vx-btn--outline vx-btn--sm" disabled={!!busy} onClick={() => mob.current?.click()}>+ Ảnh riêng cho điện thoại ({slot.mobile.size})</button>
                 )}
                 {busy && <span className="vx-help">{busy}</span>}
               </div>
-              {slot.mobile && (d.imageMobile || (d.slot === 'top' && d.bgImageMobile)) && (
+              {slot.mobile && d.imageMobile && (
                 <div className="ad-bnr-mob">
                   <span className="vx-help">Trên điện thoại:</span>
                   <Preview d={d} mobile />
@@ -170,38 +226,6 @@ function Editor({ initial, onClose }: { initial: Draft; onClose: () => void }) {
               <b>{busy || '+ Chọn ảnh banner'}</b>
               {!busy && <small>{slot.size} · JPG, PNG, WebP</small>}
             </button>
-          )}
-
-          {d.slot === 'top' && (
-            <fieldset className="ad-bnr-bg">
-              <legend>Nền phía sau khi ảnh này đang hiện <small>(không bắt buộc)</small></legend>
-              <span className="vx-help">
-                Qua ảnh này thì cả khoảng nền phía sau trên trang chủ (sau băng ảnh, ảnh lớn, lối tắt) đổi theo. Ảnh nền máy tính <b>1920 × 940 px</b>,
-                điện thoại <b>720 × 900 px</b>; họa tiết dồn lên trên và hai bên (phần giữa bị ảnh che). Chọn thêm <b>màu nền</b> trùng màu mép dưới ảnh nền
-                để nền kéo dài liền mạch xuống dưới — hoặc chỉ chọn màu. Để trống = dùng “Ảnh nền sự kiện” chung, chưa có thì chính ảnh này làm mờ.
-              </span>
-              <div className="ad-bnr-bg__row">
-                {d.bgImage && <img className="ad-bnr-bg__thumb" src={bannerImageUrl(d.bgImage)} alt="Ảnh nền máy tính đã chọn" />}
-                <button type="button" className="vx-btn vx-btn--outline vx-btn--sm" disabled={!!busy} onClick={() => bg.current?.click()}>{d.bgImage ? 'Đổi ảnh nền' : '+ Chọn ảnh nền'}</button>
-                {d.bgImage && <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" onClick={() => setD((x) => ({ ...x, bgImage: null, bgImageMobile: null }))}>Bỏ ảnh nền</button>}
-              </div>
-              {d.bgImage && (
-                <div className="ad-bnr-bg__row">
-                  {d.bgImageMobile && <img className="ad-bnr-bg__thumb ad-bnr-bg__thumb--mob" src={bannerImageUrl(d.bgImageMobile)} alt="Ảnh nền điện thoại đã chọn" />}
-                  <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" disabled={!!busy} onClick={() => bgm.current?.click()}>
-                    {d.bgImageMobile ? 'Đổi ảnh nền điện thoại' : '+ Ảnh nền riêng cho điện thoại'}
-                  </button>
-                  {d.bgImageMobile && <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" onClick={() => set('bgImageMobile', null)}>Bỏ</button>}
-                </div>
-              )}
-              <div className="ad-bnr-bg__row">
-                <label className="ad-bnr-bg__color">
-                  <input type="color" value={d.bgColor ?? '#e8f2ea'} onChange={(e) => set('bgColor', e.target.value)} />
-                  {d.bgColor ? `Màu nền ${d.bgColor}` : 'Chọn màu nền'}
-                </label>
-                {d.bgColor && <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" onClick={() => set('bgColor', null)}>Bỏ màu</button>}
-              </div>
-            </fieldset>
           )}
 
           <div className="vx-fl">

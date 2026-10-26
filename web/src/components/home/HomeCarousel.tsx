@@ -213,13 +213,14 @@ export function HomeHero({ tops, slides, sides, backdrop }: {
               data-on={k === i || undefined}
               data-prev={k === prev || undefined}
               // Có màu nền: ảnh nền giữ nguyên tỉ lệ, đặt sát trên, phần dưới là màu (như Long Châu); không màu thì ảnh phủ kín.
-              data-fit={(own.image && own.color) || undefined}
+              data-fit={((own.image || own.imageMobile) && own.color) || undefined}
                             style={own.color ? { background: own.color } : undefined}
             >
-              {seen.has(k) && own.image && (
+              {seen.has(k) && (own.image || own.imageMobile) && (
                 <picture>
                   {own.imageMobile && <source media="(max-width: 47.9375em)" srcSet={own.imageMobile} />}
-                  <img src={own.image} alt="" />
+                  {/* Chỉ có nền điện thoại: máy tính ẩn ảnh (dùng màu / nền chung) */}
+                  <img src={own.image ?? own.imageMobile} alt="" data-mob-only={!own.image || undefined} />
                 </picture>
               )}
             </div>
