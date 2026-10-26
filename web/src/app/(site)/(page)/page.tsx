@@ -72,6 +72,12 @@ export default async function HomePage() {
   // Băng ảnh rộng dựng sẵn: không có nền riêng — nền cả khoảng trên là chính ảnh đó làm mờ (HomeHero).
   const fallbackTop: Slide[] = [
     {
+      // Kiểu Long Châu: banner PNG nền trong suốt nằm trên ảnh nền trơn riêng (nền đổi theo ảnh).
+      key: 'top-ccmt', showText: false, image: '/images/banner/ccmt-hero.webp', imageMobile: '/images/banner/ccmt-hero-mb.webp',
+      title: 'Cây Cảnh Miền Tây — đa dạng, tươi tốt, giá tốt, giao hàng miền Tây', href: '/danh-muc',
+      bg: { image: '/images/banner/ccmt-hero-bg.webp', imageMobile: '/images/banner/ccmt-hero-bg-mb.webp', color: '#eaeffa' },
+    },
+    {
       // Ảnh thiết kế đã có sẵn chữ ("Vui Xuân Tết") nên không đè chữ lên; bản điện thoại xếp riêng 12:5.
       key: 'top-tet', showText: false, image: '/images/banner/vui-xuan-tet.webp', imageMobile: '/images/banner/vui-xuan-tet-mb.webp',
       title: 'Vui Xuân Tết, rộn ràng vui xuân — xem mai, quất, đào và cây Tết', href: '/cay-tet',
