@@ -244,8 +244,10 @@ export const MAX_IMAGE_ALT = 125;
 export const imageAlt = (p: Pick<Product, 'name' | 'imageAlts'>, i: number) =>
   p.imageAlts?.[i] || (i === 0 ? p.name : `${p.name} – ảnh ${i + 1}`);
 
-/** `slug` gắn vào tên file trên URL (cay-kim-tien-<mã>.jpg) — xem lib/images.ts. */
-export const productImageUrl = (file: string, slug?: string) => imageUrl('product-images', file, slug);
+/** `slug` gắn vào tên file trên URL (cay-kim-tien-<mã>.jpg) — xem lib/images.ts.
+ *  `file` là link https ngoài (ảnh của hãng, vd. phân bón Rynan) thì trả nguyên link — dòng `product_images` đó có `data` rỗng. */
+export const productImageUrl = (file: string, slug?: string) =>
+  /^https:\/\/[^\s"'<>()\\]+$/i.test(file) ? file : imageUrl('product-images', file, slug);
 
 /** Lấy mã video từ link YouTube: youtu.be/…, watch?v=…, /shorts/…, /embed/…, /live/… hoặc dán thẳng mã. */
 export function parseYoutubeId(input: string): string | null {

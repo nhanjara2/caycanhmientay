@@ -69,7 +69,7 @@ async function hydrate(rows: Row[]): Promise<Product[]> {
  *  Tự ghi "bảng"."cột": truy vấn một bảng Drizzle bỏ tên bảng, khi đó cột bên ngoài bị hiểu nhầm thành cột của product_images. */
 export const mainImageOf = (slug: AnyPgColumn) => {
   const outer = sql`${sql.identifier(getTableName(slug.table))}.${sql.identifier(slug.name)}`;
-  return sql<string | null>`(select pi.product_slug || '-' || pi.file from ${I} pi where pi.product_slug = ${outer} order by pi.idx, pi.id limit 1)`
+  return sql<string | null>`(select case when pi.file like 'https://%' then pi.file else pi.product_slug || '-' || pi.file end from ${I} pi where pi.product_slug = ${outer} order by pi.idx, pi.id limit 1)`
     .mapWith((f: string | null) => (f ? productImageUrl(f) : null)); // "slug-file" như productImageUrl(file, slug)
 };
 
