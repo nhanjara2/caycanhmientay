@@ -3,7 +3,7 @@ import { connection } from 'next/server';
 import { cache } from 'react';
 import { and, asc, desc, eq, gte, inArray, isNull, lt, lte, notInArray, or, sql } from 'drizzle-orm';
 import * as z from 'zod';
-import { BANNER_IMAGE_FILE, BANNER_SLOT_KEYS, BG_COLOR, slotOf, type Banner } from '@/lib/home-banners';
+import { BANNER_IMAGE_FILE, BANNER_SLOT_KEYS, BANNER_TONE_KEYS, BG_COLOR, BUILTIN_BANNER_IMAGE, slotOf, type Banner } from '@/lib/home-banners';
 import { staffName, type SessionUser } from './auth';
 import { db, schema } from './db';
 import type { SavedImage } from './uploads';
@@ -36,7 +36,10 @@ export async function listBannersAdmin() {
 }
 
 const line = (max: number) => z.string().trim().max(max, `Tối đa ${max} ký tự`);
-const file = z.string().regex(BANNER_IMAGE_FILE, 'Ảnh không hợp lệ');
+// Ảnh tải lên, hoặc ảnh dựng sẵn của shop (giữ nguyên khi sửa chữ / link của banner dựng sẵn).
+const file = z.string().refine((f) => BANNER_IMAGE_FILE.test(f) || BUILTIN_BANNER_IMAGE.test(f), 'Ảnh không hợp lệ');
+/** Ảnh nằm trong bảng home_banner_images (không phải ảnh dựng sẵn). */
+const uploaded = (f: string | null): f is string => !!f && BANNER_IMAGE_FILE.test(f);
 // Ngày nhập ở admin (yyyy-mm-dd, giờ Việt Nam): "từ" = đầu ngày, "đến" = hết ngày.
 const day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable();
 const vnDate = (d: string, end: boolean) => new Date(`${d}T${end ? '23:59:59.999' : '00:00:00'}+07:00`);
@@ -49,6 +52,7 @@ export const BannerInputSchema = z.object({
   cta: line(30),
   href: line(300).refine((h) => !h || h.startsWith('/') || /^https?:\/\/\S+$/.test(h), 'Link phải bắt đầu bằng / (trang trong web) hoặc https://'),
   showText: z.boolean(),
+  tone: z.enum(BANNER_TONE_KEYS),
   image: file,
   imageMobile: file.nullable(),
   bgImage: file.nullable(),
@@ -63,7 +67,7 @@ export type BannerInput = z.infer<typeof BannerInputSchema>;
 /** Dọn ảnh đã tải hơn 1 ngày mà không banner nào dùng (ảnh vừa tải chưa kịp lưu thì giữ). */
 async function cleanImages() {
   const used = await db.select({ a: B.image, b: B.imageMobile, c: B.bgImage, d: B.bgImageMobile }).from(B);
-  const keep = used.flatMap((u) => [u.a, u.b, u.c, u.d]).filter((f): f is string => !!f);
+  const keep = used.flatMap((u) => [u.a, u.b, u.c, u.d]).filter(uploaded);
   await db.delete(BI).where(and(lt(BI.createdAt, new Date(Date.now() - 86_400_000)), keep.length ? notInArray(BI.file, keep) : undefined));
 }
 
@@ -71,8 +75,8 @@ export async function saveBanner(v: BannerInput, user: SessionUser) {
   const { id, startsAt, endsAt, ...rest } = v;
   // Nền riêng chỉ có ở băng ảnh rộng trên cùng.
   if (rest.slot !== 'top') Object.assign(rest, { bgImage: null, bgImageMobile: null, bgColor: null });
-  const files = [rest.image, rest.imageMobile, rest.bgImage, rest.bgImageMobile].filter((f): f is string => !!f);
-  const found = await db.select({ file: BI.file }).from(BI).where(inArray(BI.file, files));
+  const files = [rest.image, rest.imageMobile, rest.bgImage, rest.bgImageMobile].filter(uploaded);
+  const found = files.length ? await db.select({ file: BI.file }).from(BI).where(inArray(BI.file, files)) : [];
   if (found.length !== new Set(files).size) return { ok: false as const, error: 'Ảnh đã bị xóa — hãy tải ảnh lại' };
   const data = {
     ...rest,
@@ -105,8 +109,9 @@ export async function deleteBanner(id: number) {
   const r = await db.delete(B).where(eq(B.id, id))
     .returning({ image: B.image, imageMobile: B.imageMobile, bgImage: B.bgImage, bgImageMobile: B.bgImageMobile });
   if (!r.length) return false;
-  // Ảnh của banner vừa xóa: xóa luôn nếu không banner khác dùng chung.
-  const mine = [r[0].image, r[0].imageMobile, r[0].bgImage, r[0].bgImageMobile].filter((f): f is string => !!f);
+  // Ảnh tải lên của banner vừa xóa: xóa luôn nếu không banner khác dùng chung (ảnh dựng sẵn là file tĩnh, không đụng tới).
+  const mine = [r[0].image, r[0].imageMobile, r[0].bgImage, r[0].bgImageMobile].filter(uploaded);
+  if (!mine.length) return true;
   const still = await db.select({ a: B.image, b: B.imageMobile, c: B.bgImage, d: B.bgImageMobile }).from(B)
     .where(or(inArray(B.image, mine), inArray(B.imageMobile, mine), inArray(B.bgImage, mine), inArray(B.bgImageMobile, mine)));
   const used = new Set(still.flatMap((s) => [s.a, s.b, s.c, s.d]));

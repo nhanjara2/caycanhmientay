@@ -29,7 +29,7 @@ export { indexXml, parseSitemapName, SITEMAP_MAX_URLS, urlsetXml, type SitemapEn
  * trang chính sách); trang không có ngày thật (trang chủ, trang giới thiệu dịch vụ…) thì bỏ trống — không ghi ngày deploy.
  */
 
-const STATIC_PAGES = ['/', '/danh-muc', '/doi-tac', '/bao-gia-si', '/tu-van-chon-cay', '/he-thong-cua-hang', '/khuyen-mai'];
+const STATIC_PAGES = ['/', '/danh-muc', '/doi-tac', '/bao-gia-si', '/tu-van-chon-cay', '/bang-chon-cay', '/he-thong-cua-hang', '/khuyen-mai'];
 
 const latest = (dates: (Date | undefined)[]) =>
   dates.reduce<Date | undefined>((a, d) => (d && (!a || d > a) ? d : a), undefined);

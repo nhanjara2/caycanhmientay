@@ -26,9 +26,10 @@ import { withSeo } from '@/server/seo-cms';
 import { JsonLd } from '@/components/JsonLd';
 import { organizationLd, websiteLd } from '@/lib/jsonld';
 
-// Trang chủ (từ 09/10/2026): trang giới thiệu nhiều ảnh — banner sự kiện chủ shop tự tải ở /admin/trang-chu,
+// Trang chủ (từ 09/10/2026): trang giới thiệu nhiều ảnh — banner sự kiện chủ shop quản lý ở /admin/trang-chu,
 // danh mục bằng ảnh, Flash sale, ảnh vườn, bệnh cây theo mùa, tin sự kiện, công trình, video. Trang chủ cũ (mỗi danh mục
-// một khối sản phẩm) chuyển sang /danh-muc. Khối nào chưa có dữ liệu thật thì ẩn; banner chưa tải thì dựng từ ảnh sản phẩm.
+// một khối sản phẩm) chuyển sang /danh-muc. Khối nào chưa có dữ liệu thật thì ẩn. Banner chỉ lấy từ bảng home_banners
+// (ảnh dựng sẵn của shop đã chuyển vào bảng ở migration 0081 — trước đó viết cứng ở đây, admin không thấy và tải 1 ảnh là mất cả bộ).
 
 const QUICK = [
   { label: 'Đăng ký đối tác', icon: 'user', href: `${WHOLESALE_URL}#dang-ky` },
@@ -41,7 +42,7 @@ const QUICK = [
 
 const fromBanner = (b: Banner): Slide => ({
   key: `b${b.id}`, title: b.title, subtitle: b.subtitle || undefined, cta: b.cta || undefined, href: b.href || undefined,
-  showText: b.showText, image: bannerImageUrl(b.image), imageMobile: b.imageMobile ? bannerImageUrl(b.imageMobile) : null,
+  showText: b.showText, tone: b.tone, image: bannerImageUrl(b.image), imageMobile: b.imageMobile ? bannerImageUrl(b.imageMobile) : null,
   bg: b.slot === 'top' && (b.bgImage || b.bgImageMobile || b.bgColor) ? {
     image: b.bgImage ? bannerImageUrl(b.bgImage) : undefined,
     imageMobile: b.bgImageMobile ? bannerImageUrl(b.bgImageMobile) : undefined,
@@ -66,71 +67,18 @@ export default async function HomePage() {
   // Mỗi vị trí chỉ hiện tối đa `max` ảnh đầu (BANNER_SLOTS).
   const inSlot = (slot: Banner['slot']) => banners.filter((b) => b.slot === slot).slice(0, slotOf(slot).max).map(fromBanner);
 
-  // ---- Khung đầu trang: ảnh chủ shop tải lên; chưa có thì dựng từ ảnh thật của shop ----
+  // ---- Khung đầu trang: banner trong admin (cả ảnh dựng sẵn của shop) ----
   const season = seasonNow();
-  const diseaseImgs = diseases.flatMap((d) => d.symptoms).flatMap((s) => (s.image ? [s.image] : []));
-  // Băng ảnh rộng dựng sẵn: không có nền riêng — nền cả khoảng trên là chính ảnh đó làm mờ (HomeHero).
-  const fallbackTop: Slide[] = [
-    {
-      // Kiểu Long Châu: banner PNG nền trong suốt nằm trên ảnh nền trơn riêng (nền đổi theo ảnh).
-      key: 'top-ccmt', showText: false, image: '/images/banner/ccmt-hero.webp', imageMobile: '/images/banner/ccmt-hero-mb.webp',
-      title: 'Cây Cảnh Miền Tây — đa dạng, tươi tốt, giá tốt, giao hàng miền Tây', href: '/danh-muc',
-      bg: { image: '/images/banner/ccmt-hero-bg.webp', imageMobile: '/images/banner/ccmt-hero-bg-mb.webp', color: '#eaeffa' },
-    },
-    {
-      // Ảnh thiết kế đã có sẵn chữ ("Vui Xuân Tết") nên không đè chữ lên; bản điện thoại xếp riêng 12:5.
-      key: 'top-tet', showText: false, image: '/images/banner/vui-xuan-tet.webp', imageMobile: '/images/banner/vui-xuan-tet-mb.webp',
-      title: 'Vui Xuân Tết, rộn ràng vui xuân — xem mai, quất, đào và cây Tết', href: '/cay-tet',
-    },
-    // Mùa mưa: ảnh thiết kế đã có sẵn chữ "Mùa Mưa". Mùa khô chưa có ảnh riêng nên vẫn dựng bằng ảnh bệnh cây + chữ.
-    season.key === 'mưa' ? {
-      key: 'top-mua', showText: false, image: '/images/banner/mua-mua-phong-benh.webp', imageMobile: '/images/banner/mua-mua-phong-benh-mb.webp',
-      title: 'Mùa mưa: phòng bệnh sớm, không mất cả lô cây — tra bệnh theo triệu chứng, chọn đúng thuốc, đúng liều', href: '/benh-cay',
-    } : {
-      key: 'top-mua', badge: season.name, tone: 'green', showText: true,
-      image: diseaseImgs.length ? `/api/disease-images/${diseaseImgs[1] ?? diseaseImgs[0]}` : PARTNER_IMAGE.landscape,
-      title: `${season.name}: phòng bệnh sớm, không mất cả lô cây`, subtitle: 'Tra bệnh theo triệu chứng, chọn đúng thuốc, đúng liều', cta: 'Bắt bệnh cho cây', href: '/benh-cay',
-    },
-    {
-      // Ảnh thiết kế đã có sẵn chữ (bảng tên shop) nên không đè chữ lên; bản điện thoại cắt riêng 12:5.
-      key: 'top-vuon', showText: false, image: '/images/banner/cay-canh-mien-tay.webp', imageMobile: '/images/banner/cay-canh-mien-tay-mb.webp',
-      title: 'Cây Cảnh Miền Tây: cây cảnh, cây kiểng, hoa kiểng lá — xem hệ thống cửa hàng và vườn ươm', href: '/he-thong-cua-hang',
-    },
-  ];
-  const flashImgs = pickImages(flash, 3);
-  // Ảnh lớn dựng sẵn: các ảnh thiết kế đã có sẵn chữ (12:5 = đúng khung, dùng chung máy tính + tablet + điện thoại) nên không đè chữ lên.
-  const fallbackHero: Slide[] = [
-    {
-      key: 'si', showText: false, image: '/images/banner/nguon-cung-cay-canh.webp',
-      title: 'Nguồn cung cây cảnh cho công trình, cảnh quan, đại lý — đăng ký đối tác', href: `${WHOLESALE_URL}#dang-ky`,
-    },
-    ...(flashImgs.length >= 2 ? [{
-      key: 'flash', badge: 'Flash sale giờ vàng', tone: 'sale' as const, showText: true, image: flashImgs[0], contain: flashImgs,
-      title: 'Giảm sâu mỗi ngày, 3 khung giờ vàng', subtitle: '08:00 · 12:00 · 20:00 — số lượng có hạn', cta: 'Săn ngay', href: '#flash-sale',
-    }] : []),
-    {
-      key: 'tu-van', showText: false, image: '/images/banner/chon-dung-cay.webp',
-      title: 'Chọn đúng cây cho từng không gian: công trình, cảnh quan, cửa hàng, quán cafe, văn phòng — tư vấn chọn cây', href: '/tu-van-chon-cay',
-    },
-    {
-      key: 'hoc-sinh', showText: false, image: '/images/banner/hoc-sinh-sinh-vien.webp',
-      title: 'Học sinh – sinh viên tự tin trang trí: cây xinh giá rẻ, giảm đến 29% — xem cây để bàn', href: '/danh-muc/cay-canh/cay-de-ban',
-    },
-  ];
-  const fallbackSides: Slide[] = [
-    {
-      // Ảnh mầm cây không có chữ nên vẫn đè tiêu đề + nút; khi cắt 12:5 đã dời mầm cây sang phải để chữ bên trái không đè lên.
-      key: 'bao-gia', tone: 'green', showText: true, image: '/images/banner/bao-gia-si.webp',
-      title: 'Gửi danh sách, nhận báo giá sỉ', cta: 'Gửi báo giá', href: WHOLESALE_QUOTE_URL,
-    },
-    {
-      // Ảnh mầm hoa trên đất, cắt và dời cây sang phải như ô báo giá ở trên (hai ô xếp chồng trên máy tính, thân cây thẳng hàng).
-      key: 'benh', tone: 'sale', showText: true, image: '/images/banner/tra-benh-cay.webp',
-      title: 'Cây bị bệnh? Tra theo triệu chứng', cta: 'Bắt bệnh cho cây', href: '/benh-cay',
-    },
-  ];
   const top = inSlot('top');
   const hero = inSlot('hero');
+  // Ô Flash sale dựng từ sản phẩm đang flash sale (không có ảnh để tải nên không nằm trong admin): chèn sau ảnh lớn đầu tiên.
+  const flashImgs = pickImages(flash, 3);
+  if (flashImgs.length >= 2) {
+    hero.splice(1, 0, {
+      key: 'flash', badge: 'Flash sale giờ vàng', tone: 'sale', showText: true, image: flashImgs[0], contain: flashImgs,
+      title: 'Giảm sâu mỗi ngày, 3 khung giờ vàng', subtitle: '08:00 · 12:00 · 20:00 — số lượng có hạn', cta: 'Săn ngay', href: '#flash-sale',
+    });
+  }
   const sides = inSlot('side');
   const backdrop = banners.find((b) => b.slot === 'backdrop');
   const events = inSlot('event');
@@ -185,9 +133,9 @@ export default async function HomePage() {
 
       <section className="hm-hero" aria-label="Sự kiện và ưu đãi">
         <HomeHero
-          tops={top.length ? top : fallbackTop}
-          slides={hero.length ? hero : fallbackHero}
-          sides={(sides.length ? sides : fallbackSides).slice(0, 2)}
+          tops={top}
+          slides={hero}
+          sides={sides}
           backdrop={backdrop ? { image: bannerImageUrl(backdrop.image), imageMobile: backdrop.imageMobile ? bannerImageUrl(backdrop.imageMobile) : null } : null}
         />
         <QuickLinks items={[...QUICK]} />

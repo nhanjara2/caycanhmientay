@@ -10,7 +10,7 @@ import { Icon } from '@/components/Icon';
 import { Select } from '@/components/Select';
 import { compressImage } from '@/lib/compress-image';
 import { ORIGINAL, useImageCrop } from './ImageCropper';
-import { BANNER_SLOTS, bannerImageUrl, slotOf, type Banner, type BannerSlot } from '@/lib/home-banners';
+import { BANNER_SLOTS, BANNER_TONES, bannerImageUrl, slotOf, type Banner, type BannerSlot, type BannerTone } from '@/lib/home-banners';
 import '@/styles/home.css';
 
 /** Ảnh nền phía sau băng ảnh rộng: máy tính 1920 × 940, điện thoại 1080 × 910 (đúng tỉ lệ file thiết kế nền điện thoại của shop). */
@@ -57,12 +57,12 @@ function statusOf(b: Pick<Banner, 'active' | 'startsAt' | 'endsAt'>, now = new D
 }
 
 type Draft = {
-  id?: number; slot: BannerSlot; title: string; subtitle: string; cta: string; href: string; showText: boolean;
+  id?: number; slot: BannerSlot; title: string; subtitle: string; cta: string; href: string; showText: boolean; tone: BannerTone;
   image: string | null; imageMobile: string | null; bgImage: string | null; bgImageMobile: string | null; bgColor: string | null; startsAt: string; endsAt: string; active: boolean;
 };
 
 const blank = (slot: BannerSlot): Draft => ({
-  slot, title: '', subtitle: '', cta: '', href: '', showText: false, image: null, imageMobile: null, bgImage: null, bgImageMobile: null, bgColor: null, startsAt: '', endsAt: '', active: true,
+  slot, title: '', subtitle: '', cta: '', href: '', showText: false, tone: 'green', image: null, imageMobile: null, bgImage: null, bgImageMobile: null, bgColor: null, startsAt: '', endsAt: '', active: true,
 });
 
 /** Xem trước đúng khung trên trang chủ (dùng chung CSS + component với trang khách). */
@@ -73,7 +73,7 @@ function Preview({ d, mobile }: { d: Draft; mobile?: boolean }) {
     return <div className="ad-bnr-prev ad-bnr-prev--bg"><img src={bannerImageUrl(img)} alt="" /><span>Khung ảnh lớn nằm trên nền này</span></div>;
   }
   const s: Slide = {
-    key: 'prev', title: d.title || 'Tiêu đề banner', subtitle: d.subtitle || undefined, cta: d.cta || undefined, showText: d.showText, image: bannerImageUrl(img),
+    key: 'prev', title: d.title || 'Tiêu đề banner', subtitle: d.subtitle || undefined, cta: d.cta || undefined, showText: d.showText, tone: d.tone, image: bannerImageUrl(img),
   };
   if (d.slot === 'side') return <div className="hm-side ad-bnr-prev ad-bnr-prev--side"><SlideBody s={s} /></div>;
   const ratio = mobile ? slotOf(d.slot).mobile?.ratio : undefined;
@@ -251,6 +251,14 @@ function Editor({ initial, onClose }: { initial: Draft; onClose: () => void }) {
                   </div>
                 </div>
               )}
+              {d.showText && (
+                <div className="vx-fl">
+                  <label htmlFor="bn-tone">Màu nền sau chữ</label>
+                  <Select id="bn-tone" value={d.tone} onChange={(e) => set('tone', e.target.value as BannerTone)}>
+                    {BANNER_TONES.map((t) => <option key={t.key} value={t.key}>{t.name}</option>)}
+                  </Select>
+                </div>
+              )}
               <div className="vx-fl">
                 <label htmlFor="bn-href">Bấm vào ảnh thì mở</label>
                 <input id="bn-href" value={d.href} maxLength={300} onChange={(e) => set('href', e.target.value.trim())} placeholder="/danh-muc/cay-canh hoặc https://…" inputMode="url" />
@@ -313,7 +321,7 @@ export function HomeBannerAdmin({ banners, canEdit }: { banners: Row[]; canEdit:
             <div className="ad-card__b">
               <p className="vx-help" style={{ margin: '0 0 12px' }}>{slot.hint} Cỡ ảnh nên dùng: <b>{slot.size}</b>.{live > slot.max && ` Đang bật ${live} ảnh — trang chủ chỉ hiện ${slot.max} ảnh đầu.`}</p>
               {list.length === 0 ? (
-                <p className="vx-help" style={{ margin: 0 }}>Chưa có ảnh — trang chủ đang dùng ảnh dựng sẵn từ ảnh sản phẩm.</p>
+                <p className="vx-help" style={{ margin: 0 }}>Chưa có ảnh — mục này đang ẩn trên trang chủ.</p>
               ) : (
                 <ul className="ad-bnr-list">
                   {list.map((b, i) => {

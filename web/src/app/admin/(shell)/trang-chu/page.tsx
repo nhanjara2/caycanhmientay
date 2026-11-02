@@ -27,7 +27,7 @@ export default async function AdminHomeBannersPage() {
           Tải ảnh sự kiện, mùa cây, chương trình giảm giá… lên trang chủ. Mỗi ảnh có thể gắn <b>link</b> (bấm vào ảnh mở trang đó) và <b>ngày bắt đầu / kết thúc</b> — hết hạn tự ẩn, không cần nhớ gỡ.
           Ảnh chưa có chữ thì bật <b>“Hiện chữ trên ảnh”</b> để web tự đè tiêu đề + nút lên ảnh; ảnh đã thiết kế sẵn chữ thì tắt.
           <b>Băng ảnh rộng trên cùng</b>: mỗi ảnh kèm một nền riêng (ảnh nền và / hoặc màu) — qua ảnh mới thì cả khoảng nền phía sau đổi theo, như Long Châu.
-          Mục nào <b>chưa có ảnh nào đang hiện</b> thì trang chủ tự dùng ảnh dựng sẵn từ ảnh sản phẩm thật của shop.
+          Ảnh dựng sẵn của shop cũng nằm trong danh sách dưới đây — sửa, tắt, đổi thứ tự hay xóa như ảnh tự tải; <b>thêm ảnh mới không làm mất ảnh cũ</b>.
         </div>
       </div>
       <HomeBannerAdmin banners={rows} canEdit={canEdit} />

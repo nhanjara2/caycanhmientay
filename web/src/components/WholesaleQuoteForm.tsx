@@ -14,7 +14,8 @@ import { Icon } from './Icon';
 
 export type WholesaleDefaults = { type?: PartnerType; company: string; name: string; phone: string; address: string; items?: string };
 
-const DRAFT_KEY = 'ccmt-wholesale-quote-draft';
+export const WHOLESALE_DRAFT_KEY = 'ccmt-wholesale-quote-draft';
+const DRAFT_KEY = WHOLESALE_DRAFT_KEY;
 const MAX_PHOTOS = 3;
 
 type Draft = { type: PartnerType | null; items: string; needBy: string; company: string; name: string; phone: string; address: string };

@@ -1064,7 +1064,9 @@ export const homeBanners = pgTable('home_banners', {
   cta: text('cta').notNull().default(''),
   href: text('href').notNull().default(''),
   showText: boolean('show_text').notNull().default(false),
-  /** Tên file trong home_banner_images. */
+  /** Màu lớp phủ sau chữ khi bật `show_text` (BANNER_TONES). */
+  tone: text('tone').notNull().default('green'),
+  /** Tên file trong home_banner_images, hoặc ảnh dựng sẵn của shop /images/banner/….webp (migration 0081). */
   image: text('image').notNull(),
   imageMobile: text('image_mobile'),
   /** Chỉ băng ảnh rộng trên cùng: nền phủ kín phía sau khi ảnh này đang hiện (đổi theo ảnh, kiểu Long Châu). */

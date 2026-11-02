@@ -10,7 +10,7 @@ export const BANNER_SLOTS = [
   {
     key: 'hero', name: 'Ảnh lớn đầu trang', max: 8,
     size: '1920 × 800 px (tỉ lệ 12:5)', ratio: 2.4, mobile: { size: '1080 × 450 px (12:5)', ratio: 2.4 },
-    hint: 'Chạy vòng tự động, mỗi ảnh 6 giây. Ảnh sự kiện, mùa cây, chương trình giảm giá… Khung 12:5 ở cả máy tính, tablet và điện thoại nên một ảnh dùng chung được; ảnh riêng cho điện thoại chỉ cần khi muốn chữ to hơn.',
+    hint: 'Chạy vòng tự động, mỗi ảnh 6 giây. Ảnh sự kiện, mùa cây, chương trình giảm giá… Khung 12:5 ở cả máy tính, tablet và điện thoại nên một ảnh dùng chung được; ảnh riêng cho điện thoại chỉ cần khi muốn chữ to hơn. Khi có từ 2 sản phẩm đang Flash sale, web tự chèn thêm ô Flash sale sau ảnh đầu (không cần tải ảnh).',
   },
   {
     key: 'side', name: 'Ảnh nhỏ cạnh ảnh lớn', max: 2,
@@ -32,6 +32,15 @@ export type BannerSlot = (typeof BANNER_SLOTS)[number]['key'];
 export const BANNER_SLOT_KEYS = BANNER_SLOTS.map((s) => s.key) as [BannerSlot, ...BannerSlot[]];
 export const slotOf = (k: string) => BANNER_SLOTS.find((s) => s.key === k) ?? BANNER_SLOTS[0];
 
+/** Màu lớp phủ sau chữ (khi hiện chữ trên ảnh) — khớp .hm-tone--* trong home.css. */
+export const BANNER_TONES = [
+  { key: 'green', name: 'Xanh lá' },
+  { key: 'sale', name: 'Cam đỏ (giảm giá)' },
+  { key: 'sun', name: 'Vàng nâu' },
+] as const;
+export type BannerTone = (typeof BANNER_TONES)[number]['key'];
+export const BANNER_TONE_KEYS = BANNER_TONES.map((t) => t.key) as [BannerTone, ...BannerTone[]];
+
 /** Chữ trên ảnh: trắng trên lớp phủ tối (ảnh sáng) hoặc không có chữ (ảnh đã thiết kế sẵn chữ). */
 export type Banner = {
   id: number;
@@ -42,6 +51,7 @@ export type Banner = {
   href: string;
   /** Hiện tiêu đề / mô tả / nút đè lên ảnh. Tắt khi ảnh đã có sẵn chữ. */
   showText: boolean;
+  tone: BannerTone;
   image: string;
   /** Ảnh riêng cho điện thoại (ảnh lớn và băng rộng đều 12:5), không có thì dùng ảnh chính. */
   imageMobile: string | null;
@@ -57,7 +67,9 @@ export type Banner = {
 
 export const BG_COLOR = /^#[0-9a-f]{6}$/i;
 export const BANNER_IMAGE_FILE = /^[a-f0-9]{32}\.(jpg|png|webp)$/;
-export const bannerImageUrl = (file: string) => `/api/banner-images/${file}`;
+/** Ảnh banner dựng sẵn của shop (file tĩnh trong public/images/banner, có sẵn bản thu nhỏ -w640…). */
+export const BUILTIN_BANNER_IMAGE = /^\/images\/banner\/[a-z0-9-]+\.webp$/;
+export const bannerImageUrl = (file: string) => (BUILTIN_BANNER_IMAGE.test(file) ? file : `/api/banner-images/${file}`);
 
 /** Link trong site (/…) hoặc web ngoài (https://…). */
 export const isExternal = (href: string) => /^https?:\/\//.test(href);
