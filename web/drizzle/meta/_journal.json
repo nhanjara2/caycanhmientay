@@ -589,6 +589,13 @@
       "when": 1793614400507,
       "tag": "0083_banner_dung_san",
       "breakpoints": true
+    },
+    {
+      "idx": 84,
+      "version": "7",
+      "when": 1793614460507,
+      "tag": "0084_gia_vuon_dot_4",
+      "breakpoints": true
     }
   ]
 }

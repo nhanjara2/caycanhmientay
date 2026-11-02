@@ -1,6 +1,6 @@
 /**
- * Bảng chọn cây (/bang-chon-cay): 60 loại cây vườn có sẵn, khách chọn cây + số lượng rồi gửi qua Zalo hoặc
- * chuyển sang form Yêu cầu báo giá sỉ. Cây có `slug` lấy ảnh thật + giá từ sản phẩm trên web; cây khác dùng ảnh
+ * Bảng cây (/bang-chon-cay): 60 loại cây vườn có sẵn, khách xem ảnh + lọc (không chọn mua, không hiện giá).
+ * Cây có `slug` lấy ảnh thật từ sản phẩm trên web; cây khác dùng ảnh
  * minh họa Wikimedia Commons (giấy phép tự do, ghi tác giả cuối trang) trong public/images/bang-chon-cay/.
  */
 
@@ -14,7 +14,7 @@ export type PickerPlant = {
   light: string;
   /** Trồng làm tường nhiệt đới được không. */
   wall: 'Có' | 'Có điều kiện' | 'Không';
-  /** Sản phẩm trên web — trang lấy ảnh thật + giá từ đây. */
+  /** Sản phẩm trên web — trang lấy ảnh thật từ đây. */
   slug?: string;
   /** Ảnh minh họa khi chưa có sản phẩm trên web; không có cả hai thì hiện "Đang cập nhật ảnh". */
   img?: string;
@@ -22,10 +22,9 @@ export type PickerPlant = {
 };
 
 /** Cây đã ghép dữ liệu sản phẩm thật (server) — gửi xuống trình duyệt. */
-export type PickerItem = PickerPlant & { photo?: string; real?: boolean; price?: number; unit?: string };
+export type PickerItem = PickerPlant & { photo?: string; real?: boolean };
 
 export const PICKER_URL = '/bang-chon-cay';
-export const PICKER_STORE_KEY = 'ccmt-bang-chon-cay';
 
 export const PICKER_PLANTS: PickerPlant[] = [
   { n: 1, name: 'Bàng Singapore', size: 'Lớn', form: 'Cây thân gỗ', place: 'Góc mặt tiền, sàn', light: 'Bán râm', wall: 'Không', img: '/images/bang-chon-cay/bang-singapore.webp', credit: { author: 'Diogo Luiz', license: 'CC BY-SA 4.0', page: 'https://commons.wikimedia.org/wiki/File:Ficus_lyrata_98162192.jpg' } },
@@ -140,16 +139,3 @@ export const FILTER_GROUPS: FilterGroup[] = [
 
 export const pad2 = (n: number) => String(n).padStart(2, '0');
 
-/** Tin nhắn gửi shop (Zalo) / ghi chú form báo giá: mỗi cây một dòng kèm mã. */
-export function pickerMessage(items: PickerItem[], picked: Map<number, number>, contact?: { name?: string; phone?: string; note?: string }) {
-  const rows = items.filter((p) => picked.has(p.n));
-  const total = rows.reduce((s, p) => s + picked.get(p.n)!, 0);
-  return [
-    'Chào Cây Cảnh Miền Tây, mình muốn hỏi giá và đặt các cây sau:',
-    ...rows.map((p, i) => `${i + 1}. ${p.name} (mã ${pad2(p.n)}): ${picked.get(p.n)} cây`),
-    `Tổng: ${rows.length} loại, ${total} cây`,
-    ...(contact?.name?.trim() ? [`Tên: ${contact.name.trim()}`] : []),
-    ...(contact?.phone?.trim() ? [`SĐT: ${contact.phone.trim()}`] : []),
-    ...(contact?.note?.trim() ? [`Ghi chú: ${contact.note.trim()}`] : []),
-  ].join('\n');
-}
