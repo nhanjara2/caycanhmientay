@@ -575,6 +575,13 @@
       "when": 1793606400000,
       "tag": "0081_phan_bon_rynan",
       "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1793614340507,
+      "tag": "0082_mo_ta_chi_tiet",
+      "breakpoints": true
     }
   ]
 }

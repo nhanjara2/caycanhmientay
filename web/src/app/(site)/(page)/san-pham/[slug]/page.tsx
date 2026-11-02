@@ -7,6 +7,7 @@ import { ProductGrid } from '@/components/ProductCard';
 import { ProductQnA } from '@/components/ProductQnA';
 import { ProductReviews } from '@/components/ProductReviews';
 import { YouTubeLite } from '@/components/YouTubeLite';
+import { PostBody } from '@/components/PostParts';
 import { youtubeEmbed } from '@/lib/posts';
 import { categoryLabel, elementName, variantPosition, VARIANT_PARAM, type Product } from '@/lib/catalog';
 import { YOUTUBE_URL } from '@/lib/contact';
@@ -77,6 +78,7 @@ function Content({ p, faq }: { p: Product; faq: boolean }) {
       <article className="vx-article">
         <h2 id="mo-ta">{p.name} là gì?</h2>
         <p>{p.lead}</p>
+        {p.body && <PostBody body={p.body} products={new Map()} title={p.name} />}
         {p.youtubeId && (
           <>
             <h3 id="video">Video {isPlant ? 'thực tế tại vườn' : 'hướng dẫn'}</h3>

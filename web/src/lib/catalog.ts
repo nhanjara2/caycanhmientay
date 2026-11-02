@@ -2,6 +2,7 @@
 // Sản phẩm, danh mục nằm trong database — truy vấn qua src/server/catalog.ts, src/server/categories.ts (chỉ chạy trên server).
 import type { IconName } from '@/components/Icon';
 import type { BundleItem } from './bundle';
+import type { PostBlock } from './posts';
 import type { ProductAttrs } from './product-filters';
 import { plainText, slugify, SLUG_RE } from './slug';
 import { imageUrl } from './images';
@@ -145,6 +146,8 @@ export type Product = {
   imageAlts?: string[];
   /** Video hướng dẫn trên YouTube (mã 11 ký tự). */
   youtubeId?: string;
+  /** Bài mô tả chi tiết (khối như bài viết). */
+  body?: PostBlock[];
   fengshui?: FengShui;
   /** Đặc điểm cây (vị trí đặt, kích thước, màu) cho bộ lọc trang danh mục; chưa gắn thì không lọc theo được. */
   attrs?: ProductAttrs;

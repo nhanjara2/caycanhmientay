@@ -57,6 +57,7 @@ async function hydrate(rows: Row[]): Promise<Product[]> {
     imageAlts: imgs.some((i) => i.slug === r.slug && i.alt) ? imgs.filter((i) => i.slug === r.slug).map((i) => i.alt ?? '') : undefined,
     realImg: Boolean(mainFile(r.slug)) || undefined,
     youtubeId: r.youtubeId ?? undefined,
+    body: r.body?.length ? r.body : undefined,
     fengshui: r.fengshui ?? undefined,
     attrs: r.attrs ?? undefined,
     inStock: opts.some((o) => o.productSlug === r.slug && canSell(o)),

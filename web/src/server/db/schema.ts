@@ -141,6 +141,8 @@ export const products = pgTable('products', {
   active: boolean('active').notNull().default(true),
   /** Mã video YouTube (11 ký tự) hiện ở trang chi tiết — video để trên YouTube, web chỉ nhúng. */
   youtubeId: text('youtube_id'),
+  /** Bài mô tả chi tiết (khối như bài viết: đoạn, ảnh link ngoài, bảng…), trống = chỉ có mô tả ngắn. */
+  body: jsonb('body').$type<PostBlock[]>().notNull().default(sql`'[]'::jsonb`),
   /** Phong thủy: mệnh hợp, hợp tuổi, ý nghĩa, vị trí đặt. */
   fengshui: jsonb('fengshui').$type<FengShui>(),
   /** Đặc điểm cây cho bộ lọc: vị trí đặt, kích thước, màu (lib/product-filters.ts). null = chưa gắn. */
