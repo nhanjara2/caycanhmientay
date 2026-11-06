@@ -107,7 +107,7 @@ export async function Footer() {
       </div>
       <div className="vx-flegal">
         <span>{t('legal')}</span>
-        <span><LangSwitch className="app-langlink" /></span>
+        <span><LangSwitch /></span>
         <span>{t('contact', { address: SHOP_ADDRESS, phone: SALES_PHONE })}</span>
       </div>
     </footer>
