@@ -1,7 +1,7 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import Link from '@/components/LocaleLink';
+import { usePathname } from '@/components/LocaleLink';
 import { useCallback, useEffect, useRef, useState, type PointerEvent } from 'react';
 import { discountPct, QUOTE_TEXT, type Category } from '@/lib/catalog';
 import { ZALO_URL } from '@/lib/contact';
@@ -9,13 +9,14 @@ import { money } from '@/lib/format';
 import { shortCategoryName, type MegaMenuData, type MegaProduct } from '@/lib/mega-menu';
 import { Art, Icon, type IconName } from './Icon';
 import { thumbUrl } from '@/lib/images';
+import { useTranslations } from 'next-intl';
 
 /** Lối tắt riêng của vài danh mục hệ thống (theo slug trong SYSTEM_CATEGORIES). */
 const SHORTCUTS: Record<string, { href: string; label: string; icon: IconName }[]> = {
-  'cay-canh': [{ href: '/tu-van-chon-cay', label: 'Tư vấn chọn cây theo không gian', icon: 'spark' }],
+  'cay-canh': [{ href: '/tu-van-chon-cay', label: 'sc_advisor', icon: 'spark' }],
   'thuoc-bvtv': [
-    { href: '/benh-cay', label: 'Tra cứu theo bệnh cây', icon: 'bug' },
-    { href: '/chinh-sach/thuoc-bvtv-an-toan', label: 'Hướng dẫn dùng thuốc an toàn', icon: 'shield' },
+    { href: '/benh-cay', label: 'sc_disease', icon: 'bug' },
+    { href: '/chinh-sach/thuoc-bvtv-an-toan', label: 'sc_safe', icon: 'shield' },
   ],
 };
 
@@ -44,6 +45,7 @@ function loadMega() {
  * cột trái là nhóm con, bên phải là sản phẩm bán chạy của nhóm đang trỏ. Tablet / điện thoại đã có nút "Danh mục" ở Header.
  */
 export function CategoryNav({ categories }: { categories: Category[] }) {
+  const t = useTranslations('catnav');
   const pathname = usePathname();
   const [open, setOpen] = useState<string | null>(null);
   const [sub, setSub] = useState('');
@@ -120,7 +122,7 @@ export function CategoryNav({ categories }: { categories: Category[] }) {
         <ul className="app-mm__side">
           <li>
             <Link href={`/danh-muc/${cat.slug}`} data-active={!sub || undefined} onPointerEnter={() => setSub('')} onFocus={() => setSub('')}>
-              <span>Tất cả {cat.name}</span>
+              <span>{t('allOf', { name: cat.name })}</span>
               {data && <small>{data.counts[cat.slug] ?? 0}</small>}
               <Icon name="chevron" className="chev" />
             </Link>
@@ -144,10 +146,10 @@ export function CategoryNav({ categories }: { categories: Category[] }) {
       <div className="app-mm__body">
         <div className="app-mm__head">
           <span className="app-mm__title">
-            Bán chạy <span>· {subName ?? cat.name}</span>
+            {t('best')} <span>· {subName ?? cat.name}</span>
           </span>
-          <Link href={href} className="vx-link app-mm__all" aria-label={`Xem tất cả ${subName ?? cat.name}`}>
-            Xem tất cả <Icon name="chevron" />
+          <Link href={href} className="vx-link app-mm__all" aria-label={t('seeAllOf', { name: subName ?? cat.name })}>
+            {t('seeAll')} <Icon name="chevron" />
           </Link>
         </div>
         {!data ? (
@@ -167,9 +169,9 @@ export function CategoryNav({ categories }: { categories: Category[] }) {
         ) : (
           <p className="app-mm__empty">
             {sub ? (
-              <>Nhóm này chưa có sản phẩm đang bán. <Link href={`/danh-muc/${cat.slug}`} className="vx-link">Xem cả danh mục {cat.name}</Link></>
+              <>{t('emptySub')} <Link href={`/danh-muc/${cat.slug}`} className="vx-link">{t('seeCat', { name: cat.name })}</Link></>
             ) : (
-              <>Danh mục này đang cập nhật sản phẩm. <a href={ZALO_URL} target="_blank" rel="noopener noreferrer" className="vx-link">Hỏi hàng qua Zalo</a></>
+              <>{t('emptyCat')} <a href={ZALO_URL} target="_blank" rel="noopener noreferrer" className="vx-link">{t('askZalo')}</a></>
             )}
           </p>
         )}
@@ -177,7 +179,7 @@ export function CategoryNav({ categories }: { categories: Category[] }) {
           <div className="app-mm__tips">
             {SHORTCUTS[cat.slug].map((s) => (
               <Link key={s.href} href={s.href}>
-                <Icon name={s.icon} />{s.label}
+                <Icon name={s.icon} />{t(s.label)}
               </Link>
             ))}
           </div>
@@ -187,7 +189,7 @@ export function CategoryNav({ categories }: { categories: Category[] }) {
   );
 
   return (
-    <nav className="app-catnav" aria-label="Danh mục sản phẩm" ref={navRef} onPointerEnter={warm} onFocus={warm} onPointerLeave={leave}>
+    <nav className="app-catnav" aria-label={t('aria')} ref={navRef} onPointerEnter={warm} onFocus={warm} onPointerLeave={leave}>
       <ul className="app-catnav__bar">
         {categories.map((c) => (
           <li key={c.slug} data-cat={c.slug} data-open={open === c.slug || undefined} onPointerEnter={enterItem(c.slug)}>
@@ -199,7 +201,7 @@ export function CategoryNav({ categories }: { categories: Category[] }) {
               className="app-catnav__tog"
               aria-expanded={open === c.slug}
               aria-controls={open === c.slug ? 'app-mm' : undefined}
-              aria-label={`Xem nhóm hàng và sản phẩm bán chạy: ${c.name}`}
+              aria-label={t('openAria', { name: c.name })}
               onClick={() => {
                 warm();
                 show(open === c.slug ? null : c.slug);
@@ -212,12 +214,12 @@ export function CategoryNav({ categories }: { categories: Category[] }) {
         ))}
         <li className="app-catnav__extra app-catnav__extra--sale" onPointerEnter={enterLink}>
           <Link href="/khuyen-mai" className="app-catnav__link">
-            <Icon name="tag" />Khuyến mãi
+            <Icon name="tag" />{t('promo')}
           </Link>
         </li>
         <li className="app-catnav__extra app-catnav__extra--wide" onPointerEnter={enterLink}>
           <Link href="/doi-tac" className="app-catnav__link">
-            <Icon name="box" />Đối tác sỉ
+            <Icon name="box" />{t('partner')}
           </Link>
         </li>
       </ul>
@@ -227,6 +229,7 @@ export function CategoryNav({ categories }: { categories: Category[] }) {
 }
 
 function MiniCard({ p }: { p: MegaProduct }) {
+  const t = useTranslations('catnav');
   const pct = discountPct({ price: p.price, oldPrice: p.oldPrice ?? undefined });
   return (
     <Link href={`/san-pham/${p.slug}`} className="app-mm__card" title={p.name}>
@@ -238,7 +241,7 @@ function MiniCard({ p }: { p: MegaProduct }) {
       <span className="app-mm__price">
         {p.price > 0 ? (
           <>
-            {p.from && <small>Từ </small>}
+            {p.from && <small>{t('from')}</small>}
             <b>{money(p.price)}</b> <small>/ {p.unit}</small>
           </>
         ) : (

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { Icon } from '@/components/Icon';
 import { CopyVoucherCode } from '@/components/CopyVoucherCode';
 import { BANK, formatPhone, PICKUP_PLACE, SALES_PHONE, vietQrUrl, ZALO_URL } from '@/lib/contact';

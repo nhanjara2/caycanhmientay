@@ -1,6 +1,6 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
+import { usePathname } from '@/components/LocaleLink';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { setContactPhoneAction } from '@/app/actions/auth';
 import { isPhone, useAuth, type User } from '@/lib/auth';

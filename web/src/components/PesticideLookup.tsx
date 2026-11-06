@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { Icon } from './Icon';
 
 /** Khung "Tra cứu thuốc BVTV" đầu trang danh mục Thuốc BVTV: tìm theo tên / hoạt chất / số đăng ký + lối tắt tới bắt bệnh, hướng dẫn an toàn, kỹ sư. */

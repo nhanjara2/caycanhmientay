@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import { OG_LOCALE, hreflangsOf, langOfPath, pairOf } from './i18n';
+import { OG_LOCALE, hreflangsOf, localePath, type Lang } from './i18n';
+import { sitePath } from './seo-cms';
 
 /**
  * Thẻ chia sẻ mạng xã hội (Open Graph + X/Twitter) — mục 2.2 + 2.3 checklist SEO.
@@ -48,20 +49,12 @@ export function withShare(meta: Metadata, share: Share = {}): Metadata {
   const a = type === 'article' ? share.article : undefined;
   // Ngày sửa chỉ ghi khi sửa sau ngày đăng (bài vừa đăng thì hai ngày gần như trùng).
   const modified = a?.modifiedTime && (!a.publishedTime || a.modifiedTime.getTime() - a.publishedTime.getTime() > 60_000) ? a.modifiedTime : undefined;
-  // Trang có bản ngôn ngữ khác (lib/i18n.ts) → hreflang + og:locale đúng ngôn ngữ, og:locale:alternate trỏ bản kia.
-  const u = url ? String(url) : '';
-  const path = u && !/^https?:/.test(u) ? u.split('?')[0] : undefined;
-  const lang = path ? langOfPath(path) : 'vi';
-  const languages = path && !u.includes('?') ? hreflangsOf(path) : undefined;
   return {
     ...meta,
-    ...(languages ? { alternates: { ...meta.alternates, languages } } : {}),
     openGraph: {
       ...BASE_OPEN_GRAPH,
-      locale: OG_LOCALE[lang],
-      ...(path && pairOf(path) ? { alternateLocale: [OG_LOCALE[lang === 'vi' ? 'en' : 'vi']] } : {}),
       ...(url ? { url } : {}),
-      images: images.length ? images.map((u) => ({ url: u, alt: share.alt })) : lang === 'en' ? [{ ...DEFAULT_SHARE_IMAGE, alt: 'Cây Cảnh Miền Tây — plant nursery in Sa Dec, Vietnam' }] : BASE_OPEN_GRAPH.images,
+      images: images.length ? images.map((u) => ({ url: u, alt: share.alt })) : BASE_OPEN_GRAPH.images,
       ...(a ? {
         type: 'article',
         publishedTime: a.publishedTime?.toISOString(),
@@ -70,6 +63,30 @@ export function withShare(meta: Metadata, share: Share = {}): Metadata {
         section: a.section,
         tags: a.tags?.length ? a.tags : undefined,
       } : { type }),
+    },
+  };
+}
+
+/**
+ * Gắn ngôn ngữ (gọi trong withSeo, sau SEO đặt tay): bản tiếng Anh có canonical / og:url /en/…, og:locale en_US;
+ * mọi trang (không ?tham số) có hreflang vi / en / x-default + og:locale:alternate.
+ */
+export function localizeMeta(meta: Metadata, lang: Lang): Metadata {
+  const c = meta.alternates?.canonical;
+  const raw = typeof c === 'string' ? c : c instanceof URL ? c.toString() : c?.url?.toString();
+  if (!raw) return meta;
+  const rel = sitePath(raw, true) ?? raw;
+  const url = localePath(rel, lang);
+  const languages = rel.includes('?') ? undefined : hreflangsOf(rel);
+  const og = meta.openGraph ?? BASE_OPEN_GRAPH;
+  return {
+    ...meta,
+    alternates: { ...meta.alternates, canonical: url, ...(languages ? { languages } : {}) },
+    openGraph: {
+      ...og,
+      ...('url' in og && og.url ? { url } : {}),
+      locale: OG_LOCALE[lang],
+      ...(languages ? { alternateLocale: [OG_LOCALE[lang === 'vi' ? 'en' : 'vi']] } : {}),
     },
   };
 }

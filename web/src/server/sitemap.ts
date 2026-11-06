@@ -30,7 +30,7 @@ export { indexXml, parseSitemapName, SITEMAP_MAX_URLS, urlsetXml, type SitemapEn
  * trang chính sách); trang không có ngày thật (trang chủ, trang giới thiệu dịch vụ…) thì bỏ trống — không ghi ngày deploy.
  */
 
-const STATIC_PAGES = ['/', '/en', '/en/about', '/en/wholesale', '/danh-muc', '/doi-tac', '/bao-gia-si', '/tu-van-chon-cay', '/bang-chon-cay', '/he-thong-cua-hang', '/khuyen-mai'];
+const STATIC_PAGES = ['/', '/danh-muc', '/doi-tac', '/bao-gia-si', '/tu-van-chon-cay', '/bang-chon-cay', '/he-thong-cua-hang', '/khuyen-mai'];
 
 const latest = (dates: (Date | undefined)[]) =>
   dates.reduce<Date | undefined>((a, d) => (d && (!a || d > a) ? d : a), undefined);
@@ -45,9 +45,15 @@ const vnDate = (s: string) => {
 function entry(path: string, lastmod?: Date, images?: string[]): SitemapEntry[] {
   const [pathname, query] = path.split('?');
   if (pathname !== '/' && canonicalPath(pathname) !== pathname) return [];
-  const langs = query ? undefined : hreflangsOf(pathname);
-  const alternates = langs && Object.fromEntries(Object.entries(langs).map(([l, h]) => [l, absoluteUrl(h)]));
-  return [{ loc: absoluteUrl(query ? `${pathname}?${query}` : pathname), lastmod, images: images?.length ? images.map(absoluteUrl) : undefined, alternates }];
+  const imgs = images?.length ? images.map(absoluteUrl) : undefined;
+  if (query) return [{ loc: absoluteUrl(`${pathname}?${query}`), lastmod, images: imgs }];
+  // Mỗi trang có bản tiếng Anh /en/… (cùng trang, lib/i18n.ts) — liệt kê cả hai, mỗi bản trỏ qua lại bằng xhtml:link.
+  const langs = hreflangsOf(pathname);
+  const alternates = Object.fromEntries(Object.entries(langs).map(([l, h]) => [l, absoluteUrl(h)]));
+  return [
+    { loc: absoluteUrl(pathname), lastmod, images: imgs, alternates },
+    { loc: absoluteUrl(langs.en), lastmod, alternates },
+  ];
 }
 
 // ---- Dữ liệu ----------------------------------------------------------------------------------

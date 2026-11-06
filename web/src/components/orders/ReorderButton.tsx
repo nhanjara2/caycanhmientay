@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/components/LocaleLink';
 import { useState } from 'react';
 import { refreshCartAction } from '@/app/actions/orders';
 import { useCart } from '@/lib/cart';

@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { Fragment, type ReactNode } from 'react';
 import type { Product } from '@/lib/catalog';
 import { YouTubeLite } from './YouTubeLite';

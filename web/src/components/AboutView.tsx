@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { Breadcrumb } from './Blocks';
 import { formatPhone, SALES_PHONE, SUPPORT_PHONE } from '@/lib/contact';
 import { WARRANTY_DAYS } from '@/lib/warranty-labels';

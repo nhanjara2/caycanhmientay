@@ -1,6 +1,6 @@
 // Sinh tự động từ design-system/components/CampaignLayout/preview.html — không sửa tay.
 // Chạy `npm run gen-views` sau khi đổi preview.html hoặc scripts/views.config.mjs.
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { CatalogCard } from '@/components/CatalogCard';
 import { TetHeroMedia } from '@/components/TetHeroMedia';
 

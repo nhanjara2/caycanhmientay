@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { Breadcrumb } from './Blocks';
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { permanentRedirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import { after } from 'next/server';

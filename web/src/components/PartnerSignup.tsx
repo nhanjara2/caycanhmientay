@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { useState, useTransition } from 'react';
 import { applyPartnerAction } from '@/app/actions/partners';
 import { useAuth } from '@/lib/auth';

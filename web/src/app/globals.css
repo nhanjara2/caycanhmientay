@@ -3349,3 +3349,13 @@ body[data-buybar] .app-site .app-fab { bottom: 6.25rem; }
 /* Nút "Đánh giá shop trên Google" ở chi tiết đơn đã giao (OrderParts, 21/10/2026) */
 .app-site .app-greview { display: inline-flex; align-items: center; gap: 0.375rem; margin: 0 0 var(--space-3); min-height: 2.75rem; }
 .app-site .app-greview .vx-ico { color: #f5a623; }
+
+/* >>> NÚT ĐỔI NGÔN NGỮ (components/LangSwitch.tsx, 06/11/2026) */
+.app-lang { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-height: 44px; min-width: 44px; padding: 0 10px;
+  border: 1px solid var(--border); border-radius: var(--radius-pill); color: var(--ink); font-weight: 600; font-size: 0.875rem;
+  text-decoration: none; white-space: nowrap; background: #fff; }
+.app-lang:hover { background: var(--surface-sunken); }
+/* Điện thoại: đầu trang chật → nút nằm trong bảng danh mục ☰ (SidebarMenu) + chân trang */
+@media (max-width: 47.9375em) { .app-header .app-lang { display: none; } }
+.app-side .app-lang { margin: 0 12px 8px; align-self: flex-start; }
+@media (min-width: 64em) { .app-side .app-lang { display: none; } }

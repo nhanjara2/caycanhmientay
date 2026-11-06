@@ -1,7 +1,7 @@
 'use client';
 
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import Link from '@/components/LocaleLink';
+import { useRouter } from '@/components/LocaleLink';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { deliveryStoresAction, listAddressesAction } from '@/app/actions/addresses';
 import { AddressFields, EMPTY_ADDR, type AddrValue } from '@/components/AddressFields';

@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import type { ReactNode } from 'react';
 import { imageAlt, type Product } from '@/lib/catalog';
 import { diseaseImageUrl, type Disease } from '@/lib/diseases';

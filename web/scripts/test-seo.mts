@@ -10,7 +10,8 @@ import * as robotsModule from '../src/app/robots.ts';
 import { autoCategoryDescription, categorySeo, SEO_DESCRIPTION_MAX, SEO_TITLE_MAX } from '../src/lib/category-seo.ts';
 import { clipText } from '../src/lib/format.ts';
 import { CATEGORY_DESCRIPTION, pageSuffix, postState } from '../src/lib/posts.ts';
-import { BASE_OPEN_GRAPH, withShare } from '../src/lib/seo.ts';
+import { BASE_OPEN_GRAPH, localizeMeta, withShare } from '../src/lib/seo.ts';
+import { localePath } from '../src/lib/i18n.ts';
 import { redirectable, sitePath } from '../src/lib/seo-cms.ts';
 import { autoSeoName, SEO_NAME_MAX, seoNameOf } from '../src/lib/seo-name.ts';
 import {
@@ -211,18 +212,22 @@ test('robots.txt: không chặn cả web, không chặn /_next, chặn trang ri�
 
 // ---- Hreflang --------------------------------------------------------------------------------
 
-test('hreflang: chỉ trang có cặp ngôn ngữ (lib/i18n.ts) mới có alternates.languages + og:locale:alternate', () => {
-  const one = withShare({ alternates: { canonical: '/danh-muc' } });
-  assert.equal((one.alternates as { languages?: unknown }).languages, undefined);
-  assert.equal((one.openGraph as { alternateLocale?: unknown }).alternateLocale, undefined);
-  assert.equal((one.openGraph as { locale?: string }).locale, 'vi_VN');
-  const vi = withShare({ alternates: { canonical: '/' } });
-  assert.deepEqual((vi.alternates as { languages?: unknown }).languages, { vi: '/', en: '/en', 'x-default': '/' });
+test('hreflang: localizeMeta — mọi trang có vi / en / x-default; bản tiếng Anh canonical /en/…; trang có ?tham số không hreflang', () => {
+  const vi = localizeMeta(withShare({ alternates: { canonical: '/danh-muc' } }), 'vi');
+  assert.deepEqual((vi.alternates as { languages?: unknown }).languages, { vi: '/danh-muc', en: '/en/danh-muc', 'x-default': '/danh-muc' });
+  assert.equal(vi.alternates?.canonical, '/danh-muc');
+  assert.equal((vi.openGraph as { locale?: string }).locale, 'vi_VN');
   assert.deepEqual((vi.openGraph as { alternateLocale?: unknown }).alternateLocale, ['en_US']);
-  const en = withShare({ alternates: { canonical: '/en/about' } });
-  assert.deepEqual((en.alternates as { languages?: unknown }).languages, { vi: '/chinh-sach/gioi-thieu', en: '/en/about', 'x-default': '/chinh-sach/gioi-thieu' });
-  assert.equal((en.openGraph as { locale?: string }).locale, 'en_US');
-  assert.equal((withShare({ alternates: { canonical: '/?trang=2' } }).alternates as { languages?: unknown }).languages, undefined);
+  const home = localizeMeta(withShare({ alternates: { canonical: '/' } }), 'en');
+  assert.equal(home.alternates?.canonical, '/en');
+  assert.equal((home.openGraph as { url?: string }).url, '/en');
+  assert.equal((home.openGraph as { locale?: string }).locale, 'en_US');
+  const q = localizeMeta(withShare({ alternates: { canonical: '/benh-cay?trang=2' } }), 'en');
+  assert.equal(q.alternates?.canonical, '/en/benh-cay?trang=2');
+  assert.equal((q.alternates as { languages?: unknown }).languages, undefined);
+  assert.equal(localePath('/admin/x', 'en'), '/admin/x');
+  assert.equal(localePath('/en/a?x=1#b', 'vi'), '/a?x=1#b');
+  assert.equal(localePath('https://x.com/a', 'en'), 'https://x.com/a');
   assert.equal(BASE_OPEN_GRAPH.locale, 'vi_VN');
 });
 

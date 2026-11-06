@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react';
 import { TIKTOK_NAME, YOUTUBE_NAME } from '@/lib/contact';
 import { videoPlayer, videoShareUrl, type ShortVideo } from '@/lib/posts';

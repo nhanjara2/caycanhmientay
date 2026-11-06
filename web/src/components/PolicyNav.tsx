@@ -1,7 +1,7 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import Link from '@/components/LocaleLink';
+import { usePathname } from '@/components/LocaleLink';
 import { useState } from 'react';
 import { POLICY_GROUPS, policies } from '@/lib/policies';
 import { Icon } from './Icon';

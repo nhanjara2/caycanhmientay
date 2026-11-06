@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/components/LocaleLink';
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
   countWith, groupTitle, matches, selectedCount, staticOptions, withQuery,

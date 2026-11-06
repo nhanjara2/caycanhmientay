@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { Breadcrumb } from '@/components/Blocks';
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { redirect } from 'next/navigation';
 import { one, pageOf, redirectIfNotCanonical, type SearchParams } from '@/lib/url-params';
 import { Pager } from '@/components/Pager';

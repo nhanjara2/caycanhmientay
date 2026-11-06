@@ -1,7 +1,7 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import Link from '@/components/LocaleLink';
+import { usePathname } from '@/components/LocaleLink';
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import { markNotificationsReadAction, notificationsAction } from '@/app/actions/notifications';
 import { useAuth } from '@/lib/auth';

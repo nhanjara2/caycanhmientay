@@ -1,17 +1,20 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import Link from '@/components/LocaleLink';
+import { usePathname } from '@/components/LocaleLink';
 import { useEffect, useRef, useState } from 'react';
 import type { Category } from '@/lib/catalog';
 import { closeSidebar, useSidebarOpen } from '@/lib/sidebar';
 import { useModalFocus } from '@/lib/use-modal';
 import { DeliverToButton } from './DeliverTo';
 import { Icon } from './Icon';
+import { LangSwitch } from './LangSwitch';
+import { useTranslations } from 'next-intl';
 
 /** Menu danh mục cố định bên trái (desktop), bảng trượt trái trên tablet/mobile. */
 export function SidebarMenu({ categories, counts }: { categories: Category[]; counts: Record<string, number> }) {
   const pathname = usePathname();
+  const t = useTranslations('side');
   const [, , catSlug, subSlug] = pathname.split('/');
   const current = pathname.startsWith('/danh-muc/') ? catSlug : undefined;
   const [open, setOpen] = useState<string | undefined>(current);
@@ -30,32 +33,33 @@ export function SidebarMenu({ categories, counts }: { categories: Category[]; co
   return (
     <>
       <div className="app-scrim" onClick={closeSidebar} />
-      <aside ref={aside} id="app-side" tabIndex={-1} className="vx-side app-side" aria-label="Danh mục sản phẩm">
+      <aside ref={aside} id="app-side" tabIndex={-1} className="vx-side app-side" aria-label={t('aria')}>
         <button type="button" className="app-side__close" onClick={closeSidebar}>
-          <Icon name="close" size={22} />Đóng danh mục
+          <Icon name="close" size={22} />{t('close')}
         </button>
         <DeliverToButton variant="side" />
-        <div className="vx-side__title">DANH MỤC SẢN PHẨM</div>
+        <LangSwitch />
+        <div className="vx-side__title">{t('title')}</div>
         <div className="vx-side__promo">
           <Link href="/danh-muc" className="plain" aria-current={pathname === '/danh-muc' ? 'page' : undefined}>
             <Icon name="leaf" />
-            Tất cả sản phẩm
+            {t('all')}
           </Link>
           <Link href="/doi-tac" className="plain">
             <Icon name="box" />
-            Đối tác sỉ · báo giá
+            {t('partner')}
           </Link>
           <Link href="/khuyen-mai">
             <Icon name="tag" />
-            Khuyến mãi hot
+            {t('promo')}
           </Link>
           <Link href="/flash-sale">
             <Icon name="bolt" />
-            Flash sale giờ vàng
+            {t('flash')}
           </Link>
           <Link href="/tim-kiem?q=bán chạy" className="plain">
             <Icon name="star" />
-            Bán chạy nhất
+            {t('best')}
           </Link>
         </div>
         {categories.map((c) => {
@@ -69,7 +73,7 @@ export function SidebarMenu({ categories, counts }: { categories: Category[]; co
               </button>
               <div className="vx-acc__list">
                 <Link href={`/danh-muc/${c.slug}`} aria-current={current === c.slug && !subSlug ? 'true' : undefined}>
-                  Tất cả<small>{counts[c.slug] ?? 0}</small>
+                  {t('allIn')}<small>{counts[c.slug] ?? 0}</small>
                 </Link>
                 {c.subs.map((s) => (
                   <Link

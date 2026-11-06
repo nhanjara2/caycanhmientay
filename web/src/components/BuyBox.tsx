@@ -1,7 +1,7 @@
 'use client';
 
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import Link from '@/components/LocaleLink';
+import { useRouter } from '@/components/LocaleLink';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { brandOf, cheapestOption, discountPct, isQuote, optionOrder, QUOTE_TEXT, SOLD_OUT_TEXT, type Product } from '@/lib/catalog';
 import { useAuth } from '@/lib/auth';

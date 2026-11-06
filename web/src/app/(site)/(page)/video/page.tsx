@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { one, redirectIfNotCanonical, type SearchParams } from '@/lib/url-params';
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { Breadcrumb } from '@/components/Blocks';
 import { EmptyPosts } from '@/components/PostParts';
 import { ShortVideos } from '@/components/ShortVideos';

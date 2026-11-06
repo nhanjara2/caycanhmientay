@@ -1,7 +1,7 @@
 'use client';
 
 import { Breadcrumb } from './Blocks';
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { createServiceRequestAction } from '@/app/actions/service-requests';
 import { isPhone } from '@/lib/auth';

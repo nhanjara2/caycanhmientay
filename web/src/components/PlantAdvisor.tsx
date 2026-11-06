@@ -1,8 +1,8 @@
 'use client';
 
 import { Breadcrumb } from './Blocks';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import Link from '@/components/LocaleLink';
+import { useRouter } from '@/components/LocaleLink';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useCart, type CartLine } from '@/lib/cart';
 import { ZALO_URL } from '@/lib/contact';

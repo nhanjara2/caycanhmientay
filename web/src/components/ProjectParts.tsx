@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { projectImageUrl, projectPath, projectTypeOf, roleName, type Project } from '@/lib/projects';
 import { Icon } from './Icon';
 import { responsive } from '@/lib/images';

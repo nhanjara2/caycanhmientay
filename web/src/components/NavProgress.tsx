@@ -1,6 +1,7 @@
 'use client';
 
-import { usePathname, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import { usePathname } from '@/components/LocaleLink';
 import { Suspense, useEffect, useRef } from 'react';
 
 /**

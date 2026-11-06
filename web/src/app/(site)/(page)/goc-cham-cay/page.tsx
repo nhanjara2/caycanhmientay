@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { Breadcrumb } from '@/components/Blocks';
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { redirect } from 'next/navigation';
 import { Icon } from '@/components/Icon';
 import { EmptyPosts, PostMeta, PostThumb } from '@/components/PostParts';

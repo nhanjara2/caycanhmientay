@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from 'next';
-import { headers } from 'next/headers';
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages } from 'next-intl/server';
+import { currentLang } from '@/i18n/request';
 import { Be_Vietnam_Pro, Noto_Color_Emoji } from 'next/font/google';
 import { AuthProvider } from '@/lib/auth';
 import { CartProvider } from '@/lib/cart';
@@ -24,7 +26,7 @@ const font = Be_Vietnam_Pro({
 // Font chia nhiều file theo unicode-range → máy khách chỉ tải phần chứa biểu tượng có trên trang. Đứng sau Be Vietnam Pro trong --font-sans.
 const emoji = Noto_Color_Emoji({ weight: '400', subsets: ['emoji'], variable: '--font-emoji', display: 'swap', preload: false, adjustFontFallback: false });
 
-export const metadata: Metadata = {
+const BASE_METADATA: Metadata = {
   // canonical / ảnh chia sẻ ghi đường dẫn tương đối ("/san-pham/…") → Next ghép thành URL tuyệt đối trên tên miền chính.
   metadataBase: new URL(SITE_ORIGIN),
   title: { default: 'Cây Cảnh Miền Tây – Nhà vườn Sa Đéc, cung cấp sỉ cây cảnh', template: '%s | Cây Cảnh Miền Tây' },
@@ -44,16 +46,29 @@ export const metadata: Metadata = {
   // Biểu tượng: app/favicon.ico + app/icon.png (trình duyệt — vẽ từ public/images/brand/logo-mark.png), app/apple-icon.png (iPhone), app/manifest.ts (Android).
 };
 
+/** Tiêu đề / mô tả dự phòng theo ngôn ngữ (bản tiếng Anh: /en/…, lib/i18n.ts). */
+export async function generateMetadata(): Promise<Metadata> {
+  if ((await currentLang()) === 'vi') return BASE_METADATA;
+  return {
+    ...BASE_METADATA,
+    title: { default: 'Cây Cảnh Miền Tây – Plant nursery & wholesale supplier in Sa Dec, Vietnam', template: '%s | Cây Cảnh Miền Tây' },
+    description: 'Wholesale and retail ornamental plants, landscape trees, fertilisers, pots and supplies from nearly 200 nurseries in Sa Dec, Vietnam. Nursery prices, nationwide delivery.',
+    openGraph: { ...BASE_OPEN_GRAPH, locale: 'en_US' },
+  };
+}
+
 // Website chỉ có giao diện sáng (BRANDBOOK) — tokens.css khai báo color-scheme: light.
 export const viewport: Viewport = { themeColor: '#0f4a24', colorScheme: 'light' };
 
 /** Khung gốc dùng chung cho website khách, admin và app nhân viên. */
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // Trang dưới /en (bản tiếng Anh) → lang="en"; src/proxy.ts gắn header x-ccmt-lang vì layout gốc không biết đường dẫn.
-  const lang = (await headers()).get('x-ccmt-lang') === 'en' ? 'en' : 'vi';
+  const lang = await currentLang();
+  const messages = await getMessages();
   return (
     <html lang={lang} className={`${font.variable} ${emoji.variable}`}>
       <body>
+        <NextIntlClientProvider locale={lang} messages={messages}>
         <AuthProvider>
           <ShippingProvider>
             <DeliverToProvider>
@@ -61,6 +76,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </DeliverToProvider>
           </ShippingProvider>
         </AuthProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { useEffect, useState } from 'react';
 import type { Product } from '@/lib/catalog';
 import { Icon } from './Icon';

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { Breadcrumb } from '@/components/Blocks';
 import { CategoryBlock } from '@/components/CategoryBlock';
 import { FlashSale } from '@/components/FlashSale';

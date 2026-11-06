@@ -1,7 +1,7 @@
 'use client';
 
 import type { CSSProperties } from 'react';
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { cheapestOption, discountPct, imageAlt, isQuote, isSoldOut, QUOTE_TEXT, SOLD_OUT_TEXT, type Product } from '@/lib/catalog';
 import { responsive } from '@/lib/images';
 import { useWishlist } from '@/lib/wishlist';

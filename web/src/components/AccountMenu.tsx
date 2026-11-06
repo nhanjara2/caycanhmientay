@@ -1,12 +1,13 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import Link from '@/components/LocaleLink';
+import { usePathname } from '@/components/LocaleLink';
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { ACCOUNT_NAV } from './AccountSidebar';
 import { Avatar } from './Avatar';
 import { Icon } from './Icon';
+import { useTranslations } from 'next-intl';
 
 /** Tên người dùng trên Header; bấm mở menu tài khoản. Chưa đăng nhập thì mở AuthModal. */
 export function AccountMenu() {
@@ -14,6 +15,7 @@ export function AccountMenu() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
+  const t = useTranslations('account');
 
   useEffect(() => setOpen(false), [pathname]);
   useEffect(() => {
@@ -33,34 +35,34 @@ export function AccountMenu() {
     return (
       <button type="button" className="app-hbtn" onClick={openLogin}>
         <Icon name="user" />
-        <span className="app-acc-label">Đăng nhập</span>
+        <span className="app-acc-label">{t('login')}</span>
       </button>
     );
   }
 
   return (
     <div className="vx-user" ref={ref}>
-      <button type="button" className="app-hbtn" aria-expanded={open} aria-label={`Tài khoản của ${user.name}`} onClick={() => setOpen((o) => !o)}>
+      <button type="button" className="app-hbtn" aria-expanded={open} aria-label={t('accountOf', { name: user.name })} onClick={() => setOpen((o) => !o)}>
         <Avatar size="sm" initials={user.initials} url={user.avatarUrl} />
         <span className="app-hide-sm">{user.name}</span>
-        <span className="app-acc-label app-acc-label--sm">Tài khoản</span>
+        <span className="app-acc-label app-acc-label--sm">{t('account')}</span>
       </button>
       {open && (
         <div className="vx-dd app-dd">
           <div className="vx-dd__head">
             <Avatar size="sm" initials={user.initials} url={user.avatarUrl} />
             <span><b>{user.name}</b><small>{user.phoneMasked}</small></span>
-            <span className="vx-tier" style={{ marginLeft: 'auto' }}>{user.points.toLocaleString('vi-VN')} điểm</span>
+            <span className="vx-tier" style={{ marginLeft: 'auto' }}>{t('points', { n: user.points.toLocaleString('vi-VN') })}</span>
           </div>
           {ACCOUNT_NAV.map((i) => (
             <Link key={i.href} href={i.href}>
-              <Icon name={i.icon} />{i.label}{i.badge ? <em>{i.badge}</em> : null}
+              <Icon name={i.icon} />{t(`nav.${i.href}`)}{i.badge ? <em>{i.badge}</em> : null}
             </Link>
           ))}
-          {user.role !== 'customer' && <Link href="/admin"><Icon name="gauge" />Trang quản trị</Link>}
+          {user.role !== 'customer' && <Link href="/admin"><Icon name="gauge" />{t('admin')}</Link>}
           <hr />
           <button type="button" className="app-dd-out" onClick={() => { void logout(); setOpen(false); }}>
-            <Icon name="close" />Đăng xuất
+            <Icon name="close" />{t('logout')}
           </button>
         </div>
       )}

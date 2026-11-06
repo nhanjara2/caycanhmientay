@@ -6,6 +6,8 @@ import { cache } from 'react';
 import { and, desc, eq, lte, ne, sql } from 'drizzle-orm';
 import * as z from 'zod';
 import { getPolicy } from '@/lib/policies';
+import { localizeMeta } from '@/lib/seo';
+import { currentLang } from '@/i18n/request';
 import { postPath, sectionOf, SECTIONS } from '@/lib/posts';
 import { projectPath } from '@/lib/projects';
 import { auditText, isShareImage, redirectable, seoTime, sitePath, type SeoChange } from '@/lib/seo-cms';
@@ -48,7 +50,7 @@ export async function withSeo(meta: Metadata): Promise<Metadata> {
   // Đọc lỗi (database tạm hỏng, lúc build trang tĩnh) thì giữ metadata web tự tạo — SEO đặt tay không được làm sập trang.
   // Trang tĩnh (chính sách, giới thiệu…) được dựng lại khi lưu SEO nhờ revalidatePath trong saveSeoAction.
   const o = await getSeoOverride(path).catch(() => null);
-  return applySeoOverride(meta, o, !query);
+  return localizeMeta(applySeoOverride(meta, o, !query), await currentLang());
 }
 
 /** Đường dẫn rời sitemap vì đặt tay noindex hoặc canonical trỏ trang khác. */

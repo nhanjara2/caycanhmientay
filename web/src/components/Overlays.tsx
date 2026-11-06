@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { useCart } from '@/lib/cart';
 import { SALES_PHONE, ZALO_URL } from '@/lib/contact';
 import { Icon } from './Icon';

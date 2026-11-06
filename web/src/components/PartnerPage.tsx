@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import type { ReactNode } from 'react';
 import { formatPhone, LEGAL, SALES_PHONE, SHOP_ADDRESS, SHOP_EMAIL, SHOP_MAP_URL, ZALO_URL } from '@/lib/contact';
 import type { PartnerType } from '@/lib/partners';

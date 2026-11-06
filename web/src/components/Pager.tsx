@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 
 /** Số trang hiện: 1, …, các trang quanh trang đang xem, …, trang cuối (0 = dấu "…"). */
 export function pageWindow(page: number, pages: number, around = 2): number[] {

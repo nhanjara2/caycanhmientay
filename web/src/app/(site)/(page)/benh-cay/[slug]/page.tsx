@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import '@/styles/disease-detail.css';
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { Breadcrumb, SectionHeader } from '@/components/Blocks';
 import { PartIcon } from '@/components/DiseaseArt';
 import { Icon } from '@/components/Icon';

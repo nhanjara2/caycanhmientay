@@ -1,10 +1,11 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import Link from '@/components/LocaleLink';
+import { usePathname } from '@/components/LocaleLink';
 import { useAuth } from '@/lib/auth';
 import { Avatar } from './Avatar';
 import { Icon, type IconName } from './Icon';
+import { useTranslations } from 'next-intl';
 
 export const ACCOUNT_NAV: { href: string; label: string; icon: IconName; badge?: number }[] = [
   { href: '/tai-khoan', label: 'Thông tin cá nhân', icon: 'user' },
@@ -21,6 +22,7 @@ export const ACCOUNT_NAV: { href: string; label: string; icon: IconName; badge?:
 /** Cột trái các trang tài khoản: thẻ hồ sơ nền primary-deep + danh sách mục. */
 export function AccountSidebar() {
   const pathname = usePathname();
+  const t = useTranslations('account');
   const { user, logout } = useAuth();
   const current = (href: string) =>
     href === '/tai-khoan' ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
@@ -51,7 +53,7 @@ export function AccountSidebar() {
           {ACCOUNT_NAV.map((n) => (
             <Link key={n.href + n.label} href={n.href} aria-current={current(n.href) ? 'true' : undefined}>
               <Icon name={n.icon} />
-              {n.label}
+              {t(`nav.${n.href}`)}
               {n.badge ? <em>{n.badge}</em> : null}
               <Icon name="chevron" className="chev" />
             </Link>

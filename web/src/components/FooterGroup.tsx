@@ -1,6 +1,6 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
+import { usePathname } from '@/components/LocaleLink';
 import { useEffect, useId, useState, type ReactNode } from 'react';
 import { Icon } from './Icon';
 

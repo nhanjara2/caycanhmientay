@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { useRef, useState, useTransition } from 'react';
 import { markCareDoneAction, updateGardenPlantAction, uploadGardenPhotoAction } from '@/app/actions/garden';
 import { compressImage } from '@/lib/compress-image';

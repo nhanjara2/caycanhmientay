@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { Breadcrumb } from './Blocks';
 import type { ReactNode } from 'react';
 import type { Block, Section } from '@/lib/policy-content';

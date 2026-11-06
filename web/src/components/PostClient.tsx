@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { useEffect, useState } from 'react';
 import { votePostAction } from '@/app/actions/posts';
 import { isQuote, QUOTE_TEXT, type Product } from '@/lib/catalog';

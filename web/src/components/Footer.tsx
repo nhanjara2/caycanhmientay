@@ -1,27 +1,22 @@
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { CARE_PHONE, FACEBOOK_URL, formatPhone, LINKEDIN_URL, GOOGLE_REVIEW_URL, SALES_PHONE, SHOP_ADDRESS, SUPPORT_PHONE, TIKTOK_URL, YOUTUBE_URL, ZALO_QR, ZALO_URL } from '@/lib/contact';
 import { ASK_AI } from '@/lib/ask-ai';
 import { FooterGroup } from './FooterGroup';
 import { Icon } from './Icon';
+import { getTranslations } from 'next-intl/server';
+import { LangSwitch } from './LangSwitch';
 
-const ABOUT: [string, string][] = [
-  ['Giới thiệu', '/chinh-sach/gioi-thieu'], ['Hệ thống cửa hàng & vườn', '/he-thong-cua-hang'],
-  ['Giấy phép kinh doanh', '/chinh-sach/giay-phep-kinh-doanh'], ['Quy chế hoạt động', '/chinh-sach/quy-che-hoat-dong'],
-  ['Chính sách giao hàng', '/chinh-sach/giao-hang'], ['Chính sách bảo hành cây', '/chinh-sach/bao-hanh-cay'],
-  ['Chính sách đổi trả', '/chinh-sach/doi-tra'], ['Chính sách thanh toán', '/chinh-sach/thanh-toan'],
-  ['Chính sách đặt cọc', '/chinh-sach/dat-coc'], ['Chính sách bảo mật dữ liệu cá nhân', '/chinh-sach/bao-mat'],
-  ['Điều khoản sử dụng', '/chinh-sach/dieu-khoan'],
-];
-const LEARN: [string, string][] = [
-  ['Góc chăm cây', '/goc-cham-cay'], ['Video ngắn', '/video'], ['Bắt bệnh cho cây', '/benh-cay'],
-  ['Hướng dẫn dùng thuốc an toàn', '/chinh-sach/thuoc-bvtv-an-toan'], ['Đối tác sỉ', '/doi-tac'], ['Yêu cầu báo giá sỉ', '/bao-gia-si'],
-  ['Tư vấn chọn cây', '/tu-van-chon-cay'], ['Tin khuyến mãi', '/khuyen-mai'], ['Truyền thông', '/tin-tuc'],
-];
-// [nội dung, số điện thoại, người phụ trách]
+// Tên link: messages/<lang>.json → footer.links.<đường dẫn>
+const ABOUT = ['/chinh-sach/gioi-thieu', '/he-thong-cua-hang', '/chinh-sach/giay-phep-kinh-doanh', '/chinh-sach/quy-che-hoat-dong',
+  '/chinh-sach/giao-hang', '/chinh-sach/bao-hanh-cay', '/chinh-sach/doi-tra', '/chinh-sach/thanh-toan', '/chinh-sach/dat-coc',
+  '/chinh-sach/bao-mat', '/chinh-sach/dieu-khoan'];
+const LEARN = ['/goc-cham-cay', '/video', '/benh-cay', '/chinh-sach/thuoc-bvtv-an-toan', '/doi-tac', '/bao-gia-si', '/tu-van-chon-cay',
+  '/khuyen-mai', '/tin-tuc'];
+// [khóa chữ, số điện thoại, người phụ trách]
 const HOTLINES: [string, string, string?][] = [
-  ['Kinh doanh sỉ, báo giá', SALES_PHONE, 'Nhân'],
-  ['Tư vấn chăm cây, bắt bệnh', CARE_PHONE, 'Thịnh'],
-  ['Góp ý, khiếu nại, bảo hành', SUPPORT_PHONE, 'Trâm'],
+  ['hot1', SALES_PHONE, 'Nhân'],
+  ['hot2', CARE_PHONE, 'Thịnh'],
+  ['hot3', SUPPORT_PHONE, 'Trâm'],
 ];
 // Logo trong public/images/pay/
 const PAY: [string, string, string][] = [
@@ -32,87 +27,88 @@ const PAY: [string, string, string][] = [
   ['Apple Pay', 'applepay.svg', 'https://www.apple.com/vn/apple-pay/'],
 ];
 
-export function Footer() {
+export async function Footer() {
+  const t = await getTranslations('footer');
   return (
     <footer className="vx-footer">
       <div className="vx-fband">
         <span className="vx-fband__t">
           <Icon name="pin" size={24} />
           <span>
-            Ghé thăm vườn và cửa hàng Cây Cảnh Miền Tây
-            <small>Xem cây tận nơi, nhận tư vấn trực tiếp từ kỹ sư</small>
+            {t('visit')}
+            <small>{t('visitSub')}</small>
           </span>
         </span>
-        <Link className="vx-btn" href="/he-thong-cua-hang">Xem danh sách cửa hàng</Link>
+        <Link className="vx-btn" href="/he-thong-cua-hang">{t('stores')}</Link>
       </div>
       <div className="vx-fnews">
         <Icon name="mail" style={{ color: 'var(--primary)' }} />
         <span>
-          <b>Nhận lịch chăm cây theo mùa</b>
+          <b>{t('news')}</b>
           <br />
-          <span>Mỗi tháng một email: việc cần làm cho cây, ưu đãi thành viên.</span>
+          <span>{t('newsSub')}</span>
         </span>
         <form className="f">
-          <input className="vx-input" type="email" placeholder="Email của bạn" aria-label="Email" />
-          <button className="vx-btn vx-btn--primary" type="button">Đăng ký</button>
+          <input className="vx-input" type="email" placeholder={t('email')} aria-label="Email" />
+          <button className="vx-btn vx-btn--primary" type="button">{t('subscribe')}</button>
         </form>
       </div>
       <div className="vx-fcols">
-        <FooterGroup title="VỀ CÂY CẢNH MIỀN TÂY">
-          {ABOUT.map(([t, h]) => <Link key={t} href={h}>{t}</Link>)}
+        <FooterGroup title={t('about')}>
+          {ABOUT.map((h) => <Link key={h} href={h}>{t(`links.${h}`)}</Link>)}
         </FooterGroup>
-        <FooterGroup title="TÌM HIỂU THÊM">
-          {LEARN.map(([t, h]) => <Link key={t} href={h}>{t}</Link>)}
+        <FooterGroup title={t('learn')}>
+          {LEARN.map((h) => <Link key={h} href={h}>{t(`links.${h}`)}</Link>)}
         </FooterGroup>
         <div className="vx-fcol">
-          <h4>HOTLINE (8:00 – 21:00)</h4>
+          <h4>{t('hotline')}</h4>
           {HOTLINES.map(([label, phone, name]) => (
             <div key={label} className="vx-hot">
-              <span>{label}</span>
+              <span>{t(label)}</span>
               <b><a href={`tel:${phone}`}>{formatPhone(phone)}</a>{name && <small> ({name})</small>}</b>
             </div>
           ))}
-          <h4 style={{ marginTop: 8 }}>CHỨNG NHẬN BỞI</h4>
+          <h4 style={{ marginTop: 8 }}>{t('certs')}</h4>
           <div className="vx-certs">
-            <span className="vx-cert"><Icon name="shield" />Đã thông báo Bộ Công Thương</span>
-            <span className="vx-cert"><Icon name="shield" />Đủ điều kiện buôn bán thuốc BVTV</span>
+            <span className="vx-cert"><Icon name="shield" />{t('cert1')}</span>
+            <span className="vx-cert"><Icon name="shield" />{t('cert2')}</span>
           </div>
         </div>
         <div className="vx-fcol">
-          <h4>KẾT NỐI VỚI CHÚNG TÔI</h4>
+          <h4>{t('connect')}</h4>
           <div className="vx-social">
             <a href={FACEBOOK_URL} target="_blank" rel="noreferrer" title="Facebook"><img src="/images/social/facebook.svg" alt="Facebook" width={36} height={36} loading="lazy" /></a>
             <a href={ZALO_URL} target="_blank" rel="noreferrer" title="Zalo"><img src="/images/social/zalo.svg" alt="Zalo" width={36} height={36} loading="lazy" /></a>
             <a href={YOUTUBE_URL} target="_blank" rel="noreferrer" title="YouTube"><img src="/images/social/youtube.svg" alt="YouTube" width={36} height={36} loading="lazy" /></a>
             <a href={TIKTOK_URL} target="_blank" rel="noreferrer" title="TikTok"><img src="/images/social/tiktok.svg" alt="TikTok" width={36} height={36} loading="lazy" /></a>
             <a href={LINKEDIN_URL} target="_blank" rel="noreferrer" title="LinkedIn"><img src="/images/social/linkedin.svg" alt="LinkedIn" width={36} height={36} loading="lazy" /></a>
-            <a href={GOOGLE_REVIEW_URL} target="_blank" rel="noreferrer" title="Đánh giá trên Google"><img src="/images/social/google.svg" alt="Đánh giá trên Google" width={36} height={36} loading="lazy" /></a>
+            <a href={GOOGLE_REVIEW_URL} target="_blank" rel="noreferrer" title={t('googleReview')}><img src="/images/social/google.svg" alt={t('googleReview')} width={36} height={36} loading="lazy" /></a>
           </div>
-          <h4 style={{ marginTop: 8 }}>HỎI AI VỀ CÂY CẢNH MIỀN TÂY</h4>
+          <h4 style={{ marginTop: 8 }}>{t('askAi')}</h4>
           <div className="app-askai">
             {ASK_AI.map((a) => (
-              <a key={a.name} href={a.href} target="_blank" rel="noopener noreferrer nofollow" title={a.name} aria-label={`Hỏi ${a.name} về Cây Cảnh Miền Tây`}><img src={`/images/ai/${a.name.toLowerCase()}.svg`} alt="" width={36} height={36} loading="lazy" /></a>
+              <a key={a.name} href={a.href} target="_blank" rel="noopener noreferrer nofollow" title={a.name} aria-label={t('askAiOne', { name: a.name })}><img src={`/images/ai/${a.name.toLowerCase()}.svg`} alt="" width={36} height={36} loading="lazy" /></a>
             ))}
           </div>
           {/* Mã QR chỉ có ích khi xem trên máy tính; điện thoại đã có nút "Chat Zalo" ở thanh dưới. */}
           <div className="vx-fcol app-qrbox">
-            <h4 style={{ marginTop: 8 }}>QUÉT MÃ CHAT ZALO</h4>
+            <h4 style={{ marginTop: 8 }}>{t('qr')}</h4>
             <a className="vx-qr app-qr" href={ZALO_URL} target="_blank" rel="noreferrer">
-              <img src={ZALO_QR} alt="Mã QR Zalo Cây Cảnh Miền Tây" loading="lazy" />
+              <img src={ZALO_QR} alt={t('qrAlt')} loading="lazy" />
             </a>
           </div>
-          <h4 style={{ marginTop: 8 }}>HỖ TRỢ THANH TOÁN</h4>
+          <h4 style={{ marginTop: 8 }}>{t('pay')}</h4>
           <div className="vx-paylogos">
             {PAY.map(([name, file, url]) => (
-              <a key={name} className="vx-payl" href={url} target="_blank" rel="noopener noreferrer" title={`Tìm hiểu ${name}`} aria-label={`Trang chủ ${name} (mở tab mới)`}><img src={`/images/pay/${file}`} alt="" loading="lazy" /></a>
+              <a key={name} className="vx-payl" href={url} target="_blank" rel="noopener noreferrer" title={t('payAbout', { name })} aria-label={t('payAria', { name })}><img src={`/images/pay/${file}`} alt="" loading="lazy" /></a>
             ))}
           </div>
         </div>
       </div>
       <div className="vx-flegal">
-        <span>© 2007 - 2026 Cây Cảnh Miền Tây · Số ĐKKD 087096010726 cấp 04/2026 · được quản lý bởi Thuế cơ sở 6 tỉnh Đồng Tháp</span>
-        <span><a className="app-langlink" href="/en" hrefLang="en" lang="en">🌐 English</a></span>
-        <span>Địa chỉ: {SHOP_ADDRESS} · Điện thoại: {SALES_PHONE} · Email: sale@caycanhmientay.com</span>
+        <span>{t('legal')}</span>
+        <span><LangSwitch className="app-langlink" /></span>
+        <span>{t('contact', { address: SHOP_ADDRESS, phone: SALES_PHONE })}</span>
       </div>
     </footer>
   );

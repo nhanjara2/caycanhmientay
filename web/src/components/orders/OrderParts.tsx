@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import type { ReactNode } from 'react';
 import { Icon, Thumb } from '@/components/Icon';
 import { GOOGLE_REVIEW_URL, PICKUP_PLACE } from '@/lib/contact';

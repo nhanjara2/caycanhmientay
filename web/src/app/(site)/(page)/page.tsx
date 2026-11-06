@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { FlashSale } from '@/components/FlashSale';
 import { HomeCarousel, HomeHero, type Slide } from '@/components/home/HomeCarousel';
 import {

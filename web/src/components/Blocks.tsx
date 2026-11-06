@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import type { ReactNode } from 'react';
 import { breadcrumbLd, normalizeCrumbs, type Crumb } from '@/lib/jsonld';
 import { Icon, type IconName } from './Icon';

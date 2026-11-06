@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { WholesaleQuoteForm } from '@/components/WholesaleQuoteForm';
 import { formatPhone, SALES_PHONE, SHOP_EMAIL, ZALO_URL } from '@/lib/contact';
 import { PARTNER_TYPES, WHOLESALE_URL, type PartnerType } from '@/lib/partners';

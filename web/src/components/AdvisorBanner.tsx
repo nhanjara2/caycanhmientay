@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { ADVISOR_URL, KINDS, SPACE_KINDS } from '@/lib/plant-advisor';
 import { Icon } from './Icon';
 

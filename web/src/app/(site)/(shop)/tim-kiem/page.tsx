@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { after } from 'next/server';
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { Breadcrumb, EmptyState } from '@/components/Blocks';
 import { ProductGrid } from '@/components/ProductCard';
 import { findCategory } from '@/lib/catalog';

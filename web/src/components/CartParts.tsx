@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { useEffect, useState, type ReactNode } from 'react';
 import { type CartLine, type Totals, useCart } from '@/lib/cart';
 import { minOrderShort, plantFeeVaries, plantFreeFrom, type LinePrice } from '@/lib/pricing';

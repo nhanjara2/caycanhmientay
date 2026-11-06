@@ -1,7 +1,7 @@
 'use client';
 
 import { Breadcrumb } from './Blocks';
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { useEffect, useMemo, useState, type KeyboardEvent } from 'react';
 import { normalize } from '@/lib/catalog';
 import { locateMe } from '@/lib/geo';

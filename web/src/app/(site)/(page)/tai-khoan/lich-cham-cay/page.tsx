@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import Link from '@/components/LocaleLink';
 import { AccountSidebar } from '@/components/AccountSidebar';
 import { Breadcrumb } from '@/components/Blocks';
 import { CareScheduleList, type CareTask } from '@/components/CareScheduleList';
