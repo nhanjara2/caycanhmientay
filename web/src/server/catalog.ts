@@ -9,10 +9,24 @@ import type { BundleItem, BundlePart } from '@/lib/bundle';
 import { todayVN } from '@/lib/stock';
 import { bundleAvailable, partInfo, partOf, partStock } from './bundles';
 import { db, schema } from './db';
+import { safeLang } from '@/i18n/request';
+import { optionLabelEn, originEn, unitEn } from '@/lib/i18n-content';
 
 const { products: P, productOptions: O, productImages: I, stockLots: L } = schema;
 
 type Row = typeof P.$inferSelect;
+
+/** Trang /en: thay chữ bằng bản tiếng Anh (cột `en`), ô nào thiếu giữ tiếng Việt. */
+function toEn(r: Row): Row {
+  const e = r.en;
+  return {
+    ...r, unit: unitEn(r.unit), origin: originEn(r.origin),
+    ...(e ? {
+      name: e.name, seoName: e.name, lead: e.lead ?? r.lead, spec: e.spec ?? r.spec, specs: e.specs ?? r.specs,
+      body: e.body ?? r.body, fengshui: r.fengshui && e.fengshui ? { ...r.fengshui, ...e.fengshui } : r.fengshui,
+    } : {}),
+  };
+}
 
 async function hydrate(rows: Row[]): Promise<Product[]> {
   if (!rows.length) return [];
@@ -24,6 +38,7 @@ async function hydrate(rows: Row[]): Promise<Product[]> {
     db.selectDistinct({ slug: L.productSlug, idx: L.optionIdx }).from(L)
       .where(and(inArray(L.productSlug, slugs), gt(L.qty, 0), or(isNull(L.expiry), gte(L.expiry, todayVN())))),
   ]);
+  const en = (await safeLang()) === 'en';
   const sellable = new Set(lots.map((l) => `${l.slug}:${l.idx}`));
   // Sản phẩm bộ: còn hàng khi mọi món còn đủ (lô chưa hết hạn); tên món để hiện "Bộ gồm" trên trang sản phẩm
   const partSlugs = [...new Set(opts.flatMap((o) => o.parts?.map((x) => x.slug) ?? []))];
@@ -42,13 +57,13 @@ async function hydrate(rows: Row[]): Promise<Product[]> {
     const i = imgs.filter((x) => x.slug === slug).findIndex((x) => x.option === idx);
     return i >= 0 ? i : undefined;
   };
-  return rows.map((r) => { const bundle = opts.some((o) => o.productSlug === r.slug && o.parts); return {
+  return rows.map((r0) => { const r = en ? toEn(r0) : r0; const bundle = opts.some((o) => o.productSlug === r.slug && o.parts); return {
     slug: r.slug, sku: r.sku, name: r.name, seoName: r.seoName ?? undefined, category: r.category, sub: r.sub, extraSubs: r.extraSubs.length ? r.extraSubs : undefined, icon: r.icon as IconName,
     origin: r.origin, ship: r.ship, pesticide: r.pesticide || undefined, noVoucher: r.noVoucher || bundle || undefined, unit: r.unit, spec: r.spec, lead: r.lead,
     specs: r.specs, keywords: r.keywords, rating: r.rating / 10, reviews: r.reviews, sold: r.sold,
     flash: r.flashTotal ? { sold: r.flashSold ?? 0, total: r.flashTotal } : undefined,
     options: opts.filter((o) => o.productSlug === r.slug).map((o) => ({
-      idx: o.idx, label: o.label, price: o.price, oldPrice: o.oldPrice ?? undefined, combo2: o.combo2 ?? undefined, bulky: o.bulky || undefined,
+      idx: o.idx, label: en ? optionLabelEn(o.label) : o.label, price: o.price, oldPrice: o.oldPrice ?? undefined, combo2: o.combo2 ?? undefined, bulky: o.bulky || undefined,
       soldOut: !canSell(o) || undefined,
       parts: o.parts ? itemsOf(o.parts) : undefined,
       image: optionImage(r.slug, o.idx),

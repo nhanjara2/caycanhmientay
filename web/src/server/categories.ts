@@ -7,6 +7,7 @@ import type { IconName } from '@/components/Icon';
 import { CATEGORY_ICONS, SLUG_RE, SYSTEM_CATEGORIES, toSlug, type Category } from '@/lib/catalog';
 import { INTRO_MAX, SEO_DESCRIPTION_MAX, SEO_TITLE_MAX } from '@/lib/category-seo';
 import { db, schema } from './db';
+import { safeLang } from '@/i18n/request';
 
 const { categories: C, subcategories: S, products: P } = schema;
 
@@ -23,9 +24,10 @@ export const getCategories = cache(async (): Promise<Category[]> => {
     ...(r.seoTitle ? { seoTitle: r.seoTitle } : {}), ...(r.seoDescription ? { seoDescription: r.seoDescription } : {}),
     ...(r.intro ? { intro: r.intro } : {}),
   });
+  const en = (await safeLang()) === 'en';
   return cats.map((c) => ({
-    slug: c.slug, name: c.name, icon: c.icon as IconName, active: c.active, specs: c.specs, ...seo(c),
-    subs: subs.filter((s) => s.categorySlug === c.slug).map((s) => ({ slug: s.slug, name: s.name, active: s.active, specs: s.specs, ...seo(s) })),
+    slug: c.slug, name: (en && c.en?.name) || c.name, icon: c.icon as IconName, active: c.active, specs: c.specs, ...seo(c),
+    subs: subs.filter((s) => s.categorySlug === c.slug).map((s) => ({ slug: s.slug, name: (en && s.en?.name) || s.name, active: s.active, specs: s.specs, ...seo(s) })),
   }));
 });
 

@@ -9,7 +9,7 @@ import { money } from '@/lib/format';
 import { shortCategoryName, type MegaMenuData, type MegaProduct } from '@/lib/mega-menu';
 import { Art, Icon, type IconName } from './Icon';
 import { thumbUrl } from '@/lib/images';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
 /** Lối tắt riêng của vài danh mục hệ thống (theo slug trong SYSTEM_CATEGORIES). */
 const SHORTCUTS: Record<string, { href: string; label: string; icon: IconName }[]> = {
@@ -26,9 +26,9 @@ const TTL = 5 * 60_000;
 
 // Tải một lần cho cả trang (chuyển trang trong web vẫn giữ), làm mới sau 5 phút; lỗi mạng thì lần rê sau tải lại.
 let cached: { at: number; p: Promise<MegaMenuData | null> } | undefined;
-function loadMega() {
+function loadMega(lang: string) {
   if (!cached || Date.now() - cached.at > TTL) {
-    const p = fetch('/api/mega-menu')
+    const p = fetch(lang === 'en' ? '/api/mega-menu?lang=en' : '/api/mega-menu', lang === 'en' ? { headers: { 'x-ccmt-lang': 'en' } } : undefined)
       .then((r) => (r.ok ? (r.json() as Promise<MegaMenuData>) : null))
       .catch(() => null)
       .then((d) => {
@@ -46,6 +46,7 @@ function loadMega() {
  */
 export function CategoryNav({ categories }: { categories: Category[] }) {
   const t = useTranslations('catnav');
+  const lang = useLocale();
   const pathname = usePathname();
   const [open, setOpen] = useState<string | null>(null);
   const [sub, setSub] = useState('');
@@ -54,8 +55,8 @@ export function CategoryNav({ categories }: { categories: Category[] }) {
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const warm = useCallback(() => {
-    if (!data) loadMega().then((d) => d && setData(d));
-  }, [data]);
+    if (!data) loadMega(lang).then((d) => d && setData(d));
+  }, [data, lang]);
 
   const show = useCallback((slug: string | null) => {
     clearTimeout(timer.current);

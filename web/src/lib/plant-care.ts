@@ -1,11 +1,12 @@
 // Nội dung "Cách chăm sóc / Lưu ý / Câu hỏi thường gặp" ở trang cây, dựng từ thông số của cây (migration 0037 điền ~15 dòng cho mỗi cây).
 // Cây chưa có thông số chăm sóc thì không sinh gì thêm (trang dùng lại 4 dòng thông số đầu như trước).
+import { specKeyVi } from './i18n-content';
 import type { Product } from './catalog';
 
 /** Dòng thông số dùng cho mục "Cách chăm sóc", theo thứ tự hiện. */
 const CARE_KEYS = ['Ánh sáng', 'Tưới nước', 'Đất trồng', 'Bón phân', 'Nhiệt độ, độ ẩm', 'Cách nhân giống'];
 
-const specMap = (p: Pick<Product, 'specs'>) => new Map(p.specs.map(([k, v]) => [k.trim(), v.trim()]));
+const specMap = (p: Pick<Product, 'specs'>) => new Map(p.specs.map(([k, v]) => [specKeyVi(k).trim(), v.trim()]));
 const sentence = (v: string) => (/[.!?…]$/.test(v) ? v : `${v}.`);
 const lower = (v: string) => v.charAt(0).toLowerCase() + v.slice(1);
 

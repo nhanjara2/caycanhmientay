@@ -5,6 +5,7 @@
 //   vd. "Cây kim tiền (Kim phát tài) để bàn, văn phòng, trong nhà – dễ chăm, chịu bóng, phong thủy tài lộc, hợp mệnh Mộc, Hỏa"
 // Admin bấm "Tạo tự động" trong form sản phẩm để điền tên theo công thức rồi sửa lại; để trống thì web tự dùng tên tạo tự động.
 // Hàm thuần — dùng chung server (trang sản phẩm) và client (form admin).
+import { specKeyVi } from './i18n-content';
 import { ELEMENTS, normalize, type Product } from './catalog';
 
 /** Tên chi tiết tối đa (ký tự). Google chỉ hiện khoảng 60–65 ký tự đầu của <title>, nên phần quan trọng phải đứng đầu. */
@@ -40,7 +41,7 @@ const MEANINGS: { name: string; re: RegExp }[] = [
   { name: 'thăng tiến', re: /\bthang tien\b|\bthanh cong\b|\bsu nghiep\b|\bvuon len\b/ },
 ];
 
-const specOf = (specs: [string, string][], name: string) => specs.find(([k]) => normalize(k) === normalize(name))?.[1] ?? '';
+const specOf = (specs: [string, string][], name: string) => specs.find(([k]) => normalize(specKeyVi(k)) === normalize(name))?.[1] ?? '';
 const hasAccent = (s: string) => /[^\x00-\x7f]/.test(s);
 
 /** "Kim tiền" → "Cây kim tiền"; tên đã có "Cây" / "Cỏ" / "Bộ" (sản phẩm bộ) ở đầu thì giữ. */

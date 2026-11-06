@@ -2,6 +2,7 @@
 import { sql } from 'drizzle-orm';
 import type { BundlePart } from '../../lib/bundle';
 import type { FengShui, SpecField } from '../../lib/catalog';
+import type { ProductEn } from '../../lib/i18n-content';
 import { CASH_KINDS } from '../../lib/cash-labels';
 import type { Disease } from '../../lib/diseases';
 import type { PostBlock } from '../../lib/posts';
@@ -93,6 +94,8 @@ export const categories = pgTable('categories', {
   /** Tiêu đề / mô tả trên Google do admin tự viết; null = web tự tạo (lib/category-seo.ts). */
   seoTitle: text('seo_title'),
   seoDescription: text('seo_description'),
+  /** Bản tiếng Anh: { name } — null = tên tiếng Việt. */
+  en: jsonb('en').$type<{ name: string }>(),
   /** Đoạn giới thiệu hiện cuối trang danh mục (trang 1, không lọc); null = không hiện. Đoạn cách nhau một dòng trống. */
   intro: text('intro'),
   createdAt: createdAt(),
@@ -108,6 +111,8 @@ export const subcategories = pgTable('subcategories', {
   specs: jsonb('specs').$type<SpecField[]>().notNull().default(sql`'[]'::jsonb`),
   seoTitle: text('seo_title'),
   seoDescription: text('seo_description'),
+  /** Bản tiếng Anh: { name } — null = tên tiếng Việt. */
+  en: jsonb('en').$type<{ name: string }>(),
   intro: text('intro'),
   createdAt: createdAt(),
 }, (t) => [primaryKey({ columns: [t.categorySlug, t.slug] })]);
@@ -147,6 +152,8 @@ export const products = pgTable('products', {
   fengshui: jsonb('fengshui').$type<FengShui>(),
   /** Đặc điểm cây cho bộ lọc: vị trí đặt, kích thước, màu (lib/product-filters.ts). null = chưa gắn. */
   attrs: jsonb('attrs').$type<ProductAttrs>(),
+  /** Bản tiếng Anh (trang /en, lib/i18n.ts) — null = hiện tiếng Việt. Dịch bằng AI qua migration. */
+  en: jsonb('en').$type<ProductEn>(),
   /** Lần cuối nội dung khách thấy thay đổi (tên, mô tả, thông số, quy cách / giá, ảnh) — lastmod của sitemap. Bật / tắt bán không tính. */
   updatedAt: ts('updated_at').notNull().defaultNow(),
   createdAt: createdAt(),

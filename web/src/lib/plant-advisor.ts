@@ -4,6 +4,7 @@
 //
 // Số liệu (mấy cây mỗi m², khoảng cách, chiều cao theo trần…) là quy tắc kinh nghiệm để ra phương án sơ bộ —
 // kỹ sư chỉnh lại khi khảo sát. Muốn đổi thì sửa trong KINDS bên dưới.
+import { specKeyVi } from './i18n-content';
 import { snapOf, type CartSnap } from './cart-snap';
 import type { IconName } from '@/components/Icon';
 import { ELEMENTS, inSub, normalize, type ElementKey, type Product } from './catalog';
@@ -71,7 +72,7 @@ export type AdvisorPlant = {
 
 const specOf = (p: Product, ...names: string[]) => {
   const want = names.map(normalize);
-  return p.specs.find(([k, v]) => want.includes(normalize(k)) && v.trim())?.[1] ?? '';
+  return p.specs.find(([k, v]) => want.includes(normalize(specKeyVi(k))) && v.trim())?.[1] ?? '';
 };
 
 /** Đọc chiều cao (cm) từ chữ: "60–70cm", "1,2 - 1,5m", "Cao 1m2", "80cm". Không đọc được → null. */

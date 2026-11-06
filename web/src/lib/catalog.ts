@@ -1,5 +1,6 @@
 // Kiểu dữ liệu và hàm thuần dùng chung cho server và client.
 // Sản phẩm, danh mục nằm trong database — truy vấn qua src/server/catalog.ts, src/server/categories.ts (chỉ chạy trên server).
+import { specKeyVi } from './i18n-content';
 import type { IconName } from '@/components/Icon';
 import type { BundleItem } from './bundle';
 import type { PostBlock } from './posts';
@@ -95,7 +96,7 @@ export const cheapestOption = (options: Unit[]) => {
 const BRAND_SPECS = new Set(['thuong hieu', 'hang san xuat', 'nha san xuat']);
 /** Thương hiệu ghi trong thông số (thuốc, phân bón, chậu… của hãng khác); không có = hàng của shop ("Cây Cảnh Miền Tây").
  *  Trang sản phẩm và schema Product dùng chung để không lệch nhau. */
-export const brandOf = (p: Pick<Product, 'specs'>) => p.specs.find(([k, v]) => BRAND_SPECS.has(normalize(k)) && v.trim())?.[1].trim();
+export const brandOf = (p: Pick<Product, 'specs'>) => p.specs.find(([k, v]) => BRAND_SPECS.has(normalize(specKeyVi(k))) && v.trim())?.[1].trim();
 
 /** Quy cách có giá còn bán online được (bỏ "Liên hệ báo giá") — dùng chung cho schema Product và kiểm tra. */
 export const pricedOptions = (options: Unit[]) => options.filter((o) => !isQuote(o));

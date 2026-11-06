@@ -3,6 +3,8 @@ import { and, asc, eq, gt, ne, sql } from 'drizzle-orm';
 import type { IconName } from '@/components/Icon';
 import { MEGA_TOP, type MegaMenuData, type MegaProduct } from '@/lib/mega-menu';
 import { mainImageOf } from './catalog';
+import { safeLang } from '@/i18n/request';
+import { unitEn } from '@/lib/i18n-content';
 import { db, schema } from './db';
 
 const { products: P, productOptions: O, orders: Ord, orderItems: OI } = schema;
@@ -15,10 +17,11 @@ const SALES_DAYS = 90;
  * Xếp: số lượng bán thật trong 90 ngày (đơn bán chưa hủy) → "Đã bán" → có ảnh → còn hàng → có giá → mới đăng.
  */
 export async function megaMenuData(): Promise<MegaMenuData> {
+  const en = (await safeLang()) === 'en';
   const since = new Date(Date.now() - SALES_DAYS * 86_400_000);
   const [rows, opts, sales] = await Promise.all([
     db.select({
-      slug: P.slug, name: P.name, category: P.category, sub: P.sub, extraSubs: P.extraSubs, unit: P.unit, icon: P.icon,
+      slug: P.slug, name: P.name, en: P.en, category: P.category, sub: P.sub, extraSubs: P.extraSubs, unit: P.unit, icon: P.icon,
       sold: P.sold, createdAt: P.createdAt, image: mainImageOf(P.slug),
     }).from(P).where(eq(P.active, true)),
     db.select({ slug: O.productSlug, price: O.price, oldPrice: O.oldPrice, stock: O.stock })
@@ -40,7 +43,7 @@ export async function megaMenuData(): Promise<MegaMenuData> {
     const priced = os.filter((o) => o.price > 0);
     const cheapest = priced.reduce<(typeof os)[number] | undefined>((b, o) => (!b || o.price < b.price ? o : b), undefined);
     products[r.slug] = {
-      slug: r.slug, name: r.name, image: r.image, icon: r.icon as IconName, unit: r.unit,
+      slug: r.slug, name: (en && r.en?.name) || r.name, image: r.image, icon: r.icon as IconName, unit: en ? unitEn(r.unit) : r.unit,
       price: cheapest?.price ?? 0, oldPrice: cheapest?.oldPrice ?? null,
       from: new Set(priced.map((o) => o.price)).size > 1,
     };
