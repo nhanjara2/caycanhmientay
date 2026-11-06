@@ -1,4 +1,5 @@
 import 'server-only';
+import { hreflangsOf } from '@/lib/i18n';
 import { TREE_GUIDES, treeGuidePath } from '@/lib/tree-guides';
 import { connection } from 'next/server';
 import { asc, eq } from 'drizzle-orm';
@@ -29,7 +30,7 @@ export { indexXml, parseSitemapName, SITEMAP_MAX_URLS, urlsetXml, type SitemapEn
  * trang chính sách); trang không có ngày thật (trang chủ, trang giới thiệu dịch vụ…) thì bỏ trống — không ghi ngày deploy.
  */
 
-const STATIC_PAGES = ['/', '/danh-muc', '/doi-tac', '/bao-gia-si', '/tu-van-chon-cay', '/bang-chon-cay', '/he-thong-cua-hang', '/khuyen-mai'];
+const STATIC_PAGES = ['/', '/en', '/en/about', '/en/wholesale', '/danh-muc', '/doi-tac', '/bao-gia-si', '/tu-van-chon-cay', '/bang-chon-cay', '/he-thong-cua-hang', '/khuyen-mai'];
 
 const latest = (dates: (Date | undefined)[]) =>
   dates.reduce<Date | undefined>((a, d) => (d && (!a || d > a) ? d : a), undefined);
@@ -44,7 +45,9 @@ const vnDate = (s: string) => {
 function entry(path: string, lastmod?: Date, images?: string[]): SitemapEntry[] {
   const [pathname, query] = path.split('?');
   if (pathname !== '/' && canonicalPath(pathname) !== pathname) return [];
-  return [{ loc: absoluteUrl(query ? `${pathname}?${query}` : pathname), lastmod, images: images?.length ? images.map(absoluteUrl) : undefined }];
+  const langs = query ? undefined : hreflangsOf(pathname);
+  const alternates = langs && Object.fromEntries(Object.entries(langs).map(([l, h]) => [l, absoluteUrl(h)]));
+  return [{ loc: absoluteUrl(query ? `${pathname}?${query}` : pathname), lastmod, images: images?.length ? images.map(absoluteUrl) : undefined, alternates }];
 }
 
 // ---- Dữ liệu ----------------------------------------------------------------------------------

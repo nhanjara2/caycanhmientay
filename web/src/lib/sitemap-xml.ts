@@ -5,7 +5,8 @@
 
 /** Video trên trang (thẻ <video:video> — Google bắt buộc ảnh thu nhỏ, tiêu đề, mô tả, link trình phát). */
 export type SitemapVideo = { thumbnail: string; title: string; description: string; player: string; seconds?: number | null; published: Date };
-export type SitemapEntry = { loc: string; lastmod?: Date; images?: string[]; videos?: SitemapVideo[] };
+/** `alternates`: bản ngôn ngữ khác của cùng trang (hreflang → URL tuyệt đối), ghi thành <xhtml:link>. */
+export type SitemapEntry = { loc: string; lastmod?: Date; images?: string[]; videos?: SitemapVideo[]; alternates?: Record<string, string> };
 
 /** Google cho tối đa 50.000 URL / 50MB mỗi file; mỗi sản phẩm kèm tới 10 ảnh nên chia nhỏ hơn nhiều cho chắc. */
 export const SITEMAP_MAX_URLS = 10_000;
@@ -30,11 +31,12 @@ export function urlsetXml(entries: SitemapEntry[]) {
     '<url>',
     `<loc>${esc(e.loc)}</loc>`,
     e.lastmod ? `<lastmod>${iso(e.lastmod)}</lastmod>` : '',
+    ...Object.entries(e.alternates ?? {}).map(([l, h]) => `<xhtml:link rel="alternate" hreflang="${esc(l)}" href="${esc(h)}"/>`),
     ...(e.images ?? []).slice(0, 1000).map((i) => `<image:image><image:loc>${esc(i)}</image:loc></image:image>`),
     ...(e.videos ?? []).map(videoXml),
     '</url>',
   ].join('')).join('\n');
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">\n${body}\n</urlset>\n`;
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${body}\n</urlset>\n`;
 }
 
 /** Một <video:video>: tiêu đề ≤ 100 ký tự, mô tả ≤ 2048, thời lượng 1–28800 giây (giới hạn của Google). */

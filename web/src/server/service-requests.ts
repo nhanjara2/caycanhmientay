@@ -348,3 +348,39 @@ export async function readServicePhoto(file: string) {
     .innerJoin(S, eq(S.id, SP.requestId)).where(eq(SP.file, file));
   return row ?? null;
 }
+
+// ---- Khách nước ngoài gửi từ bản tiếng Anh (/en/wholesale) ----------------------------------------
+
+/** Số điện thoại / WhatsApp quốc tế: chữ số, dấu cách, + - ( ). Không ép dạng số Việt Nam như form tiếng Việt. */
+const intlPhone = z.string().trim().regex(/^\+?[\d\s().-]{6,24}$/, 'Please enter a valid phone / WhatsApp number');
+
+export const ForeignInquirySchema = z.object({
+  service: z.enum(PARTNER_TYPES, 'Please choose your business type'),
+  name: z.string().trim().min(2, 'Please enter your name').max(80),
+  email: z.email('Please enter a valid email').max(120),
+  phone: intlPhone.optional().or(z.literal('').transform(() => undefined)),
+  company: z.string().trim().max(120).optional(),
+  country: z.string().trim().min(2, 'Please enter your country').max(80),
+  message: z.string().trim().min(10, 'Please tell us which plants and quantities you need').max(4000),
+});
+export type ForeignInquiry = z.infer<typeof ForeignInquirySchema>;
+
+/** Lưu vào chung bảng yêu cầu báo giá sỉ (/admin/dich-vu): nơi giao = quốc gia, liên hệ = email (+ điện thoại), ghi chú có nhãn [EN]. */
+export async function createForeignInquiry(input: ForeignInquiry, user: SessionUser | null): Promise<Ok<{ code: string }> | Err> {
+  const contact = input.phone ? `${input.phone} · ${input.email}` : input.email;
+  const since = new Date(Date.now() - DAY);
+  const [{ n: byContact }] = await db.select({ n: count() }).from(S).where(and(eq(S.phone, contact.slice(0, 120)), gte(S.createdAt, since)));
+  if (byContact >= MAX_PER_PHONE_DAY) return { ok: false, error: 'You have already sent several requests today. We will get back to you soon.' };
+  const [{ n: recent }] = await db.select({ n: count() }).from(S).where(and(eq(S.source, 'web'), gte(S.createdAt, new Date(Date.now() - HOUR))));
+  if (recent >= MAX_WEB_PER_HOUR) return { ok: false, error: 'We are receiving too many requests right now. Please try again in a few minutes or email us.' };
+  const id = await db.transaction(async (tx) => {
+    const [row] = await tx.insert(S).values({
+      service: input.service, name: input.name, phone: contact.slice(0, 120), address: input.country,
+      note: `[EN – khách nước ngoài] Email: ${input.email}${input.phone ? ` · ĐT/WhatsApp: ${input.phone}` : ''}\n\n${input.message}`,
+      company: input.company || null, styles: [], userId: user?.id ?? null, source: 'web',
+    }).returning({ id: S.id });
+    await tx.insert(SE).values({ requestId: row.id, kind: 'created', actor: input.name, text: `Khách nước ngoài gửi yêu cầu báo giá trên bản tiếng Anh (${input.country})` });
+    return row.id;
+  });
+  return { ok: true, code: serviceCode(id) };
+}

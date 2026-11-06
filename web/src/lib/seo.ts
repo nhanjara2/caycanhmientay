@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { OG_LOCALE, hreflangsOf, langOfPath, pairOf } from './i18n';
 
 /**
  * Thẻ chia sẻ mạng xã hội (Open Graph + X/Twitter) — mục 2.2 + 2.3 checklist SEO.
@@ -47,12 +48,20 @@ export function withShare(meta: Metadata, share: Share = {}): Metadata {
   const a = type === 'article' ? share.article : undefined;
   // Ngày sửa chỉ ghi khi sửa sau ngày đăng (bài vừa đăng thì hai ngày gần như trùng).
   const modified = a?.modifiedTime && (!a.publishedTime || a.modifiedTime.getTime() - a.publishedTime.getTime() > 60_000) ? a.modifiedTime : undefined;
+  // Trang có bản ngôn ngữ khác (lib/i18n.ts) → hreflang + og:locale đúng ngôn ngữ, og:locale:alternate trỏ bản kia.
+  const u = url ? String(url) : '';
+  const path = u && !/^https?:/.test(u) ? u.split('?')[0] : undefined;
+  const lang = path ? langOfPath(path) : 'vi';
+  const languages = path && !u.includes('?') ? hreflangsOf(path) : undefined;
   return {
     ...meta,
+    ...(languages ? { alternates: { ...meta.alternates, languages } } : {}),
     openGraph: {
       ...BASE_OPEN_GRAPH,
+      locale: OG_LOCALE[lang],
+      ...(path && pairOf(path) ? { alternateLocale: [OG_LOCALE[lang === 'vi' ? 'en' : 'vi']] } : {}),
       ...(url ? { url } : {}),
-      images: images.length ? images.map((u) => ({ url: u, alt: share.alt })) : BASE_OPEN_GRAPH.images,
+      images: images.length ? images.map((u) => ({ url: u, alt: share.alt })) : lang === 'en' ? [{ ...DEFAULT_SHARE_IMAGE, alt: 'Cây Cảnh Miền Tây — plant nursery in Sa Dec, Vietnam' }] : BASE_OPEN_GRAPH.images,
       ...(a ? {
         type: 'article',
         publishedTime: a.publishedTime?.toISOString(),

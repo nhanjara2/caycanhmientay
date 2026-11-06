@@ -163,6 +163,7 @@ function checkProduct(loc: string, list: Crumb[], html: string) {
 }
 
 async function checkPage(loc: string) {
+  if (/^\/en(\/|$)/.test(new URL(loc).pathname)) return; // bản tiếng Anh có breadcrumb riêng (EnCrumbs)
   const p = await open(loc);
   if (p.status !== 200) return err(`Trang trong sitemap trả mã ${p.status}`, loc);
   const all = crumbsOf(p.html);

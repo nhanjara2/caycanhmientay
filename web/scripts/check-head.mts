@@ -170,7 +170,8 @@ async function main() {
     else if (g.html.search(/<meta\s+charset=/i) > 1024) err(`<meta charset> nằm sau 1024 byte đầu — ${loc}`);
     const vp = one('viewport');
     if (vp.length !== 1 || !/width=device-width/.test(vp[0] ?? '')) err(`Cần đúng một <meta name="viewport" content="width=device-width…"> — ${loc}`);
-    if (!/<html[^>]*\blang="vi"/i.test(g.html)) err(`<html> thiếu lang="vi" — ${loc}`);
+    const wantLang = /^\/en(\/|$)/.test(new URL(loc).pathname) ? 'en' : 'vi';
+    if (!new RegExp(`<html[^>]*\\blang="${wantLang}"`, 'i').test(g.html)) err(`<html> thiếu lang="${wantLang}" — ${loc}`);
     if (one('keywords').length) warn(`Có meta keywords (Google bỏ qua, chỉ lộ từ khóa cho đối thủ) — ${loc}`);
 
     // Trùng thẻ
@@ -182,7 +183,7 @@ async function main() {
     if (canon.length !== 1) { err(`Có ${canon.length} canonical — ${loc}`); return; }
     const canonical = canon[0].href;
     checkUrl(canonical, 'Canonical', loc);
-    if (g.links.some((l) => l.hreflang)) warn(`Có hreflang dù web chỉ một ngôn ngữ — ${loc}`);
+    // hreflang chỉ có ở trang có bản tiếng Anh (src/lib/i18n.ts) — seo:locale kiểm kỹ.
 
     // Robots: thẻ meta và X-Robots-Tag không được xung đột
     const xr = g.res.headers.get('x-robots-tag');

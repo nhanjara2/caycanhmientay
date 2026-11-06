@@ -1,7 +1,7 @@
 /**
  * Kiểm thử đơn vị các hàm SEO (mục 20.1 checklist SEO): `npm run test:seo`.
  * Hàm thuần, không cần database / máy chủ — chạy trong vài giây, chạy được trên GitHub Actions trước khi deploy.
- * Gồm: title, description, slug, canonical, robots, hreflang (web một ngôn ngữ → không sinh), sitemap, chuyển hướng,
+ * Gồm: title, description, slug, canonical, robots, hreflang (chỉ trang có cặp ngôn ngữ), sitemap, chuyển hướng,
  * trạng thái nội dung. JSON-LD có bộ riêng: `npm run test:jsonld` (lệnh `test:seo-all` chạy cả hai). Có lỗi thì thoát mã 1.
  */
 import assert from 'node:assert/strict';
@@ -211,10 +211,18 @@ test('robots.txt: không chặn cả web, không chặn /_next, chặn trang ri�
 
 // ---- Hreflang --------------------------------------------------------------------------------
 
-test('hreflang: web một ngôn ngữ — metadata không sinh alternates.languages / og:locale:alternate', () => {
-  const m = withShare({ alternates: { canonical: '/' } });
-  assert.equal((m.alternates as { languages?: unknown }).languages, undefined);
-  assert.equal((m.openGraph as { alternateLocale?: unknown }).alternateLocale, undefined);
+test('hreflang: chỉ trang có cặp ngôn ngữ (lib/i18n.ts) mới có alternates.languages + og:locale:alternate', () => {
+  const one = withShare({ alternates: { canonical: '/danh-muc' } });
+  assert.equal((one.alternates as { languages?: unknown }).languages, undefined);
+  assert.equal((one.openGraph as { alternateLocale?: unknown }).alternateLocale, undefined);
+  assert.equal((one.openGraph as { locale?: string }).locale, 'vi_VN');
+  const vi = withShare({ alternates: { canonical: '/' } });
+  assert.deepEqual((vi.alternates as { languages?: unknown }).languages, { vi: '/', en: '/en', 'x-default': '/' });
+  assert.deepEqual((vi.openGraph as { alternateLocale?: unknown }).alternateLocale, ['en_US']);
+  const en = withShare({ alternates: { canonical: '/en/about' } });
+  assert.deepEqual((en.alternates as { languages?: unknown }).languages, { vi: '/chinh-sach/gioi-thieu', en: '/en/about', 'x-default': '/chinh-sach/gioi-thieu' });
+  assert.equal((en.openGraph as { locale?: string }).locale, 'en_US');
+  assert.equal((withShare({ alternates: { canonical: '/?trang=2' } }).alternates as { languages?: unknown }).languages, undefined);
   assert.equal(BASE_OPEN_GRAPH.locale, 'vi_VN');
 });
 

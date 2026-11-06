@@ -57,7 +57,12 @@ export function proxy(request: NextRequest, event: NextFetchEvent) {
   // Chỉ xét đuôi .vercel.app: lỡ đọc sai host thì tên miền chính cũng không bao giờ bị noindex.
   // Link xem trước của admin (?xem-truoc=1 — bài / dự án chưa đăng) cũng noindex ngay ở header, kể cả khi lỡ bị chia sẻ
   // ra ngoài (SEO mục 13); trang chưa đăng còn tự có meta noindex.
-  const res = NextResponse.next();
+  // Bản tiếng Anh: báo cho layout gốc để <html lang="en"> (lib/i18n.ts).
+  // Luôn ghi đè header này (khách tự gửi x-ccmt-lang cũng không đổi được ngôn ngữ trang tiếng Việt).
+  const h = new Headers(request.headers);
+  if (pathname === '/en' || pathname.startsWith('/en/')) h.set('x-ccmt-lang', 'en');
+  else h.delete('x-ccmt-lang');
+  const res = NextResponse.next({ request: { headers: h } });
   const host = (request.headers.get('x-forwarded-host') ?? request.headers.get('host') ?? '').toLowerCase();
   if (host.endsWith('.vercel.app') || params.has('xem-truoc')) res.headers.set('X-Robots-Tag', 'noindex, nofollow');
   return res;

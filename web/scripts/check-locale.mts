@@ -2,7 +2,7 @@
  * Kiểm tra ngôn ngữ / khu vực (mục 8 checklist SEO): `npm run seo:locale` (máy dev, http://localhost:3000)
  * hoặc `npm run seo:locale -- https://www.caycanhmientay.com` (web thật, chạy sau mỗi lần deploy cùng các lệnh seo:* khác).
  *
- * Web chỉ có MỘT ngôn ngữ (tiếng Việt) cho MỘT thị trường (Việt Nam) nên không có /vi/ /en/ hay hreflang.
+ * Web tiếng Việt là chính; từ 06/11/2026 có thêm vài trang tiếng Anh dưới /en (cặp trang ở src/lib/i18n.ts, có hreflang).
  * Mở mọi trang trong sitemap (UA Googlebot) và kiểm:
  *  - <html lang="vi">; header Content-Language (nếu có) là tiếng Việt; og:locale = vi_VN, không og:locale:alternate;
  *  - hreflang: hiện không được có (không có bản ngôn ngữ khác). Sau này thêm bản tiếng Anh thì công cụ kiểm luôn:
@@ -98,16 +98,19 @@ async function checkPage(loc: string, seen: Map<string, Page>) {
   const end = html.indexOf('</head>');
   const head = end > 0 ? html.slice(0, end) : html;
 
-  // Ngôn ngữ của trang.
+  // Ngôn ngữ của trang: bản tiếng Anh nằm dưới /en (src/lib/i18n.ts), còn lại tiếng Việt.
+  const en = /^\/en(\/|$)/.test(new URL(loc).pathname);
+  const want = en ? 'en' : 'vi';
   if (!p.lang) err('Thiếu thuộc tính lang trên <html>', loc);
-  else if (!/^vi(-VN)?$/i.test(p.lang)) err(`<html lang="${p.lang}"> — trang tiếng Việt phải là "vi"`, loc);
+  else if (!new RegExp(`^${want}(-[A-Z]{2})?$`, 'i').test(p.lang)) err(`<html lang="${p.lang}"> — trang này phải là "${want}"`, loc);
   const cl = p.headers.get('content-language');
-  if (cl && !/^vi\b/i.test(cl)) err(`Header Content-Language: ${cl} khác ngôn ngữ trang`, loc);
+  if (cl && !new RegExp(`^${want}\\b`, 'i').test(cl)) err(`Header Content-Language: ${cl} khác ngôn ngữ trang`, loc);
   const metas = [...head.matchAll(/<meta\b[^>]*>/gi)].map((m) => m[0]);
   const og = (prop: string) => metas.filter((t) => attr(t, 'property') === prop).map((t) => attr(t, 'content') ?? '');
   const locale = og('og:locale');
-  if (locale.length !== 1 || locale[0] !== 'vi_VN') err(`og:locale phải đúng một thẻ "vi_VN" (đang: ${locale.join(', ') || 'không có'})`, loc);
-  if (metas.some((t) => /http-equiv=["']content-language["']/i.test(t) && !/content=["']vi/i.test(t))) err('<meta http-equiv="content-language"> khác tiếng Việt', loc);
+  const wantLocale = en ? 'en_US' : 'vi_VN';
+  if (locale.length !== 1 || locale[0] !== wantLocale) err(`og:locale phải đúng một thẻ "${wantLocale}" (đang: ${locale.join(', ') || 'không có'})`, loc);
+  if (metas.some((t) => /http-equiv=["']content-language["']/i.test(t) && !new RegExp(`content=["']${want}`, 'i').test(t))) err('<meta http-equiv="content-language"> khác ngôn ngữ trang', loc);
 
   // hreflang.
   const alts = [...html.matchAll(/<link\b[^>]*>/gi)].map((m) => m[0]).filter((t) => /\brel=["']alternate["']/i.test(t) && /\bhreflang=/i.test(t))
@@ -125,7 +128,7 @@ async function checkPage(loc: string, seen: Map<string, Page>) {
     }
     const self = alts.find((a) => a.href === p.canonical);
     if (!self) err('hreflang không tự trỏ về chính trang này (phải có một dòng trùng canonical)', loc);
-    else if (!/^vi/i.test(self.code)) err(`hreflang tự trỏ ghi "${self.code}" mà trang là tiếng Việt`, loc);
+    else if (!self.code.toLowerCase().startsWith(want)) err(`hreflang tự trỏ ghi "${self.code}" mà trang là "${want}"`, loc);
     if (alts.length === 1) err('Chỉ có hreflang tự trỏ — không có bản ngôn ngữ nào khác thì bỏ hreflang', loc);
     for (const a of alts.filter((x) => x !== self)) {
       const other = seen.get(a.href) ?? await open(a.href);
@@ -141,7 +144,7 @@ async function checkPage(loc: string, seen: Map<string, Page>) {
     let data: unknown;
     try { data = JSON.parse(m[1]); } catch { continue; } // JSON hỏng: seo:schema báo.
     walkLd(data, (k, v) => {
-      if (k === 'inLanguage' && !(typeof v === 'string' && /^vi(-VN)?$/i.test(v))) err(`JSON-LD inLanguage = "${String(v)}" — trang tiếng Việt`, loc);
+      if (k === 'inLanguage' && !(typeof v === 'string' && new RegExp(`^${want}(-[A-Z]{2})?$`, 'i').test(v))) err(`JSON-LD inLanguage = "${String(v)}" — trang "${want}"`, loc);
       if (k === 'priceCurrency' && v !== 'VND') err(`JSON-LD priceCurrency = "${String(v)}" — phải là VND`, loc);
       if (['price', 'lowPrice', 'highPrice'].includes(k) && !(typeof v === 'number' || (typeof v === 'string' && /^\d+(\.\d+)?$/.test(v)))) err(`JSON-LD ${k} = "${String(v)}" không phải số (không dấu chấm / phẩy ngăn nghìn, không "đ")`, loc);
       if (k === 'addressCountry' && !(v === 'VN' || (v && typeof v === 'object' && (v as Record<string, unknown>).name === 'VN'))) err(`JSON-LD addressCountry = "${JSON.stringify(v)}" — phải là "VN"`, loc);
@@ -151,7 +154,7 @@ async function checkPage(loc: string, seen: Map<string, Page>) {
 
   // Chữ hiện trên trang.
   const text = visibleText(html);
-  for (const [re, msg, level] of TEXT_RULES) {
+  for (const [re, msg, level] of en ? [] : TEXT_RULES) {
     const hit = re.exec(text);
     if (hit) (level === 'err' ? err : warn)(`${msg} — "${hit[0]}"`, loc);
   }

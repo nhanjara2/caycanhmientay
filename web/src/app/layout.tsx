@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { headers } from 'next/headers';
 import { Be_Vietnam_Pro, Noto_Color_Emoji } from 'next/font/google';
 import { AuthProvider } from '@/lib/auth';
 import { CartProvider } from '@/lib/cart';
@@ -47,9 +48,11 @@ export const metadata: Metadata = {
 export const viewport: Viewport = { themeColor: '#0f4a24', colorScheme: 'light' };
 
 /** Khung gốc dùng chung cho website khách, admin và app nhân viên. */
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Trang dưới /en (bản tiếng Anh) → lang="en"; src/proxy.ts gắn header x-ccmt-lang vì layout gốc không biết đường dẫn.
+  const lang = (await headers()).get('x-ccmt-lang') === 'en' ? 'en' : 'vi';
   return (
-    <html lang="vi" className={`${font.variable} ${emoji.variable}`}>
+    <html lang={lang} className={`${font.variable} ${emoji.variable}`}>
       <body>
         <AuthProvider>
           <ShippingProvider>

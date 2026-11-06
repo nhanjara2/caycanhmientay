@@ -5,7 +5,7 @@ import { SERVICE_INFO } from '@/lib/service-labels';
 import { alertShop } from '@/server/shop-alert';
 import { getCurrentUser, requireAccess, staffName } from '@/server/auth';
 import {
-  addServiceNote, createByStaff, createServiceRequest, NoteSchema, ServiceInputSchema, StaffCreateSchema, UpdateSchema, updateServiceRequest,
+  addServiceNote, createByStaff, createForeignInquiry, createServiceRequest, ForeignInquirySchema, NoteSchema, ServiceInputSchema, StaffCreateSchema, UpdateSchema, updateServiceRequest,
 } from '@/server/service-requests';
 
 const str = (v: FormDataEntryValue | null) => (typeof v === 'string' && v.trim() ? v : undefined);
@@ -79,5 +79,26 @@ export async function addServiceNoteAction(input: unknown) {
   if (!p.success) return { ok: false as const, error: p.error.issues[0].message };
   const r = await addServiceNote(p.data, staffName(staff));
   if (r.ok) revalidatePath('/admin', 'layout');
+  return r;
+}
+
+/** Form báo giá của bản tiếng Anh (/en/wholesale) — lỗi trả bằng tiếng Anh. */
+export async function createForeignInquiryAction(fd: FormData) {
+  if (str(fd.get('website'))) return { ok: true as const, code: '' };
+  const p = ForeignInquirySchema.safeParse({
+    service: str(fd.get('service')), name: fd.get('name') ?? '', email: str(fd.get('email')) ?? '',
+    phone: str(fd.get('phone')) ?? '', company: str(fd.get('company')), country: fd.get('country') ?? '', message: fd.get('message') ?? '',
+  });
+  if (!p.success) return { ok: false as const, error: p.error.issues[0].message };
+  const r = await createForeignInquiry(p.data, await getCurrentUser());
+  if (r.ok) {
+    revalidatePath('/admin', 'layout');
+    const d = p.data;
+    alertShop(`🌐 Yêu cầu báo giá tiếng Anh ${r.code}`, [
+      `${SERVICE_INFO[d.service].label}${d.company ? ` · ${d.company}` : ''} · ${d.country}`,
+      `Liên hệ: ${d.name} · ${d.email}${d.phone ? ` · ${d.phone}` : ''}`,
+      `Nội dung: ${d.message.slice(0, 600)}`,
+    ], '/admin/dich-vu');
+  }
   return r;
 }

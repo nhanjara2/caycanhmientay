@@ -111,6 +111,7 @@ export function Footer() {
       </div>
       <div className="vx-flegal">
         <span>© 2007 - 2026 Cây Cảnh Miền Tây · Số ĐKKD 087096010726 cấp 04/2026 · được quản lý bởi Thuế cơ sở 6 tỉnh Đồng Tháp</span>
+        <span><a className="app-langlink" href="/en" hrefLang="en" lang="en">🌐 English</a></span>
         <span>Địa chỉ: {SHOP_ADDRESS} · Điện thoại: {SALES_PHONE} · Email: sale@caycanhmientay.com</span>
       </div>
     </footer>
