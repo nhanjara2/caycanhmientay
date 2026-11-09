@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import Link from '@/components/LocaleLink';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties } from 'react';
 import { isExternal } from '@/lib/home-banners';
@@ -74,6 +75,7 @@ const AUTO_MS = 6000;
 export function HomeCarousel({ slides, label, className = '', onIndex }: {
   slides: Slide[]; label: string; className?: string; onIndex?: (i: number) => void;
 }) {
+  const t = useTranslations('home');
   const track = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -132,13 +134,13 @@ export function HomeCarousel({ slides, label, className = '', onIndex }: {
       </div>
       {n > 1 && (
         <>
-          <button type="button" className="hm-car__nav hm-car__nav--prev" aria-label="Ảnh trước" onClick={() => go(i - 1)}><Icon name="chevron" /></button>
-          <button type="button" className="hm-car__nav hm-car__nav--next" aria-label="Ảnh sau" onClick={() => go(i + 1)}><Icon name="chevron" /></button>
+          <button type="button" className="hm-car__nav hm-car__nav--prev" aria-label={t('car_prev')} onClick={() => go(i - 1)}><Icon name="chevron" /></button>
+          <button type="button" className="hm-car__nav hm-car__nav--next" aria-label={t('car_next')} onClick={() => go(i + 1)}><Icon name="chevron" /></button>
           <div className="hm-car__dots">
             {slides.map((s, k) => (
-              <button key={s.key} type="button" aria-label={`Xem ảnh ${k + 1}`} aria-current={k === i || undefined} onClick={() => go(k)} />
+              <button key={s.key} type="button" aria-label={t('car_go', { n: k + 1 })} aria-current={k === i || undefined} onClick={() => go(k)} />
             ))}
-            <button type="button" className="hm-car__pause" aria-label={paused ? 'Chạy tiếp' : 'Tạm dừng chạy ảnh'} onClick={() => setPaused((p) => !p)}>
+            <button type="button" className="hm-car__pause" aria-label={paused ? t('car_play') : t('car_pause')} onClick={() => setPaused((p) => !p)}>
               {paused
                 ? <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
                 : <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h4v14H7zM13 5h4v14h-4z" /></svg>}
@@ -176,6 +178,7 @@ function useCompact() {
 export function HomeHero({ tops, slides, sides, backdrop }: {
   tops: Slide[]; slides: Slide[]; sides: Slide[]; backdrop: { image: string; imageMobile: string | null } | null;
 }) {
+  const t = useTranslations('home');
   const compact = useCompact();
   const heroSlides = useMemo(() => (compact ? [...slides, ...sides] : slides), [compact, slides, sides]);
   const [{ i, prev }, setAt] = useState({ i: 0, prev: -1 });
@@ -227,9 +230,9 @@ export function HomeHero({ tops, slides, sides, backdrop }: {
           );
         })}
       </div>
-      {tops.length > 0 && <HomeCarousel slides={tops} label="Chương trình nổi bật" className="hm-car--top" onIndex={onIndex} />}
+      {tops.length > 0 && <HomeCarousel slides={tops} label={t('car_top')} className="hm-car--top" onIndex={onIndex} />}
       <div className="hm-hero__grid">
-        <HomeCarousel slides={heroSlides} label="Sự kiện & ưu đãi nổi bật" className="hm-car--hero" onIndex={tops.length ? undefined : onIndex} />
+        <HomeCarousel slides={heroSlides} label={t('car_hero')} className="hm-car--hero" onIndex={tops.length ? undefined : onIndex} />
         {!compact && sides.length > 0 && (
           <div className="hm-sides">
             {sides.map((s) => <div key={s.key} className={s.showText ? 'hm-side hm-side--text' : 'hm-side'}><SlideBody s={s} /></div>)}

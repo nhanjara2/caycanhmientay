@@ -23,6 +23,8 @@ import { publishedPosts, publishedVideos } from '@/server/posts';
 import '@/styles/home.css';
 import { withShare } from '@/lib/seo';
 import { withSeo } from '@/server/seo-cms';
+import { getTranslations } from 'next-intl/server';
+import { currentLang } from '@/i18n/request';
 import { JsonLd } from '@/components/JsonLd';
 import { organizationLd, websiteLd } from '@/lib/jsonld';
 
@@ -31,17 +33,20 @@ import { organizationLd, websiteLd } from '@/lib/jsonld';
 // một khối sản phẩm) chuyển sang /danh-muc. Khối nào chưa có dữ liệu thật thì ẩn. Banner chỉ lấy từ bảng home_banners
 // (ảnh dựng sẵn của shop đã chuyển vào bảng ở migration 0081 — trước đó viết cứng ở đây, admin không thấy và tải 1 ảnh là mất cả bộ).
 
+// label = khóa chữ trong messages/<lang>.json → home.*
 const QUICK = [
-  { label: 'Đăng ký đối tác', icon: 'user', href: `${WHOLESALE_URL}#dang-ky` },
-  { label: 'Gửi báo giá sỉ', icon: 'receipt', href: WHOLESALE_QUOTE_URL },
-  { label: 'Tư vấn chọn cây', icon: 'spark', href: '/tu-van-chon-cay' },
-  { label: 'Bắt bệnh cho cây', icon: 'bug', href: '/benh-cay' },
-  { label: 'Tìm vườn ươm', icon: 'pin', href: '/he-thong-cua-hang' },
-  { label: 'Tất cả sản phẩm', icon: 'leaf', href: '/danh-muc' },
+  { label: 'q_partner', icon: 'user', href: `${WHOLESALE_URL}#dang-ky` },
+  { label: 'q_quote', icon: 'receipt', href: WHOLESALE_QUOTE_URL },
+  { label: 'q_advisor', icon: 'spark', href: '/tu-van-chon-cay' },
+  { label: 'q_disease', icon: 'bug', href: '/benh-cay' },
+  { label: 'q_stores', icon: 'pin', href: '/he-thong-cua-hang' },
+  { label: 'q_all', icon: 'leaf', href: '/danh-muc' },
 ] as const;
 
-const fromBanner = (b: Banner): Slide => ({
-  key: `b${b.id}`, title: b.title, subtitle: b.subtitle || undefined, cta: b.cta || undefined, href: b.href || undefined,
+/** Bản tiếng Anh: chữ banner lấy từ cột `en` (ô trống → tiếng Việt). */
+const fromBanner = (en: boolean) => (b: Banner): Slide => ({
+  key: `b${b.id}`, title: (en && b.en?.title) || b.title, subtitle: ((en && b.en?.subtitle) || b.subtitle) || undefined,
+  cta: ((en && b.en?.cta) || b.cta) || undefined, href: b.href || undefined,
   showText: b.showText, tone: b.tone, image: bannerImageUrl(b.image), imageMobile: b.imageMobile ? bannerImageUrl(b.imageMobile) : null,
   bg: b.slot === 'top' && (b.bgImage || b.bgImageMobile || b.bgColor) ? {
     image: b.bgImage ? bannerImageUrl(b.bgImage) : undefined,
@@ -65,18 +70,21 @@ export default async function HomePage() {
     publishedPosts(), publishedVideos(), allDiseases(),
   ]);
   // Mỗi vị trí chỉ hiện tối đa `max` ảnh đầu (BANNER_SLOTS).
-  const inSlot = (slot: Banner['slot']) => banners.filter((b) => b.slot === slot).slice(0, slotOf(slot).max).map(fromBanner);
+  const t = await getTranslations('home');
+  const en = (await currentLang()) === 'en';
+  const inSlot = (slot: Banner['slot']) => banners.filter((b) => b.slot === slot).slice(0, slotOf(slot).max).map(fromBanner(en));
 
   // ---- Khung đầu trang: banner trong admin (cả ảnh dựng sẵn của shop) ----
   const season = seasonNow();
+  const seasonName = t(season.key === 'mưa' ? 'rainy' : 'dry');
   const top = inSlot('top');
   const hero = inSlot('hero');
   // Ô Flash sale dựng từ sản phẩm đang flash sale (không có ảnh để tải nên không nằm trong admin): chèn sau ảnh lớn đầu tiên.
   const flashImgs = pickImages(flash, 3);
   if (flashImgs.length >= 2) {
     hero.splice(1, 0, {
-      key: 'flash', badge: 'Flash sale giờ vàng', tone: 'sale', showText: true, image: flashImgs[0], contain: flashImgs,
-      title: 'Giảm sâu mỗi ngày, 3 khung giờ vàng', subtitle: '08:00 · 12:00 · 20:00 — số lượng có hạn', cta: 'Săn ngay', href: '#flash-sale',
+      key: 'flash', badge: t('flashBadge'), tone: 'sale', showText: true, image: flashImgs[0], contain: flashImgs,
+      title: t('flashTitle'), subtitle: t('flashSub'), cta: t('flashCta'), href: '#flash-sale',
     });
   }
   const sides = inSlot('side');
@@ -129,47 +137,47 @@ export default async function HomePage() {
       {/* Schema toàn website: tổ chức (tên, logo, hotline, mạng xã hội) + website — các trang khác trỏ về bằng @id */}
       <JsonLd data={organizationLd()} />
       <JsonLd data={websiteLd()} />
-      <h1 className="app-sr">Cây Cảnh Miền Tây — cung cấp sỉ cây cảnh, phân bón, vật tư làm vườn</h1>
+      <h1 className="app-sr">{t('h1')}</h1>
 
-      <section className="hm-hero" aria-label="Sự kiện và ưu đãi">
+      <section className="hm-hero" aria-label={t('heroAria')}>
         <HomeHero
           tops={top}
           slides={hero}
           sides={sides}
           backdrop={backdrop ? { image: bannerImageUrl(backdrop.image), imageMobile: backdrop.imageMobile ? bannerImageUrl(backdrop.imageMobile) : null } : null}
         />
-        <QuickLinks items={[...QUICK]} />
+        <QuickLinks items={QUICK.map((q) => ({ ...q, label: t(q.label) }))} />
       </section>
 
       <div className="hm-body">
         <section className="hm-sec">
-          <HomeHead icon="leaf" title="Mua sỉ theo danh mục" href="/danh-muc" />
+          <HomeHead icon="leaf" title={t('byCategory')} href="/danh-muc" />
           <CategoryMosaic items={mosaic} />
         </section>
 
         {flash.length > 0 && <FlashSale products={flash} />}
 
         {events.length > 0 && (
-          <section className="hm-sec" aria-label="Sự kiện nổi bật">
-            <HomeCarousel slides={events} label="Sự kiện nổi bật" className="hm-car--band" />
+          <section className="hm-sec" aria-label={t('events')}>
+            <HomeCarousel slides={events} label={t('events')} className="hm-car--band" />
           </section>
         )}
 
         <section className="hm-partner">
           <div className="hm-partner__txt">
-            <span className="hm-partner__badge">Chương trình đối tác sỉ</span>
-            <h2>Một giá sỉ chung, chiết khấu riêng cho từng đối tác</h2>
+            <span className="hm-partner__badge">{t('partnerBadge')}</span>
+            <h2>{t('partnerTitle')}</h2>
             <div className="hm-partner__acts">
-              <Link href={`${WHOLESALE_URL}#dang-ky`} className="vx-btn hm-btn-sun">Đăng ký đối tác</Link>
-              <Link href={WHOLESALE_QUOTE_URL} className="vx-btn hm-btn-ghost">Gửi báo giá sỉ</Link>
+              <Link href={`${WHOLESALE_URL}#dang-ky`} className="vx-btn hm-btn-sun">{t('q_partner')}</Link>
+              <Link href={WHOLESALE_QUOTE_URL} className="vx-btn hm-btn-ghost">{t('q_quote')}</Link>
             </div>
           </div>
           <ul className="hm-partner__types">
-            {PARTNER_TYPES.map((t) => (
-              <li key={t}>
+            {PARTNER_TYPES.map((pt) => (
+              <li key={pt}>
                 <Link href={`${WHOLESALE_URL}#dang-ky`} className="hm-ptype app-plain">
-                  <img {...responsive(PARTNER_IMAGE[t], '(max-width: 47.9375em) 44vw, 400px', 640)} alt="" loading="lazy" style={{ objectPosition: PARTNER_IMAGE_POS[t] }} />
-                  <span><Icon name={PARTNER_INFO[t].icon} /><b>{PARTNER_INFO[t].label.replace(/^Đối tác /, '').replace(/^./, (c) => c.toUpperCase())}</b></span>
+                  <img {...responsive(PARTNER_IMAGE[pt], '(max-width: 47.9375em) 44vw, 400px', 640)} alt="" loading="lazy" style={{ objectPosition: PARTNER_IMAGE_POS[pt] }} />
+                  <span><Icon name={PARTNER_INFO[pt].icon} /><b>{t(`pt_${pt}`)}</b></span>
                 </Link>
               </li>
             ))}
@@ -178,35 +186,35 @@ export default async function HomePage() {
 
         {best.length > 0 && (
           <section className="hm-sec hm-sec--card">
-            <HomeHead icon="star" title="Bán chạy ở vườn" href="/tim-kiem?q=bán chạy" />
+            <HomeHead icon="star" title={t('best')} href="/tim-kiem?q=bán chạy" />
             <ProductGrid products={best} />
           </section>
         )}
 
         {wall.length === 9 && (
           <section className="hm-sec">
-            <HomeHead icon="tree" title="Ảnh thật từ vườn" href="/danh-muc/cay-canh" />
+            <HomeHead icon="tree" title={t('wall')} href="/danh-muc/cay-canh" />
             <PhotoWall products={wall} />
           </section>
         )}
 
         {videos.length > 0 && (
           <section className="hm-sec">
-            <HomeHead icon="camera" title="Video ngắn nổi bật" href={VIDEO_PAGE} />
+            <HomeHead icon="camera" title={t('videos')} href={VIDEO_PAGE} />
             <ShortVideos videos={videos} layout="row" />
           </section>
         )}
 
         {seasonal.length > 0 && (
           <section className="hm-sec">
-            <HomeHead icon="bug" title={`Bệnh cây ${season.name.toLowerCase()}`} href="/benh-cay" />
-            <SeasonDiseases season={season.name} diseases={seasonal} />
+            <HomeHead icon="bug" title={t('diseases', { season: seasonName.toLowerCase() })} href="/benh-cay" />
+            <SeasonDiseases season={seasonName} diseases={seasonal} />
           </section>
         )}
 
         {news.length > 0 && (
           <section className="hm-sec">
-            <HomeHead icon="gift" title="Sự kiện & khuyến mãi" href="/khuyen-mai" />
+            <HomeHead icon="gift" title={t('news')} href="/khuyen-mai" />
             <NewsBoard posts={news} />
           </section>
 
@@ -214,16 +222,16 @@ export default async function HomePage() {
 
         {care.length > 0 && (
           <section className="hm-sec">
-            <HomeHead icon="sprout" title="Góc chăm cây" href={SECTIONS.blog.path} />
+            <HomeHead icon="sprout" title={t('care')} href={SECTIONS.blog.path} />
             <CareBoard posts={care} chips={careChips} />
           </section>
         )}
 
         <TrustRow items={[
-          { icon: 'tag', b: 'Giá sỉ công khai', text: 'Chiết khấu riêng cho đối tác' },
-          { icon: 'truck', b: 'Giao toàn quốc', text: 'Gọi xác nhận trước khi gửi' },
-          { icon: 'shield', b: `Bảo hành cây ${WARRANTY_DAYS} ngày`, text: 'Gửi ảnh, kỹ sư xem xét' },
-          { icon: 'plant', b: 'Kỹ sư tư vấn', text: 'Chọn cây, bắt bệnh, dùng thuốc' },
+          { icon: 'tag', b: t('t1'), text: t('t1s') },
+          { icon: 'truck', b: t('t2'), text: t('t2s') },
+          { icon: 'shield', b: t('t3', { days: WARRANTY_DAYS }), text: t('t3s') },
+          { icon: 'plant', b: t('t4'), text: t('t4s') },
         ]} />
       </div>
     </div>

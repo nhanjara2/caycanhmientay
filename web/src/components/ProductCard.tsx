@@ -2,7 +2,8 @@
 
 import type { CSSProperties } from 'react';
 import Link from '@/components/LocaleLink';
-import { cheapestOption, discountPct, imageAlt, isQuote, isSoldOut, QUOTE_TEXT, SOLD_OUT_TEXT, type Product } from '@/lib/catalog';
+import { cheapestOption, discountPct, imageAlt, isQuote, isSoldOut, type Product } from '@/lib/catalog';
+import { useTranslations } from 'next-intl';
 import { responsive } from '@/lib/images';
 import { useWishlist } from '@/lib/wishlist';
 import { moneyNum } from '@/lib/format';
@@ -31,6 +32,7 @@ export function ProductCard({ product: p, showFlash = false, level = 3, eager = 
   /** Có thì hiện tim đỏ góc ảnh để bỏ yêu thích (trang /tai-khoan/yeu-thich) — gọi lại khi đã bỏ để ẩn thẻ khỏi lưới. */
   onRemoveFromWishlist?: () => void;
 }) {
+  const t = useTranslations('card');
   const wish = useWishlist();
   const publics = usePublicVouchers();
   // Chỉ mã áp dụng cho sản phẩm này; shop có mã mà không mã nào áp dụng thì không hiện vé
@@ -52,11 +54,11 @@ export function ProductCard({ product: p, showFlash = false, level = 3, eager = 
           {p.images?.[0] ? <img {...responsive(p.images[0], CARD_SIZES, 640)} alt={imageAlt(p, 0)} width={600} height={600} loading={eager ? 'eager' : 'lazy'} /> : <Art name={p.icon} />}
         </Link>
         {/* Mọi quy cách có giá đều hết hàng: nhãn giữa ảnh (trang sản phẩm + schema cùng ghi hết hàng) */}
-        {isSoldOut(p.options) && <span className="app-pcard__out" data-stock="out">{SOLD_OUT_TEXT}</span>}
+        {isSoldOut(p.options) && <span className="app-pcard__out" data-stock="out">{t('soldOut')}</span>}
         {/* Dải góc dưới trái: ô "Hàng mới" (nếu có) + sticker ưu đãi (ảnh thật, siêu sale, free ship…) cùng một kiểu ô */}
         <ProductStickers p={p} isNew={p.isNew} />
         {/* Có video (YouTube) → biểu tượng play góc dưới phải ảnh, kiểu Shopee; chỉ để báo hiệu, bấm vẫn mở trang sản phẩm */}
-        {p.youtubeId && <span className="app-pcard__play" title="Có video" aria-label="Có video"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 5.6v12.8L18.6 12z" /></svg></span>}
+        {p.youtubeId && <span className="app-pcard__play" title={t('video')} aria-label={t('video')}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 5.6v12.8L18.6 12z" /></svg></span>}
         {/* Tim yêu thích góc trên phải khung ảnh, ngay dưới nhãn -% (cột bên phải: -% rồi tim; bên trái: xuất xứ). Trang Yêu thích: bỏ tim thì gỡ thẻ khỏi lưới. */}
         <WishlistHeart
           slug={p.slug}
@@ -78,12 +80,12 @@ export function ProductCard({ product: p, showFlash = false, level = 3, eager = 
           {pct > 0 && <span className="app-pcard__off"><ClockPercentIcon />-{pct}%</span>}
         </div>
         <div className="vx-price" style={isQuote(u) ? undefined : { '--w': priceEm(moneyNum(u.price)).toFixed(2), '--from': from ? 1 : 0 } as CSSProperties}>
-          {isQuote(u) ? <span className="app-quote">{QUOTE_TEXT}</span> : (
+          {isQuote(u) ? <span className="app-quote">{t('quote')}</span> : (
             <>
-              <span className="app-pcard__amt">{from && <small>Từ </small>}{moneyNum(u.price)}<span className="app-dong">đ</span></span>
+              <span className="app-pcard__amt">{from && <small>{t('from')}</small>}{moneyNum(u.price)}<span className="app-dong">đ</span></span>
               <small className="app-pcard__unit">/ {p.unit}</small>
               {/* Giá nào cũng kèm vé voucher có dấu tích (chủ shop dặn: giá nào cũng có voucher) */}
-              {showTicket && <VoucherCheckIcon title={vouchers.length ? `Đơn này dùng được mã giảm giá: ${(vouchers.find((v) => v.kind === 'discount') ?? vouchers[0]).code}` : 'Có voucher ưu đãi cho đơn này'} />}
+              {showTicket && <VoucherCheckIcon title={vouchers.length ? t('voucherCode', { code: (vouchers.find((v) => v.kind === 'discount') ?? vouchers[0]).code }) : t('voucherAny')} />}
             </>
           )}
         </div>
@@ -92,7 +94,7 @@ export function ProductCard({ product: p, showFlash = false, level = 3, eager = 
         {showFlash && p.flash ? (
           <span style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <span className="vx-progress"><i style={{ width: `${(p.flash.sold / p.flash.total) * 100}%` }} /></span>
-            <span>{p.flash.sold / p.flash.total > 0.85 ? 'Sắp hết' : `Đã bán ${p.flash.sold}/${p.flash.total}`}</span>
+            <span>{p.flash.sold / p.flash.total > 0.85 ? t('almostGone') : t('sold', { n: p.flash.sold, t: p.flash.total })}</span>
           </span>
         ) : (
           // "Văn phòng · Trong nhà" → mỗi cụm một nhãn viền cam chữ cam (kiểu "Cheap on Shopee")

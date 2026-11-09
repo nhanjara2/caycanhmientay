@@ -53,6 +53,7 @@ export const BannerInputSchema = z.object({
   href: line(300).refine((h) => !h || h.startsWith('/') || /^https?:\/\/\S+$/.test(h), 'Link phải bắt đầu bằng / (trang trong web) hoặc https://'),
   showText: z.boolean(),
   tone: z.enum(BANNER_TONE_KEYS),
+  en: z.object({ title: line(120), subtitle: line(200), cta: line(30) }).nullable().optional(),
   image: file,
   imageMobile: file.nullable(),
   bgImage: file.nullable(),
@@ -78,8 +79,10 @@ export async function saveBanner(v: BannerInput, user: SessionUser) {
   const files = [rest.image, rest.imageMobile, rest.bgImage, rest.bgImageMobile].filter(uploaded);
   const found = files.length ? await db.select({ file: BI.file }).from(BI).where(inArray(BI.file, files)) : [];
   if (found.length !== new Set(files).size) return { ok: false as const, error: 'Ảnh đã bị xóa — hãy tải ảnh lại' };
+  // Bản tiếng Anh: bỏ hẳn khi cả 3 ô trống
+  const en = rest.en && (rest.en.title || rest.en.subtitle || rest.en.cta) ? rest.en : null;
   const data = {
-    ...rest,
+    ...rest, en,
     startsAt: startsAt ? vnDate(startsAt, false) : null,
     endsAt: endsAt ? vnDate(endsAt, true) : null,
     updatedBy: staffName(user),

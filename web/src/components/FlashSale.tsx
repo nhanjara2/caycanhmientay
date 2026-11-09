@@ -1,6 +1,7 @@
 'use client';
 
 import Link from '@/components/LocaleLink';
+import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import type { Product } from '@/lib/catalog';
 import { Icon } from './Icon';
@@ -51,12 +52,13 @@ function Countdown({ left }: { left: number }) {
 /** Dải Flash sale nằm trên khung giá trang sản phẩm (kiểu Shopee): tên chương trình + đếm ngược. Tách riêng để chỉ dải này vẽ lại mỗi giây. */
 export function FlashPriceBar() {
   const { active, left } = useFlashClock();
+  const t = useTranslations('flash');
   return (
     <div className="app-ppflash">
       <span className="app-ppflash__t"><Icon name="bolt" />Flash sale</span>
       <span className="app-ppflash__end">
         {/* Khung giá hẹp (điện thoại, tablet): nhãn rút gọn (data-short) cho cả dải vừa một hàng */}
-        <span className="app-ppflash__k" data-short={active >= 0 ? 'Còn' : 'Mở sau'}><span>{active >= 0 ? 'Kết thúc sau' : 'Bắt đầu sau'}</span></span>
+        <span className="app-ppflash__k" data-short={active >= 0 ? t('endsShort') : t('startsShort')}><span>{active >= 0 ? t('ends') : t('starts')}</span></span>
         <Countdown left={left} />
       </span>
     </div>
@@ -66,20 +68,21 @@ export function FlashPriceBar() {
 /** Khối Flash sale: dải sun + đồng hồ đếm ngược tới hết khung giờ hiện tại. */
 export function FlashSale({ products }: { products: Product[] }) {
   const { hour, active, left } = useFlashClock();
+  const t = useTranslations('flash');
 
   return (
     <section className="vx-flash" id="flash-sale">
       <div className="vx-flash__bar">
-        <h2 className="vx-flash__title"><Icon name="bolt" />Flash sale giờ vàng</h2>
-        <span style={{ fontSize: '0.8125rem' }}>{active >= 0 ? 'Kết thúc sau' : 'Bắt đầu sau'}</span>
+        <h2 className="vx-flash__title"><Icon name="bolt" />{t('title')}</h2>
+        <span style={{ fontSize: '0.8125rem' }}>{active >= 0 ? t('ends') : t('starts')}</span>
         <Countdown left={left} />
-        <Link href="/flash-sale" style={{ marginLeft: 'auto', fontWeight: 600 }} aria-label="Xem tất cả Flash sale">Xem tất cả</Link>
+        <Link href="/flash-sale" style={{ marginLeft: 'auto', fontWeight: 600 }} aria-label={t('seeAllAria')}>{t('seeAll')}</Link>
       </div>
       <div className="vx-slots">
         {SLOTS.map((s, i) => (
           <div key={s.from} className="vx-slot" aria-current={i === active ? 'true' : undefined}>
             <b>{hh(s.from)} – {hh(s.to)}</b>
-            {i === active ? 'Đang diễn ra' : hour >= s.to ? 'Đã kết thúc' : 'Sắp diễn ra'}
+            {i === active ? t('live') : hour >= s.to ? t('ended') : t('soon')}
           </div>
         ))}
       </div>

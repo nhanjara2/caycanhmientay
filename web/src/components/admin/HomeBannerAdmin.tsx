@@ -58,11 +58,12 @@ function statusOf(b: Pick<Banner, 'active' | 'startsAt' | 'endsAt'>, now = new D
 
 type Draft = {
   id?: number; slot: BannerSlot; title: string; subtitle: string; cta: string; href: string; showText: boolean; tone: BannerTone;
+  en: { title?: string; subtitle?: string; cta?: string } | null;
   image: string | null; imageMobile: string | null; bgImage: string | null; bgImageMobile: string | null; bgColor: string | null; startsAt: string; endsAt: string; active: boolean;
 };
 
 const blank = (slot: BannerSlot): Draft => ({
-  slot, title: '', subtitle: '', cta: '', href: '', showText: false, tone: 'green', image: null, imageMobile: null, bgImage: null, bgImageMobile: null, bgColor: null, startsAt: '', endsAt: '', active: true,
+  slot, title: '', subtitle: '', cta: '', href: '', showText: false, tone: 'green', en: null, image: null, imageMobile: null, bgImage: null, bgImageMobile: null, bgColor: null, startsAt: '', endsAt: '', active: true,
 });
 
 /** Xem trước đúng khung trên trang chủ (dùng chung CSS + component với trang khách). */
@@ -137,7 +138,8 @@ function Editor({ initial, onClose }: { initial: Draft; onClose: () => void }) {
     if (!d.image) { setError('Chọn ảnh banner'); return; }
     setError('');
     start(async () => {
-      const r = await saveBannerAction({ ...d, ...(d.slot !== 'top' && { bgImage: null, bgImageMobile: null, bgColor: null }), startsAt: d.startsAt || null, endsAt: d.endsAt || null })
+      const en = d.en && { title: d.en.title ?? '', subtitle: d.en.subtitle ?? '', cta: d.en.cta ?? '' };
+      const r = await saveBannerAction({ ...d, en, ...(d.slot !== 'top' && { bgImage: null, bgImageMobile: null, bgColor: null }), startsAt: d.startsAt || null, endsAt: d.endsAt || null })
         .catch(() => ({ ok: false as const, error: 'Có lỗi, vui lòng thử lại' }));
       if (!r.ok) { setError(r.error); return; }
       router.refresh();
@@ -251,6 +253,16 @@ function Editor({ initial, onClose }: { initial: Draft; onClose: () => void }) {
                   </div>
                 </div>
               )}
+              <details className="vx-fl">
+                <summary>Chữ tiếng Anh (trang /en) — để trống thì dùng chữ tiếng Việt</summary>
+                <input aria-label="Tiêu đề tiếng Anh" value={d.en?.title ?? ''} maxLength={120} placeholder="Title (English)" onChange={(e) => set('en', { ...d.en, title: e.target.value })} />
+                {d.showText && (
+                  <>
+                    <input aria-label="Dòng mô tả tiếng Anh" value={d.en?.subtitle ?? ''} maxLength={200} placeholder="Subtitle (English)" onChange={(e) => set('en', { ...d.en, subtitle: e.target.value })} />
+                    <input aria-label="Chữ trên nút tiếng Anh" value={d.en?.cta ?? ''} maxLength={30} placeholder="Button text (English)" onChange={(e) => set('en', { ...d.en, cta: e.target.value })} />
+                  </>
+                )}
+              </details>
               {d.showText && (
                 <div className="vx-fl">
                   <label htmlFor="bn-tone">Màu nền sau chữ</label>

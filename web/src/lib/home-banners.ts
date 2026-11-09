@@ -1,4 +1,5 @@
 // Banner trang chủ (/) — dùng chung trình duyệt + server. Chủ shop tự tải ảnh ở /admin/trang-chu.
+import type { BannerEn } from './i18n-content';
 
 /** Vị trí banner trên trang chủ. Thêm vị trí mới = thêm 1 dòng (key không đổi sau khi đã dùng). */
 export const BANNER_SLOTS = [
@@ -52,6 +53,8 @@ export type Banner = {
   /** Hiện tiêu đề / mô tả / nút đè lên ảnh. Tắt khi ảnh đã có sẵn chữ. */
   showText: boolean;
   tone: BannerTone;
+  /** Chữ tiếng Anh (trang /en); null = dùng chữ tiếng Việt. */
+  en: BannerEn | null;
   image: string;
   /** Ảnh riêng cho điện thoại (ảnh lớn và băng rộng đều 12:5), không có thì dùng ảnh chính. */
   imageMobile: string | null;

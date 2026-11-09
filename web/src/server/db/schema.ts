@@ -2,7 +2,7 @@
 import { sql } from 'drizzle-orm';
 import type { BundlePart } from '../../lib/bundle';
 import type { FengShui, SpecField } from '../../lib/catalog';
-import type { ProductEn } from '../../lib/i18n-content';
+import type { BannerEn, ProductEn } from '../../lib/i18n-content';
 import { CASH_KINDS } from '../../lib/cash-labels';
 import type { Disease } from '../../lib/diseases';
 import type { PostBlock } from '../../lib/posts';
@@ -1073,6 +1073,8 @@ export const homeBanners = pgTable('home_banners', {
   showText: boolean('show_text').notNull().default(false),
   /** Màu lớp phủ sau chữ khi bật `show_text` (BANNER_TONES). */
   tone: text('tone').notNull().default('green'),
+  /** Chữ bản tiếng Anh (trang /en) — ô trống dùng chữ tiếng Việt. */
+  en: jsonb('en').$type<BannerEn>(),
   /** Tên file trong home_banner_images, hoặc ảnh dựng sẵn của shop /images/banner/….webp (migration 0081). */
   image: text('image').notNull(),
   imageMobile: text('image_mobile'),

@@ -15,6 +15,9 @@ export type ProductEn = {
   body?: PostBlock[];
 };
 
+/** Chữ bản tiếng Anh của banner trang chủ (home_banners.en). */
+export type BannerEn = { title?: string; subtitle?: string; cta?: string };
+
 const UNIT: Record<string, string> = {
   'Chậu': 'pot', 'Cây': 'plant', 'Bộ': 'set', 'Bịch': 'bag', 'Hũ': 'jar', 'Túi': 'pack', 'Gói': 'pack', 'Bao': 'sack', 'Chai': 'bottle', 'Cái': 'piece',
 };

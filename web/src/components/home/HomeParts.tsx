@@ -7,13 +7,16 @@ import type { PostCard } from '@/server/posts';
 import { Art, Icon, type IconName } from '../Icon';
 import { PostMeta, PostThumb } from '../PostParts';
 import { responsive, thumbUrl } from '@/lib/images';
+import { useTranslations } from 'next-intl';
 
 // Khối trình bày của trang chủ (/) — CSS lớp `hm-*` trong styles/home.css.
 
 /** Tiêu đề khối: chữ lớn + dòng phụ + link "Xem tất cả". */
-export function HomeHead({ icon, title, sub, href, more = 'Xem tất cả', light }: {
+export function HomeHead({ icon, title, sub, href, more: moreText, light }: {
   icon: IconName; title: ReactNode; sub?: ReactNode; href?: string; more?: string; light?: boolean;
 }) {
+  const t = useTranslations('home');
+  const more = moreText ?? t('seeAll');
   return (
     <div className={light ? 'hm-head hm-head--light' : 'hm-head'}>
       <span className="hm-head__mark"><Icon name={icon} /></span>
@@ -29,8 +32,9 @@ export function HomeHead({ icon, title, sub, href, more = 'Xem tất cả', ligh
 
 /** Lối tắt dưới khung đầu trang (thẻ trắng nổi lên nền ảnh). */
 export function QuickLinks({ items }: { items: { label: string; icon: IconName; href: string }[] }) {
+  const t = useTranslations('home');
   return (
-    <nav className="hm-quick" aria-label="Lối tắt">
+    <nav className="hm-quick" aria-label={t('quickAria')}>
       {items.map((q) => (
         <Link key={q.label} href={q.href} className="hm-quick__item app-plain">
           <span className="hm-quick__ic"><Icon name={q.icon} /></span>
@@ -46,6 +50,7 @@ export type MosaicItem = { key: string; name: string; href: string; count: numbe
 /** Danh mục bằng ảnh: hàng ô nhỏ — ảnh vuông (ảnh sản phẩm bán chạy của nhóm đó) + tên, số sản phẩm bên dưới.
  *  Tối đa 9 ô; máy tính + tablet 6 ô một hàng (`--hm-cols` trong home.css), điện thoại một hàng vuốt ngang. */
 export function CategoryMosaic({ items }: { items: MosaicItem[] }) {
+  const t = useTranslations('home');
   return (
     <div className="hm-mosaic">
       {items.map((m) => (
@@ -55,7 +60,7 @@ export function CategoryMosaic({ items }: { items: MosaicItem[] }) {
           </span>
           <span className="hm-tile__txt">
             <b>{m.name}</b>
-            <small>{m.count} sản phẩm</small>
+            <small>{t('count', { n: m.count })}</small>
           </span>
         </Link>
       ))}
@@ -79,12 +84,13 @@ export function PhotoWall({ products }: { products: Product[] }) {
 
 /** Bệnh cây theo mùa: khung giới thiệu mùa + thẻ bệnh có ảnh triệu chứng. */
 export function SeasonDiseases({ season, diseases }: { season: string; diseases: Disease[] }) {
+  const t = useTranslations('home');
   return (
     <div className="hm-season">
       <div className="hm-season__intro">
         <span className="hm-season__tag"><Icon name="rain" />{season}</span>
-        <Link href="/benh-cay" className="vx-btn hm-btn-light">Bắt bệnh cho cây</Link>
-        <Link href="/goc-cham-cay?chuyen-muc=thuoc-phan-bon" className="hm-season__link">Chọn thuốc &amp; phân bón<Icon name="chevron" size={16} /></Link>
+        <Link href="/benh-cay" className="vx-btn hm-btn-light">{t('q_disease')}</Link>
+        <Link href="/goc-cham-cay?chuyen-muc=thuoc-phan-bon" className="hm-season__link">{t('pickMeds')}<Icon name="chevron" size={16} /></Link>
       </div>
       <div className="hm-season__cards">
         {diseases.map((d) => {
@@ -95,7 +101,7 @@ export function SeasonDiseases({ season, diseases }: { season: string; diseases:
               <span className="hm-dcard__b">
                 <b>{d.name}</b>
                 <small>{d.summary}</small>
-                <span className="hm-dcard__more">Cách xử lý<Icon name="chevron" size={14} /></span>
+                <span className="hm-dcard__more">{t('howToTreat')}<Icon name="chevron" size={14} /></span>
               </span>
             </Link>
           );
@@ -150,11 +156,12 @@ export function PostCards({ posts }: { posts: PostCard[] }) {
 /** Góc chăm cây kiểu Long Châu: chip chuyên mục, 1 bài lớn trái + danh sách bài ảnh nhỏ phải. */
 export function CareBoard({ posts, chips }: { posts: PostCard[]; chips: { label: string; href: string }[] }) {
   const [main, ...rest] = posts;
+  const t = useTranslations('home');
   if (!main) return null;
   return (
     <div className="hm-care">
       {chips.length > 0 && (
-        <nav className="hm-care__chips" aria-label="Chuyên mục Góc chăm cây">
+        <nav className="hm-care__chips" aria-label={t('careChips')}>
           {chips.map((c) => <Link key={c.href} href={c.href} className="hm-care__chip app-plain">{c.label}</Link>)}
         </nav>
       )}
