@@ -5,6 +5,7 @@
 import { CARE_PHONE, formatPhone, SALES_PHONE, SHOP_ADDRESS, SHOP_EMAIL, SUPPORT_PHONE, ZALO_URL } from './contact';
 import { money } from './format';
 import { REGION_LABEL, SLOT_CLOSE_BEFORE_END_MIN, slotTime, type ShippingConfig } from './shipping';
+import { BODIES_EN } from './policy-content-en';
 import { SUPPLY_RETURN_DAYS, WARRANTY_DAYS } from './warranty-labels';
 
 export type Block =
@@ -687,8 +688,8 @@ const BODIES: Record<string, Body> = {
 };
 
 /** Nội dung trang `slug`; undefined nếu chưa có (trang Giới thiệu viết tay ở AboutView). */
-export function policyBody(slug: string, ctx: PolicyContext): Section[] | undefined {
-  const b = BODIES[slug];
+export function policyBody(slug: string, ctx: PolicyContext, lang: string = 'vi'): Section[] | undefined {
+  const b = (lang === 'en' ? BODIES_EN[slug] : undefined) ?? BODIES[slug];
   return typeof b === 'function' ? b(ctx) : b;
 }
 

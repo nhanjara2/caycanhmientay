@@ -82,7 +82,9 @@ function BlockView({ b }: { b: Block }) {
 }
 
 /** Khung chung các trang chính sách / hướng dẫn: breadcrumb, menu bài trong danh mục, tiêu đề, nội dung theo mục. */
-export function PolicyArticle({ title, updated, sections, crumbs, nav }: { title: string; updated: string; sections: Section[]; crumbs?: Crumb[]; nav?: NavGroup[] }) {
+export function PolicyArticle({ title, updated, sections, crumbs, nav, lang = 'vi' }: { title: string; updated: string; sections: Section[]; crumbs?: Crumb[]; nav?: NavGroup[]; lang?: string }) {
+  const en = lang === 'en';
+  const toc = en ? 'On this page' : 'Trong trang này';
   return (
     <>
       <div style={{ padding: '12px 24px 0', background: 'var(--surface)' }}>
@@ -93,14 +95,14 @@ export function PolicyArticle({ title, updated, sections, crumbs, nav }: { title
         <article className="vx-policy">
           <h1>{title}</h1>
           <div className="vx-policy__meta">
-            <span>Cập nhật lần cuối: {updated}</span>
+            <span>{en ? 'Last updated' : 'Cập nhật lần cuối'}: {updated}</span>
             <span>·</span>
-            <span>{readMinutes(sections)} phút đọc</span>
+            <span>{readMinutes(sections)} {en ? 'min read' : 'phút đọc'}</span>
             <span className="acts"><ShareButton title={title} /></span>
           </div>
           {sections.length >= TOC_MIN && (
-            <nav className="pol-toc" aria-label="Trong trang này">
-              <b>Trong trang này</b>
+            <nav className="pol-toc" aria-label={toc}>
+              <b>{toc}</b>
               <ol>
                 {sections.map((s, i) => (
                   <li key={s.h}><a href={`#${s.id ?? `muc-${i + 1}`}`}>{ROMAN[i]}. {s.h}</a></li>
