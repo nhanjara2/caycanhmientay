@@ -16,8 +16,18 @@ export function careSteps(p: Pick<Product, 'specs'>): [string, string][] {
 }
 
 /** Việc cần làm khi cây mới về + lưu ý riêng của cây (sâu bệnh, thú cưng). */
-export function careNotes(p: Pick<Product, 'specs'>): string[] {
+export function careNotes(p: Pick<Product, 'specs'>, lang: 'vi' | 'en' = 'vi'): string[] {
   const m = specMap(p);
+  if (lang === 'en') {
+    const out = [
+      'Unpack as soon as it arrives and water lightly if the soil is dry; keep it in gentle light for the first week before moving it to its final spot.',
+      'Do not fertilise or repot for the first 2–3 weeks; a few old leaves dropping or slight wilting on arrival is normal.',
+      'Water in the early morning or late afternoon, at the base; use a pot with drainage holes and do not leave water in the saucer.',
+    ];
+    const pests = m.get('Sâu bệnh thường gặp');
+    if (pests) out.push(`Common problems: ${sentence(lower(pests))} Check the undersides of leaves weekly.`);
+    return out;
+  }
   const notes = [
     'Mở hộp ngay khi nhận, tưới nhẹ nếu đất khô; tuần đầu để cây chỗ sáng nhẹ, thoáng gió cho quen môi trường rồi mới chuyển ra vị trí chính.',
     'Chưa bón phân, chưa thay chậu trong 2–3 tuần đầu; cây rụng vài lá già hoặc hơi rũ lúc mới về là bình thường.',
@@ -31,7 +41,7 @@ export function careNotes(p: Pick<Product, 'specs'>): string[] {
 }
 
 /** Câu hỏi thường gặp tự sinh từ thông số; câu admin nhập (bảng faqs) vẫn hiện trước. */
-export function careFaqs(p: Pick<Product, 'name' | 'specs'>): { question: string; answer: string }[] {
+export function careFaqs(p: Pick<Product, 'name' | 'specs'>, lang: 'vi' | 'en' = 'vi'): { question: string; answer: string }[] {
   const m = specMap(p);
   const n = p.name;
   const out: { question: string; answer: string }[] = [];
@@ -39,6 +49,16 @@ export function careFaqs(p: Pick<Product, 'name' | 'specs'>): { question: string
     const v = m.get(key);
     if (v) out.push({ question, answer: answer(v) });
   };
+  if (lang === 'en') {
+    add('Tưới nước', `How often should I water ${n}?`);
+    add('Ánh sáng', `Where should I place ${n}?`);
+    add('Sâu bệnh thường gặp', `${n} has yellow leaves or rotting stems — what should I do?`, (v) =>
+      `${sentence(v)} Most cases come from overwatering or too little light: water less, let the topsoil dry before watering again, move the plant to a brighter spot and remove damaged leaves. Send us a photo on Zalo for advice.`);
+    add('Bón phân', `What fertiliser does ${n} need, and how often?`);
+    add('An toàn thú cưng', `Is ${n} toxic to cats, dogs or children?`);
+    add('Cách nhân giống', `Can I propagate ${n} myself?`);
+    return out;
+  }
   add('Tưới nước', `Bao lâu tưới ${n} một lần?`);
   add('Ánh sáng', `${n} đặt ở đâu thì hợp?`);
   add('Sâu bệnh thường gặp', `${n} bị vàng lá, thối gốc phải làm sao?`, (v) =>

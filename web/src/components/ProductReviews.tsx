@@ -1,5 +1,6 @@
 'use client';
 
+import { useL } from '@/lib/use-l';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { deleteReviewAction, saveReviewAction } from '@/app/actions/reviews';
@@ -7,7 +8,7 @@ import { saveAfterLogin, takeAfterLogin } from '@/lib/after-login';
 import { useAuth } from '@/lib/auth';
 import { compressImage } from '@/lib/compress-image';
 import {
-  initials, MAX_REVIEW_PHOTOS, REVIEW_MAX_CHARS, REVIEW_MIN_CHARS, reviewStats, STAR_LABEL, starsText, timeAgo, type ReviewView,
+  initials, MAX_REVIEW_PHOTOS, REVIEW_MAX_CHARS, REVIEW_MIN_CHARS, reviewStats, STAR_LABEL, STAR_LABEL_EN, starsText, timeAgo, type ReviewView,
 } from '@/lib/reviews';
 import { useModalFocus } from '@/lib/use-modal';
 import { HelpfulButton } from './HelpfulButton';
@@ -21,6 +22,8 @@ const PAGE = 5;
  * Khách đã đăng nhập viết / sửa / xóa đánh giá của mình ngay tại đây (mỗi người 1 đánh giá / sản phẩm).
  */
 export function ProductReviews({ slug, items, isPlant }: { slug: string; items: ReviewView[]; isPlant: boolean }) {
+  const L = useL();
+  const en = L('', '1') === '1';
   const { user, ready, openLogin } = useAuth();
   const [filter, setFilter] = useState<Filter>('all');
   const [shown, setShown] = useState(PAGE);
@@ -51,18 +54,18 @@ export function ProductReviews({ slug, items, isPlant }: { slug: string; items: 
   }, [editing]);
 
   const chips: { key: Filter; label: string }[] = [
-    { key: 'all', label: 'Tất cả' },
-    { key: 'photo', label: `Có ảnh thực tế (${stats.withPhotos})` },
-    { key: 5, label: '5 sao' },
-    { key: 4, label: '4 sao' },
-    { key: 'low', label: '3 sao trở xuống' },
+    { key: 'all', label: L('Tất cả', 'All') },
+    { key: 'photo', label: L(`Có ảnh thực tế (${stats.withPhotos})`, `With photos (${stats.withPhotos})`) },
+    { key: 5, label: L('5 sao', '5 stars') },
+    { key: 4, label: L('4 sao', '4 stars') },
+    { key: 'low', label: L('3 sao trở xuống', '3 stars or less') },
   ];
 
   return (
     <section className="vx-card" id="danh-gia">
       <div className="vx-sect">
         <h2 style={{ fontSize: '1.125rem' }}>
-          Đánh giá sản phẩm <small style={{ fontWeight: 400, color: 'var(--ink-muted)', fontSize: '0.875rem' }}>({stats.count} đánh giá)</small>
+          {L('Đánh giá sản phẩm', 'Product reviews')} <small style={{ fontWeight: 400, color: 'var(--ink-muted)', fontSize: '0.875rem' }}>({stats.count} {L('đánh giá', 'reviews')})</small>
         </h2>
       </div>
 
@@ -70,16 +73,16 @@ export function ProductReviews({ slug, items, isPlant }: { slug: string; items: 
         <div className="vx-rating__big">
           {stats.count ? (
             <>
-              <span style={{ color: 'var(--ink-muted)', fontSize: '0.8125rem' }}>Trung bình</span>
+              <span style={{ color: 'var(--ink-muted)', fontSize: '0.8125rem' }}>{L('Trung bình', 'Average')}</span>
               <b>{stats.avg.toFixed(1).replace('.', ',')}</b>
               <span className="vx-stars">{starsText(stats.avg)}</span>
             </>
           ) : (
-            <span style={{ color: 'var(--ink-muted)', fontSize: '0.875rem' }}>Chưa có đánh giá nào.<br />Hãy là người đầu tiên chia sẻ trải nghiệm!</span>
+            <span style={{ color: 'var(--ink-muted)', fontSize: '0.875rem' }}>{L('Chưa có đánh giá nào.', 'No reviews yet.')}<br />{L('Hãy là người đầu tiên chia sẻ trải nghiệm!', 'Be the first to share your experience!')}</span>
           )}
           {!editing && (
             <button type="button" className="vx-btn vx-btn--primary vx-btn--sm" style={{ alignSelf: 'flex-start' }} onClick={write}>
-              {mine ? 'Sửa đánh giá của bạn' : 'Gửi đánh giá'}
+              {mine ? L('Sửa đánh giá của bạn', 'Edit your review') : L('Gửi đánh giá', 'Write a review')}
             </button>
           )}
         </div>
@@ -114,7 +117,7 @@ export function ProductReviews({ slug, items, isPlant }: { slug: string; items: 
 
       {stats.count > 0 && (
         <div className="vx-row" style={{ flexWrap: 'wrap' }}>
-          <span className="vx-spec">Lọc theo:</span>
+          <span className="vx-spec">{L('Lọc theo:', 'Filter:')}</span>
           {chips.map((c) => (
             <button key={c.key} type="button" className="vx-chip" aria-pressed={filter === c.key} onClick={() => { setFilter(c.key); setShown(PAGE); }}>
               {c.label}
@@ -124,12 +127,12 @@ export function ProductReviews({ slug, items, isPlant }: { slug: string; items: 
       )}
 
       {list.slice(0, shown).map((r) => (
-        <ReviewItem key={r.id} r={r} slug={slug} onZoom={setZoom} onEdit={write} onDeleted={() => setNotice('Đã xóa đánh giá của bạn.')} />
+        <ReviewItem key={r.id} r={r} slug={slug} onZoom={setZoom} onEdit={write} onDeleted={() => setNotice(L('Đã xóa đánh giá của bạn.', 'Your review was deleted.'))} />
       ))}
-      {stats.count > 0 && !list.length && <p style={{ color: 'var(--ink-muted)', fontSize: '0.875rem', margin: 0 }}>Chưa có đánh giá phù hợp bộ lọc.</p>}
+      {stats.count > 0 && !list.length && <p style={{ color: 'var(--ink-muted)', fontSize: '0.875rem', margin: 0 }}>{L('Chưa có đánh giá phù hợp bộ lọc.', 'No reviews match this filter.')}</p>}
       {list.length > shown && (
         <button type="button" className="vx-btn vx-btn--ghost" style={{ alignSelf: 'center' }} onClick={() => setShown((n) => n + 10)}>
-          Xem thêm {list.length - shown} đánh giá
+          {L(`Xem thêm ${list.length - shown} đánh giá`, `Show ${list.length - shown} more reviews`)}
         </button>
       )}
 
@@ -139,12 +142,14 @@ export function ProductReviews({ slug, items, isPlant }: { slug: string; items: 
 }
 
 function ZoomPhoto({ src, onClose }: { src: string; onClose: () => void }) {
+  const L = useL();
+  const en = L('', '1') === '1';
   const box = useRef<HTMLDivElement>(null);
   useModalFocus(box, onClose);
   return (
-    <div ref={box} tabIndex={-1} className="rvw-zoom" role="dialog" aria-modal="true" aria-label="Ảnh đánh giá" onClick={onClose}>
+    <div ref={box} tabIndex={-1} className="rvw-zoom" role="dialog" aria-modal="true" aria-label={L('Ảnh đánh giá', 'Review photo')} onClick={onClose}>
       <img src={src} alt="" />
-      <button type="button" aria-label="Đóng"><Icon name="close" /></button>
+      <button type="button" aria-label={L('Đóng', 'Close')}><Icon name="close" /></button>
     </div>
   );
 }
@@ -152,12 +157,14 @@ function ZoomPhoto({ src, onClose }: { src: string; onClose: () => void }) {
 function ReviewItem({ r, slug, onZoom, onEdit, onDeleted }: {
   r: ReviewView; slug: string; onZoom: (url: string) => void; onEdit: () => void; onDeleted: () => void;
 }) {
+  const L = useL();
+  const en = L('', '1') === '1';
   const router = useRouter();
   const [pending, start] = useTransition();
   const remove = () => {
-    if (!confirm('Xóa đánh giá của bạn cho sản phẩm này?')) return;
+    if (!confirm(L('Xóa đánh giá của bạn cho sản phẩm này?', 'Delete your review?'))) return;
     start(async () => {
-      const res = await deleteReviewAction(slug).catch(() => ({ ok: false as const, error: 'Không xóa được, vui lòng thử lại' }));
+      const res = await deleteReviewAction(slug).catch(() => ({ ok: false as const, error: L('Không xóa được, vui lòng thử lại', 'Could not delete, please try again') }));
       if (!res.ok) { alert(res.error); return; }
       onDeleted();
       router.refresh();
@@ -170,15 +177,15 @@ function ReviewItem({ r, slug, onZoom, onEdit, onDeleted }: {
       <div className="vx-review__body">
         <div className="vx-review__who">
           {r.name}
-          {r.verified && <span className="vx-verified">Đã mua hàng</span>}
-          <small suppressHydrationWarning>{timeAgo(r.createdAt)}</small>
+          {r.verified && <span className="vx-verified">{L('Đã mua hàng', 'Verified buyer')}</span>}
+          <small suppressHydrationWarning>{timeAgo(r.createdAt, en)}</small>
         </div>
-        <span className="vx-stars" aria-label={`${r.stars} sao`}>{starsText(r.stars)}</span>
+        <span className="vx-stars" aria-label={`${r.stars} ${L('sao', 'stars')}`}>{starsText(r.stars)}</span>
         <span style={{ whiteSpace: 'pre-line' }}>{r.content}</span>
         {r.photos.length > 0 && (
           <div className="vx-photos rvw-photos">
             {r.photos.map((ph) => (
-              <button key={ph.file} type="button" onClick={() => onZoom(ph.url)} aria-label="Xem ảnh lớn">
+              <button key={ph.file} type="button" onClick={() => onZoom(ph.url)} aria-label={L('Xem ảnh lớn', 'View larger')}>
                 <img src={ph.url} alt="" loading="lazy" />
               </button>
             ))}
@@ -188,10 +195,10 @@ function ReviewItem({ r, slug, onZoom, onEdit, onDeleted }: {
           <HelpfulButton kind="review" id={r.id} count={r.helpful} voted={r.voted} own={r.mine} />
           {r.mine && (
             <>
-              <span>Đánh giá của bạn</span>
-              <a role="button" tabIndex={0} onClick={onEdit} onKeyDown={(e) => e.key === 'Enter' && onEdit()}>Sửa</a>
+              <span>{L('Đánh giá của bạn', 'Your review')}</span>
+              <a role="button" tabIndex={0} onClick={onEdit} onKeyDown={(e) => e.key === 'Enter' && onEdit()}>{L('Sửa', 'Edit')}</a>
               <a role="button" tabIndex={0} onClick={pending ? undefined : remove} onKeyDown={(e) => e.key === 'Enter' && remove()}>
-                {pending ? 'Đang xóa…' : 'Xóa'}
+                {pending ? L('Đang xóa…', 'Deleting…') : L('Xóa', 'Delete')}
               </a>
             </>
           )}
@@ -202,7 +209,7 @@ function ReviewItem({ r, slug, onZoom, onEdit, onDeleted }: {
             <div className="vx-review__body">
               <div className="vx-review__who">
                 Cây Cảnh Miền Tây<span className="vx-staff">Shop</span>
-                {r.repliedAt && <small suppressHydrationWarning>{timeAgo(r.repliedAt)}</small>}
+                {r.repliedAt && <small suppressHydrationWarning>{timeAgo(r.repliedAt, en)}</small>}
               </div>
               <span style={{ whiteSpace: 'pre-line' }}>{r.reply}</span>
             </div>
@@ -218,6 +225,8 @@ type NewPhoto = { file: File; url: string };
 function ReviewForm({ slug, mine, isPlant, onCancel, onDone }: {
   slug: string; mine: ReviewView | null; isPlant: boolean; onCancel: () => void; onDone: (msg: string) => void;
 }) {
+  const L = useL();
+  const en = L('', '1') === '1';
   const router = useRouter();
   const [stars, setStars] = useState(mine?.stars ?? 0);
   const [hover, setHover] = useState(0);
@@ -241,10 +250,10 @@ function ReviewForm({ slug, mine, isPlant, onCancel, onDone }: {
         const c = await compressImage(f);
         out.push({ file: c, url: URL.createObjectURL(c) });
       } catch {
-        setError('Không đọc được một ảnh, vui lòng chọn ảnh khác');
+        setError(L('Không đọc được một ảnh, vui lòng chọn ảnh khác', 'Could not read a photo, please choose another'));
       }
     }
-    if (files.length > room) setError(`Tối đa ${MAX_REVIEW_PHOTOS} ảnh`);
+    if (files.length > room) setError(L(`Tối đa ${MAX_REVIEW_PHOTOS} ảnh`, `Up to ${MAX_REVIEW_PHOTOS} photos`));
     setAdded((a) => [...a, ...out]);
     setBusy(false);
     if (fileRef.current) fileRef.current.value = '';
@@ -252,8 +261,8 @@ function ReviewForm({ slug, mine, isPlant, onCancel, onDone }: {
 
   const submit = () => {
     setError('');
-    if (!stars) return setError('Chọn số sao cho sản phẩm');
-    if (len < REVIEW_MIN_CHARS) return setError(`Viết ít nhất ${REVIEW_MIN_CHARS} ký tự để người mua sau tham khảo`);
+    if (!stars) return setError(L('Chọn số sao cho sản phẩm', 'Choose a star rating'));
+    if (len < REVIEW_MIN_CHARS) return setError(L(`Viết ít nhất ${REVIEW_MIN_CHARS} ký tự để người mua sau tham khảo`, `Please write at least ${REVIEW_MIN_CHARS} characters`));
     const fd = new FormData();
     fd.set('slug', slug);
     fd.set('stars', String(stars));
@@ -261,9 +270,9 @@ function ReviewForm({ slug, mine, isPlant, onCancel, onDone }: {
     keep.forEach((k) => fd.append('keep', k.file));
     added.forEach((a) => fd.append('photos', a.file));
     start(async () => {
-      const r = await saveReviewAction(fd).catch(() => ({ ok: false as const, error: 'Không gửi được. Vui lòng kiểm tra mạng và thử lại.' }));
+      const r = await saveReviewAction(fd).catch(() => ({ ok: false as const, error: L('Không gửi được. Vui lòng kiểm tra mạng và thử lại.', 'Could not send. Please check your connection and try again.') }));
       if (!r.ok) { setError(r.error); return; }
-      onDone(mine ? 'Đã cập nhật đánh giá của bạn.' : 'Cảm ơn bạn đã đánh giá! Chia sẻ của bạn giúp người mua sau chọn cây dễ hơn.');
+      onDone(mine ? L('Đã cập nhật đánh giá của bạn.', 'Your review was updated.') : L('Cảm ơn bạn đã đánh giá! Chia sẻ của bạn giúp người mua sau chọn cây dễ hơn.', 'Thanks for your review!'));
       router.refresh();
     });
   };
@@ -271,7 +280,7 @@ function ReviewForm({ slug, mine, isPlant, onCancel, onDone }: {
   const shown = hover || stars;
   return (
     <div className="rvw-form">
-      <b style={{ fontSize: '0.9375rem' }}>{mine ? 'Sửa đánh giá của bạn' : 'Viết đánh giá'}</b>
+      <b style={{ fontSize: '0.9375rem' }}>{mine ? L('Sửa đánh giá của bạn', 'Edit your review') : L('Viết đánh giá', 'Write a review')}</b>
       <div className="rvw-stars" onMouseLeave={() => setHover(0)}>
         {[1, 2, 3, 4, 5].map((s) => (
           <button
@@ -284,10 +293,10 @@ function ReviewForm({ slug, mine, isPlant, onCancel, onDone }: {
             onClick={() => setStars(s)}
           >★</button>
         ))}
-        <span>{shown ? STAR_LABEL[shown] : 'Chạm để chấm sao'}</span>
+        <span>{shown ? (en ? STAR_LABEL_EN : STAR_LABEL)[shown] : L('Chạm để chấm sao', 'Tap to rate')}</span>
       </div>
       <div className="ad-f">
-        <label htmlFor="rvw-text">Nhận xét của bạn</label>
+        <label htmlFor="rvw-text">{L('Nhận xét của bạn', 'Your review')}</label>
         <textarea
           id="rvw-text"
           className="vx-input"
@@ -296,29 +305,29 @@ function ReviewForm({ slug, mine, isPlant, onCancel, onDone }: {
           maxLength={REVIEW_MAX_CHARS}
           onChange={(e) => setContent(e.target.value)}
           placeholder={isPlant
-            ? 'Cây giao về thế nào? Lá, rễ, chậu, đóng gói… Sau vài tuần cây phát triển ra sao?'
-            : 'Sản phẩm dùng có hiệu quả không? Đóng gói, hạn dùng, giao hàng thế nào?'}
+            ? L('Cây giao về thế nào? Lá, rễ, chậu, đóng gói… Sau vài tuần cây phát triển ra sao?', 'How did the plant arrive? Leaves, roots, pot, packing… How is it doing after a few weeks?')
+            : L('Sản phẩm dùng có hiệu quả không? Đóng gói, hạn dùng, giao hàng thế nào?', 'Did it work well? Packing, expiry date, delivery?')}
         />
         <small style={{ color: len && len < REVIEW_MIN_CHARS ? 'var(--danger)' : 'var(--ink-muted)', fontSize: '0.75rem' }}>
-          {len}/{REVIEW_MAX_CHARS} ký tự{len < REVIEW_MIN_CHARS ? ` · tối thiểu ${REVIEW_MIN_CHARS}` : ''}
+          {len}/{REVIEW_MAX_CHARS} {L('ký tự', 'characters')}{len < REVIEW_MIN_CHARS ? ` · ${L('tối thiểu', 'min')} ${REVIEW_MIN_CHARS}` : ''}
         </small>
       </div>
       <div className="ad-f">
-        <span style={{ fontSize: '0.8125rem', fontWeight: 600 }}>Ảnh thực tế <small style={{ fontWeight: 400, color: 'var(--ink-muted)' }}>(không bắt buộc, tối đa {MAX_REVIEW_PHOTOS} ảnh)</small></span>
+        <span style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{L('Ảnh thực tế', 'Photos')} <small style={{ fontWeight: 400, color: 'var(--ink-muted)' }}>({L('không bắt buộc, tối đa', 'optional, up to')} {MAX_REVIEW_PHOTOS} {L('ảnh', 'photos')})</small></span>
         <div className="rvw-pics">
           {keep.map((k) => (
             <span key={k.file} style={{ backgroundImage: `url(${k.url})` }}>
-              <button type="button" aria-label="Bỏ ảnh" onClick={() => setKeep((x) => x.filter((y) => y.file !== k.file))}>✕</button>
+              <button type="button" aria-label={L('Bỏ ảnh', 'Remove photo')} onClick={() => setKeep((x) => x.filter((y) => y.file !== k.file))}>✕</button>
             </span>
           ))}
           {added.map((a) => (
             <span key={a.url} style={{ backgroundImage: `url(${a.url})` }}>
-              <button type="button" aria-label="Bỏ ảnh" onClick={() => setAdded((x) => x.filter((y) => y.url !== a.url))}>✕</button>
+              <button type="button" aria-label={L('Bỏ ảnh', 'Remove photo')} onClick={() => setAdded((x) => x.filter((y) => y.url !== a.url))}>✕</button>
             </span>
           ))}
           {room > 0 && (
             <button type="button" className="rvw-add" onClick={() => fileRef.current?.click()} disabled={busy}>
-              <Icon name="plus" />{busy ? 'Đang nén…' : 'Thêm ảnh'}
+              <Icon name="plus" />{busy ? L('Đang nén…', 'Compressing…') : L('Thêm ảnh', 'Add photo')}
             </button>
           )}
           <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => pick(e.target.files)} />
@@ -327,9 +336,9 @@ function ReviewForm({ slug, mine, isPlant, onCancel, onDone }: {
       {error && <p role="alert" style={{ color: 'var(--danger)', fontSize: '0.8125rem', margin: 0 }}>{error}</p>}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <button type="button" className="vx-btn vx-btn--primary" onClick={submit} disabled={pending || busy}>
-          {pending ? 'Đang gửi…' : mine ? 'Lưu đánh giá' : 'Gửi đánh giá'}
+          {pending ? L('Đang gửi…', 'Sending…') : mine ? L('Lưu đánh giá', 'Save review') : L('Gửi đánh giá', 'Submit review')}
         </button>
-        <button type="button" className="vx-btn vx-btn--ghost" onClick={onCancel} disabled={pending}>Hủy</button>
+        <button type="button" className="vx-btn vx-btn--ghost" onClick={onCancel} disabled={pending}>{L('Hủy', 'Cancel')}</button>
       </div>
     </div>
   );

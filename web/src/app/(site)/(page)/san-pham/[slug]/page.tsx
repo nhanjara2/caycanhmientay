@@ -28,6 +28,7 @@ import { movedOrNotFound, redirectIfMoved, withSeo } from '@/server/seo-cms';
 import { JsonLd } from '@/components/JsonLd';
 import { faqLd, productLd } from '@/lib/jsonld';
 import { one, type SearchParams } from '@/lib/url-params';
+import { currentLang } from '@/i18n/request';
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<SearchParams> };
 
@@ -45,51 +46,53 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   ));
 }
 
-function FengShuiBlock({ f }: { f: NonNullable<Product['fengshui']> }) {
+function FengShuiBlock({ f, en }: { f: NonNullable<Product['fengshui']>; en: boolean }) {
+  const L = (vi: string, e: string) => (en ? e : vi);
   return (
     <>
-      <h3 id="phong-thuy">Ý nghĩa phong thủy</h3>
+      <h3 id="phong-thuy">{L('Ý nghĩa phong thủy', 'Feng shui meaning')}</h3>
       <dl className="app-fs">
         {f.elements.length > 0 && (
-          <div><dt>Hợp mệnh</dt><dd>{f.elements.map((e) => <span key={e} className={`app-fs__el app-fs__el--${e}`}>{elementName(e)}</span>)}</dd></div>
+          <div><dt>{L('Hợp mệnh', 'Suits element')}</dt><dd>{f.elements.map((e) => <span key={e} className={`app-fs__el app-fs__el--${e}`}>{elementName(e)}</span>)}</dd></div>
         )}
-        {f.ages && <div><dt>Hợp tuổi</dt><dd>{f.ages}</dd></div>}
-        {f.placement && <div><dt>Vị trí đặt</dt><dd>{f.placement}</dd></div>}
+        {f.ages && <div><dt>{L('Hợp tuổi', 'Suits age')}</dt><dd>{f.ages}</dd></div>}
+        {f.placement && <div><dt>{L('Vị trí đặt', 'Placement')}</dt><dd>{f.placement}</dd></div>}
       </dl>
       {f.meaning && <p style={{ whiteSpace: 'pre-line' }}>{f.meaning}</p>}
     </>
   );
 }
 
-function Content({ p, faq }: { p: Product; faq: boolean }) {
+function Content({ p, faq, en }: { p: Product; faq: boolean; en: boolean }) {
+  const L = (vi: string, e: string) => (en ? e : vi);
   const isPlant = p.ship === 'plant';
   const care = isPlant ? careSteps(p) : [];
-  const notes = isPlant && care.length ? careNotes(p) : [];
+  const notes = isPlant && care.length ? careNotes(p, en ? 'en' : 'vi') : [];
   return (
     <div className="vx-content">
       <nav className="vx-toc">
-        <a href="#mo-ta" aria-current="true">Mô tả sản phẩm</a>
+        <a href="#mo-ta" aria-current="true">{L('Mô tả sản phẩm', 'Description')}</a>
         {p.youtubeId && <a href="#video">Video</a>}
-        {p.fengshui && <a href="#phong-thuy">Phong thủy</a>}
-        <a href="#cach-dung">{isPlant ? 'Cách chăm sóc' : 'Cách sử dụng'}</a>
-        <a href="#luu-y">Lưu ý</a>
-        {faq && <a href="#hoi-dap">Câu hỏi thường gặp</a>}
+        {p.fengshui && <a href="#phong-thuy">{L('Phong thủy', 'Feng shui')}</a>}
+        <a href="#cach-dung">{isPlant ? L('Cách chăm sóc', 'Care') : L('Cách sử dụng', 'How to use')}</a>
+        <a href="#luu-y">{L('Lưu ý', 'Notes')}</a>
+        {faq && <a href="#hoi-dap">{L('Câu hỏi thường gặp', 'FAQ')}</a>}
       </nav>
       <article className="vx-article">
-        <h2 id="mo-ta">{p.name} là gì?</h2>
+        <h2 id="mo-ta">{L(`${p.name} là gì?`, `What is ${p.name}?`)}</h2>
         <p>{p.lead}</p>
         {p.body && <PostBody body={p.body} products={new Map()} title={p.name} />}
         {p.youtubeId && (
           <>
-            <h3 id="video">Video {isPlant ? 'thực tế tại vườn' : 'hướng dẫn'}</h3>
+            <h3 id="video">{isPlant ? L('Video thực tế tại vườn', 'Video from our nursery') : L('Video hướng dẫn', 'How-to video')}</h3>
             <YouTubeLite id={p.youtubeId} title={`Video ${p.name}`} src={youtubeEmbed(p.youtubeId)} />
             <p className="app-yt-more">
-              Xem thêm video chăm cây trên <a href={YOUTUBE_URL} target="_blank" rel="noreferrer">kênh YouTube Cây Cảnh Miền Tây</a>
+              {L('Xem thêm video chăm cây trên', 'More plant-care videos on')} <a href={YOUTUBE_URL} target="_blank" rel="noreferrer">{L('kênh YouTube Cây Cảnh Miền Tây', 'the Cây Cảnh Miền Tây YouTube channel')}</a>
             </p>
           </>
         )}
-        {p.fengshui && <FengShuiBlock f={p.fengshui} />}
-        <h3 id="cach-dung">{isPlant ? 'Cách chăm sóc' : 'Cách sử dụng'}</h3>
+        {p.fengshui && <FengShuiBlock f={p.fengshui} en={en} />}
+        <h3 id="cach-dung">{isPlant ? L('Cách chăm sóc', 'Care guide') : L('Cách sử dụng', 'How to use')}</h3>
         <ul>
           {(care.length ? care : p.specs.slice(0, 4)).map(([k, v]) => (
             <li key={k}><b>{k}:</b> {v}.</li>
@@ -99,21 +102,21 @@ function Content({ p, faq }: { p: Product; faq: boolean }) {
           <Icon name="alert" />
           <div>
             {p.pesticide ? (
-              <><b>Lưu ý an toàn:</b> Đọc kỹ hướng dẫn trên bao bì, đeo găng tay và khẩu trang khi pha, để xa tầm tay trẻ em và vật nuôi. Tuân thủ thời gian cách ly trước khi thu hoạch.</>
+              <><b>{L('Lưu ý an toàn:', 'Safety:')}</b> {L('Đọc kỹ hướng dẫn trên bao bì, đeo găng tay và khẩu trang khi pha, để xa tầm tay trẻ em và vật nuôi. Tuân thủ thời gian cách ly trước khi thu hoạch.', 'Read the label carefully, wear gloves and a mask when mixing, keep away from children and pets, and respect the pre-harvest interval.')}</>
             ) : notes.length ? (
-              <><b>Lưu ý khi cây mới về:</b><ul>{notes.map((n) => <li key={n}>{n}</li>)}</ul></>
+              <><b>{L('Lưu ý khi cây mới về:', 'When your plant arrives:')}</b><ul>{notes.map((n) => <li key={n}>{n}</li>)}</ul></>
             ) : isPlant ? (
-              <><b>Lưu ý:</b> Tuần đầu để cây chỗ sáng nhẹ cho quen môi trường rồi mới chuyển ra vị trí chính.</>
+              <><b>{L('Lưu ý:', 'Note:')}</b> {L('Tuần đầu để cây chỗ sáng nhẹ cho quen môi trường rồi mới chuyển ra vị trí chính.', 'Keep the plant in gentle light for the first week before moving it to its final spot.')}</>
             ) : (
-              <><b>Lưu ý:</b> Bảo quản nơi khô ráo, thoáng mát, tránh ánh nắng trực tiếp.</>
+              <><b>{L('Lưu ý:', 'Note:')}</b> {L('Bảo quản nơi khô ráo, thoáng mát, tránh ánh nắng trực tiếp.', 'Store in a cool, dry place away from direct sunlight.')}</>
             )}
           </div>
         </div>
         <div className="vx-expert">
           <span className="vx-avatar">KS</span>
           <div>
-            <b>Kỹ sư nông nghiệp Trần Minh An</b> <span className="vx-badge vx-badge--success">Đã kiểm duyệt</span>
-            <p>Tốt nghiệp ĐH Nông Lâm TP.HCM, 8 năm kinh nghiệm cây kiểng lá và bảo vệ thực vật.</p>
+            <b>{L('Kỹ sư nông nghiệp Trần Minh An', 'Agricultural engineer Trần Minh An')}</b> <span className="vx-badge vx-badge--success">{L('Đã kiểm duyệt', 'Reviewed')}</span>
+            <p>{L('Tốt nghiệp ĐH Nông Lâm TP.HCM, 8 năm kinh nghiệm cây kiểng lá và bảo vệ thực vật.', 'Graduate of Nong Lam University HCMC, 8 years of experience with foliage plants and plant protection.')}</p>
           </div>
         </div>
       </article>
@@ -127,6 +130,8 @@ export default async function ProductPage({ params, searchParams }: Props) {
   const p = await getProduct(slug);
   // Sản phẩm đã xóa / ẩn: có chuyển hướng (admin SEO) thì 308 sang trang mới, không thì 404.
   if (!p) return movedOrNotFound(`/san-pham/${slug}`);
+  const en = (await currentLang()) === 'en';
+  const L = (vi: string, e: string) => (en ? e : vi);
   const [together, user] = await Promise.all([boughtTogether(p), getCurrentUser()]);
   const [wishlisted, reviews, questions, faq] = await Promise.all([
     user ? isWishlisted(user.id, p.slug) : false,
@@ -135,10 +140,12 @@ export default async function ProductPage({ params, searchParams }: Props) {
     productFaqs(p),
   ]);
   // Câu admin nhập trước, rồi câu tự sinh từ thông số chăm sóc (bỏ câu trùng)
-  const asked = new Set(faq.map((f) => f.question.trim().toLowerCase()));
+  // Bản tiếng Anh: câu hỏi admin nhập (tiếng Việt, chưa có bản dịch) không hiện
+  const shopFaq = en ? [] : faq;
+  const asked = new Set(shopFaq.map((f) => f.question.trim().toLowerCase()));
   const faqs = [
-    ...faq.map((f) => ({ key: `f${f.id}`, question: f.question, answer: f.answer })),
-    ...(p.ship === 'plant' ? careFaqs(p) : []).filter((f) => !asked.has(f.question.toLowerCase())).map((f, i) => ({ key: `c${i}`, ...f })),
+    ...shopFaq.map((f) => ({ key: `f${f.id}`, question: f.question, answer: f.answer })),
+    ...(p.ship === 'plant' ? careFaqs(p, en ? 'en' : 'vi') : []).filter((f) => !asked.has(f.question.toLowerCase())).map((f, i) => ({ key: `c${i}`, ...f })),
   ];
   // Số sao ở BuyBox tính từ đánh giá thật (products.rating/reviews là số mẫu, không dùng để hiển thị)
   const rs = reviewStats(reviews);
@@ -165,7 +172,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
       })} />
       <Breadcrumb
         items={[
-          { label: 'Trang chủ', href: '/' },
+          { label: L('Trang chủ', 'Home'), href: '/' },
           { label: label.cat, href: `/danh-muc/${p.category}` },
           ...(label.sub ? [{ label: label.sub, href: `/danh-muc/${p.category}/${p.sub}` }] : []),
           { label: p.name },
@@ -175,29 +182,29 @@ export default async function ProductPage({ params, searchParams }: Props) {
         <GalleryCol>
           <ProductGallery p={p} start={p.options[selected]?.image} />
           <p className="vx-gal__note">
-            {p.ship === 'plant' ? 'Mỗi cây là một cá thể, dáng lá có thể khác đôi chút so với ảnh.' : 'Bao bì có thể thay đổi theo lô sản xuất.'}
+            {p.ship === 'plant' ? L('Mỗi cây là một cá thể, dáng lá có thể khác đôi chút so với ảnh.', 'Every plant is unique; leaf shape may differ slightly from the photo.') : L('Bao bì có thể thay đổi theo lô sản xuất.', 'Packaging may vary by batch.')}
           </p>
           <div className="vx-trust">
-            <div><Icon name="truck" /><span><b>{p.ship === 'plant' ? 'Giao cây an toàn' : 'Giao nhanh 2h'}</b></span></div>
-            <div><Icon name="shield" /><span><b>{p.ship === 'plant' ? 'Bảo hành 7 ngày' : 'Hàng chính hãng'}</b></span></div>
-            <div><Icon name="chat" /><span><b>Kỹ sư tư vấn</b></span></div>
+            <div><Icon name="truck" /><span><b>{p.ship === 'plant' ? L('Giao cây an toàn', 'Safe plant delivery') : L('Giao nhanh 2h', 'Fast delivery')}</b></span></div>
+            <div><Icon name="shield" /><span><b>{p.ship === 'plant' ? L('Bảo hành 7 ngày', '7-day warranty') : L('Hàng chính hãng', 'Genuine products')}</b></span></div>
+            <div><Icon name="chat" /><span><b>{L('Kỹ sư tư vấn', 'Expert advice')}</b></span></div>
           </div>
         </GalleryCol>
         <BuyBox product={{ ...p, rating: rs.avg, reviews: rs.count }} category={{ ...label, extra }} wishlisted={wishlisted} initialOpt={selected} />
       </section>
 
-      <Content p={p} faq={faqs.length > 0} />
+      <Content p={p} faq={faqs.length > 0} en={en} />
 
       {together.length > 0 && (
         <section className="vx-card">
-          <SectionHeader icon="cart" title="Thường mua kèm" />
+          <SectionHeader icon="cart" title={L('Thường mua kèm', 'Frequently bought together')} />
           <ProductGrid products={together} />
         </section>
       )}
 
       {faqs.length > 0 && (
         <section className="vx-card" id="hoi-dap">
-          <h3 className="vx-card__title">Câu hỏi thường gặp</h3>
+          <h3 className="vx-card__title">{L('Câu hỏi thường gặp', 'Frequently asked questions')}</h3>
           <div className="vx-faq">
             {faqs.map((f, i) => (
               <details key={f.key} open={i === 0}>

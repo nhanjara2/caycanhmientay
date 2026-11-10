@@ -1,5 +1,6 @@
 'use client';
 
+import { useL } from '@/lib/use-l';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { answerAsCustomerAction, askQuestionAction, deleteAnswerAction, deleteQuestionAction } from '@/app/actions/reviews';
@@ -18,6 +19,8 @@ const PAGE = 5;
  * người đã mua sản phẩm thấy cả câu hỏi chưa ai trả lời để chia sẻ kinh nghiệm.
  */
 export function ProductQnA({ slug, items, pesticide }: { slug: string; items: QuestionView[]; pesticide?: boolean }) {
+  const L = useL();
+  const en = L('', '1') === '1';
   const { user, ready, openLogin } = useAuth();
   const router = useRouter();
   const [text, setText] = useState('');
@@ -39,10 +42,10 @@ export function ProductQnA({ slug, items, pesticide }: { slug: string; items: Qu
   const list = [...mine, ...others];
 
   const send = (content: string) => start(async () => {
-    const r = await askQuestionAction({ slug, content }).catch(() => ({ ok: false as const, error: 'Không gửi được. Vui lòng kiểm tra mạng và thử lại.' }));
+    const r = await askQuestionAction({ slug, content }).catch(() => ({ ok: false as const, error: L('Không gửi được. Vui lòng kiểm tra mạng và thử lại.', 'Could not send. Please check your connection and try again.') }));
     if (!r.ok) { setError(r.error); return; }
     setText('');
-    setNotice('Đã gửi câu hỏi. Kỹ sư sẽ trả lời trong 2 giờ làm việc, bạn sẽ nhận thông báo khi có trả lời.');
+    setNotice(L('Đã gửi câu hỏi. Kỹ sư sẽ trả lời trong 2 giờ làm việc, bạn sẽ nhận thông báo khi có trả lời.', 'Question sent. Our engineer will reply within 2 working hours.'));
     router.refresh();
   });
 
@@ -50,7 +53,7 @@ export function ProductQnA({ slug, items, pesticide }: { slug: string; items: Qu
     setError('');
     setNotice('');
     if (!ready) return;
-    if (len < QUESTION_MIN_CHARS) { setError(`Câu hỏi cần ít nhất ${QUESTION_MIN_CHARS} ký tự`); boxRef.current?.focus(); return; }
+    if (len < QUESTION_MIN_CHARS) { setError(L(`Câu hỏi cần ít nhất ${QUESTION_MIN_CHARS} ký tự`, `Please write at least ${QUESTION_MIN_CHARS} characters`)); boxRef.current?.focus(); return; }
     if (!user) { saveAfterLogin({ kind: 'question', slug, text }); openLogin(); return; }
     send(text);
   };
@@ -76,7 +79,7 @@ export function ProductQnA({ slug, items, pesticide }: { slug: string; items: Qu
   return (
     <section className="vx-card app-qa" id="cau-hoi">
       <h2 style={{ margin: 0, fontSize: '1.125rem' }}>
-        Hỏi đáp <small style={{ fontWeight: 400, color: 'var(--ink-muted)', fontSize: '0.875rem' }}>({list.length} câu hỏi)</small>
+        {L('Hỏi đáp', 'Questions & answers')} <small style={{ fontWeight: 400, color: 'var(--ink-muted)', fontSize: '0.875rem' }}>({list.length} {L('câu hỏi', 'questions')})</small>
       </h2>
       <div className="vx-ask">
         <textarea
@@ -85,15 +88,15 @@ export function ProductQnA({ slug, items, pesticide }: { slug: string; items: Qu
           value={text}
           maxLength={QUESTION_MAX_CHARS}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Nhập câu hỏi về cây, cách chăm, giao hàng… Kỹ sư Cây Cảnh Miền Tây sẽ trả lời trong 2 giờ làm việc."
-          aria-label="Câu hỏi của bạn"
+          placeholder={L('Nhập câu hỏi về cây, cách chăm, giao hàng… Kỹ sư Cây Cảnh Miền Tây sẽ trả lời trong 2 giờ làm việc.', 'Ask about this plant, care, delivery… Our engineer replies within 2 working hours.')}
+          aria-label={L('Câu hỏi của bạn', 'Your question')}
         />
         <div className="app-qa__bar">
           <small style={{ color: 'var(--ink-muted)' }}>
-            {len ? `${len}/${QUESTION_MAX_CHARS} ký tự` : !user ? 'Đăng nhập để gửi câu hỏi và nhận thông báo khi có trả lời' : ''}
+            {len ? `${len}/${QUESTION_MAX_CHARS} ${L('ký tự', 'characters')}` : !user ? L('Đăng nhập để gửi câu hỏi và nhận thông báo khi có trả lời', 'Sign in to ask and get notified of answers') : ''}
           </small>
           <button type="button" className="vx-btn vx-btn--primary vx-btn--sm" onClick={submit} disabled={pending}>
-            {pending ? 'Đang gửi…' : 'Gửi câu hỏi'}
+            {pending ? L('Đang gửi…', 'Sending…') : L('Gửi câu hỏi', 'Ask question')}
           </button>
         </div>
         {error && <p role="alert" style={{ color: 'var(--danger)', fontSize: '0.8125rem', margin: 0 }}>{error}</p>}
@@ -102,18 +105,18 @@ export function ProductQnA({ slug, items, pesticide }: { slug: string; items: Qu
 
       {others.length > 1 && (
         <div className="vx-row" style={{ flexWrap: 'wrap' }}>
-          <span className="vx-spec">Lọc theo:</span>
-          {([['new', 'Mới nhất'], ['old', 'Cũ nhất'], ['helpful', 'Hữu ích nhất']] as const).map(([k, label]) => (
+          <span className="vx-spec">{L('Lọc theo:', 'Filter:')}</span>
+          {([['new', L('Mới nhất', 'Newest')], ['old', L('Cũ nhất', 'Oldest')], ['helpful', L('Hữu ích nhất', 'Most helpful')]] as const).map(([k, label]) => (
             <button key={k} type="button" className="vx-chip" aria-pressed={sort === k} onClick={() => { setSort(k); setShown(PAGE); }}>{label}</button>
           ))}
         </div>
       )}
 
       {list.slice(0, shown).map((q) => <QuestionItem key={q.id} slug={slug} q={q} pesticide={pesticide} />)}
-      {!list.length && <p style={{ color: 'var(--ink-muted)', fontSize: '0.875rem', margin: 0 }}>Chưa có câu hỏi nào. Bạn cần tư vấn gì về sản phẩm này?</p>}
+      {!list.length && <p style={{ color: 'var(--ink-muted)', fontSize: '0.875rem', margin: 0 }}>{L('Chưa có câu hỏi nào. Bạn cần tư vấn gì về sản phẩm này?', 'No questions yet. Anything you want to ask about this product?')}</p>}
       {list.length > shown && (
         <button type="button" className="vx-btn vx-btn--ghost" style={{ alignSelf: 'center' }} onClick={() => setShown((n) => n + 10)}>
-          Xem thêm {list.length - shown} câu hỏi
+          {L(`Xem thêm ${list.length - shown} câu hỏi`, `Show ${list.length - shown} more questions`)}
         </button>
       )}
     </section>
@@ -121,6 +124,8 @@ export function ProductQnA({ slug, items, pesticide }: { slug: string; items: Qu
 }
 
 function QuestionItem({ slug, q, pesticide }: { slug: string; q: QuestionView; pesticide?: boolean }) {
+  const L = useL();
+  const en = L('', '1') === '1';
   const { user, ready, openLogin } = useAuth();
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -143,9 +148,9 @@ function QuestionItem({ slug, q, pesticide }: { slug: string; q: QuestionView; p
   }, [ready, user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const remove = () => {
-    if (!confirm('Xóa câu hỏi này?')) return;
+    if (!confirm(L('Xóa câu hỏi này?', 'Delete this question?'))) return;
     start(async () => {
-      const r = await deleteQuestionAction(q.id).catch(() => ({ ok: false as const, error: 'Không xóa được, vui lòng thử lại' }));
+      const r = await deleteQuestionAction(q.id).catch(() => ({ ok: false as const, error: L('Không xóa được, vui lòng thử lại', 'Could not delete, please try again') }));
       if (!r.ok) { alert(r.error); return; }
       router.refresh();
     });
@@ -161,14 +166,14 @@ function QuestionItem({ slug, q, pesticide }: { slug: string; q: QuestionView; p
 
   const send = () => {
     setError('');
-    if (len < QUESTION_MIN_CHARS) { setError(`Câu trả lời cần ít nhất ${QUESTION_MIN_CHARS} ký tự`); boxRef.current?.focus(); return; }
+    if (len < QUESTION_MIN_CHARS) { setError(L(`Câu trả lời cần ít nhất ${QUESTION_MIN_CHARS} ký tự`, `Please write at least ${QUESTION_MIN_CHARS} characters`)); boxRef.current?.focus(); return; }
     start(async () => {
       const r = await answerAsCustomerAction({ questionId: q.id, content: text })
-        .catch(() => ({ ok: false as const, error: 'Không gửi được. Vui lòng kiểm tra mạng và thử lại.' }));
+        .catch(() => ({ ok: false as const, error: L('Không gửi được. Vui lòng kiểm tra mạng và thử lại.', 'Could not send. Please check your connection and try again.') }));
       if (!r.ok) { setError(r.error); return; }
       setText('');
       setReplying(false);
-      setNotice(q.mine ? 'Đã gửi.' : 'Cảm ơn bạn đã chia sẻ! Người hỏi sẽ nhận được thông báo.');
+      setNotice(q.mine ? L('Đã gửi.', 'Sent.') : L('Cảm ơn bạn đã chia sẻ! Người hỏi sẽ nhận được thông báo.', 'Thanks for sharing! The asker will be notified.'));
       router.refresh();
     });
   };
@@ -182,15 +187,15 @@ function QuestionItem({ slug, q, pesticide }: { slug: string; q: QuestionView; p
     <div className="vx-review">
       <span className="vx-avatar vx-avatar--sm">{initials(q.name)}</span>
       <div className="vx-review__body">
-        <div className="vx-review__who">{q.name}<small suppressHydrationWarning>{timeAgo(q.createdAt)}</small></div>
+        <div className="vx-review__who">{q.name}<small suppressHydrationWarning>{timeAgo(q.createdAt, en)}</small></div>
         <span style={{ whiteSpace: 'pre-line' }}>{q.content}</span>
         <div className="vx-review__acts">
           {!q.askBuyer && <HelpfulButton kind="question" id={q.id} count={q.helpful} voted={q.voted} own={q.mine} />}
-          {q.open && !replying && act(q.mine ? 'Bổ sung' : 'Trả lời', openReply)}
+          {q.open && !replying && act(q.mine ? L('Bổ sung', 'Add details') : L('Trả lời', 'Reply'), openReply)}
           {q.mine && (
             <>
-              <span>Câu hỏi của bạn</span>
-              {act(pending && !replying ? 'Đang xóa…' : 'Xóa', remove)}
+              <span>{L('Câu hỏi của bạn', 'Your question')}</span>
+              {act(pending && !replying ? L('Đang xóa…', 'Deleting…') : L('Xóa', 'Delete'), remove)}
             </>
           )}
         </div>
@@ -199,8 +204,8 @@ function QuestionItem({ slug, q, pesticide }: { slug: string; q: QuestionView; p
             <span className="vx-avatar vx-avatar--sm vx-avatar--shop">MT</span>
             <div className="vx-review__body">
               <div className="vx-review__who">
-                Cây Cảnh Miền Tây<span className="vx-staff">Kỹ sư</span>
-                {q.answeredAt && <small suppressHydrationWarning>{timeAgo(q.answeredAt)}</small>}
+                Cây Cảnh Miền Tây<span className="vx-staff">{L('Kỹ sư', 'Engineer')}</span>
+                {q.answeredAt && <small suppressHydrationWarning>{timeAgo(q.answeredAt, en)}</small>}
               </div>
               <span style={{ whiteSpace: 'pre-line' }}>{q.answer}</span>
             </div>
@@ -208,13 +213,13 @@ function QuestionItem({ slug, q, pesticide }: { slug: string; q: QuestionView; p
         )}
         {q.answers.map((a) => <AnswerItem key={a.id} a={a} />)}
         {pesticide && customerAnswers && (
-          <small className="app-qa__wait"><Icon name="alert" size={14} /> Câu trả lời của khách chỉ để tham khảo — liều dùng thuốc làm theo bao bì và hướng dẫn của kỹ sư.</small>
+          <small className="app-qa__wait"><Icon name="alert" size={14} /> {L('Câu trả lời của khách chỉ để tham khảo — liều dùng thuốc làm theo bao bì và hướng dẫn của kỹ sư.', 'Customer answers are for reference only — follow the label and our engineer for dosage.')}</small>
         )}
         {!q.answer && q.mine && (
-          <small className="app-qa__wait"><Icon name="clock" size={14} /> Đang chờ shop trả lời — bạn sẽ nhận thông báo khi có trả lời.</small>
+          <small className="app-qa__wait"><Icon name="clock" size={14} /> {L('Đang chờ shop trả lời — bạn sẽ nhận thông báo khi có trả lời.', 'Waiting for the shop to reply — you will be notified.')}</small>
         )}
         {q.askBuyer && !replying && (
-          <small className="app-qa__wait"><Icon name="chat" size={14} /> Chưa có câu trả lời. Bạn đã mua sản phẩm này — hãy chia sẻ kinh nghiệm giúp người hỏi.</small>
+          <small className="app-qa__wait"><Icon name="chat" size={14} /> {L('Chưa có câu trả lời. Bạn đã mua sản phẩm này — hãy chia sẻ kinh nghiệm giúp người hỏi.', 'No answer yet. You bought this product — share your experience.')}</small>
         )}
         {replying && (
           <div className="app-qa__form">
@@ -224,14 +229,14 @@ function QuestionItem({ slug, q, pesticide }: { slug: string; q: QuestionView; p
               value={text}
               maxLength={QUESTION_MAX_CHARS}
               onChange={(e) => setText(e.target.value)}
-              placeholder={q.mine ? 'Bổ sung thêm thông tin cho câu hỏi của bạn…' : 'Chia sẻ kinh nghiệm của bạn với sản phẩm này…'}
-              aria-label="Câu trả lời của bạn"
+              placeholder={q.mine ? L('Bổ sung thêm thông tin cho câu hỏi của bạn…', 'Add more details to your question…') : L('Chia sẻ kinh nghiệm của bạn với sản phẩm này…', 'Share your experience with this product…')}
+              aria-label={L('Câu trả lời của bạn', 'Your answer')}
             />
             <div className="app-qa__bar">
-              <small style={{ color: 'var(--ink-muted)' }}>{len ? `${len}/${QUESTION_MAX_CHARS} ký tự` : 'Không ghi số điện thoại, đường link'}</small>
+              <small style={{ color: 'var(--ink-muted)' }}>{len ? `${len}/${QUESTION_MAX_CHARS} ${L('ký tự', 'characters')}` : L('Không ghi số điện thoại, đường link', 'No phone numbers or links')}</small>
               <span style={{ display: 'flex', gap: 6 }}>
-                <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" onClick={() => { setReplying(false); setError(''); }} disabled={pending}>Hủy</button>
-                <button type="button" className="vx-btn vx-btn--primary vx-btn--sm" onClick={send} disabled={pending}>{pending ? 'Đang gửi…' : 'Gửi'}</button>
+                <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" onClick={() => { setReplying(false); setError(''); }} disabled={pending}>{L('Hủy', 'Cancel')}</button>
+                <button type="button" className="vx-btn vx-btn--primary vx-btn--sm" onClick={send} disabled={pending}>{pending ? L('Đang gửi…', 'Sending…') : L('Gửi', 'Send')}</button>
               </span>
             </div>
             {error && <p role="alert" style={{ color: 'var(--danger)', fontSize: '0.8125rem', margin: 0 }}>{error}</p>}
@@ -245,12 +250,14 @@ function QuestionItem({ slug, q, pesticide }: { slug: string; q: QuestionView; p
 
 /** Câu trả lời của khách khác (hoặc nhân viên dùng tài khoản trên web) dưới câu hỏi. */
 function AnswerItem({ a }: { a: AnswerView }) {
+  const L = useL();
+  const en = L('', '1') === '1';
   const router = useRouter();
   const [pending, start] = useTransition();
   const remove = () => {
-    if (!confirm('Xóa câu trả lời này?')) return;
+    if (!confirm(L('Xóa câu trả lời này?', 'Delete this answer?'))) return;
     start(async () => {
-      const r = await deleteAnswerAction(a.id).catch(() => ({ ok: false as const, error: 'Không xóa được, vui lòng thử lại' }));
+      const r = await deleteAnswerAction(a.id).catch(() => ({ ok: false as const, error: L('Không xóa được, vui lòng thử lại', 'Could not delete, please try again') }));
       if (!r.ok) { alert(r.error); return; }
       router.refresh();
     });
@@ -261,17 +268,17 @@ function AnswerItem({ a }: { a: AnswerView }) {
       <div className="vx-review__body">
         <div className="vx-review__who">
           {a.name}
-          {a.staff ? <span className="vx-staff">Nhân viên</span> : a.verified && <span className="vx-verified">Đã mua hàng</span>}
-          <small suppressHydrationWarning>{timeAgo(a.createdAt)}</small>
+          {a.staff ? <span className="vx-staff">{L('Nhân viên', 'Staff')}</span> : a.verified && <span className="vx-verified">{L('Đã mua hàng', 'Verified buyer')}</span>}
+          <small suppressHydrationWarning>{timeAgo(a.createdAt, en)}</small>
         </div>
         <span style={{ whiteSpace: 'pre-line' }}>{a.content}</span>
         <div className="vx-review__acts">
           <HelpfulButton kind="answer" id={a.id} count={a.helpful} voted={a.voted} own={a.mine} />
           {a.mine && (
             <>
-              <span>Câu trả lời của bạn</span>
+              <span>{L('Câu trả lời của bạn', 'Your answer')}</span>
               <a role="button" tabIndex={0} onClick={pending ? undefined : remove} onKeyDown={(e) => e.key === 'Enter' && remove()}>
-                {pending ? 'Đang xóa…' : 'Xóa'}
+                {pending ? L('Đang xóa…', 'Deleting…') : L('Xóa', 'Delete')}
               </a>
             </>
           )}

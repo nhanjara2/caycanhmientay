@@ -1,5 +1,6 @@
 'use client';
 
+import { useL } from '@/lib/use-l';
 import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
 import { imageAlt, type Product } from '@/lib/catalog';
 import { responsive, thumbUrl } from '@/lib/images';
@@ -15,6 +16,8 @@ type Lens = { x: number; y: number; w: number; h: number; size: string; pos: str
 /** Cột ảnh trang chi tiết: dính khi cuộn tới hết khối sản phẩm (CSS `.vx-pd > .vx-gal`).
  *  Ghi chiều cao cột vào `--gal-h` để cột cao hơn màn hình thì dính theo mép dưới thay vì bị che đáy. */
 export function GalleryCol({ children }: { children: ReactNode }) {
+  const L = useL();
+  const en = L('', '1') === '1';
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = ref.current;
@@ -30,6 +33,8 @@ export function GalleryCol({ children }: { children: ReactNode }) {
  *  Máy có chuột: rê lên ảnh lớn hiện kính lúp, khung phóng to phủ lên cột thông tin bên phải.
  *  `start` = ảnh mở sẵn (ảnh riêng của quy cách chọn sẵn); chọn quy cách khác có ảnh riêng thì đổi theo (lib/variant-image.ts). */
 export function ProductGallery({ p, start = 0 }: { p: Product; start?: number }) {
+  const L = useL();
+  const en = L('', '1') === '1';
   const images = p.images ?? [];
   const [cur, setCur] = useState(() => (start < images.length ? start : 0));
   const mainRef = useRef<HTMLDivElement>(null);
@@ -72,7 +77,7 @@ export function ProductGallery({ p, start = 0 }: { p: Product; start?: number })
         onMouseLeave={() => setLens(null)}
       >
         {images.length ? <img ref={imgRef} {...responsive(images[cur], '(max-width: 47.9375em) 100vw, 600px')} alt={imageAlt(p, cur)} fetchPriority={cur === start ? 'high' : undefined} /> : <Art name={p.icon} />}
-        {p.ship === 'plant' && images.length > 0 && <span className="vx-gal__tag vx-badge vx-badge--origin">Ảnh chụp tại vườn</span>}
+        {p.ship === 'plant' && images.length > 0 && <span className="vx-gal__tag vx-badge vx-badge--origin">{L('Ảnh chụp tại vườn', 'Photo taken at our nursery')}</span>}
         {/* Dấu "Ảnh thật 100%" nằm trong dải sticker; chưa có ảnh thì không có dấu này */}
         <ProductStickers p={p} size="lg" real={images.length > 0} />
         {lens && <span className="app-zoom-lens" style={{ left: lens.x, top: lens.y, width: lens.w, height: lens.h }} aria-hidden />}
@@ -87,7 +92,7 @@ export function ProductGallery({ p, start = 0 }: { p: Product; start?: number })
       {images.length > 1 && (
         <div className="vx-thumbs">
           {images.map((src, i) => (
-            <button key={src} type="button" className="vx-thumb" aria-current={i === cur} aria-label={`Ảnh ${i + 1}`} onClick={() => setCur(i)} onMouseEnter={() => setCur(i)}>
+            <button key={src} type="button" className="vx-thumb" aria-current={i === cur} aria-label={`${L('Ảnh', 'Photo')} ${i + 1}`} onClick={() => setCur(i)} onMouseEnter={() => setCur(i)}>
               <img src={thumbUrl(src, 160)} alt="" width={160} height={160} loading="lazy" />
             </button>
           ))}

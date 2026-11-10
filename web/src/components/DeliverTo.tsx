@@ -1,5 +1,6 @@
 'use client';
 
+import { useL } from '@/lib/use-l';
 import Link from '@/components/LocaleLink';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { listAddressesAction } from '@/app/actions/addresses';
@@ -29,13 +30,14 @@ function useZone(p: { lat: number | null; lng: number | null } | null, stores: S
 /** Nút "Giao đến" — `header`: viên thuốc ở đầu trang (desktop); `side`: hàng đầu bảng danh mục trên tablet / điện thoại. */
 export function DeliverToButton({ variant = 'header' }: { variant?: 'header' | 'side' }) {
   const { place, loaded, openPicker } = useDeliverTo();
-  const label = loaded && place ? place.label : 'Chọn địa chỉ';
-  const title = loaded && place ? `Giao đến: ${place.detail} — bấm để đổi` : 'Chọn nơi nhận hàng để biết có giao được cây sống không';
+  const L = useL();
+  const label = loaded && place ? place.label : L('Chọn địa chỉ', 'Choose address');
+  const title = loaded && place ? L(`Giao đến: ${place.detail} — bấm để đổi`, `Deliver to: ${place.detail} — click to change`) : L('Chọn nơi nhận hàng để biết có giao được cây sống không', 'Choose a delivery address');
   if (variant === 'side') {
     return (
       <button type="button" className="app-loc-side" onClick={openPicker} aria-haspopup="dialog" title={title}>
         <Icon name="pin" size={18} />
-        <span><small>Giao đến</small><span className="app-loc__v">{label}</span></span>
+        <span><small>{L('Giao đến', 'Deliver to')}</small><span className="app-loc__v">{label}</span></span>
         <Icon name="chevron" size={16} />
       </button>
     );
@@ -44,7 +46,7 @@ export function DeliverToButton({ variant = 'header' }: { variant?: 'header' | '
     <button type="button" className="vx-loc" onClick={openPicker} aria-haspopup="dialog" title={title}>
       <Icon name="pin" size={18} />
       <span>
-        <small>Giao đến</small>
+        <small>{L('Giao đến', 'Deliver to')}</small>
         <span className="app-loc__v">{label}</span>
       </span>
     </button>
@@ -168,15 +170,16 @@ export function DeliverToNote({ ship, bulky = false }: { ship: 'plant' | 'supply
   const { place, loaded, stores, openPicker } = useDeliverTo();
   const { rules, regionProvinces } = useShipping();
   const { enabled, pinned, zone, plantZoneKm } = useZone(place, stores);
+  const L = useL();
   let feeText: string;
   if (ship === 'plant') {
     // Cây sống: phí theo tỉnh / thành nhận hàng; chưa biết thì ghi "từ" mức thấp nhất khi các vùng khác phí
     const region = place ? regionOfAddress(place.detail || place.label, regionProvinces) : null;
     const amount = region ? rules.plant.regionFee[region] : rules.plant.fee;
-    feeText = `Phí giao ${!region && plantFeeVaries(rules.plant) ? 'từ ' : ''}${money(amount)}, miễn phí đơn từ ${money(plantFreeFrom(rules.plant, region))}`;
-    if (bulky && rules.plant.bulky > 0) feeText += `. Cây lớn tính thêm ${money(rules.plant.bulky)} / cây`;
+    feeText = L(`Phí giao ${!region && plantFeeVaries(rules.plant) ? 'từ ' : ''}${money(amount)}, miễn phí đơn từ ${money(plantFreeFrom(rules.plant, region))}`, `Shipping ${!region && plantFeeVaries(rules.plant) ? 'from ' : ''}${money(amount)}, free on orders from ${money(plantFreeFrom(rules.plant, region))}`);
+    if (bulky && rules.plant.bulky > 0) feeText += L(`. Cây lớn tính thêm ${money(rules.plant.bulky)} / cây`, `. Large plants +${money(rules.plant.bulky)} each`);
   } else {
-    feeText = `Phí giao ${money(rules.supply.fee)}, miễn phí đơn từ ${money(rules.supply.freeFrom)}`;
+    feeText = L(`Phí giao ${money(rules.supply.fee)}, miễn phí đơn từ ${money(rules.supply.freeFrom)}`, `Shipping ${money(rules.supply.fee)}, free on orders from ${money(rules.supply.freeFrom)}`);
   }
 
   if (!loaded) return <div className="app-deliver-note" style={{ minHeight: 40 }} />;
@@ -185,25 +188,25 @@ export function DeliverToNote({ ship, bulky = false }: { ship: 'plant' | 'supply
       <div className="app-deliver-note">
         <Icon name="pin" size={18} />
         <span>
-          {ship === 'plant' && enabled ? 'Cây sống chỉ giao trong vùng quanh cửa hàng. ' : 'Xem phí giao tới nơi bạn ở. '}
-          <button type="button" className="vx-link" onClick={openPicker}>Chọn địa chỉ nhận hàng</button>
+          {ship === 'plant' && enabled ? L('Cây sống chỉ giao trong vùng quanh cửa hàng. ', 'Live plants are delivered near our stores only. ') : L('Xem phí giao tới nơi bạn ở. ', 'See the shipping fee to your area. ')}
+          <button type="button" className="vx-link" onClick={openPicker}>{L('Chọn địa chỉ nhận hàng', 'Choose delivery address')}</button>
         </span>
       </div>
     );
   }
-  const where = <>Giao đến <b>{place.label}</b></>;
-  const change = <button type="button" className="vx-link" onClick={openPicker}>Đổi</button>;
+  const where = <>{L('Giao đến', 'Deliver to')} <b>{place.label}</b></>;
+  const change = <button type="button" className="vx-link" onClick={openPicker}>{L('Đổi', 'Change')}</button>;
   let body: ReactNode;
   let tone = '';
   if (ship === 'supply' || !enabled) {
-    body = <>{where} · {ship === 'plant' ? <><b>giao cây sống toàn quốc</b>. </> : null}{feeText}</>;
+    body = <>{where} · {ship === 'plant' ? <><b>{L('giao cây sống toàn quốc', 'live plants shipped nationwide')}</b>. </> : null}{feeText}</>;
   } else if (pinned && zone) {
-    if (zone.inZone) body = <>{where} · <b>giao được cây sống</b> (cách {zone.store.name} {km1(zone.km)} km). {feeText}</>;
-    else { tone = ' app-deliver-note--out'; body = <>{where} · <b>ngoài vùng giao cây sống</b> ({plantZoneKm} km quanh cửa hàng). Cây sống chưa giao được tới đây; vật tư, thuốc, phân bón vẫn giao bình thường.</>; }
+    if (zone.inZone) body = <>{where} · <b>{L('giao được cây sống', 'live plants deliverable')}</b> ({L('cách', 'from')} {zone.store.name} {km1(zone.km)} km). {feeText}</>;
+    else { tone = ' app-deliver-note--out'; body = <>{where} · <b>{L('ngoài vùng giao cây sống', 'outside live-plant delivery area')}</b> ({plantZoneKm} km). {L('Cây sống chưa giao được tới đây; vật tư, thuốc, phân bón vẫn giao bình thường.', 'Supplies and fertiliser can still be delivered.')}</>; }
   } else if (pinned) {
-    body = <>{where} · đang kiểm tra vùng giao…</>;
+    body = <>{where} · {L('đang kiểm tra vùng giao…', 'checking delivery area…')}</>;
   } else {
-    body = <>{where} · địa chỉ chưa ghim bản đồ nên chưa biết có giao cây sống được không. {feeText}</>;
+    body = <>{where} · {L('địa chỉ chưa ghim bản đồ nên chưa biết có giao cây sống được không.', 'address not pinned on the map yet.')} {feeText}</>;
   }
   return (
     <div className={`app-deliver-note${tone}`}>

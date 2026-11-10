@@ -8,6 +8,7 @@ export const MAX_REVIEW_PHOTOS = 3;
 export const REVIEW_HOLD_STARS = 2;
 
 export const STAR_LABEL = ['', 'Rất tệ', 'Tệ', 'Bình thường', 'Tốt', 'Tuyệt vời'] as const;
+export const STAR_LABEL_EN = ['', 'Very poor', 'Poor', 'Average', 'Good', 'Excellent'] as const;
 
 export const starsText = (n: number) => {
   const k = Math.max(0, Math.min(5, Math.round(n)));
@@ -124,12 +125,12 @@ export function reviewStats(items: Pick<ReviewView, 'stars' | 'photos'>[]): Revi
   };
 }
 
-export function timeAgo(ms: number) {
+export function timeAgo(ms: number, en = false) {
   const m = Math.floor((Date.now() - ms) / 60_000);
-  if (m < 1) return 'Vừa xong';
-  if (m < 60) return `${m} phút trước`;
-  if (m < 24 * 60) return `${Math.floor(m / 60)} giờ trước`;
+  if (m < 1) return en ? 'Just now' : 'Vừa xong';
+  if (m < 60) return en ? `${m} min ago` : `${m} phút trước`;
+  if (m < 24 * 60) return en ? `${Math.floor(m / 60)} h ago` : `${Math.floor(m / 60)} giờ trước`;
   const d = Math.floor(m / (24 * 60));
-  if (d < 7) return `${d} ngày trước`;
-  return new Date(ms).toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', day: '2-digit', month: '2-digit', year: 'numeric' });
+  if (d < 7) return en ? `${d} days ago` : `${d} ngày trước`;
+  return new Date(ms).toLocaleDateString(en ? 'en-GB' : 'vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', day: '2-digit', month: '2-digit', year: 'numeric' });
 }
