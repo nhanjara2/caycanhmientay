@@ -29,6 +29,7 @@ import { JsonLd } from '@/components/JsonLd';
 import { faqLd, productLd } from '@/lib/jsonld';
 import { one, type SearchParams } from '@/lib/url-params';
 import { currentLang } from '@/i18n/request';
+import { SPEC_KEY_EN } from '@/lib/i18n-content';
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<SearchParams> };
 
@@ -95,7 +96,7 @@ function Content({ p, faq, en }: { p: Product; faq: boolean; en: boolean }) {
         <h3 id="cach-dung">{isPlant ? L('Cách chăm sóc', 'Care guide') : L('Cách sử dụng', 'How to use')}</h3>
         <ul>
           {(care.length ? care : p.specs.slice(0, 4)).map(([k, v]) => (
-            <li key={k}><b>{k}:</b> {v}.</li>
+            <li key={k}><b>{en ? SPEC_KEY_EN[k] ?? k : k}:</b> {v}.</li>
           ))}
         </ul>
         <div className="vx-note" id="luu-y">
