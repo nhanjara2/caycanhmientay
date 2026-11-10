@@ -31,6 +31,6 @@ export default function robots(): MetadataRoute.Robots {
       { userAgent: AI_BOTS, allow: [...allow, '/llms.txt', '/llms-full.txt'], disallow },
     ],
     // rss.xml cũng là sitemap hợp lệ (Google, Bing nhận) — báo nhanh bài mới.
-    sitemap: [absoluteUrl('/sitemap.xml'), absoluteUrl('/rss.xml')],
+    sitemap: [absoluteUrl('/sitemap.xml'), absoluteUrl('/news-sitemap.xml'), absoluteUrl('/rss.xml')],
   };
 }
