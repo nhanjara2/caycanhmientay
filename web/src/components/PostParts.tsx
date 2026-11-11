@@ -8,6 +8,7 @@ import {
 import { Art, Icon, type IconName } from './Icon';
 import { ArticleProducts } from './PostClient';
 import { responsive } from '@/lib/images';
+import { ZoomImage } from './ZoomImage';
 
 export const postDate = (d: Date) => d.toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', day: '2-digit', month: '2-digit', year: 'numeric' });
 /** Ngày đăng / sửa trong thẻ <time> (máy đọc giờ chuẩn ISO, người đọc dd/mm/yyyy giờ Việt Nam). */
@@ -87,7 +88,7 @@ export function PostBody({ body, products, slug, title }: { body: PostBlock[]; p
       case 'image':
         return (
           <figure key={i} className="ar-fig">
-            <img {...responsive(postImageUrl(b.file, slug), '(max-width: 47.9375em) 100vw, 760px')} alt={b.caption || title || ''} loading="lazy" />
+            <ZoomImage {...responsive(postImageUrl(b.file, slug), '(max-width: 47.9375em) 100vw, 760px')} alt={b.caption || title || ''} caption={b.caption} />
             {b.caption && <figcaption>{b.caption}</figcaption>}
           </figure>
         );
