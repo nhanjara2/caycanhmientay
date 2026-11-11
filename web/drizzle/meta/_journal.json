@@ -659,6 +659,13 @@
       "when": 1794380900000,
       "tag": "0093_marathon_cap_nhat_duong_chay",
       "breakpoints": true
+    },
+    {
+      "idx": 94,
+      "version": "7",
+      "when": 1794381000000,
+      "tag": "0094_marathon_duong_chay_5km",
+      "breakpoints": true
     }
   ]
 }
