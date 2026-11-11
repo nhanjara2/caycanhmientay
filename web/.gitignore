@@ -8,3 +8,5 @@ src/styles/ds/
 # Database SQLite khi chạy dev
 data/
 !.env.example
+.vercel
+.env*

@@ -617,6 +617,13 @@
       "when": 1794210260005,
       "tag": "0087_banner_tieng_anh",
       "breakpoints": true
+    },
+    {
+      "idx": 88,
+      "version": "7",
+      "when": 1794380400000,
+      "tag": "0088_sa_dec_flower_half_marathon",
+      "breakpoints": true
     }
   ]
 }
