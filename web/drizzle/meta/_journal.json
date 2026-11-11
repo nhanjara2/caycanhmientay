@@ -624,6 +624,13 @@
       "when": 1794380400000,
       "tag": "0088_sa_dec_flower_half_marathon",
       "breakpoints": true
+    },
+    {
+      "idx": 89,
+      "version": "7",
+      "when": 1794380500000,
+      "tag": "0089_marathon_dang_ngay",
+      "breakpoints": true
     }
   ]
 }
