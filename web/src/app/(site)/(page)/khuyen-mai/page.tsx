@@ -61,7 +61,7 @@ export default async function PromotionsPage() {
       </header>
 
       <section id="tin-su-kien" className="pm-sec">
-        <SectionHeader icon="gift" title="Tin khuyến mãi & sự kiện" href={news.length > NEWS_SHOWN ? `${SECTIONS.blog.path}?chuyen-muc=khuyen-mai` : undefined} />
+        <SectionHeader icon="gift" title="Tin khuyến mãi & sự kiện" href={news.length > NEWS_SHOWN ? `${SECTIONS.news.path}?chuyen-muc=tin-tuc` : undefined} />
         {news.length > 0 ? (
           <div className="vx-promo-row pm-news">
             {news.slice(0, NEWS_SHOWN).map((p) => (
