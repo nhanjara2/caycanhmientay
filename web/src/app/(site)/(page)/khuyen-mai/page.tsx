@@ -45,7 +45,7 @@ export default async function PromotionsPage() {
   const onSale = products
     .filter((p) => bestDiscount(p) > 0)
     .sort((a, b) => bestDiscount(b) - bestDiscount(a) || a.name.localeCompare(b.name, 'vi'));
-  const news = posts.filter((p) => categoryOf(p.category)?.promo);
+  const news = posts.filter((p) => categoryOf(p.category)?.promo || p.category === 'tin-tuc');
   const scopes = await scopeTexts(vouchers);
 
   return (
@@ -59,6 +59,30 @@ export default async function PromotionsPage() {
           <a href="#tin-su-kien" className="vx-chip">Tin &amp; sự kiện</a>
         </nav>
       </header>
+
+      <section id="tin-su-kien" className="pm-sec">
+        <SectionHeader icon="gift" title="Tin khuyến mãi & sự kiện" href={news.length > NEWS_SHOWN ? `${SECTIONS.blog.path}?chuyen-muc=khuyen-mai` : undefined} />
+        {news.length > 0 ? (
+          <div className="vx-promo-row pm-news">
+            {news.slice(0, NEWS_SHOWN).map((p) => (
+              <Link key={p.id} href={postPath(p)} className="vx-promo-card">
+                <PostThumb p={p} />
+                <PostMeta p={p} />
+                <b>{p.title}</b>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="pm-follow">
+            <b>Chưa có tin khuyến mãi hay sự kiện mới</b>
+            <span>Khi shop có chương trình ưu đãi, workshop hoặc phiên chợ cây, tin sẽ đăng ở đây. Bạn có thể nhận tin sớm qua Zalo và Facebook.</span>
+            <span className="acts">
+              <a className="vx-btn vx-btn--primary" href={ZALO_URL} target="_blank" rel="noreferrer">Nhắn Zalo shop</a>
+              <a className="vx-btn vx-btn--outline" href={FACEBOOK_URL} target="_blank" rel="noreferrer">Theo dõi Facebook</a>
+            </span>
+          </div>
+        )}
+      </section>
 
       <section id="ma-giam-gia" className="pm-sec">
         <SectionHeader icon="tag" title="Mã giảm giá đang áp dụng" />
@@ -116,29 +140,6 @@ export default async function PromotionsPage() {
         )}
       </section>
 
-      <section id="tin-su-kien" className="pm-sec">
-        <SectionHeader icon="gift" title="Tin khuyến mãi & sự kiện" href={news.length > NEWS_SHOWN ? `${SECTIONS.blog.path}?chuyen-muc=khuyen-mai` : undefined} />
-        {news.length > 0 ? (
-          <div className="vx-promo-row pm-news">
-            {news.slice(0, NEWS_SHOWN).map((p) => (
-              <Link key={p.id} href={postPath(p)} className="vx-promo-card">
-                <PostThumb p={p} />
-                <PostMeta p={p} />
-                <b>{p.title}</b>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <div className="pm-follow">
-            <b>Chưa có tin khuyến mãi hay sự kiện mới</b>
-            <span>Khi shop có chương trình ưu đãi, workshop hoặc phiên chợ cây, tin sẽ đăng ở đây. Bạn có thể nhận tin sớm qua Zalo và Facebook.</span>
-            <span className="acts">
-              <a className="vx-btn vx-btn--primary" href={ZALO_URL} target="_blank" rel="noreferrer">Nhắn Zalo shop</a>
-              <a className="vx-btn vx-btn--outline" href={FACEBOOK_URL} target="_blank" rel="noreferrer">Theo dõi Facebook</a>
-            </span>
-          </div>
-        )}
-      </section>
 
       <div className="pm-contact">
         <Icon name="phone" size={28} />
