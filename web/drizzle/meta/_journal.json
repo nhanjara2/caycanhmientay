@@ -645,6 +645,13 @@
       "when": 1794380700000,
       "tag": "0091_marathon_racekit",
       "breakpoints": true
+    },
+    {
+      "idx": 92,
+      "version": "7",
+      "when": 1794380800000,
+      "tag": "0092_marathon_hoat_dong",
+      "breakpoints": true
     }
   ]
 }
