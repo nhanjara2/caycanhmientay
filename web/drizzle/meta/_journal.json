@@ -652,6 +652,13 @@
       "when": 1794380800000,
       "tag": "0092_marathon_hoat_dong",
       "breakpoints": true
+    },
+    {
+      "idx": 93,
+      "version": "7",
+      "when": 1794380900000,
+      "tag": "0093_marathon_cap_nhat_duong_chay",
+      "breakpoints": true
     }
   ]
 }
