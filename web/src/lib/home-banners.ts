@@ -72,7 +72,9 @@ export const BG_COLOR = /^#[0-9a-f]{6}$/i;
 export const BANNER_IMAGE_FILE = /^[a-f0-9]{32}\.(jpg|png|webp)$/;
 /** Ảnh banner dựng sẵn của shop (file tĩnh trong public/images/banner, có sẵn bản thu nhỏ -w640…). */
 export const BUILTIN_BANNER_IMAGE = /^\/images\/banner\/[a-z0-9-]+\.webp$/;
-export const bannerImageUrl = (file: string) => (BUILTIN_BANNER_IMAGE.test(file) ? file : `/api/banner-images/${file}`);
+/** Ảnh dán link trực tiếp (https://…), không tải lên web. */
+export const EXTERNAL_BANNER_IMAGE = /^https:\/\/[^\s"'<>]+$/;
+export const bannerImageUrl = (file: string) => (BUILTIN_BANNER_IMAGE.test(file) || EXTERNAL_BANNER_IMAGE.test(file) ? file : `/api/banner-images/${file}`);
 
 /** Link trong site (/…) hoặc web ngoài (https://…). */
 export const isExternal = (href: string) => /^https?:\/\//.test(href);

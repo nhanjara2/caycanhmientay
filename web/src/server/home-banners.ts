@@ -3,7 +3,7 @@ import { connection } from 'next/server';
 import { cache } from 'react';
 import { and, asc, desc, eq, gte, inArray, isNull, lt, lte, notInArray, or, sql } from 'drizzle-orm';
 import * as z from 'zod';
-import { BANNER_IMAGE_FILE, BANNER_SLOT_KEYS, BANNER_TONE_KEYS, BG_COLOR, BUILTIN_BANNER_IMAGE, slotOf, type Banner } from '@/lib/home-banners';
+import { BANNER_IMAGE_FILE, BANNER_SLOT_KEYS, BANNER_TONE_KEYS, BG_COLOR, BUILTIN_BANNER_IMAGE, EXTERNAL_BANNER_IMAGE, slotOf, type Banner } from '@/lib/home-banners';
 import { staffName, type SessionUser } from './auth';
 import { db, schema } from './db';
 import type { SavedImage } from './uploads';
@@ -37,7 +37,7 @@ export async function listBannersAdmin() {
 
 const line = (max: number) => z.string().trim().max(max, `Tối đa ${max} ký tự`);
 // Ảnh tải lên, hoặc ảnh dựng sẵn của shop (giữ nguyên khi sửa chữ / link của banner dựng sẵn).
-const file = z.string().refine((f) => BANNER_IMAGE_FILE.test(f) || BUILTIN_BANNER_IMAGE.test(f), 'Ảnh không hợp lệ');
+const file = z.string().max(1000).refine((f) => BANNER_IMAGE_FILE.test(f) || BUILTIN_BANNER_IMAGE.test(f) || EXTERNAL_BANNER_IMAGE.test(f), 'Ảnh không hợp lệ (link ảnh phải bắt đầu bằng https://)');
 /** Ảnh nằm trong bảng home_banner_images (không phải ảnh dựng sẵn). */
 const uploaded = (f: string | null): f is string => !!f && BANNER_IMAGE_FILE.test(f);
 // Ngày nhập ở admin (yyyy-mm-dd, giờ Việt Nam): "từ" = đầu ngày, "đến" = hết ngày.
