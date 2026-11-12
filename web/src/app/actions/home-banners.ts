@@ -60,3 +60,23 @@ export async function uploadBannerImageAction(fd: FormData) {
   if ('error' in img) return { ok: false as const, error: img.error };
   return addBannerImage(img);
 }
+
+/** Tải ảnh từ link admin dán vào (https://…) về để đưa qua khung cắt / chỉnh như ảnh chọn từ máy. */
+const PRIVATE_HOST = /^(localhost|127\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.|0\.|\[|::)/i;
+export async function fetchBannerImageUrlAction(url: unknown) {
+  await requireAccess('content', 'full');
+  let u: URL;
+  try { u = new URL(String(url)); } catch { return { ok: false as const, error: 'Link ảnh không hợp lệ' }; }
+  if (u.protocol !== 'https:' || PRIVATE_HOST.test(u.hostname)) return { ok: false as const, error: 'Link ảnh phải bắt đầu bằng https://' };
+  try {
+    const r = await fetch(u, { signal: AbortSignal.timeout(15_000), redirect: 'follow', headers: { Accept: 'image/*' } });
+    const type = (r.headers.get('content-type') ?? '').split(';')[0].trim();
+    if (!r.ok) return { ok: false as const, error: `Không tải được ảnh (mã ${r.status})` };
+    if (!/^image\/(jpeg|png|webp|gif|avif)$/.test(type)) return { ok: false as const, error: 'Link này không phải file ảnh — cần link mở ra chỉ thấy mỗi tấm ảnh' };
+    const buf = Buffer.from(await r.arrayBuffer());
+    if (buf.length > 15 * 1024 * 1024) return { ok: false as const, error: 'Ảnh quá lớn (trên 15 MB)' };
+    return { ok: true as const, type, data: buf.toString('base64') };
+  } catch {
+    return { ok: false as const, error: 'Không tải được ảnh từ link này' };
+  }
+}

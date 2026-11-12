@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useRef, useState, useTransition, type FormEvent } from 'react';
 import {
-  deleteBannerAction, moveBannerAction, saveBannerAction, setBannerActiveAction, uploadBannerImageAction,
+  deleteBannerAction, fetchBannerImageUrlAction, moveBannerAction, saveBannerAction, setBannerActiveAction, uploadBannerImageAction,
 } from '@/app/actions/home-banners';
 import { SlideBody, type Slide } from '@/components/home/HomeCarousel';
 import { Icon } from '@/components/Icon';
@@ -140,13 +140,23 @@ function Editor({ initial, onClose }: { initial: Draft; onClose: () => void }) {
   };
 
   /** Dán link ảnh trực tiếp (https://…) thay cho tải ảnh lên. */
-  const pasteLink = (key: 'image' | 'imageMobile' | 'bgImage' | 'bgImageMobile') => {
+  const pasteLink = async (key: 'image' | 'imageMobile' | 'bgImage' | 'bgImageMobile') => {
     const cur = d[key];
     const v = prompt('Dán link ảnh (bắt đầu bằng https://, ví dụ link ảnh từ Google Drive công khai, Imgur…):', cur && EXTERNAL_BANNER_IMAGE.test(cur) ? cur : '')?.trim();
     if (v === undefined || v === '') return;
     if (!EXTERNAL_BANNER_IMAGE.test(v) || v.length > 1000) { setError('Link ảnh phải bắt đầu bằng https:// và không có khoảng trắng'); return; }
     setError('');
-    set(key, v);
+    // Tải ảnh về rồi đưa qua khung cắt như ảnh chọn từ máy → chỉnh được khung, ảnh được nén cho nhẹ.
+    setBusy('Đang lấy ảnh từ link…');
+    const r = await fetchBannerImageUrlAction(v).catch(() => ({ ok: false as const, error: 'Không tải được ảnh từ link này' }));
+    setBusy('');
+    if (r.ok) {
+      const bytes = Uint8Array.from(atob(r.data), (c) => c.charCodeAt(0));
+      await upload(new File([bytes], `link.${r.type.split('/')[1]}`, { type: r.type }), key);
+      return;
+    }
+    // Web chứa ảnh chặn tải về: vẫn dùng link trực tiếp (không chỉnh khung được).
+    if (confirm(`${r.error}.\nVẫn dùng link này trực tiếp? (không chỉnh khung được, ảnh không được nén)`)) set(key, v);
   };
 
   const submit = (e: FormEvent) => {
@@ -199,14 +209,14 @@ function Editor({ initial, onClose }: { initial: Draft; onClose: () => void }) {
               <div className="ad-bnr-pair">
                 <section className="ad-bnr-dev">
                   <h4>Máy tính, tablet</h4>
-                  <ImgPick label="Ảnh banner" size={slot.size} file={d.image} ratio={slot.ratio} busy={!!busy} required onPick={() => main.current?.click()} onLink={() => pasteLink('image')} />
-                  <ImgPick label="Ảnh nền" size={BG_SIZE.desktop} file={d.bgImage} ratio={BG_RATIO.desktop} busy={!!busy} onPick={() => bg.current?.click()} onLink={() => pasteLink('bgImage')} onClear={() => set('bgImage', null)} />
+                  <ImgPick label="Ảnh banner" size={slot.size} file={d.image} ratio={slot.ratio} busy={!!busy} required onPick={() => main.current?.click()} onLink={() => void pasteLink('image')} />
+                  <ImgPick label="Ảnh nền" size={BG_SIZE.desktop} file={d.bgImage} ratio={BG_RATIO.desktop} busy={!!busy} onPick={() => bg.current?.click()} onLink={() => void pasteLink('bgImage')} onClear={() => set('bgImage', null)} />
                   {d.image && <Preview d={d} />}
                 </section>
                 <section className="ad-bnr-dev ad-bnr-dev--mob">
                   <h4>Điện thoại</h4>
-                  <ImgPick label="Ảnh banner" size={slot.mobile?.size ?? slot.size} file={d.imageMobile} ratio={slot.mobile?.ratio ?? slot.ratio} busy={!!busy} onPick={() => mob.current?.click()} onLink={() => pasteLink('imageMobile')} onClear={() => set('imageMobile', null)} />
-                  <ImgPick label="Ảnh nền" size={BG_SIZE.mobile} file={d.bgImageMobile} ratio={BG_RATIO.mobile} busy={!!busy} onPick={() => bgm.current?.click()} onLink={() => pasteLink('bgImageMobile')} onClear={() => set('bgImageMobile', null)} />
+                  <ImgPick label="Ảnh banner" size={slot.mobile?.size ?? slot.size} file={d.imageMobile} ratio={slot.mobile?.ratio ?? slot.ratio} busy={!!busy} onPick={() => mob.current?.click()} onLink={() => void pasteLink('imageMobile')} onClear={() => set('imageMobile', null)} />
+                  <ImgPick label="Ảnh nền" size={BG_SIZE.mobile} file={d.bgImageMobile} ratio={BG_RATIO.mobile} busy={!!busy} onPick={() => bgm.current?.click()} onLink={() => void pasteLink('bgImageMobile')} onClear={() => set('bgImageMobile', null)} />
                   {d.image && <div className="ad-bnr-mob"><Preview d={d} mobile /></div>}
                 </section>
               </div>
@@ -225,13 +235,13 @@ function Editor({ initial, onClose }: { initial: Draft; onClose: () => void }) {
               <Preview d={d} />
               <div className="ad-bnr-imgacts">
                 <button type="button" className="vx-btn vx-btn--outline vx-btn--sm" disabled={!!busy} onClick={() => main.current?.click()}>Đổi ảnh</button>
-                <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" disabled={!!busy} onClick={() => pasteLink('image')}>Dán link ảnh</button>
+                <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" disabled={!!busy} onClick={() => void pasteLink('image')}>Dán link ảnh</button>
                 {slot.mobile && (
                   d.imageMobile
                     ? <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" onClick={() => set('imageMobile', null)}>Bỏ ảnh riêng cho điện thoại</button>
                     : <>
                         <button type="button" className="vx-btn vx-btn--outline vx-btn--sm" disabled={!!busy} onClick={() => mob.current?.click()}>+ Ảnh riêng cho điện thoại ({slot.mobile.size})</button>
-                        <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" disabled={!!busy} onClick={() => pasteLink('imageMobile')}>Dán link ảnh điện thoại</button>
+                        <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" disabled={!!busy} onClick={() => void pasteLink('imageMobile')}>Dán link ảnh điện thoại</button>
                       </>
                 )}
                 {busy && <span className="vx-help">{busy}</span>}
@@ -250,7 +260,7 @@ function Editor({ initial, onClose }: { initial: Draft; onClose: () => void }) {
             </button>
           )}
           {d.slot !== 'top' && !d.image && (
-            <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" disabled={!!busy} onClick={() => pasteLink('image')}>hoặc dán link ảnh (https://…)</button>
+            <button type="button" className="vx-btn vx-btn--ghost vx-btn--sm" disabled={!!busy} onClick={() => void pasteLink('image')}>hoặc dán link ảnh (https://…)</button>
           )}
 
           <div className="vx-fl">
