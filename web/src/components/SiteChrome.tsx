@@ -5,7 +5,6 @@ import { Analytics } from './Analytics';
 import { RumVitals } from './RumVitals';
 import { AuthModal } from './AuthModal';
 import { CategoryNav } from './CategoryNav';
-import { CookieConsent } from './CookieConsent';
 import { DeliverToDialog } from './DeliverTo';
 import { Footer } from './Footer';
 import { Header } from './Header';
@@ -33,7 +32,6 @@ export async function SiteChrome({ children }: { children: ReactNode }) {
       <AuthModal />
       <DeliverToDialog />
       <PhonePrompt />
-      <CookieConsent />
       <ScrollReveal />
       <ImageFallback />
       <WebVitals />

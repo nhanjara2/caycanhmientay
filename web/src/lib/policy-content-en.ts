@@ -423,14 +423,12 @@ const BAO_MAT: Section[] = [
     'The display name in your profile (without phone number or email) appears with reviews, questions and answers you post publicly. Change it under **Account → Personal information**.',
   ] },
   { h: 'Cookies', blocks: [
-    'On your first visit you are asked about cookies and can choose each group:',
-    { table: { head: ['Group', 'Used for', 'Can be turned off'], rows: [
-      ['Necessary', 'Sign-in, cart, checkout, security', 'No (always on)'],
-      ['Personalisation', 'Plant suggestions based on your interests and history', 'Yes'],
-      ['Analytics', 'Measuring visits to improve the website (Google Analytics)', 'Yes'],
-      ['Advertising', 'Showing relevant ads on social networks', 'Yes'],
+    'The website automatically uses cookies and browser storage when you visit, in these groups:',
+    { table: { head: ['Group', 'Used for'], rows: [
+      ['Necessary', 'Sign-in, cart, checkout, security; remembering the delivery location you chose ("Deliver to")'],
+      ['Analytics', 'Measuring visits to improve the website (Google Analytics)'],
     ] } },
-    'Analytics and advertising code runs only with your permission. To choose again, clear this site\'s data in your browser so the dialog reappears. The website also stores the delivery location you chose ("Deliver to") in your browser.',
+    'By continuing to use the website you agree to this use of cookies. You can block or delete cookies at any time in your browser settings; blocking necessary cookies may stop some features such as sign-in and the cart from working.',
   ] },
   { h: 'Retention', blocks: [
     'Data is kept while you use your account and for the period the law requires for transaction records (orders, payments, warranty). When no longer needed or when you make a valid deletion request, we delete or anonymise the data, except what the law requires us to keep.',
@@ -438,7 +436,7 @@ const BAO_MAT: Section[] = [
   { h: 'Your rights', blocks: [
     { ul: [
       '**View and edit:** profile under Account → Personal information; addresses under Account → Address book.',
-      '**Withdraw consent:** change cookie choices or stop promotional messages at any time.',
+      '**Withdraw consent:** block or delete cookies in your browser settings, or stop promotional messages at any time.',
       '**Request access, deletion, restriction or objection** to processing: email or call the hotline at the top of this page; we verify your identity and reply within the legal time limit.',
       '**Complaints:** if you believe your data is mishandled, contact us under the [Operating rules](/chinh-sach/quy-che-hoat-dong) or the competent authority.',
     ] },

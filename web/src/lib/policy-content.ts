@@ -456,14 +456,12 @@ const BAO_MAT: Section[] = [
     'Tên hiển thị trong hồ sơ của bạn (không kèm số điện thoại hay email) hiện cùng đánh giá, câu hỏi và câu trả lời bạn đăng công khai. Bạn đổi tên hiển thị trong **Tài khoản → Thông tin cá nhân**.',
   ] },
   { h: 'Cookie', blocks: [
-    'Lần đầu vào website, bạn được hỏi về cookie và chọn từng nhóm:',
-    { table: { head: ['Nhóm', 'Dùng để', 'Có thể tắt'], rows: [
-      ['Cần thiết', 'Đăng nhập, giỏ hàng, thanh toán, bảo mật', 'Không (luôn bật)'],
-      ['Cá nhân hóa', 'Gợi ý cây theo sở thích và lịch sử xem', 'Có'],
-      ['Phân tích', 'Đo lượt truy cập để cải thiện website (Google Analytics)', 'Có'],
-      ['Quảng cáo', 'Hiện quảng cáo phù hợp trên mạng xã hội', 'Có'],
+    'Website tự động dùng cookie và bộ nhớ trình duyệt khi bạn truy cập, gồm các nhóm:',
+    { table: { head: ['Nhóm', 'Dùng để'], rows: [
+      ['Cần thiết', 'Đăng nhập, giỏ hàng, thanh toán, bảo mật; lưu nơi giao hàng bạn chọn ("Giao đến")'],
+      ['Phân tích', 'Đo lượt truy cập để cải thiện website (Google Analytics)'],
     ] } },
-    'Mã phân tích và quảng cáo chỉ được dùng khi bạn đã cho phép. Muốn chọn lại, bạn xóa dữ liệu trang web trong trình duyệt để hộp lựa chọn hiện lại. Website cũng lưu nơi giao hàng bạn chọn ("Giao đến") ngay trên trình duyệt của bạn.',
+    'Tiếp tục sử dụng website nghĩa là bạn đồng ý với việc dùng cookie như trên. Bạn có thể chặn hoặc xóa cookie bất cứ lúc nào trong phần cài đặt của trình duyệt; khi chặn cookie cần thiết, một số chức năng như đăng nhập, giỏ hàng có thể không hoạt động.',
   ] },
   { h: 'Thời gian lưu trữ', blocks: [
     'Dữ liệu được lưu trong thời gian bạn còn sử dụng tài khoản và theo thời hạn pháp luật yêu cầu đối với chứng từ giao dịch (đơn hàng, thanh toán, bảo hành). Khi hết mục đích sử dụng hoặc bạn yêu cầu xóa hợp lệ, chúng tôi xóa hoặc ẩn danh dữ liệu, trừ phần pháp luật bắt buộc phải giữ.',
@@ -471,7 +469,7 @@ const BAO_MAT: Section[] = [
   { h: 'Quyền của bạn', blocks: [
     { ul: [
       '**Xem và chỉnh sửa:** hồ sơ ở Tài khoản → Thông tin cá nhân; địa chỉ ở Tài khoản → Sổ địa chỉ.',
-      '**Rút lại đồng ý:** thay đổi lựa chọn cookie, ngừng nhận tin khuyến mãi bất cứ lúc nào.',
+      '**Rút lại đồng ý:** chặn hoặc xóa cookie trong cài đặt trình duyệt, ngừng nhận tin khuyến mãi bất cứ lúc nào.',
       '**Yêu cầu truy cập, xóa, hạn chế hoặc phản đối xử lý** dữ liệu của bạn: gửi email hoặc gọi hotline ở đầu trang này; chúng tôi xác minh danh tính và phản hồi trong thời hạn pháp luật quy định.',
       '**Khiếu nại:** nếu cho rằng dữ liệu bị xử lý sai, bạn liên hệ chúng tôi theo [Quy chế hoạt động](/chinh-sach/quy-che-hoat-dong) hoặc gửi cơ quan nhà nước có thẩm quyền.',
     ] },
