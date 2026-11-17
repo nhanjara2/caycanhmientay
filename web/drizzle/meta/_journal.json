@@ -680,6 +680,13 @@
       "when": 1794381200000,
       "tag": "0096_bai_kien_thuc_chuyen_sau",
       "breakpoints": true
+    },
+    {
+      "idx": 97,
+      "version": "7",
+      "when": 1794381300000,
+      "tag": "0097_14_bai_hen_gio_moi_ngay",
+      "breakpoints": true
     }
   ]
 }
