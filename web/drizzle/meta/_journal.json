@@ -673,6 +673,13 @@
       "when": 1794381100000,
       "tag": "0095_marathon_nhan_dien_race_kit",
       "breakpoints": true
+    },
+    {
+      "idx": 96,
+      "version": "7",
+      "when": 1794381200000,
+      "tag": "0096_bai_kien_thuc_chuyen_sau",
+      "breakpoints": true
     }
   ]
 }
